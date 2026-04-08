@@ -26,23 +26,6 @@ import {
   History,
 } from "lucide-react"
 import Link from "next/link"
-import type { Profile } from "@/types/profile"
-
-const statusColors: Record<Profile["status"], string> = {
-  created: "bg-blue-100 text-blue-800",
-  assessment_started: "bg-yellow-100 text-yellow-800",
-  assessment_completed: "bg-green-100 text-green-800",
-  active: "bg-purple-100 text-purple-800",
-  archived: "bg-gray-100 text-gray-800",
-}
-
-const statusLabels: Record<Profile["status"], { en: string; ar: string }> = {
-  created: { en: "Created", ar: "تم الإنشاء" },
-  assessment_started: { en: "Assessment Started", ar: "بدأ التقييم" },
-  assessment_completed: { en: "Assessment Completed", ar: "اكتمل التقييم" },
-  active: { en: "Active", ar: "نشط" },
-  archived: { en: "Archived", ar: "مؤرشف" },
-}
 
 export default function ProfileDetailPage({
   params,
@@ -53,11 +36,11 @@ export default function ProfileDetailPage({
   const router = useRouter()
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
-  const { getAssignmentsByProfile, getVisibleAssignments } = useAssignments()
+  const { getAssignmentsByCase, getVisibleAssignments } = useAssignments(id)
   const { getToolById } = useTools()
 
   const profile = getProfileById(id)
-  const assignments = getAssignmentsByProfile(id)
+  const assignments = getAssignmentsByCase(id)
   const visibleAssignments = getVisibleAssignments(id)
 
   if (!profile) {
@@ -78,16 +61,11 @@ export default function ProfileDetailPage({
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-primary">
-            {profile.childName}
-          </h1>
+          <h1 className="text-2xl font-bold text-primary">{profile.name}</h1>
           <p className="text-muted-foreground">
-            Created {new Date(profile.createdAt).toLocaleDateString()}
+            Created {new Date(profile.created).toLocaleDateString()}
           </p>
         </div>
-        <Badge className={statusColors[profile.status]}>
-          {statusLabels[profile.status][lang]}
-        </Badge>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
@@ -115,8 +93,8 @@ export default function ProfileDetailPage({
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Age</span>
-                  <span className="font-medium">{profile.age} years</span>
+                  <span className="text-muted-foreground">Date of Birth</span>
+                  <span className="font-medium">{profile.date_of_birth}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Gender</span>
@@ -130,13 +108,13 @@ export default function ProfileDetailPage({
                     {profile.grade}
                   </span>
                 </div>
-                {profile.mainConcern.length > 0 && (
+                {profile.main_concerns.length > 0 && (
                   <div className="pt-2">
                     <span className="mb-2 block text-muted-foreground">
                       Main Concerns
                     </span>
                     <div className="flex flex-wrap gap-1">
-                      {profile.mainConcern.map((concern) => (
+                      {profile.main_concerns.map((concern) => (
                         <Badge key={concern} variant="outline">
                           {concern}
                         </Badge>
@@ -144,29 +122,6 @@ export default function ProfileDetailPage({
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Parent Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Name:</span>
-                  <span className="font-medium">{profile.parentName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{profile.phone}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{profile.email}</span>
-                </div>
               </CardContent>
             </Card>
 
@@ -206,7 +161,7 @@ export default function ProfileDetailPage({
               ) : (
                 <div className="space-y-3">
                   {visibleAssignments.map((assignment) => {
-                    const tool = getToolById(assignment.toolId)
+                    const tool = getToolById(assignment.tool)
                     return (
                       <Link
                         key={assignment.id}
@@ -266,7 +221,7 @@ export default function ProfileDetailPage({
                   {assignments
                     .filter((a) => a.status === "completed")
                     .map((assignment) => {
-                      const tool = getToolById(assignment.toolId)
+                      const tool = getToolById(assignment.tool)
                       return (
                         <div
                           key={assignment.id}
@@ -278,9 +233,9 @@ export default function ProfileDetailPage({
                             </p>
                             <p className="text-sm text-muted-foreground">
                               Completed{" "}
-                              {assignment.completedAt &&
+                              {assignment.updated &&
                                 new Date(
-                                  assignment.completedAt
+                                  assignment.updated
                                 ).toLocaleDateString()}
                             </p>
                           </div>

@@ -72,7 +72,6 @@ export default function MultipleChoiceBuilderPage() {
   const [formData, setFormData] = useState({
     nameEn: "",
     nameAr: "",
-    isVisibleToUser: true,
   })
 
   const [questions, setQuestions] = useState<MCQuestion[]>([])
@@ -101,21 +100,20 @@ export default function MultipleChoiceBuilderPage() {
     setQuestions(reordered)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.nameEn || questions.length === 0) return
     setIsSubmitting(true)
 
     const config: MultipleChoiceConfig = {
       title: { en: formData.nameEn, ar: formData.nameAr },
       questions: questions.map((q, idx) => ({ ...q, order: idx })),
-      isVisibleToUser: formData.isVisibleToUser,
+      media: [],
     }
 
-    const toolId = addTool({
+    const toolId = await addTool({
       name: { en: formData.nameEn, ar: formData.nameAr },
-      type: "multiple_choice",
+      type: "multiple_answer",
       serviceType: "individual",
-      isVisibleToUser: formData.isVisibleToUser,
       status: "active",
       config,
     })
@@ -327,16 +325,6 @@ export default function MultipleChoiceBuilderPage() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="visible"
-                  checked={formData.isVisibleToUser}
-                  onCheckedChange={(v) =>
-                    setFormData({ ...formData, isVisibleToUser: !!v })
-                  }
-                />
-                <Label htmlFor="visible">Visible to Users</Label>
-              </div>
             </CardContent>
           </Card>
 
@@ -388,7 +376,7 @@ export default function MultipleChoiceBuilderPage() {
               config={{
                 title: { en: formData.nameEn, ar: formData.nameAr },
                 questions,
-                isVisibleToUser: formData.isVisibleToUser,
+                media: [],
               }}
             />
           </div>

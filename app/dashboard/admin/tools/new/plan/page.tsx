@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { DragList } from "@/components/ui/drag-list"
 import { PlanPreview } from "@/components/tool-renderers/PlanPreview"
 import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react"
@@ -30,7 +29,6 @@ export default function PlanBuilderPage() {
     expertNameAr: "",
     startDate: "",
     endDate: "",
-    isVisibleToUser: true,
   })
 
   const [goals, setGoals] = useState<PlanGoal[]>([])
@@ -83,7 +81,7 @@ export default function PlanBuilderPage() {
     setSteps(steps.filter((s) => s.id !== id))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (
       !formData.childNameEn ||
       !formData.expertNameEn ||
@@ -100,17 +98,16 @@ export default function PlanBuilderPage() {
       endDate: formData.endDate,
       goals: goals.map((g, idx) => ({ ...g, order: idx })),
       steps,
-      isVisibleToUser: formData.isVisibleToUser,
+      media: [],
     }
 
-    const toolId = addTool({
+    const toolId = await addTool({
       name: {
         en: `${formData.childNameEn} - Plan`,
         ar: `${formData.childNameAr} - خطة`,
       },
       type: "plan",
       serviceType: "individual",
-      isVisibleToUser: formData.isVisibleToUser,
       status: "active",
       config,
     })
@@ -281,16 +278,6 @@ export default function PlanBuilderPage() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="visible"
-                  checked={formData.isVisibleToUser}
-                  onCheckedChange={(v) =>
-                    setFormData({ ...formData, isVisibleToUser: !!v })
-                  }
-                />
-                <Label htmlFor="visible">Visible to Users</Label>
-              </div>
             </CardContent>
           </Card>
 
@@ -459,7 +446,7 @@ export default function PlanBuilderPage() {
                 endDate: formData.endDate,
                 goals,
                 steps,
-                isVisibleToUser: formData.isVisibleToUser,
+                media: [],
               }}
             />
           </div>

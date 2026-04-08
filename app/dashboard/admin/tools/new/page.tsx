@@ -31,7 +31,7 @@ const toolTypes: {
     href: "/dashboard/admin/tools/new/survey",
   },
   {
-    type: "multiple_choice",
+    type: "multiple_answer",
     label: { en: "Multiple Answer Builder", ar: "بناء الإجابات المتعددة" },
     icon: Brain,
     description: {
@@ -41,7 +41,7 @@ const toolTypes: {
     href: "/dashboard/admin/tools/new/multiple-choice",
   },
   {
-    type: "media",
+    type: "media_question",
     label: { en: "Media Questions", ar: "أسئلة الوسائط" },
     icon: Image,
     description: {

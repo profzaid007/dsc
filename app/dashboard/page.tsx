@@ -10,13 +10,13 @@ import { Users, FolderKanban, ClipboardCheck, Activity } from "lucide-react"
 
 export default function DashboardPage() {
   const { currentUser } = useAuth()
-  const { userProfiles } = useProfiles()
+  const { profiles } = useProfiles()
   const { assignments } = useAssignments()
 
   const stats = [
     {
-      title: "Profiles",
-      value: userProfiles.length,
+      title: "Cases",
+      value: profiles.length,
       icon: Users,
       href: "/dashboard/profiles",
     },
@@ -66,13 +66,13 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {userProfiles.length === 0 && (
+      {profiles.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderKanban className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-medium">No profiles yet</h3>
+            <h3 className="mb-2 text-lg font-medium">No cases yet</h3>
             <p className="mb-4 text-center text-muted-foreground">
-              Create your first profile to get started
+              Create your first case to get started
             </p>
             <Link href="/dashboard/profiles/new">
               <Button>Create Profile</Button>

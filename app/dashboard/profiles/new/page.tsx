@@ -60,54 +60,53 @@ export default function NewProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
-    childName: "",
-    age: "",
+    name: "",
+    date_of_birth: "",
     gender: "",
     grade: "",
-    parentName: "",
-    phone: "",
-    email: "",
-    mainConcern: [] as string[],
+    main_concerns: [] as string[],
     notes: "",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!currentUser) return
 
     setIsSubmitting(true)
 
-    const profileId = addProfile({
-      userId: currentUser.id,
-      childName: formData.childName,
-      age: Number(formData.age),
-      gender: formData.gender,
-      grade: formData.grade,
-      parentName: formData.parentName,
-      phone: formData.phone,
-      email: formData.email,
-      mainConcern: formData.mainConcern,
-      notes: formData.notes,
-      status: "created",
-    })
+    try {
+      const profileId = await addProfile({
+        user: currentUser.id,
+        name: formData.name,
+        date_of_birth: formData.date_of_birth,
+        gender: formData.gender as "male" | "female",
+        grade: formData.grade,
+        main_concerns: formData.main_concerns,
+        notes: formData.notes,
+      } as any)
 
-    router.push(`/dashboard/profiles/${profileId}`)
+      router.push(`/dashboard/profiles/${profileId}`)
+    } catch (error) {
+      console.error("Failed to create profile:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const toggleConcern = (concern: string) => {
     setFormData((prev) => ({
       ...prev,
-      mainConcern: prev.mainConcern.includes(concern)
-        ? prev.mainConcern.filter((c) => c !== concern)
-        : [...prev.mainConcern, concern],
+      main_concerns: prev.main_concerns.includes(concern)
+        ? prev.main_concerns.filter((c) => c !== concern)
+        : [...prev.main_concerns, concern],
     }))
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Create New Profile</h1>
-        <p className="text-muted-foreground">Fill in the profile details</p>
+        <h1 className="text-2xl font-bold text-primary">Create New Case</h1>
+        <p className="text-muted-foreground">Fill in the case details</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -117,35 +116,31 @@ export default function NewProfilePage() {
             <CardDescription>Basic details about the child</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="childName">Child Name</Label>
-                <Input
-                  id="childName"
-                  value={formData.childName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, childName: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  min="1"
-                  max="25"
-                  value={formData.age}
-                  onChange={(e) =>
-                    setFormData({ ...formData, age: e.target.value })
-                  }
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Child Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="date_of_birth">Date of Birth</Label>
+                <Input
+                  id="date_of_birth"
+                  type="date"
+                  value={formData.date_of_birth}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date_of_birth: e.target.value })
+                  }
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
                 <Select
@@ -163,74 +158,27 @@ export default function NewProfilePage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="grade">Grade</Label>
-                <Select
-                  value={formData.grade}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, grade: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select grade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GRADES.map((grade) => (
-                      <SelectItem key={grade.value} value={grade.value}>
-                        {grade.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Parent Information</CardTitle>
-            <CardDescription>
-              Contact details for the parent/guardian
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="parentName">Parent Name</Label>
-                <Input
-                  id="parentName"
-                  value={formData.parentName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, parentName: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  required
-                />
-              </div>
-            </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
+              <Label htmlFor="grade">Grade</Label>
+              <Select
+                value={formData.grade}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, grade: value })
                 }
-                required
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GRADES.map((grade) => (
+                    <SelectItem key={grade.value} value={grade.value}>
+                      {grade.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -249,7 +197,7 @@ export default function NewProfilePage() {
                     key={concern}
                     type="button"
                     variant={
-                      formData.mainConcern.includes(concern)
+                      formData.main_concerns.includes(concern)
                         ? "default"
                         : "outline"
                     }
@@ -281,7 +229,7 @@ export default function NewProfilePage() {
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Profile"}
+            {isSubmitting ? "Creating..." : "Create Case"}
           </Button>
         </div>
       </form>

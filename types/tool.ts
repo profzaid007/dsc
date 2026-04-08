@@ -1,11 +1,11 @@
 export type ToolType =
   | "survey"
-  | "multiple_choice"
-  | "media"
+  | "multiple_answer"
+  | "media_question"
   | "report"
   | "plan"
-export type ServiceType = "individual" | "institute" | "both"
-export type ToolStatus = "draft" | "active" | "archived"
+export type ServiceType = "individual" | "institution" | "both"
+export type ToolStatus = "active" | "inactive" | "archived"
 
 export interface BilingualString {
   en: string
@@ -38,7 +38,7 @@ export interface SurveyQuestion {
 export interface SurveyConfig {
   title: BilingualString
   questions: SurveyQuestion[]
-  isVisibleToUser: boolean
+  media: string[]
 }
 
 // ============ MULTIPLE ANSWER BUILDER ============
@@ -65,7 +65,7 @@ export interface MCQuestion {
 export interface MultipleChoiceConfig {
   title: BilingualString
   questions: MCQuestion[]
-  isVisibleToUser: boolean
+  media: string[]
 }
 
 // ============ MEDIA QUESTIONS ============
@@ -85,7 +85,7 @@ export interface MediaItem {
 export interface MediaConfig {
   title: BilingualString
   items: MediaItem[]
-  isVisibleToUser: boolean
+  media: string[]
 }
 
 // ============ REPORT ============
@@ -99,8 +99,8 @@ export interface ReportCustomField {
 export interface ReportConfig {
   title: BilingualString
   expertNameField: BilingualString // editable label, default "Expert Name"
-  customFields: ReportCustomField[] // added after Suggestions
-  isVisibleToUser: boolean
+  customFields: ReportCustomField[]
+  media: string[]
 }
 // Fixed fields (always present): Title, Date, Assessment, Suggestions
 
@@ -132,7 +132,7 @@ export interface PlanConfig {
   endDate: string
   goals: PlanGoal[]
   steps: PlanStep[]
-  isVisibleToUser: boolean
+  media: string[]
 }
 
 // ============ TOOL ============
@@ -150,9 +150,8 @@ export interface Tool {
   description?: BilingualString
   type: ToolType
   serviceType: ServiceType
-  isVisibleToUser: boolean
   status: ToolStatus
   config: ToolConfig
-  createdAt: string
-  updatedAt: string
+  created: string
+  updated: string
 }

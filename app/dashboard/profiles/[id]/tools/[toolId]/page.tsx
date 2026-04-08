@@ -31,12 +31,12 @@ export default function TakeSurveyToolPage({
   const router = useRouter()
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
-  const { assignments, updateAssignment, submitResponse } = useAssignments()
+  const { assignments, updateAssignment } = useAssignments(assignmentId)
   const { getToolById } = useTools()
 
   const assignment = assignments.find((a) => a.id === assignmentId)
-  const profile = assignment ? getProfileById(assignment.profileId) : undefined
-  const tool = assignment ? getToolById(assignment.toolId) : undefined
+  const profile = assignment ? getProfileById(assignment.case) : undefined
+  const tool = assignment ? getToolById(assignment.tool) : undefined
   const config = tool?.config as SurveyConfig | undefined
 
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
@@ -78,11 +78,10 @@ export default function TakeSurveyToolPage({
     setAnswers((prev) => ({ ...prev, [questionId]: value }))
   }
 
-  const handleSubmit = () => {
-    submitResponse(assignmentId, answers, !tool.isVisibleToUser)
-    updateAssignment(assignmentId, {
+  const handleSubmit = async () => {
+    await updateAssignment(assignmentId, {
       status: "completed",
-      completedAt: new Date().toISOString(),
+      responses: answers,
     })
     setIsSubmitted(true)
   }
@@ -90,7 +89,7 @@ export default function TakeSurveyToolPage({
   const renderQuestion = (question: SurveyQuestion) => {
     const value = answers[question.id] as string | number | string[] | undefined
 
-    switch (question.type) {
+    switch (question.answerType) {
       case "text":
         return (
           <Input
@@ -176,7 +175,7 @@ export default function TakeSurveyToolPage({
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-primary">{tool.name[lang]}</h1>
-          <p className="text-muted-foreground">{profile.childName}</p>
+          <p className="text-muted-foreground">{profile.name}</p>
         </div>
       </div>
 

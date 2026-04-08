@@ -112,16 +112,14 @@ export function DashboardSidebar() {
           )
         })}
 
-        {isAdmin() && (
+        {isAdmin && (
           <>
             <div className="pt-4 pb-2">
               <span className="px-3 text-xs font-medium tracking-wider text-primary-foreground/50 uppercase">
                 Admin
               </span>
             </div>
-            {adminNavigation.map((item) => (
-              renderNavItem(item, pathname, true)
-            ))}
+            {adminNavigation.map((item) => renderNavItem(item, pathname, true))}
           </>
         )}
       </nav>

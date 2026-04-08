@@ -1,6 +1,5 @@
 export { SurveyPreview } from "./SurveyPreview"
-export { AssessmentPreview } from "./AssessmentPreview"
-export { MeetingPreview } from "./MeetingPreview"
 export { ReportPreview } from "./ReportPreview"
 export { PlanPreview } from "./PlanPreview"
-export { CustomPreview } from "./CustomPreview"
+export { MultipleChoicePreview } from "./MultipleChoicePreview"
+export { MediaPreview } from "./MediaPreview"

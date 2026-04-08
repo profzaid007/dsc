@@ -16,14 +16,14 @@ export function AdminProtectedRoute({
   const { isAuthenticated, isAdmin } = useAuth()
 
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (!isAuthenticated) {
       router.push("/login")
-    } else if (!isAdmin()) {
+    } else if (!isAdmin) {
       router.push("/dashboard")
     }
   }, [isAuthenticated, isAdmin, pathname, router])
 
-  if (!isAuthenticated() || !isAdmin()) {
+  if (!isAuthenticated || !isAdmin) {
     return null
   }
 

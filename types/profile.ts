@@ -1,23 +1,14 @@
-export type ProfileStatus =
-  | "created"
-  | "assessment_started"
-  | "assessment_completed"
-  | "active"
-  | "archived"
+export type ProfileStatus = "created"
 
 export interface Profile {
   id: string
-  userId: string
-  childName: string
-  age: number
-  gender: string
+  user: string
+  name: string
+  date_of_birth: string
+  gender: "male" | "female"
   grade: string
-  parentName: string
-  phone: string
-  email: string
-  mainConcern: string[]
+  main_concerns: string[]
   notes: string
-  status: ProfileStatus
-  createdAt: string
-  updatedAt: string
+  created: string
+  updated: string
 }

@@ -27,32 +27,27 @@ import {
   Calendar,
   FileBarChart,
   Layers,
-  Settings,
-  Eye,
-  EyeOff,
 } from "lucide-react"
 
 const toolTypeIcons: Record<ToolType, typeof FileText> = {
   survey: FileText,
-  assessment: ClipboardList,
-  meeting: Calendar,
+  multiple_answer: ClipboardList,
+  media_question: Calendar,
   report: FileBarChart,
   plan: Layers,
-  custom: Settings,
 }
 
 const toolTypeLabels: Record<ToolType, { en: string; ar: string }> = {
   survey: { en: "Survey", ar: "استبيان" },
-  assessment: { en: "Assessment", ar: "تقييم" },
-  meeting: { en: "Meeting", ar: "اجتماع" },
+  multiple_answer: { en: "Multiple Answer", ar: "إجابات متعددة" },
+  media_question: { en: "Media Questions", ar: "أسئلة الوسائط" },
   report: { en: "Report", ar: "تقرير" },
   plan: { en: "Plan", ar: "خطة" },
-  custom: { en: "Custom", ar: "مخصص" },
 }
 
 const statusColors: Record<Tool["status"], string> = {
-  draft: "bg-yellow-100 text-yellow-800",
   active: "bg-green-100 text-green-800",
+  inactive: "bg-yellow-100 text-yellow-800",
   archived: "bg-gray-100 text-gray-800",
 }
 
@@ -121,7 +116,7 @@ export default function AdminToolsPage() {
       {filteredTools.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Settings className="mb-4 h-12 w-12 text-muted-foreground" />
+            <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-medium">No tools yet</h3>
             <p className="mb-4 text-center text-muted-foreground">
               Create your first tool to get started
@@ -146,11 +141,6 @@ export default function AdminToolsPage() {
                           {tool.name.en}
                         </CardTitle>
                       </div>
-                      {tool.isVisibleToUser ? (
-                        <Eye className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
-                      )}
                     </div>
                     <CardDescription>
                       {toolTypeLabels[tool.type].en}

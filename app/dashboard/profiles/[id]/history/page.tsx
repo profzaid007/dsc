@@ -25,11 +25,11 @@ export default function ProfileHistoryPage({
   const { id } = use(params)
   const router = useRouter()
   const { getProfileById } = useProfiles()
-  const { assignments, responses } = useAssignments()
+  const { assignments } = useAssignments(id)
   const { getToolById } = useTools()
 
   const profile = getProfileById(id)
-  const profileAssignments = assignments.filter((a) => a.profileId === id)
+  const profileAssignments = assignments.filter((a) => a.case === id)
 
   if (!profile) {
     return (
@@ -55,7 +55,7 @@ export default function ProfileHistoryPage({
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-primary">History</h1>
           <p className="text-muted-foreground">
-            Response history for {profile.childName}
+            Response history for {profile.name}
           </p>
         </div>
       </div>
@@ -73,10 +73,7 @@ export default function ProfileHistoryPage({
       ) : (
         <div className="space-y-4">
           {completedAssignments.map((assignment) => {
-            const tool = getToolById(assignment.toolId)
-            const assignmentResponses = responses.filter(
-              (r) => r.profileToolId === assignment.id
-            )
+            const tool = getToolById(assignment.tool)
             return (
               <Card key={assignment.id}>
                 <CardHeader>
@@ -85,20 +82,21 @@ export default function ProfileHistoryPage({
                     <Badge variant="default">Completed</Badge>
                   </div>
                   <CardDescription>
-                    Completed{" "}
-                    {assignment.completedAt &&
-                      new Date(assignment.completedAt).toLocaleDateString()}
+                    Updated{" "}
+                    {assignment.updated &&
+                      new Date(assignment.updated).toLocaleDateString()}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {assignmentResponses.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Responses:</p>
-                      <pre className="overflow-auto rounded-lg bg-muted p-3 text-xs">
-                        {JSON.stringify(assignmentResponses[0].data, null, 2)}
-                      </pre>
-                    </div>
-                  )}
+                  {assignment.responses &&
+                    Object.keys(assignment.responses).length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Responses:</p>
+                        <pre className="overflow-auto rounded-lg bg-muted p-3 text-xs">
+                          {JSON.stringify(assignment.responses, null, 2)}
+                        </pre>
+                      </div>
+                    )}
                 </CardContent>
               </Card>
             )

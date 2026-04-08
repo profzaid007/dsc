@@ -1,28 +1,18 @@
 export type AssignmentStatus =
+  | "pending"
   | "assigned"
   | "in_progress"
   | "completed"
-  | "cancelled"
 
-export interface ProfileTool {
+export interface CaseTool {
   id: string
-  profileId: string
-  toolId: string
-  assignedBy: string
+  case: string
+  tool: string
+  responses: Record<string, unknown>
   status: AssignmentStatus
-  isVisibleToUser: boolean
-  responseData: Record<string, unknown>
-  dueDate?: string
-  completedAt?: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ToolResponse {
-  id: string
-  profileToolId: string
-  data: Record<string, unknown>
-  attachments?: string[]
-  submittedAt: string
-  isInternal: boolean
+  is_visible_to_user: boolean
+  assigned_at: string
+  media: string[]
+  created: string
+  updated: string
 }

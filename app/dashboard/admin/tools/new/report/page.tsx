@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
@@ -35,7 +34,6 @@ export default function ReportBuilderPage() {
     nameAr: "",
     expertNameEn: "Expert Name",
     expertNameAr: "اسم الخبير",
-    isVisibleToUser: true,
   })
 
   const [customFields, setCustomFields] = useState<ReportCustomField[]>([])
@@ -57,7 +55,7 @@ export default function ReportBuilderPage() {
     setCustomFields(customFields.filter((f) => f.id !== id))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.nameEn) return
     setIsSubmitting(true)
 
@@ -65,14 +63,13 @@ export default function ReportBuilderPage() {
       title: { en: formData.nameEn, ar: formData.nameAr },
       expertNameField: { en: formData.expertNameEn, ar: formData.expertNameAr },
       customFields,
-      isVisibleToUser: formData.isVisibleToUser,
+      media: [],
     }
 
-    const toolId = addTool({
+    const toolId = await addTool({
       name: { en: formData.nameEn, ar: formData.nameAr },
       type: "report",
       serviceType: "individual",
-      isVisibleToUser: formData.isVisibleToUser,
       status: "active",
       config,
     })
@@ -157,16 +154,6 @@ export default function ReportBuilderPage() {
                     }
                   />
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="visible"
-                  checked={formData.isVisibleToUser}
-                  onCheckedChange={(v) =>
-                    setFormData({ ...formData, isVisibleToUser: !!v })
-                  }
-                />
-                <Label htmlFor="visible">Visible to Users</Label>
               </div>
             </CardContent>
           </Card>
@@ -297,7 +284,7 @@ export default function ReportBuilderPage() {
                   ar: formData.expertNameAr,
                 },
                 customFields,
-                isVisibleToUser: formData.isVisibleToUser,
+                media: [],
               }}
             />
           </div>

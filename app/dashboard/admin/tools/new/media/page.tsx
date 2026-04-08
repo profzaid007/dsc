@@ -30,7 +30,6 @@ import type {
   ResponseType,
 } from "@/types/tool"
 
-
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
@@ -45,7 +44,6 @@ export default function MediaBuilderPage() {
   const [formData, setFormData] = useState({
     nameEn: "",
     nameAr: "",
-    isVisibleToUser: true,
   })
 
   const [items, setItems] = useState<MediaItem[]>([])
@@ -84,21 +82,20 @@ export default function MediaBuilderPage() {
     setItems(reordered)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.nameEn || items.length === 0) return
     setIsSubmitting(true)
 
     const config: MediaConfig = {
       title: { en: formData.nameEn, ar: formData.nameAr },
       items: items.map((item, idx) => ({ ...item, order: idx })),
-      isVisibleToUser: formData.isVisibleToUser,
+      media: [],
     }
 
-    const toolId = addTool({
+    const toolId = await addTool({
       name: { en: formData.nameEn, ar: formData.nameAr },
-      type: "media",
+      type: "media_question",
       serviceType: "individual",
-      isVisibleToUser: formData.isVisibleToUser,
       status: "active",
       config,
     })
@@ -248,16 +245,6 @@ export default function MediaBuilderPage() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="visible"
-                  checked={formData.isVisibleToUser}
-                  onCheckedChange={(v) =>
-                    setFormData({ ...formData, isVisibleToUser: !!v })
-                  }
-                />
-                <Label htmlFor="visible">Visible to Users</Label>
-              </div>
             </CardContent>
           </Card>
 
@@ -307,7 +294,7 @@ export default function MediaBuilderPage() {
               config={{
                 title: { en: formData.nameEn, ar: formData.nameAr },
                 items,
-                isVisibleToUser: formData.isVisibleToUser,
+                media: [],
               }}
             />
           </div>
@@ -322,5 +309,3 @@ export default function MediaBuilderPage() {
     </div>
   )
 }
-
-

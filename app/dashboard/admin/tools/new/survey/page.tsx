@@ -63,7 +63,6 @@ export default function SurveyBuilderPage() {
   const [formData, setFormData] = useState({
     nameEn: "",
     nameAr: "",
-    isVisibleToUser: true,
   })
 
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
@@ -92,21 +91,20 @@ export default function SurveyBuilderPage() {
     setQuestions(reordered)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.nameEn || questions.length === 0) return
     setIsSubmitting(true)
 
     const config: SurveyConfig = {
       title: { en: formData.nameEn, ar: formData.nameAr },
       questions: questions.map((q, idx) => ({ ...q, order: idx })),
-      isVisibleToUser: formData.isVisibleToUser,
+      media: [],
     }
 
-    const toolId = addTool({
+    const toolId = await addTool({
       name: { en: formData.nameEn, ar: formData.nameAr },
       type: "survey",
       serviceType: "individual",
-      isVisibleToUser: formData.isVisibleToUser,
       status: "active",
       config,
     })
@@ -287,16 +285,6 @@ export default function SurveyBuilderPage() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="visible"
-                  checked={formData.isVisibleToUser}
-                  onCheckedChange={(v) =>
-                    setFormData({ ...formData, isVisibleToUser: !!v })
-                  }
-                />
-                <Label htmlFor="visible">Visible to Users</Label>
-              </div>
             </CardContent>
           </Card>
 
@@ -348,7 +336,7 @@ export default function SurveyBuilderPage() {
               config={{
                 title: { en: formData.nameEn, ar: formData.nameAr },
                 questions,
-                isVisibleToUser: formData.isVisibleToUser,
+                media: [],
               }}
             />
           </div>

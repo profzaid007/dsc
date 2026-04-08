@@ -26,22 +26,20 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-const toolTypeIcons = {
+const toolTypeIcons: Record<string, typeof FileText> = {
   survey: FileText,
-  assessment: ClipboardList,
-  meeting: Calendar,
+  multiple_answer: ClipboardList,
+  media_question: Calendar,
   report: FileBarChart,
   plan: Layers,
-  custom: Settings,
 }
 
-const toolTypeLabels = {
+const toolTypeLabels: Record<string, { en: string; ar: string }> = {
   survey: { en: "Survey", ar: "استبيان" },
-  assessment: { en: "Assessment", ar: "تقييم" },
-  meeting: { en: "Meeting", ar: "اجتماع" },
+  multiple_answer: { en: "Multiple Answer", ar: "إجابات متعددة" },
+  media_question: { en: "Media Questions", ar: "أسئلة الوسائط" },
   report: { en: "Report", ar: "تقرير" },
   plan: { en: "Plan", ar: "خطة" },
-  custom: { en: "Custom", ar: "مخصص" },
 }
 
 export default function ProfileToolsPage({
@@ -53,7 +51,7 @@ export default function ProfileToolsPage({
   const router = useRouter()
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
-  const { getVisibleAssignments, updateAssignment } = useAssignments()
+  const { getVisibleAssignments, updateAssignment } = useAssignments(id)
   const { getToolById } = useTools()
 
   const profile = getProfileById(id)
@@ -79,7 +77,7 @@ export default function ProfileToolsPage({
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-primary">Tools</h1>
           <p className="text-muted-foreground">
-            Tools assigned to {profile.childName}
+            Tools assigned to {profile.name}
           </p>
         </div>
       </div>
@@ -97,7 +95,7 @@ export default function ProfileToolsPage({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {assignments.map((assignment) => {
-            const tool = getToolById(assignment.toolId)
+            const tool = getToolById(assignment.tool)
             const Icon = toolTypeIcons[tool?.type || "custom"]
             const typeLabel = toolTypeLabels[tool?.type || "custom"]
 
@@ -129,9 +127,10 @@ export default function ProfileToolsPage({
                     >
                       {assignment.status.replace("_", " ")}
                     </Badge>
-                    {assignment.dueDate && (
+                    {assignment.assigned_at && (
                       <p className="mt-2 text-sm text-muted-foreground">
-                        Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                        Assigned:{" "}
+                        {new Date(assignment.assigned_at).toLocaleDateString()}
                       </p>
                     )}
                   </CardContent>
