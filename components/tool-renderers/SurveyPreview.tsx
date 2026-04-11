@@ -4,14 +4,26 @@ import { useState } from "react"
 import { useLang } from "@/lib/lang-context"
 import type { SurveyConfig, SurveyQuestion } from "@/types/tool"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
 interface SurveyPreviewProps {
   config: SurveyConfig
+}
+
+const RATING_LABELS: Record<number, { en: string; ar: string }> = {
+  1: { en: "Very Low", ar: "منخفض جداً" },
+  2: { en: "Low", ar: "منخفض" },
+  3: { en: "Medium", ar: "متوسط" },
+  4: { en: "High", ar: "عالٍ" },
+  5: { en: "Very High", ar: "عالٍ جداً" },
+}
+
+function t(label: { en: string; ar: string }, lang: "en" | "ar"): string {
+  return label[lang]
 }
 
 export function SurveyPreview({ config }: SurveyPreviewProps) {
@@ -24,6 +36,7 @@ export function SurveyPreview({ config }: SurveyPreviewProps) {
 
   const renderQuestion = (question: SurveyQuestion, index: number) => {
     const value = answers[question.id] as string | number | string[] | undefined
+    const selectedRating = (value as number) ?? 0
 
     return (
       <div
@@ -43,39 +56,37 @@ export function SurveyPreview({ config }: SurveyPreviewProps) {
         </div>
 
         <div className="ms-7">
-          {question.answerType === "text" && (
-            <Input
-              placeholder={
-                lang === "ar" ? "أدخل إجابتك..." : "Enter your answer..."
-              }
-              value={(value as string) || ""}
-              onChange={(e) => handleAnswer(question.id, e.target.value)}
-            />
-          )}
-          {question.answerType === "number" && (
-            <Input
-              type="number"
-              placeholder="0"
-              value={(value as string) || ""}
-              onChange={(e) => handleAnswer(question.id, e.target.value)}
-            />
-          )}
           {question.answerType === "rating" && (
-            <RadioGroup
-              value={String(value || "")}
-              onValueChange={(v) => handleAnswer(question.id, Number(v))}
-              className="flex gap-4"
-            >
-              {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-2">
-                  <RadioGroupItem
-                    value={String(n)}
-                    id={`preview-${question.id}-${n}`}
-                  />
-                  <Label htmlFor={`preview-${question.id}-${n}`}>{n}</Label>
-                </div>
+            <div dir="ltr" className="flex flex-wrap gap-2">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  type="button"
+                  onClick={() => handleAnswer(question.id, rating)}
+                  aria-label={`${rating} - ${t(RATING_LABELS[rating], lang)}`}
+                  aria-pressed={selectedRating === rating}
+                  className={cn(
+                    "flex h-12 w-12 flex-col items-center justify-center rounded-lg border-2 text-sm font-semibold transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                    selectedRating === rating
+                      ? "border-transparent text-white"
+                      : "border-border bg-background text-muted-foreground hover:border-accent hover:text-accent"
+                  )}
+                  style={
+                    selectedRating === rating
+                      ? {
+                          backgroundColor: "var(--dsc-gold)",
+                          borderColor: "var(--dsc-gold)",
+                        }
+                      : {}
+                  }
+                >
+                  <span className="text-base">{rating}</span>
+                  <span className="text-[10px] leading-tight opacity-80">
+                    {t(RATING_LABELS[rating], lang)}
+                  </span>
+                </button>
               ))}
-            </RadioGroup>
+            </div>
           )}
           {(question.answerType === "single_choice" ||
             question.answerType === "multiple_choice") &&

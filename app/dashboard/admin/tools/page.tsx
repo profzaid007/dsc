@@ -51,6 +51,12 @@ const statusColors: Record<Tool["status"], string> = {
   archived: "bg-gray-100 text-gray-800",
 }
 
+const statusLabels: Record<Tool["status"], string> = {
+  active: "Active",
+  inactive: "Inactive",
+  archived: "Archived",
+}
+
 export default function AdminToolsPage() {
   const { tools } = useTools()
   const [filterType, setFilterType] = useState<ToolType | "all">("all")
@@ -90,11 +96,10 @@ export default function AdminToolsPage() {
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="survey">Survey</SelectItem>
-            <SelectItem value="assessment">Assessment</SelectItem>
-            <SelectItem value="meeting">Meeting</SelectItem>
+            <SelectItem value="multiple_answer">Multiple Answer</SelectItem>
+            <SelectItem value="media_question">Media Questions</SelectItem>
             <SelectItem value="report">Report</SelectItem>
             <SelectItem value="plan">Plan</SelectItem>
-            <SelectItem value="custom">Custom</SelectItem>
           </SelectContent>
         </Select>
         <Select
@@ -106,8 +111,8 @@ export default function AdminToolsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
             <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
             <SelectItem value="archived">Archived</SelectItem>
           </SelectContent>
         </Select>
@@ -149,7 +154,7 @@ export default function AdminToolsPage() {
                   <CardContent>
                     <div className="flex items-center justify-between">
                       <Badge className={statusColors[tool.status]}>
-                        {tool.status}
+                        {statusLabels[tool.status]}
                       </Badge>
                       <span className="text-sm text-muted-foreground capitalize">
                         {tool.serviceType}

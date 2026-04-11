@@ -1,25 +1,72 @@
 import pb from "./pb"
 import type { User } from "@/types/user"
 import type { Profile } from "@/types/profile"
-import type { Tool } from "@/types/tool"
+import type { Tool, BilingualString } from "@/types/tool"
 import type { CaseTool } from "@/types/assignment"
 import { handlePocketBaseError } from "./pb"
 
+// Transform flat DB fields to nested TypeScript objects
+function transformToolFromDB(dbTool: Record<string, unknown>): Tool {
+  return {
+    id: dbTool.id as string,
+    name: {
+      en: (dbTool.name_en as string) || "",
+      ar: (dbTool.name_ar as string) || "",
+    },
+    description: {
+      en: (dbTool.description_en as string) || "",
+      ar: (dbTool.description_ar as string) || "",
+    },
+    type: dbTool.type as Tool["type"],
+    serviceType: (dbTool.serviceType as Tool["serviceType"]) || "individual",
+    status: (dbTool.status as Tool["status"]) || "active",
+    config: (dbTool.config as Tool["config"]) || {},
+    created: dbTool.created as string,
+    updated: dbTool.updated as string,
+  }
+}
+
+// Transform nested TypeScript objects to flat DB fields
+function transformToolToDB(tool: Partial<Tool>): Record<string, unknown> {
+  const dbData: Record<string, unknown> = {}
+
+  if (tool.name) {
+    dbData.name_en = tool.name.en
+    dbData.name_ar = tool.name.ar
+  }
+  if (tool.description) {
+    dbData.description_en = tool.description.en
+    dbData.description_ar = tool.description.ar
+  }
+  if (tool.type) dbData.type = tool.type
+  if (tool.serviceType) dbData.serviceType = tool.serviceType
+  if (tool.status) dbData.status = tool.status
+  if (tool.config) dbData.config = tool.config
+
+  return dbData
+}
+
 export const toolsCollection = {
   async getAll(): Promise<Tool[]> {
-    return pb.collection("tools").getFullList()
+    const data = await pb.collection("tools").getFullList()
+    return data.map(transformToolFromDB)
   },
 
   async getById(id: string): Promise<Tool> {
-    return pb.collection("tools").getOne(id)
+    const data = await pb.collection("tools").getOne(id)
+    return transformToolFromDB(data)
   },
 
   async create(data: Partial<Tool>): Promise<Tool> {
-    return pb.collection("tools").create(data)
+    const dbData = transformToolToDB(data)
+    const result = await pb.collection("tools").create(dbData)
+    return transformToolFromDB(result)
   },
 
   async update(id: string, data: Partial<Tool>): Promise<Tool> {
-    return pb.collection("tools").update(id, data)
+    const dbData = transformToolToDB(data)
+    const result = await pb.collection("tools").update(id, dbData)
+    return transformToolFromDB(result)
   },
 
   async delete(id: string): Promise<void> {
@@ -27,15 +74,17 @@ export const toolsCollection = {
   },
 
   async getByType(type: string): Promise<Tool[]> {
-    return pb.collection("tools").getFullList({
+    const data = await pb.collection("tools").getFullList({
       filter: `type = "${type}"`,
     })
+    return data.map(transformToolFromDB)
   },
 
   async getActive(): Promise<Tool[]> {
-    return pb.collection("tools").getFullList({
+    const data = await pb.collection("tools").getFullList({
       filter: `status = "active"`,
     })
+    return data.map(transformToolFromDB)
   },
 }
 

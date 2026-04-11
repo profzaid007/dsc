@@ -38,11 +38,9 @@ function generateId(): string {
 }
 
 const ANSWER_TYPES: { value: SurveyAnswerType; label: string }[] = [
-  { value: "text", label: "Text" },
-  { value: "number", label: "Number" },
   { value: "single_choice", label: "Single Choice" },
   { value: "multiple_choice", label: "Multiple Choice" },
-  { value: "rating", label: "Rating (1-5)" },
+  { value: "rating", label: "Rating (Severity)" },
 ]
 
 const DEFAULT_OPTIONS = [
@@ -71,7 +69,7 @@ export default function SurveyBuilderPage() {
     const newQuestion: SurveyQuestion = {
       id: generateId(),
       text: { en: "", ar: "" },
-      answerType: "text",
+      answerType: "single_choice",
       options: [...DEFAULT_OPTIONS],
       required: false,
       order: questions.length,

@@ -19,12 +19,7 @@ export interface ToolOption {
 
 // ============ SURVEY ============
 
-export type SurveyAnswerType =
-  | "text"
-  | "number"
-  | "single_choice"
-  | "multiple_choice"
-  | "rating"
+export type SurveyAnswerType = "single_choice" | "multiple_choice" | "rating"
 
 export interface SurveyQuestion {
   id: string

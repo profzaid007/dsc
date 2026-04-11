@@ -14,13 +14,21 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import type { SurveyConfig, SurveyQuestion } from "@/types/tool"
+import { cn } from "@/lib/utils"
+
+const RATING_LABELS: Record<number, { en: string; ar: string }> = {
+  1: { en: "Very Low", ar: "منخفض جداً" },
+  2: { en: "Low", ar: "منخفض" },
+  3: { en: "Medium", ar: "متوسط" },
+  4: { en: "High", ar: "عالٍ" },
+  5: { en: "Very High", ar: "عالٍ جداً" },
+}
 
 export default function TakeSurveyToolPage({
   params,
@@ -88,33 +96,41 @@ export default function TakeSurveyToolPage({
 
   const renderQuestion = (question: SurveyQuestion) => {
     const value = answers[question.id] as string | number | string[] | undefined
+    const selectedRating = (value as number) ?? 0
 
     switch (question.answerType) {
-      case "text":
-        return (
-          <Input
-            value={(value as string) || ""}
-            onChange={(e) => handleAnswer(question.id, e.target.value)}
-            placeholder={lang === "ar" ? "أدخل إجابتك" : "Enter your answer"}
-          />
-        )
       case "rating":
         return (
-          <RadioGroup
-            value={String(value || "")}
-            onValueChange={(v) => handleAnswer(question.id, Number(v))}
-            className="flex gap-4"
-          >
-            {[1, 2, 3, 4, 5].map((n) => (
-              <div key={n} className="flex items-center gap-2">
-                <RadioGroupItem
-                  value={n.toString()}
-                  id={`${question.id}-${n}`}
-                />
-                <Label htmlFor={`${question.id}-${n}`}>{n}</Label>
-              </div>
+          <div dir="ltr" className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4, 5].map((rating) => (
+              <button
+                key={rating}
+                type="button"
+                onClick={() => handleAnswer(question.id, rating)}
+                aria-label={`${rating} - ${RATING_LABELS[rating][lang]}`}
+                aria-pressed={selectedRating === rating}
+                className={cn(
+                  "flex h-12 w-12 flex-col items-center justify-center rounded-lg border-2 text-sm font-semibold transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  selectedRating === rating
+                    ? "border-transparent text-white"
+                    : "border-border bg-background text-muted-foreground hover:border-accent hover:text-accent"
+                )}
+                style={
+                  selectedRating === rating
+                    ? {
+                        backgroundColor: "var(--dsc-gold)",
+                        borderColor: "var(--dsc-gold)",
+                      }
+                    : {}
+                }
+              >
+                <span className="text-base">{rating}</span>
+                <span className="text-[10px] leading-tight opacity-80">
+                  {RATING_LABELS[rating][lang]}
+                </span>
+              </button>
             ))}
-          </RadioGroup>
+          </div>
         )
       case "single_choice":
         return (
