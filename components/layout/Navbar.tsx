@@ -9,7 +9,9 @@ import { t } from "@/lib/i18n";
 import { useLang } from "@/lib/lang-context";
 import { SITE_CONTENT } from "@/lib/site-content";
 import { cn } from "@/lib/utils";
+
 import Image from "next/image";
+import { LogIn } from "lucide-react";
 
 export function Navbar() {
   const { lang } = useLang();
@@ -145,6 +147,20 @@ export function Navbar() {
               <Menu className="h-5 w-5" />
             )}
           </button>
+
+          {/* Login button */} 
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="hidden md:inline-flex gap-2"
+          >
+            <Link href="/login">
+              <LogIn className="h-4 w-4" />
+              Login
+            </Link>
+          </Button>
+
         </div>
       </div>
 
