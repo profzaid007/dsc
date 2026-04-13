@@ -9,6 +9,7 @@ import { t } from "@/lib/i18n";
 import { useLang } from "@/lib/lang-context";
 import { SITE_CONTENT } from "@/lib/site-content";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export function Navbar() {
   const { lang } = useLang();
@@ -37,17 +38,31 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
+
+        <Link href="/" className="flex-shrink-0">
+          <Image
+            src="/logo.svg"
+            alt="DSC Logo"
+            width={150}
+            height={60}
+            className="h-15 w-auto"  // or any size you prefer
+            unoptimized            // required for SVGs
+          />
+        </Link>
+
         {/* Logo */}
-        <Link
+        {/* <Link 
           href="/"
           className="text-xl font-bold tracking-wide"
           style={{ color: "var(--dsc-navy)" }}
         >
           DSC
-        </Link>
+        </Link> */}
 
         {/* Desktop nav links */}
         <div className="hidden items-center gap-6 md:flex">
+
+
           <Link
             href="/"
             className={cn(navLinkClass)}
