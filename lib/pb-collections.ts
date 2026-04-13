@@ -143,6 +143,12 @@ export const caseToolsCollection = {
     })
   },
 
+  async getByTool(toolId: string): Promise<CaseTool[]> {
+    return pb.collection("case_tools").getFullList({
+      filter: `tool = "${toolId}"`,
+    })
+  },
+
   async getVisibleToUser(caseId: string): Promise<CaseTool[]> {
     return pb.collection("case_tools").getFullList({
       filter: `case = "${caseId}" && is_visible_to_user = true`,

@@ -62,6 +62,9 @@ export function useAssignments(caseId?: string) {
   const getAssignmentsByCase = (caseId: string) =>
     assignments.filter((a) => a.case === caseId)
 
+  const getAssignmentsByTool = (toolId: string) =>
+    assignments.filter((a) => a.tool === toolId)
+
   const getVisibleAssignments = (caseId: string) =>
     assignments.filter((a) => a.case === caseId && a.is_visible_to_user)
 
@@ -72,6 +75,7 @@ export function useAssignments(caseId?: string) {
     updateAssignment,
     deleteAssignment,
     getAssignmentsByCase,
+    getAssignmentsByTool,
     getVisibleAssignments,
     refresh: fetchAssignments,
   }

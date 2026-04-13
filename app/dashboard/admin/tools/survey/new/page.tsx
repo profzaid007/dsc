@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
 import { useLang } from "@/lib/lang-context"
@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
@@ -19,14 +18,7 @@ import {
 } from "@/components/ui/select"
 import { DragList } from "@/components/ui/drag-list"
 import { SurveyPreview } from "@/components/tool-renderers/SurveyPreview"
-import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Eye,
-  EyeOff,
-  GripVertical,
-} from "lucide-react"
+import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react"
 import type {
   SurveyConfig,
   SurveyQuestion,
@@ -51,12 +43,24 @@ const DEFAULT_OPTIONS = [
   { value: "opt5", label: { en: "Option 5", ar: "الخيار 5" } },
 ]
 
-export default function SurveyBuilderPage() {
+interface SurveyBuilderPageProps {
+  params?: Promise<{ id?: string }>
+}
+
+export default function SurveyBuilderPage({
+  params,
+}: SurveyBuilderPageProps = {}) {
   const router = useRouter()
   const { lang } = useLang()
-  const { addTool } = useTools()
+  const { addTool, updateTool, getToolById } = useTools()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Edit mode detection
+  const resolvedParams = params ? use(params) : undefined
+  const editId = resolvedParams?.id
+  const isEditMode = !!editId
 
   const [formData, setFormData] = useState({
     nameEn: "",
@@ -64,6 +68,23 @@ export default function SurveyBuilderPage() {
   })
 
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
+
+  // Load existing data in edit mode
+  useEffect(() => {
+    if (isEditMode && editId) {
+      setIsLoading(true)
+      const tool = getToolById(editId)
+      if (tool && tool.config) {
+        const config = tool.config as SurveyConfig
+        setFormData({
+          nameEn: tool.name.en,
+          nameAr: tool.name.ar,
+        })
+        setQuestions(config.questions || [])
+      }
+      setIsLoading(false)
+    }
+  }, [isEditMode, editId, getToolById])
 
   const addQuestion = () => {
     const newQuestion: SurveyQuestion = {
@@ -99,15 +120,22 @@ export default function SurveyBuilderPage() {
       media: [],
     }
 
-    const toolId = await addTool({
-      name: { en: formData.nameEn, ar: formData.nameAr },
-      type: "survey",
-      serviceType: "individual",
-      status: "active",
-      config,
-    })
-
-    router.push(`/dashboard/admin/tools`)
+    if (isEditMode && editId) {
+      await updateTool(editId, {
+        name: { en: formData.nameEn, ar: formData.nameAr },
+        config,
+      })
+      router.push(`/dashboard/admin/tools/survey/${editId}`)
+    } else {
+      await addTool({
+        name: { en: formData.nameEn, ar: formData.nameAr },
+        type: "survey",
+        serviceType: "individual",
+        status: "active",
+        config,
+      })
+      router.push(`/dashboard/admin/tools`)
+    }
   }
 
   const renderQuestionItem = (question: SurveyQuestion, index: number) => {
@@ -225,6 +253,14 @@ export default function SurveyBuilderPage() {
     )
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -233,9 +269,13 @@ export default function SurveyBuilderPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-primary">Create Survey</h1>
+            <h1 className="text-2xl font-bold text-primary">
+              {isEditMode ? "Edit Survey" : "Create Survey"}
+            </h1>
             <p className="text-muted-foreground">
-              Build a survey with questions and answer options
+              {isEditMode
+                ? "Update survey questions and answer options"
+                : "Build a survey with questions and answer options"}
             </p>
           </div>
         </div>
@@ -320,7 +360,13 @@ export default function SurveyBuilderPage() {
                 !formData.nameEn || questions.length === 0 || isSubmitting
               }
             >
-              {isSubmitting ? "Creating..." : "Create Survey"}
+              {isSubmitting
+                ? isEditMode
+                  ? "Saving..."
+                  : "Creating..."
+                : isEditMode
+                  ? "Save Changes"
+                  : "Create Survey"}
             </Button>
           </div>
         </div>

@@ -17,6 +17,7 @@ import {
   Image,
   FileBarChart,
   Layers,
+  ClipboardList,
 } from "lucide-react"
 
 const navigation = [
@@ -26,8 +27,8 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
-    name: { en: "Profiles", ar: "الملفات الشخصية" },
-    href: "/dashboard/profiles",
+    name: { en: "Cases", ar: "الحالات" },
+    href: "/dashboard/cases",
     icon: Users,
   },
 ]
@@ -37,6 +38,11 @@ const adminNavigation = [
     name: { en: "Tools", ar: "الأدوات" },
     href: "/dashboard/admin/tools",
     icon: Wrench,
+  },
+  {
+    name: { en: "Assignments", ar: "التعيينات" },
+    href: "/dashboard/admin/assignments",
+    icon: ClipboardList,
   },
 ]
 
@@ -93,9 +99,7 @@ export function DashboardSidebar() {
 
       <nav className="flex-1 space-y-1 p-4">
         {navigation.map((item) => {
-
-          const isActive =
-            pathname === item.href
+          const isActive = pathname === item.href
           return (
             <Link
               key={item.href}

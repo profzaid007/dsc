@@ -28,7 +28,7 @@ const toolTypes: {
       en: "Questions with answer types + options",
       ar: "أسئلة بأنواع إجابات + خيارات",
     },
-    href: "/dashboard/admin/tools/new/survey",
+    href: "/dashboard/admin/tools/survey/new",
   },
   {
     type: "multiple_answer",
@@ -38,7 +38,7 @@ const toolTypes: {
       en: "Quiz with correct answer(s)",
       ar: "اختبار بإجابة صحيحة",
     },
-    href: "/dashboard/admin/tools/new/multiple-choice",
+    href: "/dashboard/admin/tools/multiple-choice/new",
   },
   {
     type: "media_question",
@@ -48,7 +48,7 @@ const toolTypes: {
       en: "Image/video/audio + question",
       ar: "صورة/فيديو/صوت + سؤال",
     },
-    href: "/dashboard/admin/tools/new/media",
+    href: "/dashboard/admin/tools/media/new",
   },
   {
     type: "report",
@@ -58,7 +58,7 @@ const toolTypes: {
       en: "Fixed fields + custom fields",
       ar: "حقول ثابتة + حقول مخصصة",
     },
-    href: "/dashboard/admin/tools/new/report",
+    href: "/dashboard/admin/tools/report/new",
   },
   {
     type: "plan",
@@ -68,7 +68,7 @@ const toolTypes: {
       en: "Child info, goals, steps",
       ar: "معلومات الطفل، الأهداف، الخطوات",
     },
-    href: "/dashboard/admin/tools/new/plan",
+    href: "/dashboard/admin/tools/plan/new",
   },
 ]
 

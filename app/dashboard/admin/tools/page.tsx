@@ -135,8 +135,21 @@ export default function AdminToolsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTools.map((tool) => {
             const Icon = toolTypeIcons[tool.type]
+            const typeRoute =
+              tool.type === "survey"
+                ? "survey"
+                : tool.type === "multiple_answer"
+                  ? "multiple-choice"
+                  : tool.type === "media_question"
+                    ? "media"
+                    : tool.type === "report"
+                      ? "report"
+                      : "plan"
             return (
-              <Link key={tool.id} href={`/dashboard/admin/tools/${tool.id}`}>
+              <Link
+                key={tool.id}
+                href={`/dashboard/admin/tools/${typeRoute}/${tool.id}`}
+              >
                 <Card className="h-full cursor-pointer transition-all hover:shadow-md">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
