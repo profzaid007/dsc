@@ -43,8 +43,8 @@ export default function DashboardPage() {
             Welcome back, {currentUser?.name}
           </p>
         </div>
-        <Link href="/dashboard/profiles/new">
-          <Button>New Profile</Button>
+        <Link href="/dashboard/cases/new">
+          <Button>New Case</Button>
         </Link>
       </div>
 
@@ -74,8 +74,8 @@ export default function DashboardPage() {
             <p className="mb-4 text-center text-muted-foreground">
               Create your first case to get started
             </p>
-            <Link href="/dashboard/profiles/new">
-              <Button>Create Profile</Button>
+            <Link href="/dashboard/cases/new">
+              <Button>Create Case</Button>
             </Link>
           </CardContent>
         </Card>

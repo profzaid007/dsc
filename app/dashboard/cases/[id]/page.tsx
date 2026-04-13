@@ -4,7 +4,6 @@ import { use } from "react"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
-import { useTools } from "@/hooks/useTools"
 import { useLang } from "@/lib/lang-context"
 import {
   Card,
@@ -37,7 +36,6 @@ export default function ProfileDetailPage({
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
   const { getAssignmentsByCase, getVisibleAssignments } = useAssignments(id)
-  const { getToolById } = useTools()
 
   const profile = getProfileById(id)
   const assignments = getAssignmentsByCase(id)
@@ -46,9 +44,9 @@ export default function ProfileDetailPage({
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="mb-4 text-xl font-medium">Profile not found</h2>
-        <Link href="/dashboard/profiles">
-          <Button>Back to Profiles</Button>
+        <h2 className="mb-4 text-xl font-medium">Case not found</h2>
+        <Link href="/dashboard/cases">
+          <Button>Back to Cases</Button>
         </Link>
       </div>
     )
@@ -160,35 +158,34 @@ export default function ProfileDetailPage({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {visibleAssignments.map((assignment) => {
-                    const tool = getToolById(assignment.tool)
-                    return (
-                      <Link
-                        key={assignment.id}
-                        href={`/dashboard/profiles/${id}/tools/${assignment.id}`}
-                      >
-                        <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                          <div>
-                            <p className="font-medium">
-                              {tool?.name.en || "Unknown Tool"}
-                            </p>
-                            <p className="text-sm text-muted-foreground capitalize">
-                              {assignment.status.replace("_", " ")}
-                            </p>
-                          </div>
-                          <Badge
-                            variant={
-                              assignment.status === "completed"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {assignment.status}
-                          </Badge>
+                  {visibleAssignments.map((assignment) => (
+                    <Link
+                      key={assignment.id}
+                      href={`/dashboard/cases/${id}/tools/${assignment.id}`}
+                    >
+                      <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                        <div>
+                          <p className="font-medium">
+                            {lang === "ar"
+                              ? assignment.name_ar || assignment.name_en
+                              : assignment.name_en}
+                          </p>
+                          <p className="text-sm text-muted-foreground capitalize">
+                            {assignment.status.replace("_", " ")}
+                          </p>
                         </div>
-                      </Link>
-                    )
-                  })}
+                        <Badge
+                          variant={
+                            assignment.status === "completed"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {assignment.status}
+                        </Badge>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               )}
             </CardContent>
@@ -220,29 +217,26 @@ export default function ProfileDetailPage({
                 <div className="space-y-3">
                   {assignments
                     .filter((a) => a.status === "completed")
-                    .map((assignment) => {
-                      const tool = getToolById(assignment.tool)
-                      return (
-                        <div
-                          key={assignment.id}
-                          className="flex items-center justify-between rounded-lg border p-4"
-                        >
-                          <div>
-                            <p className="font-medium">
-                              {tool?.name.en || "Unknown Tool"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Completed{" "}
-                              {assignment.updated &&
-                                new Date(
-                                  assignment.updated
-                                ).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Badge variant="default">Completed</Badge>
+                    .map((assignment) => (
+                      <div
+                        key={assignment.id}
+                        className="flex items-center justify-between rounded-lg border p-4"
+                      >
+                        <div>
+                          <p className="font-medium">
+                            {lang === "ar"
+                              ? assignment.name_ar || assignment.name_en
+                              : assignment.name_en}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Completed{" "}
+                            {assignment.updated &&
+                              new Date(assignment.updated).toLocaleDateString()}
+                          </p>
                         </div>
-                      )
-                    })}
+                        <Badge variant="default">Completed</Badge>
+                      </div>
+                    ))}
                 </div>
               )}
             </CardContent>

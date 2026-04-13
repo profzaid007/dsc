@@ -85,7 +85,7 @@ export default function NewProfilePage() {
         notes: formData.notes,
       } as any)
 
-      router.push(`/dashboard/profiles/${profileId}`)
+      router.push(`/dashboard/cases/${profileId}`)
     } catch (error) {
       console.error("Failed to create profile:", error)
     } finally {

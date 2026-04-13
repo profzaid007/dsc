@@ -156,5 +156,60 @@ export const caseToolsCollection = {
   },
 }
 
+// Tool Types Collection with caching
+const toolTypesCache: Map<string, { id: string; name: string }> = new Map()
+
+export const toolTypesCollection = {
+  async getAll(): Promise<{ id: string; name: string }[]> {
+    const data = await pb.collection("tool_types").getFullList()
+    // Update cache
+    data.forEach((type) => {
+      toolTypesCache.set(type.name, { id: type.id, name: type.name })
+    })
+    return data.map((type) => ({ id: type.id, name: type.name }))
+  },
+
+  async getByName(name: string): Promise<{ id: string; name: string }> {
+    // Check cache first
+    if (toolTypesCache.has(name)) {
+      return toolTypesCache.get(name)!
+    }
+
+    // Fetch from DB
+    try {
+      const type = await pb
+        .collection("tool_types")
+        .getFirstListItem(`name = "${name}"`)
+      // Cache it
+      toolTypesCache.set(name, { id: type.id, name: type.name })
+      return { id: type.id, name: type.name }
+    } catch (error) {
+      console.error(`Tool type "${name}" not found`)
+      throw new Error(`Tool type "${name}" not found`)
+    }
+  },
+
+  // Get by ID (useful when you have the type ID from case_tools)
+  async getById(id: string): Promise<{ id: string; name: string }> {
+    // Check cache first
+    for (const [name, typeData] of toolTypesCache.entries()) {
+      if (typeData.id === id) {
+        return typeData
+      }
+    }
+
+    // Fetch from DB
+    const type = await pb.collection("tool_types").getOne(id)
+    const result = { id: type.id, name: type.name }
+    toolTypesCache.set(type.name, result)
+    return result
+  },
+
+  // Clear cache (useful if tool types are modified)
+  clearCache() {
+    toolTypesCache.clear()
+  },
+}
+
 export { handlePocketBaseError }
 export type { User, Tool, Profile, CaseTool }

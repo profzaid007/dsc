@@ -4,7 +4,6 @@ import { use, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
-import { useTools } from "@/hooks/useTools"
 import { useLang } from "@/lib/lang-context"
 import {
   Card,
@@ -40,22 +39,22 @@ export default function TakeSurveyToolPage({
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
   const { assignments, updateAssignment } = useAssignments(assignmentId)
-  const { getToolById } = useTools()
 
   const assignment = assignments.find((a) => a.id === assignmentId)
   const profile = assignment ? getProfileById(assignment.case) : undefined
-  const tool = assignment ? getToolById(assignment.tool) : undefined
-  const config = tool?.config as SurveyConfig | undefined
+
+  // Use stored config snapshot from assignment
+  const config = assignment?.config as SurveyConfig | undefined
 
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  if (!assignment || !profile || !tool || !config) {
+  if (!assignment || !profile || !config) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <h2 className="mb-4 text-xl font-medium">Tool not found</h2>
-        <Link href="/dashboard/profiles">
-          <Button>Back to Profiles</Button>
+        <Link href="/dashboard/cases">
+          <Button>Back to Cases</Button>
         </Link>
       </div>
     )
@@ -72,9 +71,9 @@ export default function TakeSurveyToolPage({
               Thank you for completing this survey.
             </p>
             <Button
-              onClick={() => router.push(`/dashboard/profiles/${profile.id}`)}
+              onClick={() => router.push(`/dashboard/cases/${profile.id}`)}
             >
-              Back to Profile
+              Back to Case
             </Button>
           </CardContent>
         </Card>
@@ -183,6 +182,11 @@ export default function TakeSurveyToolPage({
     }
   }
 
+  const displayName =
+    lang === "ar"
+      ? assignment.name_ar || assignment.name_en
+      : assignment.name_en
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
@@ -190,17 +194,14 @@ export default function TakeSurveyToolPage({
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-primary">{tool.name[lang]}</h1>
+          <h1 className="text-2xl font-bold text-primary">{displayName}</h1>
           <p className="text-muted-foreground">{profile.name}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{tool.name.en}</CardTitle>
-          {tool.description && (
-            <CardDescription>{tool.description[lang]}</CardDescription>
-          )}
+          <CardTitle>{assignment.name_en}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {config.questions.map((question, idx) => (

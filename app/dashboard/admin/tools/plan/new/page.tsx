@@ -1,15 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useTools } from "@/hooks/useTools"
+import { useAssignments } from "@/hooks/useAssignments"
+import { useProfiles } from "@/hooks/useProfiles"
+import { toolTypesCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DragList } from "@/components/ui/drag-list"
+import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { PlanPreview } from "@/components/tool-renderers/PlanPreview"
-import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react"
+import { Plus, Trash2, Eye, EyeOff } from "lucide-react"
 import type { PlanConfig, PlanGoal, PlanStep } from "@/types/tool"
 
 function generateId(): string {
@@ -18,21 +21,73 @@ function generateId(): string {
 
 export default function PlanBuilderPage() {
   const router = useRouter()
-  const { addTool } = useTools()
+  const { assignTool } = useAssignments()
+  const { getProfileById } = useProfiles()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [planTypeId, setPlanTypeId] = useState<string>("")
+  const [typeError, setTypeError] = useState<string>("")
+
+  const [selectedCaseId, setSelectedCaseId] = useState("")
+
+  // Tool name for this specific plan instance
+  const [toolName, setToolName] = useState({
+    en: "",
+    ar: "",
+  })
 
   const [formData, setFormData] = useState({
     childNameEn: "",
     childNameAr: "",
-    expertNameEn: "",
-    expertNameAr: "",
+    expertNameEn: "Expert",
+    expertNameAr: "خبير",
     startDate: "",
     endDate: "",
   })
 
   const [goals, setGoals] = useState<PlanGoal[]>([])
   const [steps, setSteps] = useState<PlanStep[]>([])
+
+  // Fetch plan type ID on mount
+  useEffect(() => {
+    const fetchPlanType = async () => {
+      try {
+        const planType = await toolTypesCollection.getByName("plan")
+        setPlanTypeId(planType.id)
+        setTypeError("")
+      } catch (error) {
+        setTypeError('Tool type "plan" not found. Please contact admin.')
+        console.error("Failed to fetch plan type:", error)
+      }
+    }
+    fetchPlanType()
+  }, [])
+
+  const handleCaseSelect = (caseId: string) => {
+    setSelectedCaseId(caseId)
+    if (caseId) {
+      const caseProfile = getProfileById(caseId)
+      if (caseProfile) {
+        setFormData((prev) => ({
+          ...prev,
+          childNameEn: caseProfile.name,
+          childNameAr: caseProfile.name,
+        }))
+        // Auto-generate tool name if empty
+        setToolName((prev) => ({
+          en: prev.en || `${caseProfile.name} - Plan`,
+          ar: prev.ar || `${caseProfile.name} - خطة`,
+        }))
+      }
+    } else {
+      // Reset fields when case is cleared
+      setFormData((prev) => ({
+        ...prev,
+        childNameEn: "",
+        childNameAr: "",
+      }))
+    }
+  }
 
   const addGoal = () => {
     setGoals([
@@ -83,36 +138,63 @@ export default function PlanBuilderPage() {
 
   const handleSubmit = async () => {
     if (
+      !toolName.en ||
       !formData.childNameEn ||
       !formData.expertNameEn ||
       !formData.startDate ||
-      !formData.endDate
+      !formData.endDate ||
+      !selectedCaseId ||
+      !planTypeId
     )
       return
     setIsSubmitting(true)
 
-    const config: PlanConfig = {
-      childName: { en: formData.childNameEn, ar: formData.childNameAr },
-      expertName: { en: formData.expertNameEn, ar: formData.expertNameAr },
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      goals: goals.map((g, idx) => ({ ...g, order: idx })),
-      steps,
-      media: [],
+    try {
+      const config: PlanConfig = {
+        childName: { en: formData.childNameEn, ar: formData.childNameAr },
+        expertName: { en: formData.expertNameEn, ar: formData.expertNameAr },
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        goals: goals.map((g, idx) => ({ ...g, order: idx })),
+        steps,
+        media: [],
+      }
+
+      // Create case document directly in case_tools (no tool template)
+      await assignTool({
+        case: selectedCaseId,
+        type: planTypeId,
+        name_en: toolName.en,
+        name_ar: toolName.ar,
+        is_not_template: true,
+        config,
+        is_visible_to_user: true,
+        status: "pending",
+      })
+
+      router.push("/dashboard/admin/assignments")
+    } catch (error) {
+      console.error("Failed to create plan:", error)
+    } finally {
+      setIsSubmitting(false)
     }
+  }
 
-    const toolId = await addTool({
-      name: {
-        en: `${formData.childNameEn} - Plan`,
-        ar: `${formData.childNameAr} - خطة`,
-      },
-      type: "plan",
-      serviceType: "individual",
-      status: "active",
-      config,
+  const handleCancel = () => {
+    // Reset form
+    setSelectedCaseId("")
+    setToolName({ en: "", ar: "" })
+    setFormData({
+      childNameEn: "",
+      childNameAr: "",
+      expertNameEn: "Expert",
+      expertNameAr: "خبير",
+      startDate: "",
+      endDate: "",
     })
-
-    router.push(`/dashboard/admin/tools`)
+    setGoals([])
+    setSteps([])
+    setShowPreview(false)
   }
 
   const renderGoalItem = (goal: PlanGoal, index: number) => (
@@ -176,19 +258,77 @@ export default function PlanBuilderPage() {
     </div>
   )
 
+  const renderStepItem = (step: PlanStep, index: number) => (
+    <div className="flex-1 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">Step {index + 1}</span>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={() => removeStep(step.id)}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Input
+          placeholder="Step Title (EN)"
+          value={step.title.en}
+          onChange={(e) =>
+            updateStep(step.id, {
+              title: { ...step.title, en: e.target.value },
+            })
+          }
+        />
+        <Input
+          placeholder="عنوان الخطوة (AR)"
+          value={step.title.ar}
+          onChange={(e) =>
+            updateStep(step.id, {
+              title: { ...step.title, ar: e.target.value },
+            })
+          }
+        />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Input
+          placeholder="Description (EN)"
+          value={step.description.en}
+          onChange={(e) =>
+            updateStep(step.id, {
+              description: { ...step.description, en: e.target.value },
+            })
+          }
+        />
+        <Input
+          placeholder="الوصف (AR)"
+          value={step.description.ar}
+          onChange={(e) =>
+            updateStep(step.id, {
+              description: { ...step.description, ar: e.target.value },
+            })
+          }
+        />
+      </div>
+    </div>
+  )
+
+  if (typeError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-destructive">{typeError}</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-primary">Create Plan</h1>
-            <p className="text-muted-foreground">
-              Child info, goals, and steps
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-primary">Create Plan</h1>
+          <p className="text-muted-foreground">
+            Create a plan for a specific case
+          </p>
         </div>
         <Button
           variant={showPreview ? "default" : "outline"}
@@ -203,13 +343,65 @@ export default function PlanBuilderPage() {
         </Button>
       </div>
 
+      {typeError && (
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
+          {typeError}
+        </div>
+      )}
+
       <div
         className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "grid-cols-1"}`}
       >
         <div className="space-y-6">
+          {/* Case Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Basic Info</CardTitle>
+              <CardTitle>Case Selection *</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CaseSearchCombobox
+                value={selectedCaseId}
+                onChange={handleCaseSelect}
+                placeholder="Select a case..."
+              />
+            </CardContent>
+          </Card>
+
+          {/* Plan Name */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Plan Name *</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Name (EN)</Label>
+                  <Input
+                    value={toolName.en}
+                    onChange={(e) =>
+                      setToolName({ ...toolName, en: e.target.value })
+                    }
+                    placeholder="e.g., John's Development Plan"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Name (AR)</Label>
+                  <Input
+                    value={toolName.ar}
+                    onChange={(e) =>
+                      setToolName({ ...toolName, ar: e.target.value })
+                    }
+                    placeholder="مثال: خطة تطوير جون"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Child & Expert Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Child & Expert Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -281,9 +473,10 @@ export default function PlanBuilderPage() {
             </CardContent>
           </Card>
 
+          {/* Goals */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Goals (Drag to reorder)</CardTitle>
+              <CardTitle>Goals</CardTitle>
               <Button size="sm" onClick={addGoal}>
                 <Plus className="me-2 h-4 w-4" />
                 Add Goal
@@ -292,7 +485,7 @@ export default function PlanBuilderPage() {
             <CardContent>
               {goals.length === 0 ? (
                 <p className="py-4 text-center text-muted-foreground">
-                  No goals yet.
+                  No goals yet. Click Add Goal to create one.
                 </p>
               ) : (
                 <DragList
@@ -305,6 +498,7 @@ export default function PlanBuilderPage() {
             </CardContent>
           </Card>
 
+          {/* Steps */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Steps</CardTitle>
@@ -313,112 +507,34 @@ export default function PlanBuilderPage() {
                 Add Step
               </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent>
               {steps.length === 0 ? (
                 <p className="py-4 text-center text-muted-foreground">
-                  No steps yet.
+                  No steps yet. Click Add Step to create one.
                 </p>
               ) : (
-                steps.map((step, idx) => (
-                  <div
-                    key={step.id}
-                    className="space-y-2 rounded-md border p-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        Step {idx + 1}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => removeStep(step.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input
-                        placeholder="Step Title (EN)"
-                        value={step.title.en}
-                        onChange={(e) =>
-                          updateStep(step.id, {
-                            title: { ...step.title, en: e.target.value },
-                          })
-                        }
-                      />
-                      <Input
-                        placeholder="عنوان الخطوة (AR)"
-                        value={step.title.ar}
-                        onChange={(e) =>
-                          updateStep(step.id, {
-                            title: { ...step.title, ar: e.target.value },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input
-                        placeholder="Description (EN)"
-                        value={step.description.en}
-                        onChange={(e) =>
-                          updateStep(step.id, {
-                            description: {
-                              ...step.description,
-                              en: e.target.value,
-                            },
-                          })
-                        }
-                      />
-                      <Input
-                        placeholder="الوصف (AR)"
-                        value={step.description.ar}
-                        onChange={(e) =>
-                          updateStep(step.id, {
-                            description: {
-                              ...step.description,
-                              ar: e.target.value,
-                            },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input
-                        placeholder="Notes (EN)"
-                        value={step.notes.en}
-                        onChange={(e) =>
-                          updateStep(step.id, {
-                            notes: { ...step.notes, en: e.target.value },
-                          })
-                        }
-                      />
-                      <Input
-                        placeholder="ملاحظات (AR)"
-                        value={step.notes.ar}
-                        onChange={(e) =>
-                          updateStep(step.id, {
-                            notes: { ...step.notes, ar: e.target.value },
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                ))
+                <div className="space-y-4">
+                  {steps.map((step, idx) => (
+                    <div key={step.id}>{renderStepItem(step, idx)}</div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
 
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={() => router.back()}>
+            <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={
+                !toolName.en ||
                 !formData.childNameEn ||
-                !formData.expertNameEn ||
                 !formData.startDate ||
                 !formData.endDate ||
+                !selectedCaseId ||
+                !planTypeId ||
                 isSubmitting
               }
             >

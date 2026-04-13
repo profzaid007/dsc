@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,12 +34,24 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-export default function MediaBuilderPage() {
+interface MediaBuilderPageProps {
+  params?: Promise<{ id?: string }>
+}
+
+export default function MediaBuilderPage({
+  params,
+}: MediaBuilderPageProps = {}) {
   const router = useRouter()
-  const { addTool } = useTools()
+  const { addTool, updateTool, getToolById } = useTools()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
+
+  // Edit mode detection
+  const resolvedParams = params ? use(params) : undefined
+  const editId = resolvedParams?.id
+  const isEditMode = !!editId
 
   const [formData, setFormData] = useState({
     nameEn: "",
@@ -47,6 +59,23 @@ export default function MediaBuilderPage() {
   })
 
   const [items, setItems] = useState<MediaItem[]>([])
+
+  // Load existing data in edit mode
+  useEffect(() => {
+    if (isEditMode && editId) {
+      setIsLoading(true)
+      const tool = getToolById(editId)
+      if (tool && tool.config) {
+        const config = tool.config as MediaConfig
+        setFormData({
+          nameEn: tool.name.en,
+          nameAr: tool.name.ar,
+        })
+        setItems(config.items || [])
+      }
+      setIsLoading(false)
+    }
+  }, [isEditMode, editId, getToolById])
 
   const addItem = () => {
     setUploadOpen(true)
@@ -92,15 +121,22 @@ export default function MediaBuilderPage() {
       media: [],
     }
 
-    const toolId = await addTool({
-      name: { en: formData.nameEn, ar: formData.nameAr },
-      type: "media_question",
-      serviceType: "individual",
-      status: "active",
-      config,
-    })
-
-    router.push(`/dashboard/admin/tools`)
+    if (isEditMode && editId) {
+      await updateTool(editId, {
+        name: { en: formData.nameEn, ar: formData.nameAr },
+        config,
+      })
+      router.push(`/dashboard/admin/tools/media/${editId}`)
+    } else {
+      await addTool({
+        name: { en: formData.nameEn, ar: formData.nameAr },
+        type: "media_question",
+        serviceType: "individual",
+        status: "active",
+        config,
+      })
+      router.push(`/dashboard/admin/tools`)
+    }
   }
 
   const getMediaIcon = (type: MediaType) => {
@@ -185,6 +221,14 @@ export default function MediaBuilderPage() {
     )
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -194,10 +238,12 @@ export default function MediaBuilderPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              Create Media Questions
+              {isEditMode ? "Edit" : "Create"} Media Questions
             </h1>
             <p className="text-muted-foreground">
-              Add questions with image/video/audio
+              {isEditMode
+                ? "Update media questions"
+                : "Add questions with image/video/audio"}
             </p>
           </div>
         </div>
@@ -280,7 +326,13 @@ export default function MediaBuilderPage() {
               onClick={handleSubmit}
               disabled={!formData.nameEn || items.length === 0 || isSubmitting}
             >
-              {isSubmitting ? "Creating..." : "Create"}
+              {isSubmitting
+                ? isEditMode
+                  ? "Saving..."
+                  : "Creating..."
+                : isEditMode
+                  ? "Save Changes"
+                  : "Create"}
             </Button>
           </div>
         </div>

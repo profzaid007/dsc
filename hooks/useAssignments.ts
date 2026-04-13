@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { caseToolsCollection } from "@/lib/pb-collections"
+import { caseToolsCollection, toolTypesCollection } from "@/lib/pb-collections"
 import type { CaseTool } from "@/types/assignment"
+import type { ToolConfig } from "@/types/tool"
 
 export function useAssignments(caseId?: string) {
   const [assignments, setAssignments] = useState<CaseTool[]>([])
@@ -28,13 +29,35 @@ export function useAssignments(caseId?: string) {
     fetchAssignments()
   }, [fetchAssignments])
 
-  const assignTool = async (data: Partial<CaseTool>) => {
+  // Create assignment/document in case_tools
+  // Works for both template-based (survey, etc.) and case-specific (plan, report, attachment)
+  const assignTool = async (data: {
+    case: string
+    type: string // tool_type ID
+    name_en?: string
+    name_ar?: string
+    is_not_template?: boolean
+    config: ToolConfig
+    is_visible_to_user?: boolean
+    status?: CaseTool["status"]
+  }) => {
     try {
-      const newAssignment = await caseToolsCollection.create(data)
+      const newAssignment = await caseToolsCollection.create({
+        case: data.case,
+        type: data.type,
+        name_en: data.name_en,
+        name_ar: data.name_ar,
+        is_not_template: data.is_not_template ?? false,
+        config: data.config,
+        status: data.status ?? "pending",
+        is_visible_to_user: data.is_visible_to_user ?? true,
+        responses: {},
+        media: [],
+      })
       setAssignments((prev) => [...prev, newAssignment])
       return newAssignment.id
     } catch (error) {
-      console.error("Failed to assign tool:", error)
+      console.error("Failed to create assignment:", error)
       throw error
     }
   }
@@ -62,8 +85,8 @@ export function useAssignments(caseId?: string) {
   const getAssignmentsByCase = (caseId: string) =>
     assignments.filter((a) => a.case === caseId)
 
-  const getAssignmentsByTool = (toolId: string) =>
-    assignments.filter((a) => a.tool === toolId)
+  const getAssignmentsByType = (typeId: string) =>
+    assignments.filter((a) => a.type === typeId)
 
   const getVisibleAssignments = (caseId: string) =>
     assignments.filter((a) => a.case === caseId && a.is_visible_to_user)
@@ -75,7 +98,7 @@ export function useAssignments(caseId?: string) {
     updateAssignment,
     deleteAssignment,
     getAssignmentsByCase,
-    getAssignmentsByTool,
+    getAssignmentsByType,
     getVisibleAssignments,
     refresh: fetchAssignments,
   }

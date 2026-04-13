@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useTools } from "@/hooks/useTools"
+import { useAssignments } from "@/hooks/useAssignments"
+import { useProfiles } from "@/hooks/useProfiles"
+import { toolTypesCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import {
   Select,
   SelectContent,
@@ -16,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ReportPreview } from "@/components/tool-renderers/ReportPreview"
-import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react"
+import { Plus, Trash2, Eye, EyeOff } from "lucide-react"
 import type { ReportConfig, ReportCustomField } from "@/types/tool"
 
 function generateId(): string {
@@ -25,18 +27,60 @@ function generateId(): string {
 
 export default function ReportBuilderPage() {
   const router = useRouter()
-  const { addTool } = useTools()
+  const { assignTool } = useAssignments()
+  const { getProfileById } = useProfiles()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [reportTypeId, setReportTypeId] = useState<string>("")
+  const [typeError, setTypeError] = useState<string>("")
+
+  const [selectedCaseId, setSelectedCaseId] = useState("")
 
   const [formData, setFormData] = useState({
     nameEn: "",
     nameAr: "",
-    expertNameEn: "Expert Name",
-    expertNameAr: "اسم الخبير",
+    expertNameEn: "Expert",
+    expertNameAr: "خبير",
   })
 
   const [customFields, setCustomFields] = useState<ReportCustomField[]>([])
+
+  // Fetch report type ID on mount
+  useEffect(() => {
+    const fetchReportType = async () => {
+      try {
+        const reportType = await toolTypesCollection.getByName("report")
+        setReportTypeId(reportType.id)
+        setTypeError("")
+      } catch (error) {
+        setTypeError('Tool type "report" not found. Please contact admin.')
+        console.error("Failed to fetch report type:", error)
+      }
+    }
+    fetchReportType()
+  }, [])
+
+  const handleCaseSelect = (caseId: string) => {
+    setSelectedCaseId(caseId)
+    if (caseId) {
+      const caseProfile = getProfileById(caseId)
+      if (caseProfile) {
+        // Auto-populate report name with case name
+        setFormData((prev) => ({
+          ...prev,
+          nameEn: `${caseProfile.name} - Report`,
+          nameAr: `${caseProfile.name} - تقرير`,
+        }))
+      }
+    } else {
+      // Reset name fields when case is cleared
+      setFormData((prev) => ({
+        ...prev,
+        nameEn: "",
+        nameAr: "",
+      }))
+    }
+  }
 
   const addField = () => {
     setCustomFields([
@@ -56,40 +100,72 @@ export default function ReportBuilderPage() {
   }
 
   const handleSubmit = async () => {
-    if (!formData.nameEn) return
+    if (!selectedCaseId || !formData.nameEn || !reportTypeId) return
     setIsSubmitting(true)
 
-    const config: ReportConfig = {
-      title: { en: formData.nameEn, ar: formData.nameAr },
-      expertNameField: { en: formData.expertNameEn, ar: formData.expertNameAr },
-      customFields,
-      media: [],
+    try {
+      const config: ReportConfig = {
+        title: { en: formData.nameEn, ar: formData.nameAr },
+        expertNameField: {
+          en: formData.expertNameEn,
+          ar: formData.expertNameAr,
+        },
+        customFields,
+        media: [],
+      }
+
+      // Create case document directly in case_tools (no tool template)
+      await assignTool({
+        case: selectedCaseId,
+        type: reportTypeId,
+        name_en: formData.nameEn,
+        name_ar: formData.nameAr,
+        is_not_template: true,
+        config,
+        is_visible_to_user: true,
+        status: "pending",
+      })
+
+      // Redirect to assignments page
+      router.push(`/dashboard/admin/assignments`)
+    } catch (error) {
+      console.error("Failed to create report and assignment:", error)
+    } finally {
+      setIsSubmitting(false)
     }
+  }
 
-    const toolId = await addTool({
-      name: { en: formData.nameEn, ar: formData.nameAr },
-      type: "report",
-      serviceType: "individual",
-      status: "active",
-      config,
+  const handleCancel = () => {
+    // Reset form instead of navigating back
+    setSelectedCaseId("")
+    setFormData({
+      nameEn: "",
+      nameAr: "",
+      expertNameEn: "Expert",
+      expertNameAr: "خبير",
     })
+    setCustomFields([])
+    setShowPreview(false)
+  }
 
-    router.push(`/dashboard/admin/tools`)
+  const isFormValid = selectedCaseId && formData.nameEn && reportTypeId
+
+  if (typeError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-destructive">{typeError}</p>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-primary">Create Report</h1>
-            <p className="text-muted-foreground">
-              Fixed fields + custom fields
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-primary">Create Report</h1>
+          <p className="text-muted-foreground">
+            Create a report for a specific case
+          </p>
         </div>
         <Button
           variant={showPreview ? "default" : "outline"}
@@ -104,18 +180,42 @@ export default function ReportBuilderPage() {
         </Button>
       </div>
 
+      {typeError && (
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
+          {typeError}
+        </div>
+      )}
+
       <div
         className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "grid-cols-1"}`}
       >
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Basic Info</CardTitle>
+              <CardTitle>Select Case *</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CaseSearchCombobox
+                value={selectedCaseId}
+                onChange={handleCaseSelect}
+                placeholder="Select a case..."
+              />
+              {!selectedCaseId && (
+                <p className="mt-2 text-sm text-destructive">
+                  Please select a case to continue
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Report Name *</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Report Name (EN)</Label>
+                  <Label>Name (EN)</Label>
                   <Input
                     value={formData.nameEn}
                     onChange={(e) =>
@@ -125,7 +225,7 @@ export default function ReportBuilderPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Report Name (AR)</Label>
+                  <Label>Name (AR)</Label>
                   <Input
                     value={formData.nameAr}
                     onChange={(e) =>
@@ -135,23 +235,33 @@ export default function ReportBuilderPage() {
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Expert Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Expert Name Label (EN)</Label>
+                  <Label>Expert Name (EN)</Label>
                   <Input
                     value={formData.expertNameEn}
                     onChange={(e) =>
                       setFormData({ ...formData, expertNameEn: e.target.value })
                     }
+                    placeholder="Expert name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Expert Name Label (AR)</Label>
+                  <Label>Expert Name (AR)</Label>
                   <Input
                     value={formData.expertNameAr}
                     onChange={(e) =>
                       setFormData({ ...formData, expertNameAr: e.target.value })
                     }
+                    placeholder="اسم الخبير"
                   />
                 </div>
               </div>
@@ -160,52 +270,26 @@ export default function ReportBuilderPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Fixed Fields</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
-                <div className="text-sm">
-                  <span className="font-medium">Title</span> - user enters
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Date</span> - auto/today
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Expert Name</span> - uses label
-                  above
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Assessment</span> - textarea
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Suggestions</span> - textarea
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Custom Fields (After Suggestions)</CardTitle>
+              <CardTitle>Custom Fields</CardTitle>
               <Button size="sm" onClick={addField}>
                 <Plus className="me-2 h-4 w-4" />
                 Add Field
               </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               {customFields.length === 0 ? (
                 <p className="py-4 text-center text-muted-foreground">
-                  No custom fields. Add one after Suggestions.
+                  No custom fields yet. Click Add Field to create one.
                 </p>
               ) : (
-                customFields.map((field, idx) => (
+                customFields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="space-y-2 rounded-md border p-3"
+                    className="space-y-3 rounded-lg border p-4"
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">
-                        Field {idx + 1}
+                        Field {index + 1}
                       </span>
                       <Button
                         variant="ghost"
@@ -226,7 +310,7 @@ export default function ReportBuilderPage() {
                         }
                       />
                       <Input
-                        placeholder="تسمية (AR)"
+                        placeholder="العنوان (AR)"
                         value={field.label.ar}
                         onChange={(e) =>
                           updateField(field.id, {
@@ -239,11 +323,11 @@ export default function ReportBuilderPage() {
                       value={field.type}
                       onValueChange={(v) =>
                         updateField(field.id, {
-                          type: v as "text" | "textarea" | "date",
+                          type: v as ReportCustomField["type"],
                         })
                       }
                     >
-                      <SelectTrigger className="w-32">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -259,12 +343,12 @@ export default function ReportBuilderPage() {
           </Card>
 
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={() => router.back()}>
+            <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!formData.nameEn || isSubmitting}
+              disabled={!isFormValid || isSubmitting}
             >
               {isSubmitting ? "Creating..." : "Create Report"}
             </Button>

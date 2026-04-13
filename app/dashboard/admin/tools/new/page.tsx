@@ -9,7 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, Brain, Image, FileBarChart, Layers } from "lucide-react"
+import {
+  FileText,
+  Brain,
+  Image,
+  FileBarChart,
+  Layers,
+  Paperclip,
+} from "lucide-react"
 import Link from "next/link"
 import type { ToolType } from "@/types/tool"
 
@@ -69,6 +76,16 @@ const toolTypes: {
       ar: "معلومات الطفل، الأهداف، الخطوات",
     },
     href: "/dashboard/admin/tools/plan/new",
+  },
+  {
+    type: "attachment_request",
+    label: { en: "Request for Attachment", ar: "طلب مرفق" },
+    icon: Paperclip,
+    description: {
+      en: "Request files from case/parent",
+      ar: "طلب ملفات من الحالة/الوالد",
+    },
+    href: "/dashboard/admin/tools/attachment-request/new",
   },
 ]
 

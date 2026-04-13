@@ -1,23 +1,12 @@
 "use client"
 
-import { use, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { use } from "react"
+import MediaBuilderPage from "../../new/page"
 
-interface EditPageProps {
+interface EditMediaPageProps {
   params: Promise<{ id: string }>
 }
 
-export default function EditMediaPage({ params }: EditPageProps) {
-  const { id } = use(params)
-  const router = useRouter()
-
-  useEffect(() => {
-    router.push(`/dashboard/admin/tools/media/${id}`)
-  }, [id, router])
-
-  return (
-    <div className="flex items-center justify-center py-12">
-      <p className="text-muted-foreground">Redirecting...</p>
-    </div>
-  )
+export default function EditMediaPage({ params }: EditMediaPageProps) {
+  return <MediaBuilderPage params={params} />
 }

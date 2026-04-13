@@ -12,7 +12,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({ profile, lang = "en" }: ProfileCardProps) {
   return (
-    <Link href={`/dashboard/profiles/${profile.id}`}>
+    <Link href={`/dashboard/cases/${profile.id}`}>
       <Card className="h-full cursor-pointer transition-all hover:shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">{profile.name}</CardTitle>

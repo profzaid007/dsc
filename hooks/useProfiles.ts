@@ -5,6 +5,7 @@ import { casesCollection } from "@/lib/pb-collections"
 import type { Profile } from "@/types/profile"
 import { getCurrentUser } from "@/lib/pb"
 
+
 export function useProfiles() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -13,7 +14,7 @@ export function useProfiles() {
   const fetchProfiles = useCallback(async () => {
     try {
       let data: Profile[]
-      if (currentUser) {
+      if (currentUser && currentUser.isAdmin === false) {
         data = await casesCollection.getByUser(currentUser.id)
       } else {
         data = await casesCollection.getAll()

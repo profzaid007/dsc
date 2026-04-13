@@ -4,6 +4,7 @@ export type ToolType =
   | "media_question"
   | "report"
   | "plan"
+  | "attachment_request"
 export type ServiceType = "individual" | "institution" | "both"
 export type ToolStatus = "active" | "inactive" | "archived"
 
@@ -130,6 +131,24 @@ export interface PlanConfig {
   media: string[]
 }
 
+// ============ ATTACHMENT REQUEST ============
+
+export type AttachmentFileType =
+  | "image"
+  | "document"
+  | "video"
+  | "audio"
+  | "any"
+
+export interface AttachmentRequestConfig {
+  title: BilingualString
+  description?: BilingualString
+  allowedTypes: AttachmentFileType[]
+  maxFiles: number
+  maxFileSize: number // in MB
+  required: boolean
+}
+
 // ============ TOOL ============
 
 export type ToolConfig =
@@ -138,6 +157,7 @@ export type ToolConfig =
   | MediaConfig
   | ReportConfig
   | PlanConfig
+  | AttachmentRequestConfig
 
 export interface Tool {
   id: string

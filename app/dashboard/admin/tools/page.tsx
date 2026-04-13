@@ -27,6 +27,7 @@ import {
   Calendar,
   FileBarChart,
   Layers,
+  Paperclip,
 } from "lucide-react"
 
 const toolTypeIcons: Record<ToolType, typeof FileText> = {
@@ -35,6 +36,7 @@ const toolTypeIcons: Record<ToolType, typeof FileText> = {
   media_question: Calendar,
   report: FileBarChart,
   plan: Layers,
+  attachment_request: Paperclip,
 }
 
 const toolTypeLabels: Record<ToolType, { en: string; ar: string }> = {
@@ -43,6 +45,7 @@ const toolTypeLabels: Record<ToolType, { en: string; ar: string }> = {
   media_question: { en: "Media Questions", ar: "أسئلة الوسائط" },
   report: { en: "Report", ar: "تقرير" },
   plan: { en: "Plan", ar: "خطة" },
+  attachment_request: { en: "Request for Attachment", ar: "طلب مرفق" },
 }
 
 const statusColors: Record<Tool["status"], string> = {
@@ -144,7 +147,9 @@ export default function AdminToolsPage() {
                     ? "media"
                     : tool.type === "report"
                       ? "report"
-                      : "plan"
+                      : tool.type === "plan"
+                        ? "plan"
+                        : "attachment-request"
             return (
               <Link
                 key={tool.id}

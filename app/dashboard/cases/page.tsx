@@ -17,7 +17,7 @@ export default function ProfilesPage() {
           <h1 className="text-2xl font-bold text-primary">Cases</h1>
           <p className="text-muted-foreground">Manage your cases</p>
         </div>
-        <Link href="/dashboard/profiles/new">
+        <Link href="/dashboard/cases/new">
           <Button>
             <Plus className="me-2 h-4 w-4" />
             New Case
@@ -33,7 +33,7 @@ export default function ProfilesPage() {
             <p className="mb-4 text-center text-muted-foreground">
               Create your first case to get started
             </p>
-            <Link href="/dashboard/profiles/new">
+            <Link href="/dashboard/cases/new">
               <Button>Create Case</Button>
             </Link>
           </CardContent>

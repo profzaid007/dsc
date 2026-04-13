@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
-import { useTools } from "@/hooks/useTools"
+import { toolTypesCollection } from "@/lib/pb-collections"
 import {
   Card,
   CardContent,
@@ -39,25 +39,31 @@ import {
   FileBarChart,
   Layers,
   Search,
+  Eye,
+  Paperclip,
 } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import Link from "next/link"
-import type { ToolType } from "@/types/tool"
 import type { AssignmentStatus } from "@/types/assignment"
 
-const toolTypeIcons: Record<ToolType, typeof FileText> = {
+// Tool type name to icon mapping
+const toolTypeIcons: Record<string, typeof FileText> = {
   survey: FileText,
   multiple_answer: ClipboardList,
   media_question: Image,
   report: FileBarChart,
   plan: Layers,
+  attachment_request: Paperclip,
 }
 
-const toolTypeLabels: Record<ToolType, string> = {
+// Tool type name to label mapping
+const toolTypeLabels: Record<string, string> = {
   survey: "Survey",
   multiple_answer: "Multiple Answer",
   media_question: "Media Questions",
   report: "Report",
   plan: "Plan",
+  attachment_request: "Request for Attachment",
 }
 
 const statusColors: Record<AssignmentStatus, string> = {
@@ -76,41 +82,60 @@ const statusLabels: Record<AssignmentStatus, string> = {
 
 export default function AssignmentsPage() {
   const router = useRouter()
-  const { assignments, deleteAssignment, isLoading } = useAssignments()
+  const { assignments, deleteAssignment, updateAssignment, isLoading } =
+    useAssignments()
   const { profiles } = useProfiles()
-  const { tools } = useTools()
 
   const [searchQuery, setSearchQuery] = useState("")
-  const [filterTool, setFilterTool] = useState<string>("all")
+  const [filterType, setFilterType] = useState<string>("all")
   const [filterStatus, setFilterStatus] = useState<AssignmentStatus | "all">(
     "all"
   )
+  const [toolTypes, setToolTypes] = useState<Map<string, string>>(new Map()) // id -> name
+  const [toolTypesLoaded, setToolTypesLoaded] = useState(false)
+
+  // Fetch tool types on mount
+  useEffect(() => {
+    const fetchToolTypes = async () => {
+      try {
+        const types = await toolTypesCollection.getAll()
+        const typeMap = new Map<string, string>()
+        types.forEach((type) => {
+          typeMap.set(type.id, type.name)
+        })
+        setToolTypes(typeMap)
+        setToolTypesLoaded(true)
+      } catch (error) {
+        console.error("Failed to fetch tool types:", error)
+      }
+    }
+    fetchToolTypes()
+  }, [])
 
   const getCaseName = (caseId: string) => {
     const profile = profiles.find((p) => p.id === caseId)
     return profile?.name || "Unknown Case"
   }
 
-  const getTool = (toolId: string) => {
-    return tools.find((t) => t.id === toolId)
+  const getToolTypeName = (typeId: string) => {
+    return toolTypes.get(typeId) || "Unknown"
   }
 
   const filteredAssignments = assignments.filter((assignment) => {
     // Filter by search query
     if (searchQuery) {
       const caseName = getCaseName(assignment.case).toLowerCase()
-      const tool = getTool(assignment.tool)
-      const toolName = tool?.name?.en?.toLowerCase() || ""
+      const assignmentName = (assignment.name_en || "").toLowerCase()
       if (
         !caseName.includes(searchQuery.toLowerCase()) &&
-        !toolName.includes(searchQuery.toLowerCase())
+        !assignmentName.includes(searchQuery.toLowerCase())
       ) {
         return false
       }
     }
 
-    // Filter by tool
-    if (filterTool !== "all" && assignment.tool !== filterTool) {
+    // Filter by type
+    if (filterType !== "all" && assignment.type !== filterType) {
       return false
     }
 
@@ -122,21 +147,10 @@ export default function AssignmentsPage() {
     return true
   })
 
-  const getToolViewRoute = (toolId: string) => {
-    const tool = getTool(toolId)
-    if (!tool) return `/dashboard/admin/tools`
-    const typeRoute =
-      tool.type === "survey"
-        ? "survey"
-        : tool.type === "multiple_answer"
-          ? "multiple-choice"
-          : tool.type === "media_question"
-            ? "media"
-            : tool.type === "report"
-              ? "report"
-              : "plan"
-    return `/dashboard/admin/tools/${typeRoute}/${toolId}`
-  }
+  // Get unique tool types for filter dropdown
+  const uniqueToolTypes = Array.from(
+    new Set(assignments.map((a) => a.type))
+  ).filter(Boolean)
 
   return (
     <div className="space-y-6">
@@ -162,23 +176,26 @@ export default function AssignmentsPage() {
             <div className="relative flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by case or tool name..."
+                placeholder="Search by case or assignment name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Select value={filterTool} onValueChange={setFilterTool}>
+            <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by Tool" />
+                <SelectValue placeholder="Filter by Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Tools</SelectItem>
-                {tools.map((tool) => (
-                  <SelectItem key={tool.id} value={tool.id}>
-                    {tool.name.en}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">All Types</SelectItem>
+                {uniqueToolTypes.map((typeId) => {
+                  const typeName = getToolTypeName(typeId)
+                  return (
+                    <SelectItem key={typeId} value={typeId}>
+                      {toolTypeLabels[typeName] || typeName}
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
             <Select
@@ -211,7 +228,7 @@ export default function AssignmentsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoading || !toolTypesLoaded ? (
             <p className="py-8 text-center text-muted-foreground">Loading...</p>
           ) : filteredAssignments.length === 0 ? (
             <div className="py-12 text-center">
@@ -228,17 +245,18 @@ export default function AssignmentsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Case</TableHead>
-                  <TableHead>Tool</TableHead>
+                  <TableHead>Assignment</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Visible to User</TableHead>
                   <TableHead>Assigned Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAssignments.map((assignment) => {
-                  const tool = getTool(assignment.tool)
-                  const Icon = tool ? toolTypeIcons[tool.type] : FileText
+                  const typeName = getToolTypeName(assignment.type)
+                  const Icon = toolTypeIcons[typeName] || FileText
                   return (
                     <TableRow key={assignment.id}>
                       <TableCell className="font-medium">
@@ -251,21 +269,19 @@ export default function AssignmentsPage() {
                       </TableCell>
                       <TableCell>
                         <Link
-                          href={getToolViewRoute(assignment.tool)}
+                          href={`/dashboard/admin/assignments/${assignment.id}`}
                           className="hover:text-primary hover:underline"
                         >
-                          {tool?.name?.en || "Unknown Tool"}
+                          {assignment.name_en || "Unnamed Assignment"}
                         </Link>
                       </TableCell>
                       <TableCell>
-                        {tool && (
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Icon className="h-3 w-3" />
-                            <span className="text-xs">
-                              {toolTypeLabels[tool.type]}
-                            </span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Icon className="h-3 w-3" />
+                          <span className="text-xs">
+                            {toolTypeLabels[typeName] || typeName}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[assignment.status]}>
@@ -273,18 +289,37 @@ export default function AssignmentsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
+                        <Switch
+                          checked={assignment.is_visible_to_user}
+                          onCheckedChange={(checked) =>
+                            updateAssignment(assignment.id, {
+                              is_visible_to_user: checked,
+                            })
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
                         {new Date(
                           assignment.assigned_at || assignment.created
                         ).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteAssignment(assignment.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/dashboard/admin/assignments/${assignment.id}`}
+                          >
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteAssignment(assignment.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,11 +63,23 @@ const DEFAULT_OPTIONS = [
   },
 ]
 
-export default function MultipleChoiceBuilderPage() {
+interface MultipleChoiceBuilderPageProps {
+  params?: Promise<{ id?: string }>
+}
+
+export default function MultipleChoiceBuilderPage({
+  params,
+}: MultipleChoiceBuilderPageProps = {}) {
   const router = useRouter()
-  const { addTool } = useTools()
+  const { addTool, updateTool, getToolById } = useTools()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Edit mode detection
+  const resolvedParams = params ? use(params) : undefined
+  const editId = resolvedParams?.id
+  const isEditMode = !!editId
 
   const [formData, setFormData] = useState({
     nameEn: "",
@@ -75,6 +87,23 @@ export default function MultipleChoiceBuilderPage() {
   })
 
   const [questions, setQuestions] = useState<MCQuestion[]>([])
+
+  // Load existing data in edit mode
+  useEffect(() => {
+    if (isEditMode && editId) {
+      setIsLoading(true)
+      const tool = getToolById(editId)
+      if (tool && tool.config) {
+        const config = tool.config as MultipleChoiceConfig
+        setFormData({
+          nameEn: tool.name.en,
+          nameAr: tool.name.ar,
+        })
+        setQuestions(config.questions || [])
+      }
+      setIsLoading(false)
+    }
+  }, [isEditMode, editId, getToolById])
 
   const addQuestion = () => {
     const newQuestion: MCQuestion = {
@@ -110,15 +139,22 @@ export default function MultipleChoiceBuilderPage() {
       media: [],
     }
 
-    const toolId = await addTool({
-      name: { en: formData.nameEn, ar: formData.nameAr },
-      type: "multiple_answer",
-      serviceType: "individual",
-      status: "active",
-      config,
-    })
-
-    router.push(`/dashboard/admin/tools`)
+    if (isEditMode && editId) {
+      await updateTool(editId, {
+        name: { en: formData.nameEn, ar: formData.nameAr },
+        config,
+      })
+      router.push(`/dashboard/admin/tools/multiple-choice/${editId}`)
+    } else {
+      await addTool({
+        name: { en: formData.nameEn, ar: formData.nameAr },
+        type: "multiple_answer",
+        serviceType: "individual",
+        status: "active",
+        config,
+      })
+      router.push(`/dashboard/admin/tools`)
+    }
   }
 
   const renderQuestionItem = (question: MCQuestion, index: number) => {
@@ -265,6 +301,14 @@ export default function MultipleChoiceBuilderPage() {
     )
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -274,10 +318,12 @@ export default function MultipleChoiceBuilderPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              Create Multiple Answer Builder
+              {isEditMode ? "Edit" : "Create"} Multiple Answer Builder
             </h1>
             <p className="text-muted-foreground">
-              Build quiz with correct answer(s)
+              {isEditMode
+                ? "Update quiz questions and answers"
+                : "Build quiz with correct answer(s)"}
             </p>
           </div>
         </div>
@@ -362,7 +408,13 @@ export default function MultipleChoiceBuilderPage() {
                 !formData.nameEn || questions.length === 0 || isSubmitting
               }
             >
-              {isSubmitting ? "Creating..." : "Create"}
+              {isSubmitting
+                ? isEditMode
+                  ? "Saving..."
+                  : "Creating..."
+                : isEditMode
+                  ? "Save Changes"
+                  : "Create"}
             </Button>
           </div>
         </div>

@@ -4,8 +4,8 @@ import { use, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
 import { useAssignments } from "@/hooks/useAssignments"
-import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
+import { toolTypesCollection } from "@/lib/pb-collections"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { MediaPreview } from "@/components/tool-renderers/MediaPreview"
 import {
@@ -18,14 +18,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
   ArrowLeft,
   Edit,
   Trash2,
@@ -35,6 +27,7 @@ import {
   Image,
   FileBarChart,
   Layers,
+  Paperclip,
 } from "lucide-react"
 import Link from "next/link"
 import type { ToolType, MediaConfig } from "@/types/tool"
@@ -46,6 +39,7 @@ const toolTypeIcons: Record<ToolType, typeof FileText> = {
   media_question: Image,
   report: FileBarChart,
   plan: Layers,
+  attachment_request: Paperclip,
 }
 
 const toolTypeLabels: Record<ToolType, string> = {
@@ -54,6 +48,7 @@ const toolTypeLabels: Record<ToolType, string> = {
   media_question: "Media Questions",
   report: "Report",
   plan: "Plan",
+  attachment_request: "Request for Attachment",
 }
 
 const statusColors: Record<AssignmentStatus | ToolType, string> = {
@@ -66,6 +61,7 @@ const statusColors: Record<AssignmentStatus | ToolType, string> = {
   media_question: "bg-pink-100 text-pink-800",
   report: "bg-orange-100 text-orange-800",
   plan: "bg-teal-100 text-teal-800",
+  attachment_request: "bg-indigo-100 text-indigo-800",
 }
 
 const statusLabels: Record<AssignmentStatus, string> = {
@@ -84,15 +80,12 @@ export default function MediaViewPage({ params }: ToolViewPageProps) {
   const router = useRouter()
   const { lang } = useLang()
   const { getToolById, deleteTool } = useTools()
-  const { assignments, assignTool, deleteAssignment, getAssignmentsByTool } =
-    useAssignments()
-  const { profiles } = useProfiles()
+  const { assignTool } = useAssignments()
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const [isAssigning, setIsAssigning] = useState(false)
 
   const tool = getToolById(toolId)
   const config = tool?.config as MediaConfig | undefined
-  const toolAssignments = getAssignmentsByTool(toolId)
 
   if (!tool || !config) {
     return (
@@ -108,16 +101,21 @@ export default function MediaViewPage({ params }: ToolViewPageProps) {
   const Icon = toolTypeIcons[tool.type]
 
   const handleAssign = async () => {
-    if (!selectedCaseId) return
+    if (!selectedCaseId || !tool) return
     setIsAssigning(true)
     try {
+      // Get the tool_type ID for this tool
+      const toolType = await toolTypesCollection.getByName("media_question")
+
       await assignTool({
         case: selectedCaseId,
-        tool: toolId,
+        type: toolType.id,
+        name_en: tool.name.en,
+        name_ar: tool.name.ar,
+        is_not_template: false,
+        config: tool.config,
         status: "pending",
         is_visible_to_user: true,
-        responses: {},
-        media: [],
       })
       setSelectedCaseId("")
     } finally {
@@ -130,11 +128,6 @@ export default function MediaViewPage({ params }: ToolViewPageProps) {
       await deleteTool(toolId)
       router.push("/dashboard/admin/tools")
     }
-  }
-
-  const getCaseName = (caseId: string) => {
-    const profile = profiles.find((p) => p.id === caseId)
-    return profile?.name || "Unknown Case"
   }
 
   return (
@@ -276,61 +269,20 @@ export default function MediaViewPage({ params }: ToolViewPageProps) {
         </CardContent>
       </Card>
 
-      {/* Assignments Table */}
+      {/* Note: Assignments are tracked in the global Assignments page */}
       <Card>
         <CardHeader>
           <CardTitle>Assignments</CardTitle>
           <CardDescription>
-            {toolAssignments.length} case(s) assigned to this tool
+            View all assignments in the{" "}
+            <Link
+              href="/dashboard/admin/assignments"
+              className="text-primary hover:underline"
+            >
+              Assignments page
+            </Link>
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {toolAssignments.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">
-              No assignments yet. Use Quick Assign above to assign this tool to
-              cases.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Case</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Assigned At</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {toolAssignments.map((assignment) => (
-                  <TableRow key={assignment.id}>
-                    <TableCell className="font-medium">
-                      {getCaseName(assignment.case)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[assignment.status]}>
-                        {statusLabels[assignment.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(
-                        assignment.assigned_at || assignment.created
-                      ).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteAssignment(assignment.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
       </Card>
     </div>
   )

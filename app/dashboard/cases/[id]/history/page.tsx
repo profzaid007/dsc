@@ -4,7 +4,7 @@ import { use } from "react"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
-import { useTools } from "@/hooks/useTools"
+import { useLang } from "@/lib/lang-context"
 import {
   Card,
   CardContent,
@@ -24,9 +24,9 @@ export default function ProfileHistoryPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
+  const { lang } = useLang()
   const { getProfileById } = useProfiles()
   const { assignments } = useAssignments(id)
-  const { getToolById } = useTools()
 
   const profile = getProfileById(id)
   const profileAssignments = assignments.filter((a) => a.case === id)
@@ -35,8 +35,8 @@ export default function ProfileHistoryPage({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <h2 className="mb-4 text-xl font-medium">Profile not found</h2>
-        <Link href="/dashboard/profiles">
-          <Button>Back to Profiles</Button>
+        <Link href="/dashboard/cases">
+          <Button>Back to Cases</Button>
         </Link>
       </div>
     )
@@ -72,35 +72,36 @@ export default function ProfileHistoryPage({
         </Card>
       ) : (
         <div className="space-y-4">
-          {completedAssignments.map((assignment) => {
-            const tool = getToolById(assignment.tool)
-            return (
-              <Card key={assignment.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>{tool?.name.en || "Unknown Tool"}</CardTitle>
-                    <Badge variant="default">Completed</Badge>
-                  </div>
-                  <CardDescription>
-                    Updated{" "}
-                    {assignment.updated &&
-                      new Date(assignment.updated).toLocaleDateString()}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {assignment.responses &&
-                    Object.keys(assignment.responses).length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Responses:</p>
-                        <pre className="overflow-auto rounded-lg bg-muted p-3 text-xs">
-                          {JSON.stringify(assignment.responses, null, 2)}
-                        </pre>
-                      </div>
-                    )}
-                </CardContent>
-              </Card>
-            )
-          })}
+          {completedAssignments.map((assignment) => (
+            <Card key={assignment.id}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>
+                    {lang === "ar"
+                      ? assignment.name_ar || assignment.name_en
+                      : assignment.name_en}
+                  </CardTitle>
+                  <Badge variant="default">Completed</Badge>
+                </div>
+                <CardDescription>
+                  Updated{" "}
+                  {assignment.updated &&
+                    new Date(assignment.updated).toLocaleDateString()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {assignment.responses &&
+                  Object.keys(assignment.responses).length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Responses:</p>
+                      <pre className="overflow-auto rounded-lg bg-muted p-3 text-xs">
+                        {JSON.stringify(assignment.responses, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>
