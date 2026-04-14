@@ -145,7 +145,6 @@ export type AttachmentFileType =
 
 export interface AttachmentRequestConfig {
   title: BilingualString
-  description?: BilingualString
   allowedTypes: AttachmentFileType[]
   maxFiles: number
   maxFileSize: number // in MB

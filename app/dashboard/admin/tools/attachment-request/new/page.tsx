@@ -39,8 +39,6 @@ export default function AttachmentRequestBuilderPage() {
   const [formData, setFormData] = useState({
     nameEn: "",
     nameAr: "",
-    descriptionEn: "",
-    descriptionAr: "",
     maxFiles: 1,
     maxFileSize: 10,
     required: true,
@@ -114,7 +112,6 @@ export default function AttachmentRequestBuilderPage() {
     try {
       const config: AttachmentRequestConfig = {
         title: { en: formData.nameEn, ar: formData.nameAr },
-        description: { en: formData.descriptionEn, ar: formData.descriptionAr },
         allowedTypes: selectedTypes,
         maxFiles: formData.maxFiles,
         maxFileSize: formData.maxFileSize,
@@ -151,8 +148,6 @@ export default function AttachmentRequestBuilderPage() {
     setFormData({
       nameEn: "",
       nameAr: "",
-      descriptionEn: "",
-      descriptionAr: "",
       maxFiles: 1,
       maxFileSize: 10,
       required: true,
@@ -239,37 +234,6 @@ export default function AttachmentRequestBuilderPage() {
                     placeholder="مثال: تحميل التقرير الطبي"
                   />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Instructions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Instructions (EN)</Label>
-                <Textarea
-                  value={formData.descriptionEn}
-                  onChange={(e) =>
-                    setFormData({ ...formData, descriptionEn: e.target.value })
-                  }
-                  placeholder="Instructions for the parent/case..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Instructions (AR)</Label>
-                <Textarea
-                  value={formData.descriptionAr}
-                  onChange={(e) =>
-                    setFormData({ ...formData, descriptionAr: e.target.value })
-                  }
-                  placeholder="تعليمات للوالد/الحالة..."
-                  rows={3}
-                />
               </div>
             </CardContent>
           </Card>
@@ -381,11 +345,6 @@ export default function AttachmentRequestBuilderPage() {
                 <h3 className="font-semibold">
                   {formData.nameEn || "Request Title"}
                 </h3>
-                {formData.descriptionEn && (
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {formData.descriptionEn}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
