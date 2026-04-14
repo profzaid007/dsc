@@ -1,9 +1,11 @@
 "use client"
 
-import { use } from "react"
+import { use, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
+import { useToolTypes } from "@/hooks/useToolTypes"
+import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import {
   Card,
@@ -24,7 +26,8 @@ import {
   ClipboardList,
   History,
   Eye,
-  Download,
+  Pencil,
+  Send,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -38,10 +41,16 @@ export default function ProfileDetailPage({
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
   const { getAssignmentsByCase, getVisibleAssignments } = useAssignments(id)
+  const { toolTypes, fetchToolTypes } = useToolTypes()
+  const { isAdmin } = useAuth()
 
   const profile = getProfileById(id)
   const assignments = getAssignmentsByCase(id)
   const visibleAssignments = getVisibleAssignments(id)
+
+  useEffect(() => {
+    fetchToolTypes()
+  }, [fetchToolTypes])
 
   if (!profile) {
     return (
@@ -160,43 +169,62 @@ export default function ProfileDetailPage({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {visibleAssignments.map((assignment) => (
-                    <div
-                      key={assignment.id}
-                      className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                    >
-                      <div className="flex-1">
-                        <Link
-                          href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
-                        >
-                          <p className="font-medium hover:underline">
-                            {lang === "ar"
-                              ? assignment.name_ar || assignment.name_en
-                              : assignment.name_en}
-                          </p>
-                          <p className="text-sm text-muted-foreground capitalize">
-                            {assignment.status.replace("_", " ")}
-                          </p>
-                        </Link>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {assignment.status === "completed" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const responses = assignment.responses
-                              if (
-                                responses &&
-                                Object.keys(responses).length > 0
-                              ) {
-                                const printWindow = window.open(
-                                  "",
-                                  "_blank",
-                                  "width=800,height=600"
-                                )
-                                if (printWindow) {
-                                  printWindow.document.write(`
+                  {visibleAssignments.map((assignment) => {
+                    const toolType = toolTypes.find(
+                      (t) => t.id === assignment.type
+                    )
+                    const toolTypeName = toolType?.name || "custom"
+                    return (
+                      <div
+                        key={assignment.id}
+                        className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">
+                              {lang === "ar"
+                                ? assignment.name_ar || assignment.name_en
+                                : assignment.name_en}
+                            </p>
+                            <Badge
+                              variant="outline"
+                              className="text-xs capitalize"
+                            >
+                              {toolTypeName.replace("_", " ")}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {!assignment.is_not_template && (
+                            <Link
+                              href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
+                            >
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                title={lang === "ar" ? "الإجابة" : "Respond"}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          )}
+                          {assignment.status === "completed" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const responses = assignment.responses
+                                if (
+                                  responses &&
+                                  Object.keys(responses).length > 0
+                                ) {
+                                  const printWindow = window.open(
+                                    "",
+                                    "_blank",
+                                    "width=800,height=600"
+                                  )
+                                  if (printWindow) {
+                                    printWindow.document.write(`
                                     <html>
                                       <head>
                                         <title>${assignment.name_en || "Responses"}</title>
@@ -217,26 +245,27 @@ export default function ProfileDetailPage({
                                       </body>
                                     </html>
                                   `)
-                                  printWindow.document.close()
+                                    printWindow.document.close()
+                                  }
                                 }
-                              }
-                            }}
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Badge
+                            variant={
+                              assignment.status === "completed"
+                                ? "default"
+                                : "secondary"
+                            }
                           >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Badge
-                          variant={
-                            assignment.status === "completed"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {assignment.status}
-                        </Badge>
+                            {assignment.status}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </CardContent>

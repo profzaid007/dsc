@@ -203,7 +203,7 @@ export default function TakeSurveyToolPage({
     return (
       <div className="space-y-3">
         <Label className="text-base font-medium">
-          {question.text[lang]}
+          {question.text}
           {question.required && (
             <span className="ms-1 text-destructive">*</span>
           )}
@@ -252,7 +252,7 @@ export default function TakeSurveyToolPage({
                   id={`${question.id}-${opt.value}`}
                 />
                 <Label htmlFor={`${question.id}-${opt.value}`}>
-                  {(opt.label as { en: string; ar: string })[lang]}
+                  {opt.label}
                 </Label>
               </div>
             ))}
@@ -282,7 +282,7 @@ export default function TakeSurveyToolPage({
                   }}
                 />
                 <Label htmlFor={`${question.id}-${opt.value}`}>
-                  {(opt.label as { en: string; ar: string })[lang]}
+                  {opt.label}
                 </Label>
               </div>
             ))}
@@ -305,7 +305,7 @@ export default function TakeSurveyToolPage({
     return (
       <div className="space-y-3">
         <Label className="text-base font-medium">
-          {question.text[lang]}
+          {question.text}
           {question.required && (
             <span className="ms-1 text-destructive">*</span>
           )}
@@ -339,7 +339,7 @@ export default function TakeSurveyToolPage({
                   id={`mc-${question.id}-${opt.value}`}
                 />
                 <Label htmlFor={`mc-${question.id}-${opt.value}`}>
-                  {(opt.label as { en: string; ar: string })[lang]}
+                  {opt.label}
                 </Label>
               </div>
             ))}
@@ -369,7 +369,7 @@ export default function TakeSurveyToolPage({
                   }}
                 />
                 <Label htmlFor={`mc-${question.id}-${opt.value}`}>
-                  {(opt.label as { en: string; ar: string })[lang]}
+                  {opt.label}
                 </Label>
               </div>
             ))}
@@ -387,7 +387,7 @@ export default function TakeSurveyToolPage({
 
   const renderMediaItem = (item: MediaItem) => (
     <div key={item.id} className="space-y-3 rounded-lg border bg-card p-4">
-      <Label className="text-base font-medium">{item.question[lang]}</Label>
+      <Label className="text-base font-medium">{item.question}</Label>
       {item.mediaData && (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
           {item.mediaType === "image" && (
@@ -504,7 +504,7 @@ export default function TakeSurveyToolPage({
               surveyConfig?.questions.map((question, idx) => (
                 <div key={question.id} className="space-y-2">
                   <Label className="text-base font-medium text-muted-foreground">
-                    {idx + 1}. {question.text[lang]}
+                    {idx + 1}. {question.text}
                   </Label>
                   <div className="rounded-lg bg-muted/30 p-3">
                     {question.answerType === "rating" && (
@@ -522,8 +522,8 @@ export default function TakeSurveyToolPage({
                         {(
                           question.options?.find(
                             (o) => o.value === answers[question.id]
-                          )?.label as { en: string; ar: string }
-                        )?.[lang] || "-"}
+                          )?.label
+                        ) || "-"}
                       </span>
                     )}
                     {question.answerType === "multiple_choice" && (
@@ -534,10 +534,8 @@ export default function TakeSurveyToolPage({
                             className="rounded-full bg-primary/10 px-3 py-1 text-sm"
                           >
                             {
-                              (
-                                question.options?.find((o) => o.value === v)
-                                  ?.label as { en: string; ar: string }
-                              )?.[lang]
+                              question.options?.find((o) => o.value === v)
+                                ?.label
                             }
                           </span>
                         ))}
@@ -551,7 +549,7 @@ export default function TakeSurveyToolPage({
               mcConfig?.questions.map((question, idx) => (
                 <div key={question.id} className="space-y-2">
                   <Label className="text-base font-medium text-muted-foreground">
-                    {idx + 1}. {question.text[lang]}
+                    {idx + 1}. {question.text}
                   </Label>
                   <div className="rounded-lg bg-muted/30 p-3">
                     {question.answerType === "text" && (
@@ -569,8 +567,8 @@ export default function TakeSurveyToolPage({
                         {(
                           question.options?.find(
                             (o) => o.value === answers[question.id]
-                          )?.label as { en: string; ar: string }
-                        )?.[lang] || "-"}
+                          )?.label
+                        ) || "-"}
                       </span>
                     )}
                     {question.answerType === "multiple_choice" && (
@@ -581,10 +579,8 @@ export default function TakeSurveyToolPage({
                             className="rounded-full bg-primary/10 px-3 py-1 text-sm"
                           >
                             {
-                              (
-                                question.options?.find((o) => o.value === v)
-                                  ?.label as { en: string; ar: string }
-                              )?.[lang]
+                              question.options?.find((o) => o.value === v)
+                                ?.label
                             }
                           </span>
                         ))}
@@ -598,7 +594,7 @@ export default function TakeSurveyToolPage({
               mediaConfig?.items.map((item) => (
                 <div key={item.id} className="space-y-2">
                   <Label className="text-base font-medium text-muted-foreground">
-                    {item.question[lang]}
+                    {item.question}
                   </Label>
                   <div className="rounded-lg bg-muted/30 p-3">
                     <span className="font-medium">

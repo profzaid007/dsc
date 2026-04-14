@@ -84,7 +84,7 @@ export default function SurveyBuilderPage({
   const addQuestion = () => {
     const newQuestion: SurveyQuestion = {
       id: generateId(),
-      text: { en: "", ar: "" },
+      text: "",
       answerType: "single_choice",
       options: [...DEFAULT_OPTIONS],
       required: false,
@@ -159,10 +159,10 @@ export default function SurveyBuilderPage({
         </div>
         <Input
           placeholder="Question"
-          value={question.text.en}
+          value={question.text}
           onChange={(e) =>
             updateQuestion(question.id, {
-              text: { en: e.target.value, ar: e.target.value },
+              text: e.target.value,
             })
           }
         />
@@ -190,15 +190,13 @@ export default function SurveyBuilderPage({
               <div key={opt.value} className="flex gap-2">
                 <Input
                   placeholder="Option"
-                  value={
-                    typeof opt.label === "string" ? opt.label : opt.label.en
-                  }
+                  value={opt.label}
                   onChange={(e) => {
                     const newOptions = question.options.map((o, i) =>
                       i === optIdx
                         ? {
                             ...o,
-                            label: { en: e.target.value, ar: e.target.value },
+                            label: e.target.value,
                           }
                         : o
                     )

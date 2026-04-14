@@ -15,7 +15,7 @@ export interface BilingualString {
 
 export interface ToolOption {
   value: string
-  label: string | BilingualString
+  label: string
 }
 
 // ============ SURVEY ============
@@ -24,7 +24,7 @@ export type SurveyAnswerType = "single_choice" | "multiple_choice" | "rating"
 
 export interface SurveyQuestion {
   id: string
-  text: BilingualString
+  text: string
   answerType: SurveyAnswerType
   options: ToolOption[] // default 5, can add more
   required: boolean
@@ -90,13 +90,13 @@ export interface MediaConfig {
 
 export interface ReportCustomField {
   id: string
-  label: BilingualString
+  label: string
   type: "text" | "textarea" | "date"
 }
 
 export interface ReportConfig {
   title: BilingualString
-  expertNameField: BilingualString // editable label, default "Expert Name"
+  expertNameField: string // editable label, default "Expert Name"
   customFields: ReportCustomField[]
   media: string[]
   // Fixed fields (always present)
@@ -118,12 +118,12 @@ export interface PlanStep {
   id: string
   goalId?: string
   title: BilingualString
-  description: BilingualString
+  description: string
   completed: boolean
-  notes: BilingualString
-  comments: BilingualString
+  notes: string
+  comments: string
   dateOfAchievement?: string
-  evaluation?: BilingualString
+  evaluation?: string
 }
 
 export interface PlanConfig {
