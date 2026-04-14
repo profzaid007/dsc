@@ -45,13 +45,15 @@ export type MCAnswerType =
   | "single_choice"
   | "multiple_choice"
 
-export interface MCQuestionOption extends ToolOption {
-  isCorrect: boolean // admin marks correct answer
+export interface MCQuestionOption {
+  value: string
+  label: string
+  isCorrect: boolean
 }
 
 export interface MCQuestion {
   id: string
-  text: BilingualString
+  text: string
   answerType: MCAnswerType
   options: MCQuestionOption[]
   required: boolean

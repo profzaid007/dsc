@@ -42,7 +42,7 @@ export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
             {index + 1}
           </Badge>
           <Label className="flex-1 font-medium">
-            {question.text[lang]}
+            {question.text}
             {question.required && (
               <span className="ms-1 text-destructive">*</span>
             )}
@@ -86,8 +86,7 @@ export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
                         : ""
                     }
                   >
-                    {(opt.label as { en: string; ar: string })[lang]}{" "}
-                    {showAnswers && opt.isCorrect && "✓"}
+                    {opt.label} {showAnswers && opt.isCorrect && "✓"}
                   </Label>
                 </div>
               ))}
@@ -119,8 +118,7 @@ export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
                         : ""
                     }
                   >
-                    {(opt.label as { en: string; ar: string })[lang]}{" "}
-                    {showAnswers && opt.isCorrect && "✓"}
+                    {opt.label} {showAnswers && opt.isCorrect && "✓"}
                   </Label>
                 </div>
               ))}

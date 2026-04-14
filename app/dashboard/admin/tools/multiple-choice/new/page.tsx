@@ -23,6 +23,7 @@ import type {
   MCQuestion,
   MCAnswerType,
 } from "@/types/tool"
+import { useToolTypes } from "@/hooks/useToolTypes"
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -36,31 +37,11 @@ const ANSWER_TYPES: { value: MCAnswerType; label: string }[] = [
 ]
 
 const DEFAULT_OPTIONS = [
-  {
-    value: "opt1",
-    label: { en: "Option 1", ar: "الخيار 1" },
-    isCorrect: false,
-  },
-  {
-    value: "opt2",
-    label: { en: "Option 2", ar: "الخيار 2" },
-    isCorrect: false,
-  },
-  {
-    value: "opt3",
-    label: { en: "Option 3", ar: "الخيار 3" },
-    isCorrect: false,
-  },
-  {
-    value: "opt4",
-    label: { en: "Option 4", ar: "الخيار 4" },
-    isCorrect: false,
-  },
-  {
-    value: "opt5",
-    label: { en: "Option 5", ar: "الخيار 5" },
-    isCorrect: false,
-  },
+  { value: "opt1", label: "Option 1", isCorrect: false },
+  { value: "opt2", label: "Option 2", isCorrect: false },
+  { value: "opt3", label: "Option 3", isCorrect: false },
+  { value: "opt4", label: "Option 4", isCorrect: false },
+  { value: "opt5", label: "Option 5", isCorrect: false },
 ]
 
 interface MultipleChoiceBuilderPageProps {
@@ -77,6 +58,7 @@ export default function MultipleChoiceBuilderPage({
     getToolById,
     isLoading: isToolsLoading,
   } = useTools()
+  const { toolTypes, fetchToolTypes } = useToolTypes()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -113,7 +95,7 @@ export default function MultipleChoiceBuilderPage({
   const addQuestion = () => {
     const newQuestion: MCQuestion = {
       id: generateId(),
-      text: { en: "", ar: "" },
+      text: "",
       answerType: "single_choice",
       options: [...DEFAULT_OPTIONS],
       required: false,
@@ -151,9 +133,13 @@ export default function MultipleChoiceBuilderPage({
       })
       router.push(`/dashboard/admin/tools/multiple-choice/${editId}`)
     } else {
+
+      const toolTypes = await fetchToolTypes()
+      const type = toolTypes.find((t) => t.name === "survey")?.id
+
       await addTool({
         name: { en: formData.nameEn, ar: formData.nameAr },
-        type: "multiple_answer",
+        type: type,
         serviceType: "individual",
         status: "active",
         config,
@@ -193,26 +179,13 @@ export default function MultipleChoiceBuilderPage({
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Input
-            placeholder="Question (EN)"
-            value={question.text.en}
-            onChange={(e) =>
-              updateQuestion(question.id, {
-                text: { ...question.text, en: e.target.value },
-              })
-            }
-          />
-          <Input
-            placeholder="السؤال (AR)"
-            value={question.text.ar}
-            onChange={(e) =>
-              updateQuestion(question.id, {
-                text: { ...question.text, ar: e.target.value },
-              })
-            }
-          />
-        </div>
+        <Input
+          placeholder="Question"
+          value={question.text}
+          onChange={(e) =>
+            updateQuestion(question.id, { text: e.target.value })
+          }
+        />
 
         <Select
           value={question.answerType}
@@ -248,38 +221,11 @@ export default function MultipleChoiceBuilderPage({
                   }}
                 />
                 <Input
-                  placeholder="EN"
-                  value={(opt.label as { en: string; ar: string }).en}
+                  placeholder="Option"
+                  value={opt.label}
                   onChange={(e) => {
                     const newOptions = question.options.map((o, i) =>
-                      i === optIdx
-                        ? {
-                            ...o,
-                            label: {
-                              ...(o.label as { en: string; ar: string }),
-                              en: e.target.value,
-                            },
-                          }
-                        : o
-                    )
-                    updateQuestion(question.id, { options: newOptions })
-                  }}
-                  className="flex-1"
-                />
-                <Input
-                  placeholder="AR"
-                  value={(opt.label as { en: string; ar: string }).ar}
-                  onChange={(e) => {
-                    const newOptions = question.options.map((o, i) =>
-                      i === optIdx
-                        ? {
-                            ...o,
-                            label: {
-                              ...(o.label as { en: string; ar: string }),
-                              ar: e.target.value,
-                            },
-                          }
-                        : o
+                      i === optIdx ? { ...o, label: e.target.value } : o
                     )
                     updateQuestion(question.id, { options: newOptions })
                   }}
@@ -299,10 +245,7 @@ export default function MultipleChoiceBuilderPage({
                   ...question.options,
                   {
                     value: generateId(),
-                    label: {
-                      en: `Option ${question.options.length + 1}`,
-                      ar: `الخيار ${question.options.length + 1}`,
-                    },
+                    label: `Option ${question.options.length + 1}`,
                     isCorrect: false,
                   },
                 ]
