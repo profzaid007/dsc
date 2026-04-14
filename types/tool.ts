@@ -166,7 +166,7 @@ export interface Tool {
   id: string
   name: BilingualString
   description?: BilingualString
-  type: ToolType
+  type: string
   serviceType: ServiceType
   status: ToolStatus
   config: ToolConfig

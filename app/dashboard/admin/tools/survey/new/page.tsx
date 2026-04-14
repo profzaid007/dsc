@@ -24,6 +24,7 @@ import type {
   SurveyQuestion,
   SurveyAnswerType,
 } from "@/types/tool"
+import { useToolTypes } from "@/hooks/useToolTypes"
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
@@ -48,6 +49,7 @@ export default function SurveyBuilderPage({
   const router = useRouter()
   const { lang } = useLang()
   const { addTool, updateTool, getToolById } = useTools()
+  const { toolTypes, fetchToolTypes } = useToolTypes()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -109,9 +111,13 @@ export default function SurveyBuilderPage({
       })
       router.push(`/dashboard/admin/tools/survey/${editId}`)
     } else {
+
+      const toolTypes = await fetchToolTypes()
+      const type = toolTypes.find((t) => t.name === "survey")?.id
+  
       await addTool({
         name: { en: formData.nameEn, ar: formData.nameAr },
-        type: "survey",
+        type: type,
         serviceType: "individual",
         status: "active",
         config,
