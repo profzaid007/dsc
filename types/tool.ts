@@ -15,7 +15,7 @@ export interface BilingualString {
 
 export interface ToolOption {
   value: string
-  label: BilingualString
+  label: string | BilingualString
 }
 
 // ============ SURVEY ============

@@ -24,29 +24,24 @@ import type {
   SurveyQuestion,
   SurveyAnswerType,
 } from "@/types/tool"
-
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
-
 const ANSWER_TYPES: { value: SurveyAnswerType; label: string }[] = [
   { value: "single_choice", label: "Single Choice" },
   { value: "multiple_choice", label: "Multiple Choice" },
   { value: "rating", label: "Rating (Severity)" },
 ]
-
 const DEFAULT_OPTIONS = [
-  { value: "opt1", label: { en: "Option 1", ar: "الخيار 1" } },
-  { value: "opt2", label: { en: "Option 2", ar: "الخيار 2" } },
-  { value: "opt3", label: { en: "Option 3", ar: "الخيار 3" } },
-  { value: "opt4", label: { en: "Option 4", ar: "الخيار 4" } },
-  { value: "opt5", label: { en: "Option 5", ar: "الخيار 5" } },
+  { value: "opt1", label: "Option 1" },
+  { value: "opt2", label: "Option 2" },
+  { value: "opt3", label: "Option 3" },
+  { value: "opt4", label: "Option 4" },
+  { value: "opt5", label: "Option 5" },
 ]
-
 interface SurveyBuilderPageProps {
   params?: Promise<{ id?: string }>
 }
-
 export default function SurveyBuilderPage({
   params,
 }: SurveyBuilderPageProps = {}) {
@@ -56,20 +51,14 @@ export default function SurveyBuilderPage({
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-
-  // Edit mode detection
   const resolvedParams = params ? use(params) : undefined
   const editId = resolvedParams?.id
   const isEditMode = !!editId
-
   const [formData, setFormData] = useState({
     nameEn: "",
     nameAr: "",
   })
-
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
-
-  // Load existing data in edit mode
   useEffect(() => {
     if (isEditMode && editId) {
       setIsLoading(true)
@@ -85,7 +74,6 @@ export default function SurveyBuilderPage({
       setIsLoading(false)
     }
   }, [isEditMode, editId, getToolById])
-
   const addQuestion = () => {
     const newQuestion: SurveyQuestion = {
       id: generateId(),
@@ -97,29 +85,23 @@ export default function SurveyBuilderPage({
     }
     setQuestions([...questions, newQuestion])
   }
-
   const updateQuestion = (id: string, updates: Partial<SurveyQuestion>) => {
     setQuestions(questions.map((q) => (q.id === id ? { ...q, ...updates } : q)))
   }
-
   const removeQuestion = (id: string) => {
     setQuestions(questions.filter((q) => q.id !== id))
   }
-
   const handleReorder = (reordered: SurveyQuestion[]) => {
     setQuestions(reordered)
   }
-
   const handleSubmit = async () => {
     if (!formData.nameEn || questions.length === 0) return
     setIsSubmitting(true)
-
     const config: SurveyConfig = {
       title: { en: formData.nameEn, ar: formData.nameAr },
       questions: questions.map((q, idx) => ({ ...q, order: idx })),
       media: [],
     }
-
     if (isEditMode && editId) {
       await updateTool(editId, {
         name: { en: formData.nameEn, ar: formData.nameAr },
@@ -137,12 +119,10 @@ export default function SurveyBuilderPage({
       router.push(`/dashboard/admin/tools`)
     }
   }
-
   const renderQuestionItem = (question: SurveyQuestion, index: number) => {
     const showOptions =
       question.answerType === "single_choice" ||
       question.answerType === "multiple_choice"
-
     return (
       <div className="flex-1 space-y-3">
         <div className="flex items-center justify-between">
@@ -167,28 +147,15 @@ export default function SurveyBuilderPage({
             </Button>
           </div>
         </div>
-
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Input
-            placeholder="Question (EN)"
-            value={question.text.en}
-            onChange={(e) =>
-              updateQuestion(question.id, {
-                text: { ...question.text, en: e.target.value },
-              })
-            }
-          />
-          <Input
-            placeholder="السؤال (AR)"
-            value={question.text.ar}
-            onChange={(e) =>
-              updateQuestion(question.id, {
-                text: { ...question.text, ar: e.target.value },
-              })
-            }
-          />
-        </div>
-
+        <Input
+          placeholder="Question"
+          value={question.text.en}
+          onChange={(e) =>
+            updateQuestion(question.id, {
+              text: { en: e.target.value, ar: e.target.value },
+            })
+          }
+        />
         <Select
           value={question.answerType}
           onValueChange={(v) =>
@@ -206,24 +173,24 @@ export default function SurveyBuilderPage({
             ))}
           </SelectContent>
         </Select>
-
         {showOptions && (
           <div className="space-y-2 rounded-md border p-3">
-            <Label className="text-xs">Options (EN | AR)</Label>
+            <Label className="text-xs">Options</Label>
             {question.options.map((opt, optIdx) => (
               <div key={opt.value} className="flex gap-2">
-                <Input
-                  placeholder="EN"
-                  value={opt.label.en}
-                  onChange={() => {}}
-                  className="flex-1"
-                />
-                <Input
-                  placeholder="AR"
-                  value={opt.label.ar}
-                  onChange={() => {}}
-                  className="flex-1"
-                />
+              <Input
+                placeholder="Option"
+                value={typeof opt.label === "string" ? opt.label : opt.label.en}
+                onChange={(e) => {
+                  const newOptions = question.options.map((o, i) =>
+                    i === optIdx 
+                      ? { ...o, label: { en: e.target.value, ar: e.target.value } } 
+                      : o
+                  )
+                  updateQuestion(question.id, { options: newOptions })
+                }}
+                className="flex-1"
+              />
               </div>
             ))}
             <Button
@@ -235,10 +202,7 @@ export default function SurveyBuilderPage({
                   ...question.options,
                   {
                     value: generateId(),
-                    label: {
-                      en: `Option ${question.options.length + 1}`,
-                      ar: `الخيار ${question.options.length + 1}`,
-                    },
+                    label: `Option ${question.options.length + 1}`,
                   },
                 ]
                 updateQuestion(question.id, { options: newOptions })
@@ -252,7 +216,6 @@ export default function SurveyBuilderPage({
       </div>
     )
   }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -260,7 +223,6 @@ export default function SurveyBuilderPage({
       </div>
     )
   }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -291,7 +253,6 @@ export default function SurveyBuilderPage({
           {showPreview ? "Hide Preview" : "Preview"}
         </Button>
       </div>
-
       <div
         className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "grid-cols-1"}`}
       >
@@ -325,7 +286,6 @@ export default function SurveyBuilderPage({
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Questions</CardTitle>
@@ -349,7 +309,6 @@ export default function SurveyBuilderPage({
               )}
             </CardContent>
           </Card>
-
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={() => router.back()}>
               Cancel
@@ -370,7 +329,6 @@ export default function SurveyBuilderPage({
             </Button>
           </div>
         </div>
-
         {showPreview && (
           <div className="sticky top-6 max-h-[calc(100vh-12rem)] overflow-auto rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
