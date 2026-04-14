@@ -135,7 +135,7 @@ export default function MultipleChoiceBuilderPage({
     } else {
 
       const toolTypes = await fetchToolTypes()
-      const type = toolTypes.find((t) => t.name === "survey")?.id
+      const type = toolTypes.find((t) => t.name === "multiple_answer")?.id
 
       await addTool({
         name: { en: formData.nameEn, ar: formData.nameAr },

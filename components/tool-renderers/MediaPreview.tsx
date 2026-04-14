@@ -73,7 +73,7 @@ export function MediaPreview({ config }: MediaPreviewProps) {
         <div key={item.id} className="space-y-3 rounded-lg border bg-card p-4">
           <div className="flex items-start gap-2">
             <Label className="font-medium">
-              {item.question[lang] || "No question text"}
+              {item.question || "No question text"}
             </Label>
           </div>
           {renderMedia(item)}

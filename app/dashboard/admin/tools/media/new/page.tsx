@@ -29,6 +29,7 @@ import type {
   MediaType,
   ResponseType,
 } from "@/types/tool"
+import { useToolTypes } from "@/hooks/useToolTypes"
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -48,6 +49,7 @@ export default function MediaBuilderPage({
     getToolById,
     isLoading: isToolsLoading,
   } = useTools()
+  const { fetchToolTypes } = useToolTypes()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -93,7 +95,7 @@ export default function MediaBuilderPage({
   }) => {
     const newItem: MediaItem = {
       id: generateId(),
-      question: { en: "", ar: "" },
+      question: "",
       mediaType: data.mediaType,
       mediaData: data.mediaData,
       responseType: data.responseType,
@@ -133,9 +135,13 @@ export default function MediaBuilderPage({
       })
       router.push(`/dashboard/admin/tools/media/${editId}`)
     } else {
+      
+      const toolTypes = await fetchToolTypes()
+      const type = toolTypes.find((t) => t.name === "media_question")?.id
+
       await addTool({
         name: { en: formData.nameEn, ar: formData.nameAr },
-        type: "media_question",
+        type: type,
         serviceType: "individual",
         status: "active",
         config,
@@ -197,26 +203,11 @@ export default function MediaBuilderPage({
           )}
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Input
-            placeholder="Question (EN)"
-            value={item.question.en}
-            onChange={(e) =>
-              updateItem(item.id, {
-                question: { ...item.question, en: e.target.value },
-              })
-            }
-          />
-          <Input
-            placeholder="السؤال (AR)"
-            value={item.question.ar}
-            onChange={(e) =>
-              updateItem(item.id, {
-                question: { ...item.question, ar: e.target.value },
-              })
-            }
-          />
-        </div>
+        <Input
+          placeholder="Question"
+          value={item.question}
+          onChange={(e) => updateItem(item.id, { question: e.target.value })}
+        />
 
         <div className="text-sm text-muted-foreground">
           Response:{" "}

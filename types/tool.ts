@@ -73,7 +73,7 @@ export type ResponseType = "text" | "video" | "audio"
 
 export interface MediaItem {
   id: string
-  question: BilingualString
+  question: string
   mediaType: MediaType
   mediaData: string // base64 encoded, max 20MB
   responseType: ResponseType
