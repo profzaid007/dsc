@@ -69,15 +69,15 @@ export default function ProfileDetailPage({
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="tools">
-            Tools
+          <TabsTrigger value="tasks">
+            Tasks
             {visibleAssignments.length > 0 && (
               <Badge variant="secondary" className="ms-2">
                 {visibleAssignments.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="case-file">Case File</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -136,24 +136,24 @@ export default function ProfileDetailPage({
           </div>
         </TabsContent>
 
-        <TabsContent value="tools">
+        <TabsContent value="tasks">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5" />
-                Assigned Tools
+                Assigned Tasks
               </CardTitle>
-              <CardDescription>Tools assigned to this profile</CardDescription>
+              <CardDescription>Tasks assigned to this profile</CardDescription>
             </CardHeader>
             <CardContent>
               {visibleAssignments.length === 0 ? (
                 <div className="py-8 text-center">
                   <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <h3 className="mb-2 text-lg font-medium">
-                    No tools assigned
+                    No tasks assigned
                   </h3>
                   <p className="text-muted-foreground">
-                    Tools will appear here once assigned by an admin
+                    Tasks will appear here once assigned by an admin
                   </p>
                 </div>
               ) : (
@@ -161,7 +161,7 @@ export default function ProfileDetailPage({
                   {visibleAssignments.map((assignment) => (
                     <Link
                       key={assignment.id}
-                      href={`/dashboard/cases/${id}/tools/${assignment.id}`}
+                      href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
                     >
                       <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50">
                         <div>
@@ -192,15 +192,15 @@ export default function ProfileDetailPage({
           </Card>
         </TabsContent>
 
-        <TabsContent value="history">
+        <TabsContent value="case-file">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
-                Response History
+                Case File
               </CardTitle>
               <CardDescription>
-                History of all submitted responses
+                History of all interactions between the case and the expert
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -210,7 +210,7 @@ export default function ProfileDetailPage({
                   <History className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <h3 className="mb-2 text-lg font-medium">No history yet</h3>
                   <p className="text-muted-foreground">
-                    Completed tools will appear here
+                    Completed tasks will appear here
                   </p>
                 </div>
               ) : (

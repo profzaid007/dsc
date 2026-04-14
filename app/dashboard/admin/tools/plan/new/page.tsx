@@ -4,25 +4,49 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
+import { useAuth } from "@/hooks/useAuth"
 import { toolTypesCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { DragList } from "@/components/ui/drag-list"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { PlanPreview } from "@/components/tool-renderers/PlanPreview"
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react"
-import type { PlanConfig, PlanGoal, PlanStep } from "@/types/tool"
+import { Plus, Trash2, Eye, EyeOff, GripVertical } from "lucide-react"
+import type { PlanConfig } from "@/types/tool"
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+// Simple interfaces for admin form (non-bilingual except plan name)
+interface SimplePlanGoal {
+  id: string
+  title: string
+  description: string
+  order: number
+}
+
+interface SimplePlanStep {
+  id: string
+  goalId?: string
+  title: string
+  description: string
+  notes: string
+  comments: string
+  dateOfAchievement: string
+  evaluation: string
+  completed: boolean
+  order: number
 }
 
 export default function PlanBuilderPage() {
   const router = useRouter()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
+  const { currentUser } = useAuth()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [planTypeId, setPlanTypeId] = useState<string>("")
@@ -30,23 +54,21 @@ export default function PlanBuilderPage() {
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
 
-  // Tool name for this specific plan instance
+  // Tool name for this specific plan instance (only bilingual field)
   const [toolName, setToolName] = useState({
     en: "",
     ar: "",
   })
 
   const [formData, setFormData] = useState({
-    childNameEn: "",
-    childNameAr: "",
-    expertNameEn: "Expert",
-    expertNameAr: "خبير",
+    childName: "",
+    expertName: "",
     startDate: "",
     endDate: "",
   })
 
-  const [goals, setGoals] = useState<PlanGoal[]>([])
-  const [steps, setSteps] = useState<PlanStep[]>([])
+  const [goals, setGoals] = useState<SimplePlanGoal[]>([])
+  const [steps, setSteps] = useState<SimplePlanStep[]>([])
 
   // Fetch plan type ID on mount
   useEffect(() => {
@@ -63,6 +85,16 @@ export default function PlanBuilderPage() {
     fetchPlanType()
   }, [])
 
+  // Update expert name when currentUser loads
+  useEffect(() => {
+    if (currentUser?.name) {
+      setFormData((prev) => ({
+        ...prev,
+        expertName: currentUser.name,
+      }))
+    }
+  }, [currentUser])
+
   const handleCaseSelect = (caseId: string) => {
     setSelectedCaseId(caseId)
     if (caseId) {
@@ -70,8 +102,7 @@ export default function PlanBuilderPage() {
       if (caseProfile) {
         setFormData((prev) => ({
           ...prev,
-          childNameEn: caseProfile.name,
-          childNameAr: caseProfile.name,
+          childName: caseProfile.name,
         }))
         // Auto-generate tool name if empty
         setToolName((prev) => ({
@@ -83,8 +114,7 @@ export default function PlanBuilderPage() {
       // Reset fields when case is cleared
       setFormData((prev) => ({
         ...prev,
-        childNameEn: "",
-        childNameAr: "",
+        childName: "",
       }))
     }
   }
@@ -94,14 +124,14 @@ export default function PlanBuilderPage() {
       ...goals,
       {
         id: generateId(),
-        title: { en: "", ar: "" },
-        description: { en: "", ar: "" },
+        title: "",
+        description: "",
         order: goals.length,
       },
     ])
   }
 
-  const updateGoal = (id: string, updates: Partial<PlanGoal>) => {
+  const updateGoal = (id: string, updates: Partial<SimplePlanGoal>) => {
     setGoals(goals.map((g) => (g.id === id ? { ...g, ...updates } : g)))
   }
 
@@ -109,26 +139,28 @@ export default function PlanBuilderPage() {
     setGoals(goals.filter((g) => g.id !== id))
   }
 
-  const handleGoalReorder = (reordered: PlanGoal[]) => {
-    setGoals(reordered)
+  const handleGoalReorder = (reordered: SimplePlanGoal[]) => {
+    setGoals(reordered.map((g, idx) => ({ ...g, order: idx })))
   }
 
-  const addStep = (goalId?: string) => {
+  const addStep = () => {
     setSteps([
       ...steps,
       {
         id: generateId(),
-        goalId,
-        title: { en: "", ar: "" },
-        description: { en: "", ar: "" },
+        title: "",
+        description: "",
+        notes: "",
+        comments: "",
+        dateOfAchievement: "",
+        evaluation: "",
         completed: false,
-        notes: { en: "", ar: "" },
-        comments: { en: "", ar: "" },
+        order: steps.length,
       },
     ])
   }
 
-  const updateStep = (id: string, updates: Partial<PlanStep>) => {
+  const updateStep = (id: string, updates: Partial<SimplePlanStep>) => {
     setSteps(steps.map((s) => (s.id === id ? { ...s, ...updates } : s)))
   }
 
@@ -136,11 +168,15 @@ export default function PlanBuilderPage() {
     setSteps(steps.filter((s) => s.id !== id))
   }
 
+  const handleStepReorder = (reordered: SimplePlanStep[]) => {
+    setSteps(reordered.map((s, idx) => ({ ...s, order: idx })))
+  }
+
   const handleSubmit = async () => {
     if (
       !toolName.en ||
-      !formData.childNameEn ||
-      !formData.expertNameEn ||
+      !formData.childName ||
+      !formData.expertName ||
       !formData.startDate ||
       !formData.endDate ||
       !selectedCaseId ||
@@ -150,13 +186,32 @@ export default function PlanBuilderPage() {
     setIsSubmitting(true)
 
     try {
+      // Convert simple form data to bilingual config for storage
       const config: PlanConfig = {
-        childName: { en: formData.childNameEn, ar: formData.childNameAr },
-        expertName: { en: formData.expertNameEn, ar: formData.expertNameAr },
+        childName: { en: formData.childName, ar: formData.childName },
+        expertName: { en: formData.expertName, ar: formData.expertName },
         startDate: formData.startDate,
         endDate: formData.endDate,
-        goals: goals.map((g, idx) => ({ ...g, order: idx })),
-        steps,
+        goals: goals.map((g, idx) => ({
+          id: g.id,
+          title: { en: g.title, ar: g.title },
+          description: g.description
+            ? { en: g.description, ar: g.description }
+            : undefined,
+          order: idx,
+        })),
+        steps: steps.map((s) => ({
+          id: s.id,
+          title: { en: s.title, ar: s.title },
+          description: { en: s.description, ar: s.description },
+          notes: { en: s.notes, ar: s.notes },
+          comments: { en: s.comments, ar: s.comments },
+          dateOfAchievement: s.dateOfAchievement || undefined,
+          evaluation: s.evaluation
+            ? { en: s.evaluation, ar: s.evaluation }
+            : undefined,
+          completed: s.completed,
+        })),
         media: [],
       }
 
@@ -185,10 +240,8 @@ export default function PlanBuilderPage() {
     setSelectedCaseId("")
     setToolName({ en: "", ar: "" })
     setFormData({
-      childNameEn: "",
-      childNameAr: "",
-      expertNameEn: "Expert",
-      expertNameAr: "خبير",
+      childName: "",
+      expertName: currentUser?.name || "",
       startDate: "",
       endDate: "",
     })
@@ -197,118 +250,98 @@ export default function PlanBuilderPage() {
     setShowPreview(false)
   }
 
-  const renderGoalItem = (goal: PlanGoal, index: number) => (
+  const renderGoalItem = (goal: SimplePlanGoal, index: number) => (
     <div className="flex-1 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">Goal {index + 1}</span>
         <Button
           variant="ghost"
-          size="icon-xs"
+          size="icon"
+          className="h-8 w-8"
           onClick={() => removeGoal(goal.id)}
         >
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="space-y-2">
         <Input
-          placeholder="Goal Title (EN)"
-          value={goal.title.en}
-          onChange={(e) =>
-            updateGoal(goal.id, {
-              title: { ...goal.title, en: e.target.value },
-            })
-          }
+          placeholder="Goal Title"
+          value={goal.title}
+          onChange={(e) => updateGoal(goal.id, { title: e.target.value })}
         />
         <Input
-          placeholder="عنوان الهدف (AR)"
-          value={goal.title.ar}
-          onChange={(e) =>
-            updateGoal(goal.id, {
-              title: { ...goal.title, ar: e.target.value },
-            })
-          }
-        />
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <Input
-          placeholder="Description (EN)"
-          value={goal.description?.en || ""}
-          onChange={(e) =>
-            updateGoal(goal.id, {
-              description: {
-                en: e.target.value,
-                ar: goal.description?.ar || "",
-              },
-            })
-          }
-        />
-        <Input
-          placeholder="الوصف (AR)"
-          value={goal.description?.ar || ""}
-          onChange={(e) =>
-            updateGoal(goal.id, {
-              description: {
-                en: goal.description?.en || "",
-                ar: e.target.value,
-              },
-            })
-          }
+          placeholder="Description"
+          value={goal.description}
+          onChange={(e) => updateGoal(goal.id, { description: e.target.value })}
         />
       </div>
     </div>
   )
 
-  const renderStepItem = (step: PlanStep, index: number) => (
-    <div className="flex-1 space-y-3">
+  const renderStepItem = (step: SimplePlanStep, index: number) => (
+    <div className="flex-1 space-y-3 rounded border p-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Step {index + 1}</span>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={step.completed}
+            onCheckedChange={(checked) =>
+              updateStep(step.id, { completed: !!checked })
+            }
+          />
+          <span className="font-medium">Step {index + 1}</span>
+        </div>
         <Button
           variant="ghost"
-          size="icon-xs"
+          size="icon"
+          className="h-8 w-8"
           onClick={() => removeStep(step.id)}
         >
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2">
+
+      <div className="space-y-3">
         <Input
-          placeholder="Step Title (EN)"
-          value={step.title.en}
-          onChange={(e) =>
-            updateStep(step.id, {
-              title: { ...step.title, en: e.target.value },
-            })
-          }
+          placeholder="Step Title"
+          value={step.title}
+          onChange={(e) => updateStep(step.id, { title: e.target.value })}
         />
         <Input
-          placeholder="عنوان الخطوة (AR)"
-          value={step.title.ar}
-          onChange={(e) =>
-            updateStep(step.id, {
-              title: { ...step.title, ar: e.target.value },
-            })
-          }
+          placeholder="Description"
+          value={step.description}
+          onChange={(e) => updateStep(step.id, { description: e.target.value })}
         />
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <Input
-          placeholder="Description (EN)"
-          value={step.description.en}
-          onChange={(e) =>
-            updateStep(step.id, {
-              description: { ...step.description, en: e.target.value },
-            })
-          }
-        />
-        <Input
-          placeholder="الوصف (AR)"
-          value={step.description.ar}
-          onChange={(e) =>
-            updateStep(step.id, {
-              description: { ...step.description, ar: e.target.value },
-            })
-          }
-        />
+
+        {/* Fields matching preview layout */}
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Input
+            placeholder="Notes"
+            value={step.notes}
+            onChange={(e) => updateStep(step.id, { notes: e.target.value })}
+          />
+          <Input
+            placeholder="Comments"
+            value={step.comments}
+            onChange={(e) => updateStep(step.id, { comments: e.target.value })}
+          />
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Input
+            type="date"
+            placeholder="Date of Achievement"
+            value={step.dateOfAchievement}
+            onChange={(e) =>
+              updateStep(step.id, { dateOfAchievement: e.target.value })
+            }
+          />
+          <Input
+            placeholder="Evaluation"
+            value={step.evaluation}
+            onChange={(e) =>
+              updateStep(step.id, { evaluation: e.target.value })
+            }
+          />
+        </div>
       </div>
     </div>
   )
@@ -367,7 +400,7 @@ export default function PlanBuilderPage() {
             </CardContent>
           </Card>
 
-          {/* Plan Name */}
+          {/* Plan Name - Only bilingual field */}
           <Card>
             <CardHeader>
               <CardTitle>Plan Name *</CardTitle>
@@ -398,7 +431,7 @@ export default function PlanBuilderPage() {
             </CardContent>
           </Card>
 
-          {/* Child & Expert Info */}
+          {/* Child & Expert Info - Single fields */}
           <Card>
             <CardHeader>
               <CardTitle>Child & Expert Information</CardTitle>
@@ -406,45 +439,23 @@ export default function PlanBuilderPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Child Name (EN)</Label>
+                  <Label>Child Name</Label>
                   <Input
-                    value={formData.childNameEn}
+                    value={formData.childName}
                     onChange={(e) =>
-                      setFormData({ ...formData, childNameEn: e.target.value })
+                      setFormData({ ...formData, childName: e.target.value })
                     }
                     placeholder="Child name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Child Name (AR)</Label>
+                  <Label>Expert Name</Label>
                   <Input
-                    value={formData.childNameAr}
+                    value={formData.expertName}
                     onChange={(e) =>
-                      setFormData({ ...formData, childNameAr: e.target.value })
-                    }
-                    placeholder="اسم الطفل"
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Expert Name (EN)</Label>
-                  <Input
-                    value={formData.expertNameEn}
-                    onChange={(e) =>
-                      setFormData({ ...formData, expertNameEn: e.target.value })
+                      setFormData({ ...formData, expertName: e.target.value })
                     }
                     placeholder="Expert name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Expert Name (AR)</Label>
-                  <Input
-                    value={formData.expertNameAr}
-                    onChange={(e) =>
-                      setFormData({ ...formData, expertNameAr: e.target.value })
-                    }
-                    placeholder="اسم الخبير"
                   />
                 </div>
               </div>
@@ -473,7 +484,7 @@ export default function PlanBuilderPage() {
             </CardContent>
           </Card>
 
-          {/* Goals */}
+          {/* Goals - Single fields */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Goals</CardTitle>
@@ -498,11 +509,11 @@ export default function PlanBuilderPage() {
             </CardContent>
           </Card>
 
-          {/* Steps */}
+          {/* Steps - With all fields matching preview */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Steps</CardTitle>
-              <Button size="sm" onClick={() => addStep()}>
+              <Button size="sm" onClick={addStep}>
                 <Plus className="me-2 h-4 w-4" />
                 Add Step
               </Button>
@@ -513,11 +524,12 @@ export default function PlanBuilderPage() {
                   No steps yet. Click Add Step to create one.
                 </p>
               ) : (
-                <div className="space-y-4">
-                  {steps.map((step, idx) => (
-                    <div key={step.id}>{renderStepItem(step, idx)}</div>
-                  ))}
-                </div>
+                <DragList
+                  items={steps}
+                  onReorder={handleStepReorder}
+                  renderItem={renderStepItem}
+                  keyExtractor={(s) => s.id}
+                />
               )}
             </CardContent>
           </Card>
@@ -530,7 +542,7 @@ export default function PlanBuilderPage() {
               onClick={handleSubmit}
               disabled={
                 !toolName.en ||
-                !formData.childNameEn ||
+                !formData.childName ||
                 !formData.startDate ||
                 !formData.endDate ||
                 !selectedCaseId ||
@@ -551,17 +563,35 @@ export default function PlanBuilderPage() {
             <PlanPreview
               config={{
                 childName: {
-                  en: formData.childNameEn,
-                  ar: formData.childNameAr,
+                  en: formData.childName,
+                  ar: formData.childName,
                 },
                 expertName: {
-                  en: formData.expertNameEn,
-                  ar: formData.expertNameAr,
+                  en: formData.expertName,
+                  ar: formData.expertName,
                 },
                 startDate: formData.startDate,
                 endDate: formData.endDate,
-                goals,
-                steps,
+                goals: goals.map((g) => ({
+                  id: g.id,
+                  title: { en: g.title, ar: g.title },
+                  description: g.description
+                    ? { en: g.description, ar: g.description }
+                    : undefined,
+                  order: g.order,
+                })),
+                steps: steps.map((s) => ({
+                  id: s.id,
+                  title: { en: s.title, ar: s.title },
+                  description: { en: s.description, ar: s.description },
+                  notes: { en: s.notes, ar: s.notes },
+                  comments: { en: s.comments, ar: s.comments },
+                  dateOfAchievement: s.dateOfAchievement || undefined,
+                  evaluation: s.evaluation
+                    ? { en: s.evaluation, ar: s.evaluation }
+                    : undefined,
+                  completed: s.completed,
+                })),
                 media: [],
               }}
             />

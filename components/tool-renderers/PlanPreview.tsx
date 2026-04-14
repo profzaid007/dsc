@@ -67,9 +67,11 @@ export function PlanPreview({ config }: PlanPreviewProps) {
           <CardContent className="space-y-2">
             {[...config.goals]
               .sort((a, b) => a.order - b.order)
-              .map((goal) => (
+              .map((goal, idx) => (
                 <div key={goal.id} className="rounded border p-3">
-                  <div className="font-medium">{goal.title[lang]}</div>
+                  <div className="font-medium">
+                    Goal {idx + 1}: {goal.title[lang]}
+                  </div>
                   {goal.description && (
                     <div className="text-sm text-muted-foreground">
                       {goal.description[lang]}
