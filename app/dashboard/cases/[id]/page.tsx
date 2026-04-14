@@ -23,6 +23,8 @@ import {
   User,
   ClipboardList,
   History,
+  Eye,
+  Download,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -159,13 +161,15 @@ export default function ProfileDetailPage({
               ) : (
                 <div className="space-y-3">
                   {visibleAssignments.map((assignment) => (
-                    <Link
+                    <div
                       key={assignment.id}
-                      href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
+                      className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
                     >
-                      <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                        <div>
-                          <p className="font-medium">
+                      <div className="flex-1">
+                        <Link
+                          href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
+                        >
+                          <p className="font-medium hover:underline">
                             {lang === "ar"
                               ? assignment.name_ar || assignment.name_en
                               : assignment.name_en}
@@ -173,7 +177,54 @@ export default function ProfileDetailPage({
                           <p className="text-sm text-muted-foreground capitalize">
                             {assignment.status.replace("_", " ")}
                           </p>
-                        </div>
+                        </Link>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {assignment.status === "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const responses = assignment.responses
+                              if (
+                                responses &&
+                                Object.keys(responses).length > 0
+                              ) {
+                                const printWindow = window.open(
+                                  "",
+                                  "_blank",
+                                  "width=800,height=600"
+                                )
+                                if (printWindow) {
+                                  printWindow.document.write(`
+                                    <html>
+                                      <head>
+                                        <title>${assignment.name_en || "Responses"}</title>
+                                        <style>
+                                          body { font-family: system-ui, sans-serif; padding: 20px; }
+                                          h1 { margin-bottom: 10px; }
+                                          .meta { color: #666; margin-bottom: 20px; }
+                                          .response { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+                                          .question { font-weight: bold; margin-bottom: 5px; }
+                                          @media print { .no-print { display: none; } }
+                                        </style>
+                                      </head>
+                                      <body>
+                                        <h1>${assignment.name_en || "Responses"}</h1>
+                                        <p class="meta">Profile: ${profile.name} | Date: ${new Date(assignment.updated).toLocaleDateString()}</p>
+                                        <pre style="white-space: pre-wrap; background: #f5f5f5; padding: 15px; border-radius: 4px;">${JSON.stringify(responses, null, 2)}</pre>
+                                        <button class="no-print" onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Print / Save as PDF</button>
+                                      </body>
+                                    </html>
+                                  `)
+                                  printWindow.document.close()
+                                }
+                              }
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Badge
                           variant={
                             assignment.status === "completed"
@@ -184,7 +235,7 @@ export default function ProfileDetailPage({
                           {assignment.status}
                         </Badge>
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               )}

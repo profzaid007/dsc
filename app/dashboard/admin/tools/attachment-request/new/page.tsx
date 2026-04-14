@@ -124,7 +124,6 @@ export default function AttachmentRequestBuilderPage() {
         type: attachmentTypeId,
         name_en: formData.nameEn,
         name_ar: formData.nameAr,
-        is_not_template: true,
         config,
         is_visible_to_user: true,
         status: "pending",
