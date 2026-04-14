@@ -97,8 +97,11 @@ export interface ReportConfig {
   expertNameField: BilingualString // editable label, default "Expert Name"
   customFields: ReportCustomField[]
   media: string[]
+  // Fixed fields (always present)
+  date?: string
+  assessment?: string
+  suggestions?: string
 }
-// Fixed fields (always present): Title, Date, Assessment, Suggestions
 
 // ============ PLAN ============
 

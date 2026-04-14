@@ -4,31 +4,23 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
+import { useAuth } from "@/hooks/useAuth"
 import { toolTypesCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { ReportPreview } from "@/components/tool-renderers/ReportPreview"
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react"
-import type { ReportConfig, ReportCustomField } from "@/types/tool"
-
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-}
+import { Eye, EyeOff } from "lucide-react"
+import type { ReportConfig } from "@/types/tool"
 
 export default function ReportBuilderPage() {
   const router = useRouter()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
+  const { currentUser } = useAuth()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [reportTypeId, setReportTypeId] = useState<string>("")
@@ -36,14 +28,21 @@ export default function ReportBuilderPage() {
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
 
-  const [formData, setFormData] = useState({
-    nameEn: "",
-    nameAr: "",
-    expertNameEn: "Expert",
-    expertNameAr: "خبير",
+  // Report name (bilingual) - goes directly to name_en/name_ar
+  const [reportName, setReportName] = useState({
+    en: "",
+    ar: "",
   })
 
-  const [customFields, setCustomFields] = useState<ReportCustomField[]>([])
+  // Expert name - single field, auto-filled from auth
+  const [expertName, setExpertName] = useState("")
+
+  // Fixed fields - stored in config
+  const [fixedFields, setFixedFields] = useState({
+    date: "",
+    assessment: "",
+    suggestions: "",
+  })
 
   // Fetch report type ID on mount
   useEffect(() => {
@@ -60,70 +59,57 @@ export default function ReportBuilderPage() {
     fetchReportType()
   }, [])
 
+  // Auto-fill expert name when currentUser loads
+  useEffect(() => {
+    if (currentUser?.name) {
+      setExpertName(currentUser.name)
+    }
+  }, [currentUser])
+
   const handleCaseSelect = (caseId: string) => {
     setSelectedCaseId(caseId)
     if (caseId) {
       const caseProfile = getProfileById(caseId)
       if (caseProfile) {
         // Auto-populate report name with case name
-        setFormData((prev) => ({
-          ...prev,
-          nameEn: `${caseProfile.name} - Report`,
-          nameAr: `${caseProfile.name} - تقرير`,
-        }))
+        setReportName({
+          en: `${caseProfile.name} - Report`,
+          ar: `${caseProfile.name} - تقرير`,
+        })
       }
     } else {
       // Reset name fields when case is cleared
-      setFormData((prev) => ({
-        ...prev,
-        nameEn: "",
-        nameAr: "",
-      }))
+      setReportName({ en: "", ar: "" })
     }
   }
 
-  const addField = () => {
-    setCustomFields([
-      ...customFields,
-      { id: generateId(), label: { en: "", ar: "" }, type: "text" },
-    ])
-  }
-
-  const updateField = (id: string, updates: Partial<ReportCustomField>) => {
-    setCustomFields(
-      customFields.map((f) => (f.id === id ? { ...f, ...updates } : f))
-    )
-  }
-
-  const removeField = (id: string) => {
-    setCustomFields(customFields.filter((f) => f.id !== id))
-  }
-
   const handleSubmit = async () => {
-    if (!selectedCaseId || !formData.nameEn || !reportTypeId) return
+    if (!selectedCaseId || !reportName.en || !expertName || !reportTypeId)
+      return
     setIsSubmitting(true)
 
     try {
+      // Store fixed fields in config
       const config: ReportConfig = {
-        title: { en: formData.nameEn, ar: formData.nameAr },
-        expertNameField: {
-          en: formData.expertNameEn,
-          ar: formData.expertNameAr,
-        },
-        customFields,
+        title: { en: reportName.en, ar: reportName.ar },
+        expertNameField: { en: expertName, ar: expertName },
+        customFields: [],
         media: [],
+        date: fixedFields.date || undefined,
+        assessment: fixedFields.assessment || undefined,
+        suggestions: fixedFields.suggestions || undefined,
       }
 
       // Create case document directly in case_tools (no tool template)
       await assignTool({
         case: selectedCaseId,
         type: reportTypeId,
-        name_en: formData.nameEn,
-        name_ar: formData.nameAr,
+        name_en: reportName.en,
+        name_ar: reportName.ar,
         is_not_template: true,
         config,
         is_visible_to_user: true,
-        status: "pending",
+        status: "completed",
       })
 
       // Redirect to assignments page
@@ -136,19 +122,20 @@ export default function ReportBuilderPage() {
   }
 
   const handleCancel = () => {
-    // Reset form instead of navigating back
+    // Reset form
     setSelectedCaseId("")
-    setFormData({
-      nameEn: "",
-      nameAr: "",
-      expertNameEn: "Expert",
-      expertNameAr: "خبير",
+    setReportName({ en: "", ar: "" })
+    setExpertName(currentUser?.name || "")
+    setFixedFields({
+      date: "",
+      assessment: "",
+      suggestions: "",
     })
-    setCustomFields([])
     setShowPreview(false)
   }
 
-  const isFormValid = selectedCaseId && formData.nameEn && reportTypeId
+  const isFormValid =
+    selectedCaseId && reportName.en && expertName && reportTypeId
 
   if (typeError) {
     return (
@@ -190,6 +177,7 @@ export default function ReportBuilderPage() {
         className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "grid-cols-1"}`}
       >
         <div className="space-y-6">
+          {/* Case Selection */}
           <Card>
             <CardHeader>
               <CardTitle>Select Case *</CardTitle>
@@ -208,6 +196,7 @@ export default function ReportBuilderPage() {
             </CardContent>
           </Card>
 
+          {/* Report Name - Bilingual (goes to name_en/name_ar) */}
           <Card>
             <CardHeader>
               <CardTitle>Report Name *</CardTitle>
@@ -217,9 +206,9 @@ export default function ReportBuilderPage() {
                 <div className="space-y-2">
                   <Label>Name (EN)</Label>
                   <Input
-                    value={formData.nameEn}
+                    value={reportName.en}
                     onChange={(e) =>
-                      setFormData({ ...formData, nameEn: e.target.value })
+                      setReportName({ ...reportName, en: e.target.value })
                     }
                     placeholder="Report title"
                   />
@@ -227,9 +216,9 @@ export default function ReportBuilderPage() {
                 <div className="space-y-2">
                   <Label>Name (AR)</Label>
                   <Input
-                    value={formData.nameAr}
+                    value={reportName.ar}
                     onChange={(e) =>
-                      setFormData({ ...formData, nameAr: e.target.value })
+                      setReportName({ ...reportName, ar: e.target.value })
                     }
                     placeholder="عنوان التقرير"
                   />
@@ -238,107 +227,67 @@ export default function ReportBuilderPage() {
             </CardContent>
           </Card>
 
+          {/* Expert Name - Single field, auto-filled */}
           <Card>
             <CardHeader>
               <CardTitle>Expert Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Expert Name (EN)</Label>
-                  <Input
-                    value={formData.expertNameEn}
-                    onChange={(e) =>
-                      setFormData({ ...formData, expertNameEn: e.target.value })
-                    }
-                    placeholder="Expert name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Expert Name (AR)</Label>
-                  <Input
-                    value={formData.expertNameAr}
-                    onChange={(e) =>
-                      setFormData({ ...formData, expertNameAr: e.target.value })
-                    }
-                    placeholder="اسم الخبير"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Expert Name</Label>
+                <Input
+                  value={expertName}
+                  onChange={(e) => setExpertName(e.target.value)}
+                  placeholder="Expert name"
+                />
               </div>
             </CardContent>
           </Card>
 
+          {/* Fixed Fields - Date, Assessment, Suggestions */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Custom Fields</CardTitle>
-              <Button size="sm" onClick={addField}>
-                <Plus className="me-2 h-4 w-4" />
-                Add Field
-              </Button>
+            <CardHeader>
+              <CardTitle>Report Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {customFields.length === 0 ? (
-                <p className="py-4 text-center text-muted-foreground">
-                  No custom fields yet. Click Add Field to create one.
-                </p>
-              ) : (
-                customFields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="space-y-3 rounded-lg border p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        Field {index + 1}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => removeField(field.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input
-                        placeholder="Label (EN)"
-                        value={field.label.en}
-                        onChange={(e) =>
-                          updateField(field.id, {
-                            label: { ...field.label, en: e.target.value },
-                          })
-                        }
-                      />
-                      <Input
-                        placeholder="العنوان (AR)"
-                        value={field.label.ar}
-                        onChange={(e) =>
-                          updateField(field.id, {
-                            label: { ...field.label, ar: e.target.value },
-                          })
-                        }
-                      />
-                    </div>
-                    <Select
-                      value={field.type}
-                      onValueChange={(v) =>
-                        updateField(field.id, {
-                          type: v as ReportCustomField["type"],
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="text">Text</SelectItem>
-                        <SelectItem value="textarea">Textarea</SelectItem>
-                        <SelectItem value="date">Date</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ))
-              )}
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <Input
+                  type="date"
+                  value={fixedFields.date}
+                  onChange={(e) =>
+                    setFixedFields({ ...fixedFields, date: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Assessment</Label>
+                <Textarea
+                  value={fixedFields.assessment}
+                  onChange={(e) =>
+                    setFixedFields({
+                      ...fixedFields,
+                      assessment: e.target.value,
+                    })
+                  }
+                  placeholder="Enter assessment..."
+                  rows={4}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Suggestions</Label>
+                <Textarea
+                  value={fixedFields.suggestions}
+                  onChange={(e) =>
+                    setFixedFields({
+                      ...fixedFields,
+                      suggestions: e.target.value,
+                    })
+                  }
+                  placeholder="Enter suggestions..."
+                  rows={4}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -362,13 +311,16 @@ export default function ReportBuilderPage() {
             </p>
             <ReportPreview
               config={{
-                title: { en: formData.nameEn, ar: formData.nameAr },
-                expertNameField: {
-                  en: formData.expertNameEn,
-                  ar: formData.expertNameAr,
-                },
-                customFields,
+                title: { en: reportName.en, ar: reportName.ar },
+                expertNameField: { en: expertName, ar: expertName },
+                customFields: [],
                 media: [],
+                date: fixedFields.date,
+                assessment: fixedFields.assessment,
+                suggestions: fixedFields.suggestions,
+              }}
+              onChange={(field, value) => {
+                setFixedFields((prev) => ({ ...prev, [field]: value }))
               }}
             />
           </div>
