@@ -244,11 +244,17 @@ export default function MultipleChoiceBuilderPage({
                 />
                 <Input
                   placeholder="EN"
-                  value={opt.label.en}
+                  value={(opt.label as { en: string; ar: string }).en}
                   onChange={(e) => {
                     const newOptions = question.options.map((o, i) =>
                       i === optIdx
-                        ? { ...o, label: { ...o.label, en: e.target.value } }
+                        ? {
+                            ...o,
+                            label: {
+                              ...(o.label as { en: string; ar: string }),
+                              en: e.target.value,
+                            },
+                          }
                         : o
                     )
                     updateQuestion(question.id, { options: newOptions })
@@ -257,11 +263,17 @@ export default function MultipleChoiceBuilderPage({
                 />
                 <Input
                   placeholder="AR"
-                  value={opt.label.ar}
+                  value={(opt.label as { en: string; ar: string }).ar}
                   onChange={(e) => {
                     const newOptions = question.options.map((o, i) =>
                       i === optIdx
-                        ? { ...o, label: { ...o.label, ar: e.target.value } }
+                        ? {
+                            ...o,
+                            label: {
+                              ...(o.label as { en: string; ar: string }),
+                              ar: e.target.value,
+                            },
+                          }
                         : o
                     )
                     updateQuestion(question.id, { options: newOptions })

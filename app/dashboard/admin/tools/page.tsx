@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useTools } from "@/hooks/useTools"
+import { useToolTypes } from "@/hooks/useToolTypes"
 import type { Tool, ToolType } from "@/types/tool"
 import {
   Card,
@@ -62,13 +63,46 @@ const statusLabels: Record<Tool["status"], string> = {
 
 export default function AdminToolsPage() {
   const { tools } = useTools()
+  const { toolTypes, fetchToolTypes, getToolTypeById } = useToolTypes()
   const [filterType, setFilterType] = useState<ToolType | "all">("all")
   const [filterStatus, setFilterStatus] = useState<Tool["status"] | "all">(
     "all"
   )
 
+  // Fetch tool types on mount
+  useEffect(() => {
+    fetchToolTypes()
+  }, [fetchToolTypes])
+
+  // Helper to get type name from ID
+  const getTypeName = (typeId: string): ToolType | undefined => {
+    const toolType = getToolTypeById(typeId)
+    return toolType?.name as ToolType | undefined
+  }
+
+  // Helper to get route from type name
+  const getTypeRoute = (typeName: ToolType): string => {
+    switch (typeName) {
+      case "survey":
+        return "survey"
+      case "multiple_answer":
+        return "multiple-choice"
+      case "media_question":
+        return "media"
+      case "report":
+        return "report"
+      case "plan":
+        return "plan"
+      case "attachment_request":
+        return "attachment-request"
+      default:
+        return "survey"
+    }
+  }
+
   const filteredTools = tools.filter((tool) => {
-    if (filterType !== "all" && tool.type !== filterType) return false
+    const typeName = getTypeName(tool.type)
+    if (filterType !== "all" && typeName !== filterType) return false
     if (filterStatus !== "all" && tool.status !== filterStatus) return false
     return true
   })
@@ -137,19 +171,15 @@ export default function AdminToolsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTools.map((tool) => {
-            const Icon = toolTypeIcons[tool.type]
-            const typeRoute =
-              tool.type === "survey"
-                ? "survey"
-                : tool.type === "multiple_answer"
-                  ? "multiple-choice"
-                  : tool.type === "media_question"
-                    ? "media"
-                    : tool.type === "report"
-                      ? "report"
-                      : tool.type === "plan"
-                        ? "plan"
-                        : "attachment-request"
+            const typeName = getTypeName(tool.type)
+            const Icon = typeName
+              ? toolTypeIcons[typeName] || FileText
+              : FileText
+            const typeLabel = typeName
+              ? toolTypeLabels[typeName]?.en
+              : "Unknown Type"
+            const typeRoute = typeName ? getTypeRoute(typeName) : "survey"
+
             return (
               <Link
                 key={tool.id}
@@ -165,9 +195,7 @@ export default function AdminToolsPage() {
                         </CardTitle>
                       </div>
                     </div>
-                    <CardDescription>
-                      {toolTypeLabels[tool.type].en}
-                    </CardDescription>
+                    <CardDescription>{typeLabel}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">

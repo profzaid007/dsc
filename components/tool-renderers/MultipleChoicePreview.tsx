@@ -86,7 +86,8 @@ export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
                         : ""
                     }
                   >
-                    {opt.label[lang]} {showAnswers && opt.isCorrect && "✓"}
+                    {(opt.label as { en: string; ar: string })[lang]}{" "}
+                    {showAnswers && opt.isCorrect && "✓"}
                   </Label>
                 </div>
               ))}
@@ -118,7 +119,8 @@ export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
                         : ""
                     }
                   >
-                    {opt.label[lang]} {showAnswers && opt.isCorrect && "✓"}
+                    {(opt.label as { en: string; ar: string })[lang]}{" "}
+                    {showAnswers && opt.isCorrect && "✓"}
                   </Label>
                 </div>
               ))}

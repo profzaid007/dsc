@@ -102,7 +102,7 @@ export function SurveyPreview({ config }: SurveyPreviewProps) {
                       id={`preview-${question.id}-${opt.value}`}
                     />
                     <Label htmlFor={`preview-${question.id}-${opt.value}`}>
-                      {opt.label[lang]}
+                      {(opt.label as { en: string; ar: string })[lang]}
                     </Label>
                   </div>
                 ))}
@@ -127,7 +127,7 @@ export function SurveyPreview({ config }: SurveyPreviewProps) {
                       }}
                     />
                     <Label htmlFor={`preview-${question.id}-${opt.value}`}>
-                      {opt.label[lang]}
+                      {(opt.label as { en: string; ar: string })[lang]}
                     </Label>
                   </div>
                 ))}

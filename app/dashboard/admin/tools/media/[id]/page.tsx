@@ -98,7 +98,7 @@ export default function MediaViewPage({ params }: ToolViewPageProps) {
     )
   }
 
-  const Icon = toolTypeIcons[tool.type]
+  const Icon = toolTypeIcons["media_question"]
 
   const handleAssign = async () => {
     if (!selectedCaseId || !tool) return
@@ -143,7 +143,7 @@ export default function MediaViewPage({ params }: ToolViewPageProps) {
               {tool.name[lang]}
             </h1>
             <p className="text-muted-foreground">
-              {toolTypeLabels[tool.type]} • {tool.serviceType}
+              {toolTypeLabels["media_question"]} • {tool.serviceType}
             </p>
           </div>
         </div>
@@ -190,8 +190,8 @@ export default function MediaViewPage({ params }: ToolViewPageProps) {
                 Type
               </span>
               <div>
-                <Badge className={statusColors[tool.type]}>
-                  {toolTypeLabels[tool.type]}
+                <Badge className={statusColors["media_question"]}>
+                  {toolTypeLabels["media_question"]}
                 </Badge>
               </div>
             </div>

@@ -98,7 +98,7 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
     )
   }
 
-  const Icon = toolTypeIcons[tool.type]
+  const Icon = toolTypeIcons["multiple_answer"]
 
   const handleAssign = async () => {
     if (!selectedCaseId || !tool) return
@@ -143,7 +143,7 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
               {tool.name[lang]}
             </h1>
             <p className="text-muted-foreground">
-              {toolTypeLabels[tool.type]} • {tool.serviceType}
+              {toolTypeLabels["multiple_answer"]} • {tool.serviceType}
             </p>
           </div>
         </div>
@@ -190,8 +190,8 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
                 Type
               </span>
               <div>
-                <Badge className={statusColors[tool.type]}>
-                  {toolTypeLabels[tool.type]}
+                <Badge className={statusColors["multiple_answer"]}>
+                  {toolTypeLabels["multiple_answer"]}
                 </Badge>
               </div>
             </div>

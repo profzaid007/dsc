@@ -144,7 +144,7 @@ export default function TakeSurveyToolPage({
                   id={`${question.id}-${opt.value}`}
                 />
                 <Label htmlFor={`${question.id}-${opt.value}`}>
-                  {opt.label[lang]}
+                  {(opt.label as { en: string; ar: string })[lang]}
                 </Label>
               </div>
             ))}
@@ -171,7 +171,7 @@ export default function TakeSurveyToolPage({
                   }}
                 />
                 <Label htmlFor={`${question.id}-${opt.value}`}>
-                  {opt.label[lang]}
+                  {(opt.label as { en: string; ar: string })[lang]}
                 </Label>
               </div>
             ))}
