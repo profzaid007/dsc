@@ -42,7 +42,12 @@ export default function MediaBuilderPage({
   params,
 }: MediaBuilderPageProps = {}) {
   const router = useRouter()
-  const { addTool, updateTool, getToolById } = useTools()
+  const {
+    addTool,
+    updateTool,
+    getToolById,
+    isLoading: isToolsLoading,
+  } = useTools()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -62,7 +67,7 @@ export default function MediaBuilderPage({
 
   // Load existing data in edit mode
   useEffect(() => {
-    if (isEditMode && editId) {
+    if (isEditMode && editId && !isToolsLoading) {
       setIsLoading(true)
       const tool = getToolById(editId)
       if (tool && tool.config) {
@@ -75,7 +80,7 @@ export default function MediaBuilderPage({
       }
       setIsLoading(false)
     }
-  }, [isEditMode, editId, getToolById])
+  }, [isEditMode, editId, isToolsLoading])
 
   const addItem = () => {
     setUploadOpen(true)

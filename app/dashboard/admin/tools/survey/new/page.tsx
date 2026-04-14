@@ -48,7 +48,12 @@ export default function SurveyBuilderPage({
 }: SurveyBuilderPageProps = {}) {
   const router = useRouter()
   const { lang } = useLang()
-  const { addTool, updateTool, getToolById } = useTools()
+  const {
+    addTool,
+    updateTool,
+    getToolById,
+    isLoading: isToolsLoading,
+  } = useTools()
   const { toolTypes, fetchToolTypes } = useToolTypes()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -62,7 +67,7 @@ export default function SurveyBuilderPage({
   })
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
   useEffect(() => {
-    if (isEditMode && editId) {
+    if (isEditMode && editId && !isToolsLoading) {
       setIsLoading(true)
       const tool = getToolById(editId)
       if (tool && tool.config) {
@@ -75,7 +80,7 @@ export default function SurveyBuilderPage({
       }
       setIsLoading(false)
     }
-  }, [isEditMode, editId, getToolById])
+  }, [isEditMode, editId, isToolsLoading])
   const addQuestion = () => {
     const newQuestion: SurveyQuestion = {
       id: generateId(),
@@ -111,10 +116,9 @@ export default function SurveyBuilderPage({
       })
       router.push(`/dashboard/admin/tools/survey/${editId}`)
     } else {
-
       const toolTypes = await fetchToolTypes()
       const type = toolTypes.find((t) => t.name === "survey")?.id
-  
+
       await addTool({
         name: { en: formData.nameEn, ar: formData.nameAr },
         type: type,
@@ -184,19 +188,24 @@ export default function SurveyBuilderPage({
             <Label className="text-xs">Options</Label>
             {question.options.map((opt, optIdx) => (
               <div key={opt.value} className="flex gap-2">
-              <Input
-                placeholder="Option"
-                value={typeof opt.label === "string" ? opt.label : opt.label.en}
-                onChange={(e) => {
-                  const newOptions = question.options.map((o, i) =>
-                    i === optIdx 
-                      ? { ...o, label: { en: e.target.value, ar: e.target.value } } 
-                      : o
-                  )
-                  updateQuestion(question.id, { options: newOptions })
-                }}
-                className="flex-1"
-              />
+                <Input
+                  placeholder="Option"
+                  value={
+                    typeof opt.label === "string" ? opt.label : opt.label.en
+                  }
+                  onChange={(e) => {
+                    const newOptions = question.options.map((o, i) =>
+                      i === optIdx
+                        ? {
+                            ...o,
+                            label: { en: e.target.value, ar: e.target.value },
+                          }
+                        : o
+                    )
+                    updateQuestion(question.id, { options: newOptions })
+                  }}
+                  className="flex-1"
+                />
               </div>
             ))}
             <Button

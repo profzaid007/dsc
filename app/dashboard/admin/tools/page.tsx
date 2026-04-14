@@ -65,7 +65,6 @@ const statusLabels: Record<Tool["status"], string> = {
 }
 
 export default function AdminToolsPage() {
-
   const { tools } = useTools()
   const router = useRouter()
   const { toolTypes, fetchToolTypes, getToolTypeById } = useToolTypes()
@@ -199,15 +198,17 @@ export default function AdminToolsPage() {
                           {tool.name.en}
                         </CardTitle>
                       </div>
-                      <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        router.push(`/dashboard/admin/tools/survey/edit/${tool.id}`)
-                      }}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          router.push(
+                            `/dashboard/admin/tools/${typeRoute}/edit/${tool.id}`
+                          )
+                        }}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>

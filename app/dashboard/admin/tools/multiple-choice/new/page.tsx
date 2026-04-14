@@ -71,7 +71,12 @@ export default function MultipleChoiceBuilderPage({
   params,
 }: MultipleChoiceBuilderPageProps = {}) {
   const router = useRouter()
-  const { addTool, updateTool, getToolById } = useTools()
+  const {
+    addTool,
+    updateTool,
+    getToolById,
+    isLoading: isToolsLoading,
+  } = useTools()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -90,7 +95,7 @@ export default function MultipleChoiceBuilderPage({
 
   // Load existing data in edit mode
   useEffect(() => {
-    if (isEditMode && editId) {
+    if (isEditMode && editId && !isToolsLoading) {
       setIsLoading(true)
       const tool = getToolById(editId)
       if (tool && tool.config) {
@@ -103,7 +108,7 @@ export default function MultipleChoiceBuilderPage({
       }
       setIsLoading(false)
     }
-  }, [isEditMode, editId, getToolById])
+  }, [isEditMode, editId, isToolsLoading])
 
   const addQuestion = () => {
     const newQuestion: MCQuestion = {
