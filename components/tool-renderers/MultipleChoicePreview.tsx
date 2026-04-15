@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "../ui/textarea"
 
 interface MultipleChoicePreviewProps {
   config: MultipleChoiceConfig
@@ -51,7 +52,7 @@ export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
 
         <div className="ms-7">
           {question.answerType === "text" && (
-            <Input
+            <Textarea
               placeholder={
                 lang === "ar" ? "أدخل إجابتك..." : "Enter your answer..."
               }
@@ -60,11 +61,16 @@ export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
             />
           )}
           {question.answerType === "number" && (
-            <Input
-              type="number"
-              placeholder="0"
-              value={(value as string) || ""}
-              onChange={(e) => handleAnswer(question.id, e.target.value)}
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="0"
+            value={(value as string) || ""}
+            onChange={(e) => {
+              const filtered = e.target.value.replace(/[^0-9]/g, "")
+              handleAnswer(question.id, filtered)
+            }}
             />
           )}
           {showOptions && question.answerType === "single_choice" && (
