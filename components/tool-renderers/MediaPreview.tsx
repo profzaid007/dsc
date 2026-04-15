@@ -29,7 +29,7 @@ export function MediaPreview({ config }: MediaPreviewProps) {
       return (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
           <img
-            src={item.mediaData}
+            src={item.mediaUrl}
             alt="Media"
             className="h-full w-full object-contain"
           />
@@ -39,17 +39,14 @@ export function MediaPreview({ config }: MediaPreviewProps) {
     if (item.mediaType === "video") {
       return (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
-          <video
-            src={item.mediaData}
-            className="h-full w-full object-contain"
-          />
+          <video src={item.mediaUrl} className="h-full w-full object-contain" />
         </div>
       )
     }
     if (item.mediaType === "audio") {
       return (
         <div className="flex items-center justify-center rounded-lg border bg-muted/30 p-4">
-          <audio src={item.mediaData} controls className="w-full" />
+          <audio src={item.mediaUrl} controls className="w-full" />
         </div>
       )
     }

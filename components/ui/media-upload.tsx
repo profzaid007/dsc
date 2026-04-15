@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Upload, X, Image, Video, Music, Play, Loader2 } from "lucide-react"
+import { Upload, X, Image, Video, Music, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -41,7 +41,7 @@ interface MediaUploadProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpload: (data: {
-    mediaData: string
+    file: File
     mediaType: MediaType
     responseType: ResponseType
   }) => void
@@ -54,7 +54,8 @@ export function MediaUpload({
 }: MediaUploadProps) {
   const [mediaType, setMediaType] = useState<MediaType>("image")
   const [responseType, setResponseType] = useState<ResponseType>("text")
-  const [preview, setPreview] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -70,33 +71,22 @@ export function MediaUpload({
       return
     }
 
-    setIsLoading(true)
-
-    try {
-      const reader = new FileReader()
-      reader.onload = () => {
-        setPreview(reader.result as string)
-        setIsLoading(false)
-      }
-      reader.onerror = () => {
-        setError("Failed to read file")
-        setIsLoading(false)
-      }
-      reader.readAsDataURL(file)
-    } catch {
-      setError("Failed to process file")
-      setIsLoading(false)
-    }
+    setSelectedFile(file)
+    setPreviewUrl(URL.createObjectURL(file))
   }
 
   const handleSave = () => {
-    if (!preview) return
-    onUpload({ mediaData: preview, mediaType, responseType })
+    if (!selectedFile) return
+    onUpload({ file: selectedFile, mediaType, responseType })
     handleClose()
   }
 
   const handleClose = () => {
-    setPreview(null)
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+    }
+    setSelectedFile(null)
+    setPreviewUrl(null)
     setError(null)
     setMediaType("image")
     setResponseType("text")
@@ -104,13 +94,13 @@ export function MediaUpload({
   }
 
   const renderPreview = () => {
-    if (!preview) return null
+    if (!previewUrl) return null
 
     if (mediaType === "image") {
       return (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
           <img
-            src={preview}
+            src={previewUrl}
             alt="Preview"
             className="h-full w-full object-contain"
           />
@@ -121,7 +111,7 @@ export function MediaUpload({
     if (mediaType === "video") {
       return (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
-          <video src={preview} className="h-full w-full object-contain" />
+          <video src={previewUrl} className="h-full w-full object-contain" />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
               <Play className="h-8 w-8 text-white" />
@@ -136,7 +126,7 @@ export function MediaUpload({
         <div className="flex items-center justify-center rounded-lg border bg-muted/30 p-8">
           <div className="flex flex-col items-center gap-2">
             <Music className="h-12 w-12 text-muted-foreground" />
-            <audio src={preview} controls className="w-full" />
+            <audio src={previewUrl} controls className="w-full" />
           </div>
         </div>
       )
@@ -198,7 +188,7 @@ export function MediaUpload({
             </div>
           </div>
 
-          {!preview && (
+          {!selectedFile && (
             <div className="space-y-2">
               <Input
                 ref={fileInputRef}
@@ -213,24 +203,22 @@ export function MediaUpload({
                 onChange={handleFileSelect}
                 className="cursor-pointer"
               />
-              {isLoading && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing...
-                </div>
-              )}
               {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
           )}
 
-          {preview && (
+          {selectedFile && (
             <div className="space-y-3">
               {renderPreview()}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setPreview(null)
+                  if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl)
+                  }
+                  setSelectedFile(null)
+                  setPreviewUrl(null)
                   if (fileInputRef.current) fileInputRef.current.value = ""
                 }}
               >
@@ -245,7 +233,7 @@ export function MediaUpload({
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!preview}>
+          <Button onClick={handleSave} disabled={!selectedFile}>
             Add Media
           </Button>
         </DialogFooter>

@@ -30,6 +30,7 @@ import type {
   ResponseType,
 } from "@/types/tool"
 import { useToolTypes } from "@/hooks/useToolTypes"
+import pb from "@/lib/pb"
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -66,6 +67,7 @@ export default function MediaBuilderPage({
   })
 
   const [items, setItems] = useState<MediaItem[]>([])
+  const [pendingFiles, setPendingFiles] = useState<Map<string, File>>(new Map())
 
   // Load existing data in edit mode
   useEffect(() => {
@@ -89,7 +91,7 @@ export default function MediaBuilderPage({
   }
 
   const handleMediaUpload = (data: {
-    mediaData: string
+    file: File
     mediaType: MediaType
     responseType: ResponseType
   }) => {
@@ -97,11 +99,13 @@ export default function MediaBuilderPage({
       id: generateId(),
       question: "",
       mediaType: data.mediaType,
-      mediaData: data.mediaData,
+      mediaUrl: "", // Will be set after upload
       responseType: data.responseType,
       order: items.length,
     }
+    const itemId = newItem.id
     setItems([...items, newItem])
+    setPendingFiles((prev) => new Map(prev).set(itemId, data.file))
   }
 
   const updateItem = (id: string, updates: Partial<MediaItem>) => {
@@ -122,30 +126,61 @@ export default function MediaBuilderPage({
     if (!formData.nameEn || items.length === 0) return
     setIsSubmitting(true)
 
+    const toolTypes = await fetchToolTypes()
+    const type = toolTypes.find((t) => t.name === "media_question")?.id
+
+    const updatedItems = items.map((item, idx) => ({ ...item, order: idx }))
+
     const config: MediaConfig = {
       title: { en: formData.nameEn, ar: formData.nameAr },
-      items: items.map((item, idx) => ({ ...item, order: idx })),
+      items: updatedItems,
       media: [],
     }
 
+    const mediaFormData = new FormData()
+    mediaFormData.append("name_en", formData.nameEn)
+    mediaFormData.append("name_ar", formData.nameAr)
+    mediaFormData.append("type", type || "")
+    mediaFormData.append("serviceType", "individual")
+    mediaFormData.append("status", "active")
+    mediaFormData.append("config", JSON.stringify(config))
+
+    for (const [, file] of pendingFiles) {
+      mediaFormData.append("media", file)
+    }
+
     if (isEditMode && editId) {
+      const record = await pb.collection("tools").update(editId, mediaFormData)
+      const uploadedUrls = (record.media as string[]).map((filename) =>
+        pb.files.getUrl(record, filename)
+      )
+      const finalConfig: MediaConfig = {
+        title: { en: formData.nameEn, ar: formData.nameAr },
+        items: updatedItems.map((item, idx) => ({
+          ...item,
+          mediaUrl: uploadedUrls[idx] || item.mediaUrl,
+        })),
+        media: uploadedUrls,
+      }
       await updateTool(editId, {
         name: { en: formData.nameEn, ar: formData.nameAr },
-        config,
+        config: finalConfig,
       })
       router.push(`/dashboard/admin/tools/media/${editId}`)
     } else {
-      
-      const toolTypes = await fetchToolTypes()
-      const type = toolTypes.find((t) => t.name === "media_question")?.id
-
-      await addTool({
-        name: { en: formData.nameEn, ar: formData.nameAr },
-        type: type,
-        serviceType: "individual",
-        status: "active",
-        config,
-      })
+      const record = await pb.collection("tools").create(mediaFormData)
+      const uploadedUrls = (record.media as string[]).map((filename) =>
+        pb.files.getUrl(record, filename)
+      )
+      const finalConfig: MediaConfig = {
+        title: { en: formData.nameEn, ar: formData.nameAr },
+        items: updatedItems.map((item, idx) => ({
+          ...item,
+          mediaUrl: uploadedUrls[idx] || item.mediaUrl,
+        })),
+        media: uploadedUrls,
+      }
+      await updateTool(record.id, { config: finalConfig })
       router.push(`/dashboard/admin/tools`)
     }
   }
@@ -163,6 +198,10 @@ export default function MediaBuilderPage({
 
   const renderItemPreview = (item: MediaItem, index: number) => {
     const Icon = getMediaIcon(item.mediaType)
+    const pendingFile = pendingFiles.get(item.id)
+    const previewSrc = pendingFile
+      ? URL.createObjectURL(pendingFile)
+      : item.mediaUrl
 
     return (
       <div className="flex-1 space-y-3">
@@ -177,28 +216,44 @@ export default function MediaBuilderPage({
           <Button
             variant="ghost"
             size="icon-xs"
-            onClick={() => removeItem(item.id)}
+            onClick={() => {
+              removeItem(item.id)
+              setPendingFiles((prev) => {
+                const next = new Map(prev)
+                next.delete(item.id)
+                return next
+              })
+            }}
           >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
 
         <div className="rounded-lg border bg-muted/30 p-2">
-          {item.mediaType === "image" && (
+          {item.mediaType === "image" && previewSrc && (
             <img
-              src={item.mediaData}
+              src={previewSrc}
               alt="Preview"
               className="h-32 w-full rounded object-cover"
             />
           )}
-          {item.mediaType === "video" && (
-            <div className="relative flex h-32 w-full items-center justify-center rounded bg-black">
-              <Play className="h-8 w-8 text-white" />
-            </div>
+          {item.mediaType === "video" && previewSrc && (
+            <video
+              src={previewSrc}
+              className="h-32 w-full rounded object-cover"
+            />
           )}
           {item.mediaType === "audio" && (
             <div className="flex h-12 items-center justify-center rounded bg-muted">
               <Music className="h-6 w-6" />
+            </div>
+          )}
+          {item.mediaType === "audio" && previewSrc && (
+            <audio src={previewSrc} controls className="mt-2 w-full" />
+          )}
+          {!previewSrc && (
+            <div className="flex h-32 items-center justify-center text-muted-foreground">
+              No preview
             </div>
           )}
         </div>

@@ -75,7 +75,7 @@ export interface MediaItem {
   id: string
   question: string
   mediaType: MediaType
-  mediaData: string // base64 encoded, max 20MB
+  mediaUrl: string // URL to media file in PocketBase
   responseType: ResponseType
   order: number
 }

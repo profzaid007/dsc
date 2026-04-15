@@ -226,9 +226,9 @@ export default function TakeSurveyToolPage({
                 style={
                   selectedRating === rating
                     ? {
-                      backgroundColor: "var(--dsc-gold)",
-                      borderColor: "var(--dsc-gold)",
-                    }
+                        backgroundColor: "var(--dsc-gold)",
+                        borderColor: "var(--dsc-gold)",
+                      }
                     : {}
                 }
               >
@@ -388,25 +388,25 @@ export default function TakeSurveyToolPage({
   const renderMediaItem = (item: MediaItem) => (
     <div key={item.id} className="space-y-3 rounded-lg border bg-card p-4">
       <Label className="text-base font-medium">{item.question}</Label>
-      {item.mediaData && (
+      {item.mediaUrl && (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
           {item.mediaType === "image" && (
             <img
-              src={item.mediaData}
+              src={item.mediaUrl}
               alt="Media"
               className="h-full w-full object-contain"
             />
           )}
           {item.mediaType === "video" && (
             <video
-              src={item.mediaData}
+              src={item.mediaUrl}
               controls
               className="h-full w-full object-contain"
             />
           )}
           {item.mediaType === "audio" && (
             <div className="p-4">
-              <audio src={item.mediaData} controls className="w-full" />
+              <audio src={item.mediaUrl} controls className="w-full" />
             </div>
           )}
         </div>
@@ -512,18 +512,16 @@ export default function TakeSurveyToolPage({
                         {String(answers[question.id] || "-")} -{" "}
                         {
                           RATING_LABELS[
-                          (answers[question.id] as number) || 1
+                            (answers[question.id] as number) || 1
                           ]?.[lang]
                         }
                       </span>
                     )}
                     {question.answerType === "single_choice" && (
                       <span className="font-medium">
-                        {(
-                          question.options?.find(
-                            (o) => o.value === answers[question.id]
-                          )?.label
-                        ) || "-"}
+                        {question.options?.find(
+                          (o) => o.value === answers[question.id]
+                        )?.label || "-"}
                       </span>
                     )}
                     {question.answerType === "multiple_choice" && (
@@ -564,11 +562,9 @@ export default function TakeSurveyToolPage({
                     )}
                     {question.answerType === "single_choice" && (
                       <span className="font-medium">
-                        {(
-                          question.options?.find(
-                            (o) => o.value === answers[question.id]
-                          )?.label
-                        ) || "-"}
+                        {question.options?.find(
+                          (o) => o.value === answers[question.id]
+                        )?.label || "-"}
                       </span>
                     )}
                     {question.answerType === "multiple_choice" && (
@@ -623,7 +619,9 @@ export default function TakeSurveyToolPage({
               >
                 {lang === "ar" ? "تعديل الإجابات" : "Edit Answers"}
               </Button>
-              <Button onClick={() => router.push(`/dashboard/cases/${profile.id}`)}>
+              <Button
+                onClick={() => router.push(`/dashboard/cases/${profile.id}`)}
+              >
                 {lang === "ar" ? "العودة" : "Back"}
               </Button>
             </div>
