@@ -20,8 +20,8 @@ const FILE_TYPES: {
   extensions: string
 }[] = [
   { value: "image", label: "Image", extensions: "(jpg, png, gif, webp)" },
-  { value: "document", label: "Document", extensions: "(pdf, doc, docx, txt)" },
-  { value: "video", label: "Video", extensions: "(mp4, mov, avi)" },
+  { value: "document", label: "Document", extensions: "(pdf, doc, docx, txt, xls, xlsx)" },
+  { value: "video", label: "Video", extensions: "(mp4, mov, avi, mpeg)" },
   { value: "audio", label: "Audio", extensions: "(mp3, wav, m4a)" },
   { value: "any", label: "Any File", extensions: "(all types)" },
 ]
