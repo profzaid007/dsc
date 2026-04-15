@@ -133,6 +133,45 @@ export const caseToolsCollection = {
     return pb.collection("case_tools").update(id, data)
   },
 
+  // Update with file uploads using FormData
+  async updateWithFiles(
+    id: string,
+    data: Partial<CaseTool>,
+    files: File[],
+    filesToRemove?: string[]
+  ): Promise<CaseTool> {
+    const formData = new FormData()
+
+    // Add files to upload
+    files.forEach((file) => {
+      formData.append("media", file)
+    })
+
+    // Add other data fields
+    if (data.responses !== undefined) {
+      formData.append("responses", JSON.stringify(data.responses))
+    }
+    if (data.status !== undefined) {
+      formData.append("status", data.status)
+    }
+    if (data.name_en !== undefined) {
+      formData.append("name_en", data.name_en)
+    }
+    if (data.name_ar !== undefined) {
+      formData.append("name_ar", data.name_ar)
+    }
+    if (data.is_visible_to_user !== undefined) {
+      formData.append("is_visible_to_user", String(data.is_visible_to_user))
+    }
+
+    // Remove files if specified
+    if (filesToRemove && filesToRemove.length > 0) {
+      formData.append("media-", filesToRemove.join(","))
+    }
+
+    return pb.collection("case_tools").update(id, formData)
+  },
+
   async delete(id: string): Promise<void> {
     await pb.collection("case_tools").delete(id)
   },

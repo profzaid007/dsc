@@ -72,6 +72,27 @@ export function useAssignments(caseId?: string) {
     }
   }
 
+  const updateAssignmentWithFiles = async (
+    id: string,
+    data: Partial<CaseTool>,
+    files: File[],
+    filesToRemove?: string[]
+  ) => {
+    try {
+      const updated = await caseToolsCollection.updateWithFiles(
+        id,
+        data,
+        files,
+        filesToRemove
+      )
+      setAssignments((prev) => prev.map((a) => (a.id === id ? updated : a)))
+      return updated
+    } catch (error) {
+      console.error("Failed to update assignment with files:", error)
+      throw error
+    }
+  }
+
   const deleteAssignment = async (id: string) => {
     try {
       await caseToolsCollection.delete(id)
@@ -96,6 +117,7 @@ export function useAssignments(caseId?: string) {
     isLoading,
     assignTool,
     updateAssignment,
+    updateAssignmentWithFiles,
     deleteAssignment,
     getAssignmentsByCase,
     getAssignmentsByType,
