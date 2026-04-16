@@ -567,61 +567,6 @@ export default function TakeSurveyToolPage({
     )
   }
 
-  const renderMediaItem = (item: MediaItem) => (
-    <div key={item.id} className="space-y-3 rounded-lg border bg-card p-4">
-      <Label className="text-base font-medium">{item.question}</Label>
-      {item.mediaUrl && (
-        <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
-          {item.mediaType === "image" && (
-            <img
-              src={item.mediaUrl}
-              alt="Media"
-              className="h-full w-full object-contain"
-            />
-          )}
-          {item.mediaType === "video" && (
-            <video
-              src={item.mediaUrl}
-              controls
-              className="h-full w-full object-contain"
-            />
-          )}
-          {item.mediaType === "audio" && (
-            <div className="p-4">
-              <audio src={item.mediaUrl} controls className="w-full" />
-            </div>
-          )}
-        </div>
-      )}
-      {item.responseType === "text" && (
-        <div>
-          <Label className="text-sm text-muted-foreground">
-            {lang === "ar" ? "إجابتك:" : "Your response:"}
-          </Label>
-          <Input
-            placeholder={
-              lang === "ar" ? "اكتب إجابتك..." : "Type your answer..."
-            }
-            value={mediaResponses[item.id] || ""}
-            onChange={(e) => {
-              setMediaResponses((prev) => ({
-                ...prev,
-                [item.id]: e.target.value,
-              }))
-              setErrors((prev) => prev.filter((e) => e !== item.id))
-            }}
-            className="mt-2"
-          />
-          {errors.includes(item.id) && (
-            <div className="flex items-center gap-1 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              {lang === "ar" ? "إجابة مطلوبة" : "This field is required"}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
   const renderMediaItem = (item: MediaItem) => {
     const hasNewUpload = uploadedFiles[item.id]
     const hasExistingFile =
@@ -637,25 +582,25 @@ export default function TakeSurveyToolPage({
         </Label>
 
         {/* Display existing media (question media) */}
-        {item.mediaData && (
+        {item.mediaUrl && (
           <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
             {item.mediaType === "image" && (
               <img
-                src={item.mediaData}
+                src={item.mediaUrl}
                 alt="Media"
                 className="h-full w-full object-contain"
               />
             )}
             {item.mediaType === "video" && (
               <video
-                src={item.mediaData}
+                src={item.mediaUrl}
                 controls
                 className="h-full w-full object-contain"
               />
             )}
             {item.mediaType === "audio" && (
               <div className="p-4">
-                <audio src={item.mediaData} controls className="w-full" />
+                <audio src={item.mediaUrl} controls className="w-full" />
               </div>
             )}
           </div>
@@ -1013,39 +958,68 @@ export default function TakeSurveyToolPage({
           </CardHeader>
           <CardContent className="space-y-4">
             {isSurveyTool &&
-              surveyConfig?.questions.map((question, idx) => {
+              (() => {
                 const sortedOptions = [...(surveyConfig?.options || [])].sort(
                   (a, b) => a.order - b.order
                 )
-                const isMultiple = surveyConfig?.answerType === "multiple_choice"
+                const isMultiple =
+                  surveyConfig?.answerType === "multiple_choice"
                 return (
-                  <div key={question.id} className="space-y-2">
-                    <Label className="text-base font-medium text-muted-foreground">
-                      {idx + 1}. {question.text}
-                    </Label>
-                    <div className="rounded-lg bg-muted/30 p-3">
-                      {isMultiple ? (
-                        <div className="flex flex-wrap gap-2">
-                          {((answers[question.id] as string[]) || []).map((v) => (
-                            <span
-                              key={v}
-                              className="rounded-full bg-primary/10 px-3 py-1 text-sm"
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-start text-xs tracking-wider text-muted-foreground uppercase">
+                          <th className="min-w-[150px] pe-4 pb-2 text-start font-medium">
+                            Questions
+                          </th>
+                          {sortedOptions.map((opt) => (
+                            <th
+                              key={opt.id}
+                              className="px-2 pb-2 text-center font-medium whitespace-nowrap"
                             >
-                              {sortedOptions.find((o) => o.value === v)?.label || "-"}
-                            </span>
+                              {opt.label}
+                            </th>
                           ))}
-                        </div>
-                      ) : (
-                        <span className="font-medium">
-                          {sortedOptions.find(
-                            (o) => o.value === answers[question.id]
-                          )?.label || "-"}
-                        </span>
-                      )}
-                    </div>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {surveyConfig?.questions.map((question) => {
+                          const value = answers[question.id] as
+                            | string
+                            | string[]
+                            | undefined
+                          return (
+                            <tr
+                              key={question.id}
+                              className="text-muted-foreground"
+                            >
+                              <td className="py-3 pe-4 align-top font-medium">
+                                {question.text}
+                              </td>
+                              {sortedOptions.map((opt) => (
+                                <td
+                                  key={opt.id}
+                                  className="px-2 py-3 text-center"
+                                >
+                                  {isMultiple ? (
+                                    ((value as string[]) || []).includes(
+                                      opt.value
+                                    ) ? (
+                                      <div className="mx-auto h-4 w-4 rounded-full bg-primary" />
+                                    ) : null
+                                  ) : (value as string) === opt.value ? (
+                                    <div className="mx-auto h-4 w-4 rounded-full bg-primary" />
+                                  ) : null}
+                                </td>
+                              ))}
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 )
-              })}
+              })()}
 
             {isMultipleChoiceTool &&
               mcConfig?.questions.map((question, idx) => (
@@ -1151,9 +1125,12 @@ export default function TakeSurveyToolPage({
             {isAttachmentTool && (
               <div className="space-y-2">
                 <Label className="text-base font-medium text-muted-foreground">
-                  {((attachmentConfig?.title as unknown) as { en: string; ar: string })?.[
-                    lang
-                  ] || (lang === "ar" ? "المرفقات" : "Attachments")}
+                  {(
+                    attachmentConfig?.title as unknown as {
+                      en: string
+                      ar: string
+                    }
+                  )?.[lang] || (lang === "ar" ? "المرفقات" : "Attachments")}
                 </Label>
                 <div className="space-y-2">
                   {assignment.media && assignment.media.length > 0 ? (
@@ -1230,9 +1207,109 @@ export default function TakeSurveyToolPage({
         </CardHeader>
         <CardContent className="space-y-6">
           {isSurveyTool &&
-            surveyConfig?.questions.map((question) => (
-              <div key={question.id}>{renderQuestion(question)}</div>
-            ))}
+            (() => {
+              const sortedOptions = [...(surveyConfig?.options || [])].sort(
+                (a, b) => a.order - b.order
+              )
+              const isMultiple = surveyConfig?.answerType === "multiple_choice"
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-start text-xs tracking-wider text-muted-foreground uppercase">
+                        <th className="min-w-[150px] pe-4 pb-2 text-start font-medium">
+                          Questions
+                        </th>
+                        {sortedOptions.map((opt) => (
+                          <th
+                            key={opt.id}
+                            className="px-2 pb-2 text-center font-medium whitespace-nowrap"
+                          >
+                            {opt.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {surveyConfig?.questions.map((question) => {
+                        const value = answers[question.id] as
+                          | string
+                          | string[]
+                          | undefined
+                        const hasError = errors.includes(question.id)
+                        return (
+                          <tr key={question.id}>
+                            <td className="py-3 pe-4 align-top">
+                              <Label className="text-base font-medium">
+                                {question.text}
+                                {question.required && (
+                                  <span className="ms-1 text-destructive">
+                                    *
+                                  </span>
+                                )}
+                              </Label>
+                            </td>
+                            {sortedOptions.map((opt) => (
+                              <td
+                                key={opt.id}
+                                className="px-2 py-3 text-center"
+                              >
+                                {isMultiple ? (
+                                  <Checkbox
+                                    id={`${question.id}-${opt.id}`}
+                                    checked={(
+                                      (value as string[]) || []
+                                    ).includes(opt.value)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        handleAnswer(question.id, [
+                                          ...((value as string[]) || []),
+                                          opt.value,
+                                        ])
+                                      } else {
+                                        handleAnswer(
+                                          question.id,
+                                          ((value as string[]) || []).filter(
+                                            (v) => v !== opt.value
+                                          )
+                                        )
+                                      }
+                                    }}
+                                    className="mx-auto"
+                                  />
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleAnswer(question.id, opt.value)
+                                    }
+                                    className={`mx-auto h-5 w-5 rounded-full border-2 transition-colors ${
+                                      (value as string) === opt.value
+                                        ? "border-primary bg-primary"
+                                        : "border-muted-foreground hover:border-primary"
+                                    }`}
+                                  />
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                  {errors.some((errId) =>
+                    surveyConfig?.questions.find((q) => q.id === errId)
+                  ) && (
+                    <div className="mt-2 flex items-center gap-1 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      {lang === "ar"
+                        ? "يرجى الإجابة على جميع الأسئلة المطلوبة"
+                        : "Please answer all required questions"}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
           {isMultipleChoiceTool &&
             mcConfig?.questions.map((question) => (
