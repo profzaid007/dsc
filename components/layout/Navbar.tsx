@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, LayoutDashboard, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/form/LanguageToggle";
 import { t } from "@/lib/i18n";
@@ -12,12 +12,14 @@ import { cn } from "@/lib/utils";
 
 import Image from "next/image";
 import { LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar() {
   const { lang } = useLang();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const servicesRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated } = useAuth();
 
   // Close services dropdown on outside click
   useEffect(() => {
@@ -149,6 +151,7 @@ export function Navbar() {
           </button>
 
           {/* Login button */} 
+          {!isAuthenticated && ( 
           <Button
             asChild
             variant="outline"
@@ -160,7 +163,22 @@ export function Navbar() {
               Login
             </Link>
           </Button>
-
+          )}
+    
+          {isAuthenticated && ( 
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="hidden md:inline-flex gap-2"
+          >
+            <Link href="/dashboard">
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </Link>
+          </Button>
+          )}
+          
         </div>
       </div>
 
