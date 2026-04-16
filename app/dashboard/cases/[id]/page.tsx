@@ -88,7 +88,7 @@ export default function ProfileDetailPage({
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="case-file">Case File</TabsTrigger>
+          <TabsTrigger value="case-file">History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -277,10 +277,10 @@ export default function ProfileDetailPage({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
-                Case File
+                History
               </CardTitle>
               <CardDescription>
-                History of all interactions between the case and the expert
+                Completed Tasks will be here
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -1197,9 +1197,9 @@ export default function TakeSurveyToolPage({
               >
                 {lang === "ar" ? "تعديل الإجابات" : "Edit Answers"}
               </Button>
-              <Button
+              {/* <Button
                 onClick={() => router.push(`/dashboard/cases/${profile.id}`)}
-              >
+              > */}
               <Button
                 onClick={() => router.push(`/dashboard/cases/${profile.id}`)}
               >
