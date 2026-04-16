@@ -44,6 +44,7 @@ import {
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import Link from "next/link"
+import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import type { AssignmentStatus } from "@/types/assignment"
 
 // Tool type name to icon mapping
@@ -87,6 +88,7 @@ export default function AssignmentsPage() {
   const { profiles } = useProfiles()
 
   const [searchQuery, setSearchQuery] = useState("")
+  const [filterCase, setFilterCase] = useState("")
   const [filterType, setFilterType] = useState<string>("all")
   const [filterStatus, setFilterStatus] = useState<AssignmentStatus | "all">(
     "all"
@@ -134,6 +136,11 @@ export default function AssignmentsPage() {
       }
     }
 
+    // Filter by case
+    if (filterCase && assignment.case !== filterCase) {
+      return false
+    }
+
     // Filter by type
     if (filterType !== "all" && assignment.type !== filterType) {
       return false
@@ -176,12 +183,18 @@ export default function AssignmentsPage() {
             <div className="relative flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by case or assignment name..."
+                placeholder="Search by assignment name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
+            <CaseSearchCombobox
+              value={filterCase}
+              onChange={setFilterCase}
+              placeholder="Filter by case..."
+              className="w-[250px]"
+            />
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by Type" />
