@@ -18,31 +18,35 @@ import {
 } from "@/components/ui/select"
 import { DragList } from "@/components/ui/drag-list"
 import { SurveyPreview } from "@/components/tool-renderers/SurveyPreview"
-import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react"
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  GripVertical,
+} from "lucide-react"
 import type {
   SurveyConfig,
   SurveyQuestion,
+  SurveyOption,
   SurveyAnswerType,
 } from "@/types/tool"
 import { useToolTypes } from "@/hooks/useToolTypes"
+
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
+
 const ANSWER_TYPES: { value: SurveyAnswerType; label: string }[] = [
-  { value: "single_choice", label: "Single Choice" },
-  { value: "multiple_choice", label: "Multiple Choice" },
-  { value: "rating", label: "Rating (Severity)" },
+  { value: "single_choice", label: "Single Choice (Radio)" },
+  { value: "multiple_choice", label: "Multiple Choice (Checkbox)" },
 ]
-const DEFAULT_OPTIONS = [
-  { value: "opt1", label: "Option 1" },
-  { value: "opt2", label: "Option 2" },
-  { value: "opt3", label: "Option 3" },
-  { value: "opt4", label: "Option 4" },
-  { value: "opt5", label: "Option 5" },
-]
+
 interface SurveyBuilderPageProps {
   params?: Promise<{ id?: string }>
 }
+
 export default function SurveyBuilderPage({
   params,
 }: SurveyBuilderPageProps = {}) {
@@ -61,11 +65,33 @@ export default function SurveyBuilderPage({
   const resolvedParams = params ? use(params) : undefined
   const editId = resolvedParams?.id
   const isEditMode = !!editId
+
   const [formData, setFormData] = useState({
     nameEn: "",
     nameAr: "",
+    answerType: "single_choice" as SurveyAnswerType,
   })
+
+  const [options, setOptions] = useState<SurveyOption[]>([
+    {
+      id: generateId(),
+      value: "very_satisfied",
+      label: "Very Satisfied",
+      order: 0,
+    },
+    { id: generateId(), value: "satisfied", label: "Satisfied", order: 1 },
+    { id: generateId(), value: "neutral", label: "Neutral", order: 2 },
+    { id: generateId(), value: "unsatisfied", label: "Unsatisfied", order: 3 },
+    {
+      id: generateId(),
+      value: "very_unsatisfied",
+      label: "Very Unsatisfied",
+      order: 4,
+    },
+  ])
+
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
+
   useEffect(() => {
     if (isEditMode && editId && !isToolsLoading) {
       setIsLoading(true)
@@ -75,40 +101,68 @@ export default function SurveyBuilderPage({
         setFormData({
           nameEn: tool.name.en,
           nameAr: tool.name.ar,
+          answerType: config.answerType || "single_choice",
         })
+        setOptions(config.options || [])
         setQuestions(config.questions || [])
       }
       setIsLoading(false)
     }
   }, [isEditMode, editId, isToolsLoading])
+
+  const addOption = () => {
+    const newOption: SurveyOption = {
+      id: generateId(),
+      value: `option_${options.length + 1}`,
+      label: `Option ${options.length + 1}`,
+      order: options.length,
+    }
+    setOptions([...options, newOption])
+  }
+
+  const updateOption = (id: string, label: string) => {
+    setOptions(options.map((o) => (o.id === id ? { ...o, label } : o)))
+  }
+
+  const removeOption = (id: string) => {
+    if (options.length <= 5) return
+    setOptions(options.filter((o) => o.id !== id))
+  }
+
   const addQuestion = () => {
     const newQuestion: SurveyQuestion = {
       id: generateId(),
       text: "",
-      answerType: "single_choice",
-      options: [...DEFAULT_OPTIONS],
       required: false,
       order: questions.length,
     }
     setQuestions([...questions, newQuestion])
   }
+
   const updateQuestion = (id: string, updates: Partial<SurveyQuestion>) => {
     setQuestions(questions.map((q) => (q.id === id ? { ...q, ...updates } : q)))
   }
+
   const removeQuestion = (id: string) => {
     setQuestions(questions.filter((q) => q.id !== id))
   }
+
   const handleReorder = (reordered: SurveyQuestion[]) => {
     setQuestions(reordered)
   }
+
   const handleSubmit = async () => {
-    if (!formData.nameEn || questions.length === 0) return
+    if (!formData.nameEn || options.length < 5 || questions.length === 0) return
     setIsSubmitting(true)
+
     const config: SurveyConfig = {
       title: { en: formData.nameEn, ar: formData.nameAr },
+      answerType: formData.answerType,
+      options: options.map((o, idx) => ({ ...o, order: idx })),
       questions: questions.map((q, idx) => ({ ...q, order: idx })),
       media: [],
     }
+
     if (isEditMode && editId) {
       await updateTool(editId, {
         name: { en: formData.nameEn, ar: formData.nameAr },
@@ -129,106 +183,71 @@ export default function SurveyBuilderPage({
       router.push(`/dashboard/admin/tools`)
     }
   }
+
   const renderQuestionItem = (question: SurveyQuestion, index: number) => {
-    const showOptions =
-      question.answerType === "single_choice" ||
-      question.answerType === "multiple_choice"
     return (
-      <div className="flex-1 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Question {index + 1}</span>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id={`req-${question.id}`}
-              checked={question.required}
-              onCheckedChange={(checked) =>
-                updateQuestion(question.id, { required: !!checked })
-              }
-            />
-            <Label htmlFor={`req-${question.id}`} className="text-xs">
-              Required
-            </Label>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => removeQuestion(question.id)}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
+      <div className="flex items-start gap-3">
+        <div className="mt-3 cursor-grab">
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
-        <Input
-          placeholder="Question"
-          value={question.text}
-          onChange={(e) =>
-            updateQuestion(question.id, {
-              text: e.target.value,
-            })
-          }
-        />
-        <Select
-          value={question.answerType}
-          onValueChange={(v) =>
-            updateQuestion(question.id, { answerType: v as SurveyAnswerType })
-          }
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ANSWER_TYPES.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
-                {type.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {showOptions && (
-          <div className="space-y-2 rounded-md border p-3">
-            <Label className="text-xs">Options</Label>
-            {question.options.map((opt, optIdx) => (
-              <div key={opt.value} className="flex gap-2">
-                <Input
-                  placeholder="Option"
-                  value={opt.label}
-                  onChange={(e) => {
-                    const newOptions = question.options.map((o, i) =>
-                      i === optIdx
-                        ? {
-                            ...o,
-                            label: e.target.value,
-                          }
-                        : o
-                    )
-                    updateQuestion(question.id, { options: newOptions })
-                  }}
-                  className="flex-1"
-                />
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const newOptions = [
-                  ...question.options,
-                  {
-                    value: generateId(),
-                    label: `Option ${question.options.length + 1}`,
-                  },
-                ]
-                updateQuestion(question.id, { options: newOptions })
-              }}
-            >
-              <Plus className="me-1 h-3 w-3" />
-              Add Option
-            </Button>
+        <div className="flex-1 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Question {index + 1}</span>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`req-${question.id}`}
+                checked={question.required}
+                onCheckedChange={(checked) =>
+                  updateQuestion(question.id, { required: !!checked })
+                }
+              />
+              <Label htmlFor={`req-${question.id}`} className="text-xs">
+                Required
+              </Label>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => removeQuestion(question.id)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           </div>
-        )}
+          <Input
+            placeholder="Enter question text"
+            value={question.text}
+            onChange={(e) =>
+              updateQuestion(question.id, {
+                text: e.target.value,
+              })
+            }
+          />
+        </div>
       </div>
     )
   }
+
+  const renderOptionItem = (option: SurveyOption, index: number) => {
+    return (
+      <div key={option.id} className="flex items-center gap-2">
+        <Input
+          placeholder="Option label"
+          value={option.label}
+          onChange={(e) => updateOption(option.id, e.target.value)}
+          className="flex-1"
+        />
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={() => removeOption(option.id)}
+          disabled={options.length <= 5}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -236,6 +255,7 @@ export default function SurveyBuilderPage({
       </div>
     )
   }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -249,8 +269,8 @@ export default function SurveyBuilderPage({
             </h1>
             <p className="text-muted-foreground">
               {isEditMode
-                ? "Update survey questions and answer options"
-                : "Build a survey with questions and answer options"}
+                ? "Update survey questions and options"
+                : "Build a survey with shared options for all questions"}
             </p>
           </div>
         </div>
@@ -266,6 +286,7 @@ export default function SurveyBuilderPage({
           {showPreview ? "Hide Preview" : "Preview"}
         </Button>
       </div>
+
       <div
         className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "grid-cols-1"}`}
       >
@@ -299,6 +320,54 @@ export default function SurveyBuilderPage({
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Answer Type</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select
+                value={formData.answerType}
+                onValueChange={(v) =>
+                  setFormData({
+                    ...formData,
+                    answerType: v as SurveyAnswerType,
+                  })
+                }
+              >
+                <SelectTrigger className="w-64">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ANSWER_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Options (Shared for all questions)</CardTitle>
+              <Button size="sm" onClick={addOption}>
+                <Plus className="me-2 h-4 w-4" />
+                Add Option
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Minimum 5 options required. All questions will use these
+                options.
+              </p>
+              <div className="space-y-2">
+                {options.map((opt, idx) => renderOptionItem(opt, idx))}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Questions</CardTitle>
@@ -322,6 +391,7 @@ export default function SurveyBuilderPage({
               )}
             </CardContent>
           </Card>
+
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={() => router.back()}>
               Cancel
@@ -329,7 +399,10 @@ export default function SurveyBuilderPage({
             <Button
               onClick={handleSubmit}
               disabled={
-                !formData.nameEn || questions.length === 0 || isSubmitting
+                !formData.nameEn ||
+                options.length < 5 ||
+                questions.length === 0 ||
+                isSubmitting
               }
             >
               {isSubmitting
@@ -342,6 +415,7 @@ export default function SurveyBuilderPage({
             </Button>
           </div>
         </div>
+
         {showPreview && (
           <div className="sticky top-6 max-h-[calc(100vh-12rem)] overflow-auto rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
@@ -350,7 +424,9 @@ export default function SurveyBuilderPage({
             <SurveyPreview
               config={{
                 title: { en: formData.nameEn, ar: formData.nameAr },
-                questions,
+                answerType: formData.answerType,
+                options: options,
+                questions: questions,
                 media: [],
               }}
             />

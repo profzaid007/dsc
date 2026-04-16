@@ -2,19 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-
-import { Pencil } from "lucide-react"
 import Link from "next/link"
 import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import type { Tool, ToolType } from "@/types/tool"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -25,6 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
   Plus,
   FileText,
   ClipboardList,
@@ -32,6 +32,9 @@ import {
   FileBarChart,
   Layers,
   Paperclip,
+  Pencil,
+  Trash2,
+  Eye,
 } from "lucide-react"
 
 const toolTypeIcons: Record<ToolType, typeof FileText> = {
@@ -65,26 +68,23 @@ const statusLabels: Record<Tool["status"], string> = {
 }
 
 export default function AdminToolsPage() {
-  const { tools } = useTools()
+  const { tools, deleteTool } = useTools()
   const router = useRouter()
-  const { toolTypes, fetchToolTypes, getToolTypeById } = useToolTypes()
+  const { fetchToolTypes, getToolTypeById } = useToolTypes()
   const [filterType, setFilterType] = useState<ToolType | "all">("all")
   const [filterStatus, setFilterStatus] = useState<Tool["status"] | "all">(
     "all"
   )
 
-  // Fetch tool types on mount
   useEffect(() => {
     fetchToolTypes()
   }, [fetchToolTypes])
 
-  // Helper to get type name from ID
   const getTypeName = (typeId: string): ToolType | undefined => {
     const toolType = getToolTypeById(typeId)
     return toolType?.name as ToolType | undefined
   }
 
-  // Helper to get route from type name
   const getTypeRoute = (typeName: ToolType): string => {
     switch (typeName) {
       case "survey":
@@ -110,6 +110,14 @@ export default function AdminToolsPage() {
     if (filterStatus !== "all" && tool.status !== filterStatus) return false
     return true
   })
+
+  const handleDelete = async (toolId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (confirm("Are you sure you want to delete this tool?")) {
+      await deleteTool(toolId)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -173,63 +181,82 @@ export default function AdminToolsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredTools.map((tool) => {
-            const typeName = getTypeName(tool.type)
-            const Icon = typeName
-              ? toolTypeIcons[typeName] || FileText
-              : FileText
-            const typeLabel = typeName
-              ? toolTypeLabels[typeName]?.en
-              : "Unknown Type"
-            const typeRoute = typeName ? getTypeRoute(typeName) : "survey"
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[300px]">Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Service Type</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTools.map((tool) => {
+                const typeName = getTypeName(tool.type)
+                const Icon = typeName
+                  ? toolTypeIcons[typeName] || FileText
+                  : FileText
+                const typeLabel = typeName
+                  ? toolTypeLabels[typeName]?.en
+                  : "Unknown Type"
+                const typeRoute = typeName ? getTypeRoute(typeName) : "survey"
 
-            return (
-              <Link
-                key={tool.id}
-                href={`/dashboard/admin/tools/${typeRoute}/${tool.id}`}
-              >
-                <Card className="h-full cursor-pointer transition-all hover:shadow-md">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
+                return (
+                  <TableRow key={tool.id}>
+                    <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
-                        <Icon className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-base">
-                          {tool.name.en}
-                        </CardTitle>
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        {tool.name.en}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          router.push(
-                            `/dashboard/admin/tools/${typeRoute}/edit/${tool.id}`
-                          )
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <CardDescription>{typeLabel}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
+                    </TableCell>
+                    <TableCell>{typeLabel}</TableCell>
+                    <TableCell>
                       <Badge className={statusColors[tool.status]}>
                         {statusLabels[tool.status]}
                       </Badge>
-                      <span className="text-sm text-muted-foreground capitalize">
-                        {tool.serviceType}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          })}
-        </div>
+                    </TableCell>
+                    <TableCell className="capitalize">
+                      {tool.serviceType}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/dashboard/admin/tools/${typeRoute}/${tool.id}`}
+                        >
+                          <Button variant="ghost" size="icon-sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            router.push(
+                              `/dashboard/admin/tools/${typeRoute}/edit/${tool.id}`
+                            )
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={(e) => handleDelete(tool.id, e)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   )

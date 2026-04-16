@@ -184,7 +184,7 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
               <p>{tool.name.ar}</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <div>
               <span className="text-sm font-medium text-muted-foreground">
                 Type
@@ -194,6 +194,28 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
                   {toolTypeLabels["survey"]}
                 </Badge>
               </div>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-muted-foreground">
+                Answer Type
+              </span>
+              <p className="capitalize">
+                {config.answerType === "multiple_choice"
+                  ? "Multiple Choice"
+                  : "Single Choice"}
+              </p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-muted-foreground">
+                Options
+              </span>
+              <p>{config.options?.length || 0} options</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-muted-foreground">
+                Questions
+              </span>
+              <p>{config.questions?.length || 0} questions</p>
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">

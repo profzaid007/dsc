@@ -20,19 +20,26 @@ export interface ToolOption {
 
 // ============ SURVEY ============
 
-export type SurveyAnswerType = "single_choice" | "multiple_choice" | "rating"
+export type SurveyAnswerType = "single_choice" | "multiple_choice"
+
+export interface SurveyOption {
+  id: string
+  value: string
+  label: string
+  order: number
+}
 
 export interface SurveyQuestion {
   id: string
   text: string
-  answerType: SurveyAnswerType
-  options: ToolOption[] // default 5, can add more
   required: boolean
   order: number
 }
 
 export interface SurveyConfig {
   title: BilingualString
+  answerType: SurveyAnswerType
+  options: SurveyOption[]
   questions: SurveyQuestion[]
   media: string[]
 }

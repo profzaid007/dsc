@@ -412,9 +412,12 @@ export default function TakeSurveyToolPage({
   }
 
   const renderQuestion = (question: SurveyQuestion) => {
-    const value = answers[question.id] as string | number | string[] | undefined
-    const selectedRating = (value as number) ?? 0
+    const value = answers[question.id] as string | string[] | undefined
     const hasError = errors.includes(question.id)
+    const isMultiple = surveyConfig?.answerType === "multiple_choice"
+    const sortedOptions = [...(surveyConfig?.options || [])].sort(
+      (a, b) => a.order - b.order
+    )
 
     return (
       <div className="space-y-3">
@@ -424,65 +427,12 @@ export default function TakeSurveyToolPage({
             <span className="ms-1 text-destructive">*</span>
           )}
         </Label>
-        {question.answerType === "rating" && (
-          <div dir="ltr" className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4, 5].map((rating) => (
-              <button
-                key={rating}
-                type="button"
-                onClick={() => handleAnswer(question.id, rating)}
-                aria-label={`${rating} - ${RATING_LABELS[rating][lang]}`}
-                aria-pressed={selectedRating === rating}
-                className={cn(
-                  "flex h-12 w-12 flex-col items-center justify-center rounded-lg border-2 text-sm font-semibold transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                  selectedRating === rating
-                    ? "border-transparent text-white"
-                    : "border-border bg-background text-muted-foreground hover:border-accent hover:text-accent"
-                )}
-                style={
-                  selectedRating === rating
-                    ? {
-                        backgroundColor: "var(--dsc-gold)",
-                        borderColor: "var(--dsc-gold)",
-                      }
-                        backgroundColor: "var(--dsc-gold)",
-                        borderColor: "var(--dsc-gold)",
-                      }
-                    : {}
-                }
-              >
-                <span className="text-base">{rating}</span>
-                <span className="text-[10px] leading-tight opacity-80">
-                  {RATING_LABELS[rating][lang]}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-        {question.answerType === "single_choice" && (
-          <RadioGroup
-            value={(value as string) || ""}
-            onValueChange={(v) => handleAnswer(question.id, v)}
-          >
-            {question.options?.map((opt) => (
-              <div key={opt.value} className="flex items-center gap-2">
-                <RadioGroupItem
-                  value={opt.value}
-                  id={`${question.id}-${opt.value}`}
-                />
-                <Label htmlFor={`${question.id}-${opt.value}`}>
-                  {opt.label}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        )}
-        {question.answerType === "multiple_choice" && (
+        {isMultiple ? (
           <div className="space-y-2">
-            {question.options?.map((opt) => (
-              <div key={opt.value} className="flex items-center gap-2">
+            {sortedOptions.map((opt) => (
+              <div key={opt.id} className="flex items-center gap-2">
                 <Checkbox
-                  id={`${question.id}-${opt.value}`}
+                  id={`${question.id}-${opt.id}`}
                   checked={((value as string[]) || []).includes(opt.value)}
                   onCheckedChange={(checked) => {
                     if (checked) {
@@ -500,12 +450,25 @@ export default function TakeSurveyToolPage({
                     }
                   }}
                 />
-                <Label htmlFor={`${question.id}-${opt.value}`}>
-                  {opt.label}
-                </Label>
+                <Label htmlFor={`${question.id}-${opt.id}`}>{opt.label}</Label>
               </div>
             ))}
           </div>
+        ) : (
+          <RadioGroup
+            value={(value as string) || ""}
+            onValueChange={(v) => handleAnswer(question.id, v)}
+          >
+            {sortedOptions.map((opt) => (
+              <div key={opt.id} className="flex items-center gap-2">
+                <RadioGroupItem
+                  value={opt.value}
+                  id={`${question.id}-${opt.id}`}
+                />
+                <Label htmlFor={`${question.id}-${opt.id}`}>{opt.label}</Label>
+              </div>
+            ))}
+          </RadioGroup>
         )}
         {hasError && (
           <div className="flex items-center gap-1 text-sm text-destructive">
@@ -1050,50 +1013,39 @@ export default function TakeSurveyToolPage({
           </CardHeader>
           <CardContent className="space-y-4">
             {isSurveyTool &&
-              surveyConfig?.questions.map((question, idx) => (
-                <div key={question.id} className="space-y-2">
-                  <Label className="text-base font-medium text-muted-foreground">
-                    {idx + 1}. {question.text}
-                  </Label>
-                  <div className="rounded-lg bg-muted/30 p-3">
-                    {question.answerType === "rating" && (
-                      <span className="font-medium">
-                        {String(answers[question.id] || "-")} -{" "}
-                        {
-                          RATING_LABELS[
-                            (answers[question.id] as number) || 1
-                          ]?.[lang]
-                        }
-                      </span>
-                    )}
-                    {question.answerType === "single_choice" && (
-                      <span className="font-medium">
-                        {question.options?.find(
-                          (o) => o.value === answers[question.id]
-                        )?.label || "-"}
-                        {question.options?.find(
-                          (o) => o.value === answers[question.id]
-                        )?.label || "-"}
-                      </span>
-                    )}
-                    {question.answerType === "multiple_choice" && (
-                      <div className="flex flex-wrap gap-2">
-                        {((answers[question.id] as string[]) || []).map((v) => (
-                          <span
-                            key={v}
-                            className="rounded-full bg-primary/10 px-3 py-1 text-sm"
-                          >
-                            {
-                              question.options?.find((o) => o.value === v)
-                                ?.label
-                            }
-                          </span>
-                        ))}
-                      </div>
-                    )}
+              surveyConfig?.questions.map((question, idx) => {
+                const sortedOptions = [...(surveyConfig?.options || [])].sort(
+                  (a, b) => a.order - b.order
+                )
+                const isMultiple = surveyConfig?.answerType === "multiple_choice"
+                return (
+                  <div key={question.id} className="space-y-2">
+                    <Label className="text-base font-medium text-muted-foreground">
+                      {idx + 1}. {question.text}
+                    </Label>
+                    <div className="rounded-lg bg-muted/30 p-3">
+                      {isMultiple ? (
+                        <div className="flex flex-wrap gap-2">
+                          {((answers[question.id] as string[]) || []).map((v) => (
+                            <span
+                              key={v}
+                              className="rounded-full bg-primary/10 px-3 py-1 text-sm"
+                            >
+                              {sortedOptions.find((o) => o.value === v)?.label || "-"}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="font-medium">
+                          {sortedOptions.find(
+                            (o) => o.value === answers[question.id]
+                          )?.label || "-"}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
 
             {isMultipleChoiceTool &&
               mcConfig?.questions.map((question, idx) => (
