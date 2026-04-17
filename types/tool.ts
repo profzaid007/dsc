@@ -103,7 +103,8 @@ export interface ReportCustomField {
 
 export interface ReportConfig {
   title: BilingualString
-  expertNameField: string // editable label, default "Expert Name"
+  childName?: string
+  expertName?: string
   customFields: ReportCustomField[]
   media: string[]
   // Fixed fields (always present)
@@ -125,10 +126,10 @@ export interface PlanStep {
   id: string
   goalId?: string
   title: string
-  description: string
+  description?: string
   completed: boolean
-  notes: string
-  comments: string
+  notes?: string
+  comments?: string
   dateOfAchievement?: string
   evaluation?: string
 }
@@ -173,7 +174,7 @@ export type ToolConfig =
 export interface Tool {
   id: string
   name: BilingualString
-  description?: BilingualString
+  description?: string
   type: string
   serviceType: ServiceType
   status: ToolStatus

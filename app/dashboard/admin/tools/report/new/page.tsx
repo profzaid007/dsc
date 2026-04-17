@@ -33,6 +33,9 @@ export default function ReportBuilderPage({
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const [isInitializing, setIsInitializing] = useState(true)
 
+  // Child name - from case selection
+  const [childName, setChildName] = useState("")
+
   // Report name (bilingual) - goes directly to name_en/name_ar
   const [reportName, setReportName] = useState({
     en: "",
@@ -94,7 +97,8 @@ export default function ReportBuilderPage({
     if (caseId) {
       const caseProfile = getProfileById(caseId)
       if (caseProfile) {
-        // Auto-populate report name with case name
+        // Auto-populate child name and report name
+        setChildName(caseProfile.name)
         setReportName({
           en: `${caseProfile.name} - Report`,
           ar: `${caseProfile.name} - تقرير`,
@@ -102,6 +106,7 @@ export default function ReportBuilderPage({
       }
     } else {
       // Reset name fields when case is cleared
+      setChildName("")
       setReportName({ en: "", ar: "" })
     }
   }
@@ -115,12 +120,13 @@ export default function ReportBuilderPage({
       // Store fixed fields in config
       const config: ReportConfig = {
         title: { en: reportName.en, ar: reportName.ar },
-        expertNameField: expertName,
+        childName: childName,
+        expertName: expertName,
         customFields: [],
         media: [],
         date: fixedFields.date || undefined,
-        assessment: fixedFields.assessment || undefined,
-        suggestions: fixedFields.suggestions || undefined,
+        assessment: fixedFields.assessment,
+        suggestions: fixedFields.suggestions,
       }
 
       // Create case document directly in case_tools (no tool template)
@@ -250,19 +256,29 @@ export default function ReportBuilderPage({
             </CardContent>
           </Card>
 
-          {/* Expert Name - Single field, auto-filled */}
+          {/* Basic Info - Child Name from Case + Expert Name */}
           <Card>
             <CardHeader>
-              <CardTitle>Expert Information</CardTitle>
+              <CardTitle>Basic Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Expert Name</Label>
-                <Input
-                  value={expertName}
-                  onChange={(e) => setExpertName(e.target.value)}
-                  placeholder="Expert name"
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Child Name</Label>
+                  <Input
+                    value={childName}
+                    onChange={(e) => setChildName(e.target.value)}
+                    placeholder="Child name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Expert Name</Label>
+                  <Input
+                    value={expertName}
+                    onChange={(e) => setExpertName(e.target.value)}
+                    placeholder="Expert name"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -335,15 +351,13 @@ export default function ReportBuilderPage({
             <ReportPreview
               config={{
                 title: { en: reportName.en, ar: reportName.ar },
-                expertNameField: expertName,
+                childName: childName,
+                expertName: expertName,
                 customFields: [],
                 media: [],
                 date: fixedFields.date,
                 assessment: fixedFields.assessment,
                 suggestions: fixedFields.suggestions,
-              }}
-              onChange={(field, value) => {
-                setFixedFields((prev) => ({ ...prev, [field]: value }))
               }}
             />
           </div>

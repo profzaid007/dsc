@@ -1,125 +1,75 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { useLang } from "@/lib/lang-context"
-import type { ReportConfig } from "@/types/tool"
+import type { BilingualString, ReportConfig } from "@/types/tool"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
 
-interface ReportPreviewProps {
-  config: ReportConfig
-  onChange?: (
-    field: "date" | "assessment" | "suggestions",
-    value: string
-  ) => void
-}
-
-export function ReportPreview({ config, onChange }: ReportPreviewProps) {
+export function ReportPreview({ config }: { config: ReportConfig }) {
   const { lang } = useLang()
 
-  // Local state to track preview values (like PlanPreview does)
-  // Initialize with config values if available
-  const [fieldValues, setFieldValues] = useState<{
-    date: string
-    assessment: string
-    suggestions: string
-  }>({
-    date: config.date || "",
-    assessment: config.assessment || "",
-    suggestions: config.suggestions || "",
-  })
-
-  // Sync with config changes from parent (form inputs)
-  useEffect(() => {
-    setFieldValues({
-      date: config.date || "",
-      assessment: config.assessment || "",
-      suggestions: config.suggestions || "",
-    })
-  }, [config.date, config.assessment, config.suggestions])
-
-  const updateField = (
-    field: "date" | "assessment" | "suggestions",
-    value: string
-  ) => {
-    setFieldValues((prev) => ({ ...prev, [field]: value }))
-    onChange?.(field, value)
+  const getBilingualValue = (value?: string | BilingualString) => {
+    if (!value) return ""
+    return typeof value === "string" ? value : value[lang] || ""
   }
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">{config.title[lang]}</h3>
 
+      {/* Basic Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Report Details</CardTitle>
+          <CardTitle className="text-base">Basic Information</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Date</Label>
-            <Input
-              type="date"
-              value={fieldValues.date}
-              onChange={(e) => updateField("date", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {config.expertNameField[lang]}
-            </Label>
-            <Input
-              placeholder="Expert name"
-              value={config.expertNameField[lang]}
-              readOnly
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Assessment</Label>
-            <Textarea
-              placeholder="Enter assessment..."
-              rows={4}
-              value={fieldValues.assessment}
-              onChange={(e) => updateField("assessment", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Suggestions</Label>
-            <Textarea
-              placeholder="Enter suggestions..."
-              rows={4}
-              value={fieldValues.suggestions}
-              onChange={(e) => updateField("suggestions", e.target.value)}
-            />
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium">Child:</span>{" "}
+              {config.childName || "-"}
+            </div>
+            <div>
+              <span className="font-medium">Expert:</span>{" "}
+              {config.expertName || "-"}
+            </div>
+            {config.date && (
+              <div>
+                <span className="font-medium">Date:</span> {config.date}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {config.customFields.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Custom Fields</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {config.customFields.map((field) => (
-              <div key={field.id} className="space-y-2">
-                <Label className="text-sm font-medium">
-                  {field.label[lang]}
-                </Label>
-                {field.type === "text" && <Input placeholder="Enter value" />}
-                {field.type === "textarea" && (
-                  <Textarea placeholder="Enter text..." rows={3} />
-                )}
-                {field.type === "date" && <Input type="date" />}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      {/* Assessment */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Assessment</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={getBilingualValue(config.assessment)}
+            readOnly
+            rows={4}
+          />
+        </CardContent>
+      </Card>
 
-      <Button className="w-full">Submit Report</Button>
+      {/* Suggestions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Suggestions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={getBilingualValue(config.suggestions)}
+            readOnly
+            rows={4}
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }

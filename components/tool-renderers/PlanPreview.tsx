@@ -1,38 +1,17 @@
 "use client"
 
-import { useState } from "react"
 import { useLang } from "@/lib/lang-context"
-import type { PlanConfig } from "@/types/tool"
+import type { BilingualString, PlanConfig } from "@/types/tool"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
 
-interface PlanPreviewProps {
-  config: PlanConfig
-}
-
-export function PlanPreview({ config }: PlanPreviewProps) {
+export function PlanPreview({ config }: { config: PlanConfig }) {
   const { lang } = useLang()
-  const [stepValues, setStepValues] = useState<
-    Record<
-      string,
-      {
-        completed: boolean
-        notes: string
-        comments: string
-        date: string
-        evaluation: string
-      }
-    >
-  >({})
 
-  const updateStepValue = (stepId: string, field: string, value: unknown) => {
-    setStepValues((prev) => ({
-      ...prev,
-      [stepId]: { ...prev[stepId], [field]: value },
-    }))
+  const getBilingualValue = (value?: string | BilingualString) => {
+    if (!value) return ""
+    return typeof value === "string" ? value : value[lang] || ""
   }
 
   return (
@@ -45,11 +24,11 @@ export function PlanPreview({ config }: PlanPreviewProps) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium">Child:</span>{" "}
-              {config.childName[lang]}
+              {getBilingualValue(config.childName)}
             </div>
             <div>
               <span className="font-medium">Expert:</span>{" "}
-              {config.expertName[lang]}
+              {getBilingualValue(config.expertName)}
             </div>
             <div>
               <span className="font-medium">Period:</span> {config.startDate} to{" "}
@@ -59,7 +38,7 @@ export function PlanPreview({ config }: PlanPreviewProps) {
         </CardContent>
       </Card>
 
-      {config.goals.length > 0 && (
+      {config.goals && config.goals.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Goals</CardTitle>
@@ -70,11 +49,11 @@ export function PlanPreview({ config }: PlanPreviewProps) {
               .map((goal, idx) => (
                 <div key={goal.id} className="rounded border p-3">
                   <div className="font-medium">
-                    Goal {idx + 1}: {goal.title[lang]}
+                    Goal {idx + 1}: {getBilingualValue(goal.title)}
                   </div>
                   {goal.description && (
                     <div className="text-sm text-muted-foreground">
-                      {goal.description[lang]}
+                      {getBilingualValue(goal.description)}
                     </div>
                   )}
                 </div>
@@ -83,76 +62,52 @@ export function PlanPreview({ config }: PlanPreviewProps) {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Steps</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {config.steps.length === 0 ? (
-            <p className="py-4 text-center text-muted-foreground">No steps</p>
-          ) : (
-            config.steps.map((step, idx) => (
+      {config.steps && config.steps.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Steps</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {config.steps.map((step, idx) => (
               <div key={step.id} className="space-y-2 rounded border p-3">
                 <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={stepValues[step.id]?.completed || step.completed}
-                    onCheckedChange={(v) =>
-                      updateStepValue(step.id, "completed", !!v)
-                    }
-                  />
+                  <Checkbox checked={step.completed} disabled />
                   <span className="font-medium">
-                    Step {idx + 1}: {step.title[lang]}
+                    Step {idx + 1}: {getBilingualValue(step.title)}
                   </span>
                 </div>
-                {step.description[lang] && (
+                {step.description && (
                   <p className="ms-6 text-sm text-muted-foreground">
-                    {step.description[lang]}
+                    {getBilingualValue(step.description)}
                   </p>
                 )}
                 <div className="ms-6 grid gap-2 sm:grid-cols-2">
                   <Input
                     placeholder="Notes"
-                    value={stepValues[step.id]?.notes || step.notes.en}
-                    onChange={(e) =>
-                      updateStepValue(step.id, "notes", e.target.value)
-                    }
+                    value={getBilingualValue(step.notes)}
+                    readOnly
                   />
                   <Input
                     placeholder="Comments"
-                    value={stepValues[step.id]?.comments || step.comments.en}
-                    onChange={(e) =>
-                      updateStepValue(step.id, "comments", e.target.value)
-                    }
+                    value={getBilingualValue(step.comments)}
+                    readOnly
                   />
                   <Input
                     type="date"
-                    value={
-                      stepValues[step.id]?.date || step.dateOfAchievement || ""
-                    }
-                    onChange={(e) =>
-                      updateStepValue(step.id, "date", e.target.value)
-                    }
-                    placeholder="Achievement Date"
+                    value={step.dateOfAchievement || ""}
+                    readOnly
                   />
                   <Input
                     placeholder="Evaluation"
-                    value={
-                      stepValues[step.id]?.evaluation ||
-                      step.evaluation?.en ||
-                      ""
-                    }
-                    onChange={(e) =>
-                      updateStepValue(step.id, "evaluation", e.target.value)
-                    }
+                    value={getBilingualValue(step.evaluation)}
+                    readOnly
                   />
                 </div>
               </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
-      <Button className="w-full">Save Plan</Button>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
