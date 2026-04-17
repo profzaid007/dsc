@@ -103,6 +103,11 @@ export default function AdminCaseDetailPage({
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedToolId, setSelectedToolId] = useState<string>("")
   const [isAssigning, setIsAssigning] = useState(false)
+  const [assignTab, setAssignTab] = useState<"templates" | "caseSpecific">(
+    "templates"
+  )
+  const [toolTypeFilter, setToolTypeFilter] = useState<string>("all")
+  const [confirmToolType, setConfirmToolType] = useState<string | null>(null)
 
   const profile = getProfileById(caseId)
   const caseAssignments = assignments.filter((a) => a.case === caseId)
@@ -385,44 +390,126 @@ export default function AdminCaseDetailPage({
 
       {showAssignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="mx-4 w-full max-w-md">
+          <Card className="mx-4 w-full max-w-2xl">
             <CardHeader>
               <CardTitle>Assign Tool</CardTitle>
               <CardDescription>
-                Select a tool template to assign to this case
+                Select a template or create case-specific tool
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Select Template</label>
-                <Select
-                  value={selectedToolId}
-                  onValueChange={setSelectedToolId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a tool template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tools.map((tool) => {
-                      const toolTypeObj = toolTypes.find(
-                        (t) => t.id === tool.type
-                      )
-                      const typeName = toolTypeObj?.name || ""
-                      const typeLabel = toolTypeLabels[typeName] || typeName
-                      return (
-                        <SelectItem key={tool.id} value={tool.id}>
-                          <div className="flex flex-col">
-                            <span>{tool.name.en}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {typeLabel}
-                            </span>
-                          </div>
+              <Tabs
+                value={assignTab}
+                onValueChange={(v) =>
+                  setAssignTab(v as "templates" | "caseSpecific")
+                }
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="templates">Templates</TabsTrigger>
+                  <TabsTrigger value="caseSpecific">Case-specific</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="templates" className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Filter by Type
+                    </label>
+                    <Select
+                      value={toolTypeFilter}
+                      onValueChange={setToolTypeFilter}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="survey">Survey</SelectItem>
+                        <SelectItem value="multiple_answer">
+                          Multiple Answer
                         </SelectItem>
-                      )
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
+                        <SelectItem value="media_question">
+                          Media Questions
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="max-h-[300px] space-y-2 overflow-y-auto">
+                    {tools
+                      .filter((tool) => {
+                        if (toolTypeFilter === "all") return true
+                        const toolTypeObj = toolTypes.find(
+                          (t) => t.id === tool.type
+                        )
+                        return toolTypeObj?.name === toolTypeFilter
+                      })
+                      .map((tool) => {
+                        const toolTypeObj = toolTypes.find(
+                          (t) => t.id === tool.type
+                        )
+                        const typeName = toolTypeObj?.name || ""
+                        const typeLabel = toolTypeLabels[typeName] || typeName
+                        const Icon = toolTypeIcons[typeName] || FileText
+                        const isSelected = selectedToolId === tool.id
+                        return (
+                          <div
+                            key={tool.id}
+                            onClick={() => setSelectedToolId(tool.id)}
+                            className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
+                              isSelected
+                                ? "border-primary bg-primary/5"
+                                : "hover:border-muted-foreground hover:bg-muted/50"
+                            }`}
+                          >
+                            <Icon className="h-5 w-5 shrink-0" />
+                            <div className="flex-1">
+                              <div className="font-medium">{tool.name.en}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {typeLabel}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="h-5 w-5 rounded-full bg-primary" />
+                            )}
+                          </div>
+                        )
+                      })}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="caseSpecific">
+                  <div className="grid grid-cols-3 gap-4">
+                    {[
+                      {
+                        type: "plan",
+                        labelEn: "Plan",
+                        labelAr: "خطة",
+                        icon: Layers,
+                      },
+                      {
+                        type: "report",
+                        labelEn: "Report",
+                        labelAr: "تقرير",
+                        icon: FileBarChart,
+                      },
+                      {
+                        type: "attachment_request",
+                        labelEn: "Request Attachment",
+                        labelAr: "طلب مرفق",
+                        icon: Paperclip,
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.type}
+                        onClick={() => setConfirmToolType(item.type)}
+                        className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border p-6 text-center transition-colors hover:border-primary hover:bg-primary/5"
+                      >
+                        <item.icon className="h-8 w-8" />
+                        <span className="font-medium">{item.labelEn}</span>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
             <CardContent className="flex justify-end gap-2 pt-0">
               <Button
@@ -434,11 +521,50 @@ export default function AdminCaseDetailPage({
               >
                 Cancel
               </Button>
+              {assignTab === "templates" && (
+                <Button
+                  onClick={handleAssignTool}
+                  disabled={!selectedToolId || isAssigning}
+                >
+                  {isAssigning ? "Assigning..." : "Assign Tool"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {confirmToolType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Card className="mx-4 w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>Confirm</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>
+                {lang === "ar"
+                  ? `إنشاء ${toolTypeLabels[confirmToolType]} جديد لهذه الحالة؟`
+                  : `Create new ${toolTypeLabels[confirmToolType]} for this case?`}
+              </p>
+            </CardContent>
+            <CardContent className="flex justify-end gap-2">
               <Button
-                onClick={handleAssignTool}
-                disabled={!selectedToolId || isAssigning}
+                variant="outline"
+                onClick={() => setConfirmToolType(null)}
               >
-                {isAssigning ? "Assigning..." : "Assign Tool"}
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push(
+                    `/dashboard/admin/tools/${confirmToolType}/new?caseId=${caseId}`
+                  )
+                  setShowAssignModal(false)
+                  setConfirmToolType(null)
+                  setSelectedToolId("")
+                }}
+              >
+                {lang === "ar" ? "إنشاء" : "Create"}
               </Button>
             </CardContent>
           </Card>

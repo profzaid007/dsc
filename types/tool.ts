@@ -116,15 +116,15 @@ export interface ReportConfig {
 
 export interface PlanGoal {
   id: string
-  title: BilingualString
-  description?: BilingualString
+  title: string
+  description?: string
   order: number
 }
 
 export interface PlanStep {
   id: string
   goalId?: string
-  title: BilingualString
+  title: string
   description: string
   completed: boolean
   notes: string
@@ -134,8 +134,8 @@ export interface PlanStep {
 }
 
 export interface PlanConfig {
-  childName: BilingualString
-  expertName: BilingualString
+  childName: string
+  expertName: string
   startDate: string
   endDate: string
   goals: PlanGoal[]

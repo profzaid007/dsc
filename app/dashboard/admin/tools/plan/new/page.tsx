@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState, use } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAuth } from "@/hooks/useAuth"
@@ -42,7 +42,11 @@ interface SimplePlanStep {
   order: number
 }
 
-export default function PlanBuilderPage() {
+export default function PlanBuilderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ caseId?: string }>
+}) {
   const router = useRouter()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
@@ -53,6 +57,7 @@ export default function PlanBuilderPage() {
   const [typeError, setTypeError] = useState<string>("")
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
+  const [isInitializing, setIsInitializing] = useState(true)
 
   // Tool name for this specific plan instance (only bilingual field)
   const [toolName, setToolName] = useState({
@@ -94,6 +99,24 @@ export default function PlanBuilderPage() {
       }))
     }
   }, [currentUser])
+
+  // Initialize from URL caseId
+  useEffect(() => {
+    const initFromUrl = async () => {
+      try {
+        const params = await searchParams
+        const caseIdFromUrl = params?.caseId
+        if (caseIdFromUrl) {
+          handleCaseSelect(caseIdFromUrl)
+        }
+      } catch (e) {
+        console.error("Failed to read searchParams:", e)
+      } finally {
+        setIsInitializing(false)
+      }
+    }
+    initFromUrl()
+  }, [])
 
   const handleCaseSelect = (caseId: string) => {
     setSelectedCaseId(caseId)
@@ -188,28 +211,24 @@ export default function PlanBuilderPage() {
     try {
       // Convert simple form data to bilingual config for storage
       const config: PlanConfig = {
-        childName: { en: formData.childName, ar: formData.childName },
-        expertName: { en: formData.expertName, ar: formData.expertName },
+        childName: formData.childName,
+        expertName: formData.expertName,
         startDate: formData.startDate,
         endDate: formData.endDate,
         goals: goals.map((g, idx) => ({
           id: g.id,
-          title: { en: g.title, ar: g.title },
-          description: g.description
-            ? { en: g.description, ar: g.description }
-            : undefined,
+          title: g.title,
+          description: g.description,
           order: idx,
         })),
         steps: steps.map((s) => ({
           id: s.id,
-          title: { en: s.title, ar: s.title },
-          description: { en: s.description, ar: s.description },
-          notes: { en: s.notes, ar: s.notes },
-          comments: { en: s.comments, ar: s.comments },
+          title: s.title,
+          description: s.description,
+          notes: s.notes,
+          comments: s.comments,
           dateOfAchievement: s.dateOfAchievement || undefined,
-          evaluation: s.evaluation
-            ? { en: s.evaluation, ar: s.evaluation }
-            : undefined,
+          evaluation: s.evaluation,
           completed: s.completed,
         })),
         media: [],
@@ -562,34 +581,24 @@ export default function PlanBuilderPage() {
             </p>
             <PlanPreview
               config={{
-                childName: {
-                  en: formData.childName,
-                  ar: formData.childName,
-                },
-                expertName: {
-                  en: formData.expertName,
-                  ar: formData.expertName,
-                },
+                childName: formData.childName,
+                expertName: formData.expertName,
                 startDate: formData.startDate,
                 endDate: formData.endDate,
                 goals: goals.map((g) => ({
                   id: g.id,
-                  title: { en: g.title, ar: g.title },
-                  description: g.description
-                    ? { en: g.description, ar: g.description }
-                    : undefined,
+                  title: g.title,
+                  description: g.description,
                   order: g.order,
                 })),
                 steps: steps.map((s) => ({
                   id: s.id,
-                  title: { en: s.title, ar: s.title },
-                  description: { en: s.description, ar: s.description },
-                  notes: { en: s.notes, ar: s.notes },
-                  comments: { en: s.comments, ar: s.comments },
+                  title: s.title,
+                  description: s.description,
+                  notes: s.notes,
+                  comments: s.comments,
                   dateOfAchievement: s.dateOfAchievement || undefined,
-                  evaluation: s.evaluation
-                    ? { en: s.evaluation, ar: s.evaluation }
-                    : undefined,
+                  evaluation: s.evaluation,
                   completed: s.completed,
                 })),
                 media: [],

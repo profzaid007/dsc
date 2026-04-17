@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAuth } from "@/hooks/useAuth"
@@ -16,7 +16,11 @@ import { ReportPreview } from "@/components/tool-renderers/ReportPreview"
 import { Eye, EyeOff } from "lucide-react"
 import type { ReportConfig } from "@/types/tool"
 
-export default function ReportBuilderPage() {
+export default function ReportBuilderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ caseId?: string }>
+}) {
   const router = useRouter()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
@@ -27,6 +31,7 @@ export default function ReportBuilderPage() {
   const [typeError, setTypeError] = useState<string>("")
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
+  const [isInitializing, setIsInitializing] = useState(true)
 
   // Report name (bilingual) - goes directly to name_en/name_ar
   const [reportName, setReportName] = useState({
@@ -66,6 +71,24 @@ export default function ReportBuilderPage() {
     }
   }, [currentUser])
 
+  // Initialize from URL caseId
+  useEffect(() => {
+    const initFromUrl = async () => {
+      try {
+        const params = await searchParams
+        const caseIdFromUrl = params?.caseId
+        if (caseIdFromUrl) {
+          handleCaseSelect(caseIdFromUrl)
+        }
+      } catch (e) {
+        console.error("Failed to read searchParams:", e)
+      } finally {
+        setIsInitializing(false)
+      }
+    }
+    initFromUrl()
+  }, [])
+
   const handleCaseSelect = (caseId: string) => {
     setSelectedCaseId(caseId)
     if (caseId) {
@@ -92,7 +115,7 @@ export default function ReportBuilderPage() {
       // Store fixed fields in config
       const config: ReportConfig = {
         title: { en: reportName.en, ar: reportName.ar },
-        expertNameField: { en: expertName, ar: expertName },
+        expertNameField: expertName,
         customFields: [],
         media: [],
         date: fixedFields.date || undefined,
@@ -312,7 +335,7 @@ export default function ReportBuilderPage() {
             <ReportPreview
               config={{
                 title: { en: reportName.en, ar: reportName.ar },
-                expertNameField: { en: expertName, ar: expertName },
+                expertNameField: expertName,
                 customFields: [],
                 media: [],
                 date: fixedFields.date,

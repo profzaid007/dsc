@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { toolTypesCollection } from "@/lib/pb-collections"
@@ -20,13 +20,21 @@ const FILE_TYPES: {
   extensions: string
 }[] = [
   { value: "image", label: "Image", extensions: "(jpg, png, gif, webp)" },
-  { value: "document", label: "Document", extensions: "(pdf, doc, docx, txt, xls, xlsx)" },
+  {
+    value: "document",
+    label: "Document",
+    extensions: "(pdf, doc, docx, txt, xls, xlsx)",
+  },
   { value: "video", label: "Video", extensions: "(mp4, mov, avi, mpeg)" },
   { value: "audio", label: "Audio", extensions: "(mp3, wav, m4a)" },
   { value: "any", label: "Any File", extensions: "(all types)" },
 ]
 
-export default function AttachmentRequestBuilderPage() {
+export default function AttachmentRequestBuilderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ caseId?: string }>
+}) {
   const router = useRouter()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
@@ -35,6 +43,7 @@ export default function AttachmentRequestBuilderPage() {
   const [typeError, setTypeError] = useState<string>("")
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
+  const [isInitializing, setIsInitializing] = useState(true)
 
   const [formData, setFormData] = useState({
     nameEn: "",
@@ -64,6 +73,24 @@ export default function AttachmentRequestBuilderPage() {
       }
     }
     fetchAttachmentType()
+  }, [])
+
+  // Initialize from URL caseId
+  useEffect(() => {
+    const initFromUrl = async () => {
+      try {
+        const params = await searchParams
+        const caseIdFromUrl = params?.caseId
+        if (caseIdFromUrl) {
+          handleCaseSelect(caseIdFromUrl)
+        }
+      } catch (e) {
+        console.error("Failed to read searchParams:", e)
+      } finally {
+        setIsInitializing(false)
+      }
+    }
+    initFromUrl()
   }, [])
 
   const handleCaseSelect = (caseId: string) => {
