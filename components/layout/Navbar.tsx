@@ -2,16 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LayoutDashboard, Menu, X } from "lucide-react";
+import { ChevronDown, LayoutDashboard, Menu, X, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/form/LanguageToggle";
 import { t } from "@/lib/i18n";
 import { useLang } from "@/lib/lang-context";
 import { SITE_CONTENT } from "@/lib/site-content";
 import { cn } from "@/lib/utils";
-
 import Image from "next/image";
-import { LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar() {
@@ -21,7 +19,6 @@ export function Navbar() {
   const servicesRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
 
-  // Close services dropdown on outside click
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
       if (
@@ -35,49 +32,37 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
-
   const navLinkClass =
     "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
+      
+      {/* GRID WRAPPER */}
+      <div className="mx-auto relative grid max-w-7xl grid-cols-3 items-center px-4 py-3 md:px-6">
 
-        <Link href="/" className="flex-shrink-0">
-          <Image
-            src="/logo.svg"
-            alt="DSC Logo"
-            width={150}
-            height={60}
-            className="h-15 w-auto"  // or any size you prefer
-            unoptimized            // required for SVGs
-          />
-        </Link>
+        {/* LEFT: Logo */}
+        <div className="justify-self-start ml-35">
+          <Link href="/" className="flex-shrink-0">
+            <Image
+              src="/logo.svg"
+              alt="DSC Logo"
+              width={150}
+              height={60}
+              className="h-15 w-auto"
+              unoptimized
+            />
+          </Link>
+        </div>
 
-        {/* Logo */}
-        {/* <Link 
-          href="/"
-          className="text-xl font-bold tracking-wide"
-          style={{ color: "var(--dsc-navy)" }}
-        >
-          DSC
-        </Link> */}
+        {/* CENTER: Nav Links */}
+        <div className="hidden justify-self-center items-center gap-6 md:flex">
 
-        {/* Desktop nav links */}
-        <div className="hidden items-center gap-6 md:flex">
-
-
-          <Link
-            href="/"
-            className={cn(navLinkClass)}
-          >
+          <Link href="/" className={cn(navLinkClass)}>
             {t(SITE_CONTENT.nav.home, lang)}
           </Link>
 
-          <Link
-            href="/#about"
-            className={cn(navLinkClass)}
-          >
+          <Link href="/#about" className={cn(navLinkClass)}>
             {t(SITE_CONTENT.nav.aboutUs, lang)}
           </Link>
 
@@ -92,7 +77,7 @@ export function Navbar() {
               <ChevronDown
                 className={cn(
                   "h-4 w-4 transition-transform duration-200",
-                  servicesOpen && "rotate-180",
+                  servicesOpen && "rotate-180"
                 )}
               />
             </button>
@@ -122,8 +107,8 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Right controls */}
-        <div className="flex items-center gap-2">
+        {/* RIGHT: Controls */}
+        <div className="justify-self-end flex items-center gap-2">
           <LanguageToggle />
 
           <Button
@@ -150,35 +135,34 @@ export function Navbar() {
             )}
           </button>
 
-          {/* Login button */} 
-          {!isAuthenticated && ( 
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="hidden md:inline-flex gap-2"
-          >
-            <Link href="/login">
-              <LogIn className="h-4 w-4" />
-              Login
-            </Link>
-          </Button>
+          {/* Auth buttons */}
+          {!isAuthenticated && (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="hidden md:inline-flex gap-2"
+            >
+              <Link href="/login">
+                <LogIn className="h-4 w-4" />
+                Login
+              </Link>
+            </Button>
           )}
-    
-          {isAuthenticated && ( 
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="hidden md:inline-flex gap-2"
-          >
-            <Link href="/dashboard">
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </Link>
-          </Button>
+
+          {isAuthenticated && (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="hidden md:inline-flex gap-2"
+            >
+              <Link href="/dashboard">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Link>
+            </Button>
           )}
-          
         </div>
       </div>
 
@@ -186,20 +170,23 @@ export function Navbar() {
       {mobileOpen && (
         <div className="animate-in slide-in-from-top-2 border-t bg-background px-4 py-4 duration-200 md:hidden">
           <div className="flex flex-col gap-1">
+
             <Link
               href="/"
               onClick={() => setMobileOpen(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {t(SITE_CONTENT.nav.home, lang)}
             </Link>
+
             <Link
               href="/#about"
               onClick={() => setMobileOpen(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {t(SITE_CONTENT.nav.aboutUs, lang)}
             </Link>
+
             <div className="px-3 py-2">
               <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
                 {t(SITE_CONTENT.nav.services, lang)}
@@ -208,23 +195,24 @@ export function Navbar() {
                 <Link
                   href="/#services"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   {t(SITE_CONTENT.nav.individualServices, lang)}
                 </Link>
                 <Link
                   href="/#services"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   {t(SITE_CONTENT.nav.institutionalServices, lang)}
                 </Link>
               </div>
             </div>
+
             <Link
               href="/#contact"
               onClick={() => setMobileOpen(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {t(SITE_CONTENT.nav.contactUs, lang)}
             </Link>
@@ -240,6 +228,7 @@ export function Navbar() {
                 </Link>
               </Button>
             </div>
+
           </div>
         </div>
       )}
