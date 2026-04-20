@@ -1,23 +1,23 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { ChevronDown, LayoutDashboard, Menu, X, LogIn } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { LanguageToggle } from "@/components/form/LanguageToggle";
-import { t } from "@/lib/i18n";
-import { useLang } from "@/lib/lang-context";
-import { SITE_CONTENT } from "@/lib/site-content";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
-import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { ChevronDown, LayoutDashboard, Menu, X, LogIn } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { LanguageToggle } from "@/components/form/LanguageToggle"
+import { t } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
+import { SITE_CONTENT } from "@/lib/site-content"
+import { cn } from "@/lib/utils"
+import Image from "next/image"
+import { useAuth } from "@/hooks/useAuth"
 
 export function Navbar() {
-  const { lang } = useLang();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
-  const servicesRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuth();
+  const { lang } = useLang()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [servicesOpen, setServicesOpen] = useState(false)
+  const servicesRef = useRef<HTMLDivElement>(null)
+  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
@@ -25,24 +25,22 @@ export function Navbar() {
         servicesRef.current &&
         !servicesRef.current.contains(e.target as Node)
       ) {
-        setServicesOpen(false);
+        setServicesOpen(false)
       }
     }
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+    document.addEventListener("mousedown", handleOutsideClick)
+    return () => document.removeEventListener("mousedown", handleOutsideClick)
+  }, [])
 
   const navLinkClass =
-    "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
+    "text-sm font-medium text-gray-700 transition-all duration-200 hover:text-[#0A3D62] hover:underline decoration-2 underline-offset-4"
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
-      
+    <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur-md">
       {/* GRID WRAPPER */}
-      <div className="mx-auto relative grid max-w-7xl grid-cols-3 items-center px-4 py-3 md:px-6">
-
+      <div className="relative mx-auto grid max-w-7xl grid-cols-3 items-center px-4 py-3 md:px-6">
         {/* LEFT: Logo */}
-        <div className="justify-self-start ml-35">
+        <div className="ml-35 justify-self-start">
           <Link href="/" className="flex-shrink-0">
             <Image
               src="/logo.svg"
@@ -56,8 +54,7 @@ export function Navbar() {
         </div>
 
         {/* CENTER: Nav Links */}
-        <div className="hidden justify-self-center items-center gap-6 md:flex">
-
+        <div className="hidden items-center gap-6 justify-self-center md:flex">
           <Link href="/" className={cn(navLinkClass)}>
             {t(SITE_CONTENT.nav.home, lang)}
           </Link>
@@ -83,17 +80,17 @@ export function Navbar() {
             </button>
 
             {servicesOpen && (
-              <div className="animate-in fade-in slide-in-from-top-1 absolute start-0 top-full z-50 mt-2 w-52 rounded-lg border bg-background py-1 shadow-lg duration-150">
+              <div className="absolute start-0 top-full z-50 mt-2 w-52 animate-in rounded-lg border border-gray-200 bg-white py-1 shadow-xl duration-150 fade-in slide-in-from-top-1">
                 <Link
                   href="/#services"
-                  className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-[#0A3D62]"
                   onClick={() => setServicesOpen(false)}
                 >
                   {t(SITE_CONTENT.nav.individualServices, lang)}
                 </Link>
                 <Link
                   href="/#services"
-                  className="block px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-[#0A3D62]"
                   onClick={() => setServicesOpen(false)}
                 >
                   {t(SITE_CONTENT.nav.institutionalServices, lang)}
@@ -108,13 +105,13 @@ export function Navbar() {
         </div>
 
         {/* RIGHT: Controls */}
-        <div className="justify-self-end flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-self-end">
           <LanguageToggle />
 
           <Button
             asChild
             size="sm"
-            className="hidden md:inline-flex"
+            className="hidden shadow-md transition-all duration-200 hover:shadow-lg hover:shadow-yellow-600/20 md:inline-flex"
             style={{ backgroundColor: "var(--dsc-gold)", color: "#fff" }}
           >
             <Link href="/apply">
@@ -124,7 +121,7 @@ export function Navbar() {
 
           {/* Hamburger */}
           <button
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+            className="rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 hover:text-[#0A3D62] md:hidden"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label="Toggle menu"
           >
@@ -141,7 +138,7 @@ export function Navbar() {
               asChild
               variant="outline"
               size="sm"
-              className="hidden md:inline-flex gap-2"
+              className="hidden gap-2 md:inline-flex"
             >
               <Link href="/login">
                 <LogIn className="h-4 w-4" />
@@ -155,7 +152,7 @@ export function Navbar() {
               asChild
               variant="outline"
               size="sm"
-              className="hidden md:inline-flex gap-2"
+              className="hidden gap-2 md:inline-flex"
             >
               <Link href="/dashboard">
                 <LayoutDashboard className="h-4 w-4" />
@@ -168,13 +165,12 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="animate-in slide-in-from-top-2 border-t bg-background px-4 py-4 duration-200 md:hidden">
+        <div className="animate-in border-t border-gray-200 bg-white px-4 py-4 duration-200 slide-in-from-top-2 md:hidden">
           <div className="flex flex-col gap-1">
-
             <Link
               href="/"
               onClick={() => setMobileOpen(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-[#0A3D62]"
             >
               {t(SITE_CONTENT.nav.home, lang)}
             </Link>
@@ -182,27 +178,27 @@ export function Navbar() {
             <Link
               href="/#about"
               onClick={() => setMobileOpen(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-[#0A3D62]"
             >
               {t(SITE_CONTENT.nav.aboutUs, lang)}
             </Link>
 
             <div className="px-3 py-2">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <p className="mb-1 text-xs font-semibold tracking-wider text-gray-500 uppercase">
                 {t(SITE_CONTENT.nav.services, lang)}
               </p>
               <div className="ms-2 flex flex-col gap-1">
                 <Link
                   href="/#services"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#0A3D62]"
                 >
                   {t(SITE_CONTENT.nav.individualServices, lang)}
                 </Link>
                 <Link
                   href="/#services"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#0A3D62]"
                 >
                   {t(SITE_CONTENT.nav.institutionalServices, lang)}
                 </Link>
@@ -212,12 +208,12 @@ export function Navbar() {
             <Link
               href="/#contact"
               onClick={() => setMobileOpen(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-[#0A3D62]"
             >
               {t(SITE_CONTENT.nav.contactUs, lang)}
             </Link>
 
-            <div className="mt-2 border-t pt-2">
+            <div className="mt-2 border-t border-gray-200 pt-2">
               <Button
                 asChild
                 className="w-full"
@@ -228,10 +224,9 @@ export function Navbar() {
                 </Link>
               </Button>
             </div>
-
           </div>
         </div>
       )}
     </nav>
-  );
+  )
 }
