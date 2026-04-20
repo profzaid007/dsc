@@ -36,11 +36,11 @@ export function Navbar() {
     "text-sm font-medium text-gray-700 transition-all duration-200 hover:text-[#0A3D62] hover:underline decoration-2 underline-offset-4"
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur-md">
+    <nav className="top-5 mt-5 z-50 mx-auto w-full max-w-[1400px] rounded-2xl border border-gray-200/50 bg-white/80 shadow-lg backdrop-blur-md">
       {/* GRID WRAPPER */}
-      <div className="relative mx-auto grid max-w-7xl grid-cols-3 items-center px-4 py-3 md:px-6">
+      <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-3 md:px-8">
         {/* LEFT: Logo */}
-        <div className="ml-35 justify-self-start">
+        <div className="flex-shrink-0 mr-70">
           <Link href="/" className="flex-shrink-0">
             <Image
               src="/logo.svg"
@@ -54,7 +54,7 @@ export function Navbar() {
         </div>
 
         {/* CENTER: Nav Links */}
-        <div className="hidden items-center gap-6 justify-self-center md:flex">
+        <div className="hidden items-center gap-6 md:flex">
           <Link href="/" className={cn(navLinkClass)}>
             {t(SITE_CONTENT.nav.home, lang)}
           </Link>
@@ -105,7 +105,7 @@ export function Navbar() {
         </div>
 
         {/* RIGHT: Controls */}
-        <div className="flex items-center gap-2 justify-self-end">
+        <div className="flex items-center gap-2 justify-self-end ml-20">
           <LanguageToggle />
 
           <Button

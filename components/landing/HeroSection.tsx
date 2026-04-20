@@ -12,7 +12,7 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative flex min-h-screen scroll-mt-16 items-center justify-center overflow-hidden"
+      className="relative -mt-16 flex min-h-screen items-center justify-center overflow-hidden"
     >
       <div className="absolute inset-0 z-0">
         <video
