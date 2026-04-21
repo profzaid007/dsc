@@ -45,12 +45,13 @@ interface SimplePlanStep {
 export default function PlanBuilderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ caseId?: string }>
+  searchParams: Promise<{ caseId?: string; edit?: string }>
 }) {
   const router = useRouter()
-  const { assignTool } = useAssignments()
+  const { assignTool, updateAssignment, assignments } = useAssignments()
   const { getProfileById } = useProfiles()
   const { currentUser } = useAuth()
+  const [editAssignmentId, setEditAssignmentId] = useState<string>("")
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [planTypeId, setPlanTypeId] = useState<string>("")
@@ -105,8 +106,49 @@ export default function PlanBuilderPage({
     const initFromUrl = async () => {
       try {
         const params = await searchParams
+        const editId = params?.edit
         const caseIdFromUrl = params?.caseId
-        if (caseIdFromUrl) {
+
+        // Edit mode - load existing assignment
+        if (editId) {
+          setEditAssignmentId(editId)
+          const existingAssignment = assignments.find((a) => a.id === editId)
+          if (existingAssignment) {
+            const config = existingAssignment.config as PlanConfig
+            setSelectedCaseId(existingAssignment.case)
+            setToolName({
+              en: existingAssignment.name_en || "",
+              ar: existingAssignment.name_ar || "",
+            })
+            setFormData({
+              childName: config?.childName || "",
+              expertName: config?.expertName || "",
+              startDate: config?.startDate || "",
+              endDate: config?.endDate || "",
+            })
+            setGoals(
+              (config?.goals || []).map((g) => ({
+                id: g.id,
+                title: g.title,
+                description: g.description || "",
+                order: g.order,
+              }))
+            )
+            setSteps(
+              (config?.steps || []).map((s, idx) => ({
+                id: s.id,
+                title: s.title,
+                description: s.description || "",
+                notes: s.notes || "",
+                comments: s.comments || "",
+                dateOfAchievement: s.dateOfAchievement || "",
+                evaluation: s.evaluation || "",
+                completed: s.completed,
+                order: idx,
+              }))
+            )
+          }
+        } else if (caseIdFromUrl) {
           handleCaseSelect(caseIdFromUrl)
         }
       } catch (e) {
@@ -116,7 +158,7 @@ export default function PlanBuilderPage({
       }
     }
     initFromUrl()
-  }, [])
+  }, [assignments])
 
   const handleCaseSelect = (caseId: string) => {
     setSelectedCaseId(caseId)
@@ -234,39 +276,53 @@ export default function PlanBuilderPage({
         media: [],
       }
 
-      // Create case document directly in case_tools (no tool template)
-      await assignTool({
-        case: selectedCaseId,
-        type: planTypeId,
-        name_en: toolName.en,
-        name_ar: toolName.ar,
-        is_not_template: true,
-        config,
-        is_visible_to_user: true,
-        status: "pending",
-      })
+      // Edit mode - update existing assignment
+      if (editAssignmentId) {
+        await updateAssignment(editAssignmentId, {
+          name_en: toolName.en,
+          name_ar: toolName.ar,
+          config,
+        })
+        router.push(`/dashboard/admin/assignments/${editAssignmentId}`)
+      } else {
+        // Create case document directly in case_tools (no tool template)
+        await assignTool({
+          case: selectedCaseId,
+          type: planTypeId,
+          name_en: toolName.en,
+          name_ar: toolName.ar,
+          is_not_template: true,
+          config,
+          is_visible_to_user: true,
+          status: "pending",
+        })
 
-      router.push("/dashboard/admin/assignments")
+        router.push("/dashboard/admin/assignments")
+      }
     } catch (error) {
-      console.error("Failed to create plan:", error)
+      console.error(editAssignmentId ? "Failed to update plan:" : "Failed to create plan:", error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleCancel = () => {
-    // Reset form
-    setSelectedCaseId("")
-    setToolName({ en: "", ar: "" })
-    setFormData({
-      childName: "",
-      expertName: currentUser?.name || "",
-      startDate: "",
-      endDate: "",
-    })
-    setGoals([])
-    setSteps([])
-    setShowPreview(false)
+    if (editAssignmentId) {
+      router.push(`/dashboard/admin/assignments/${editAssignmentId}`)
+    } else {
+      // Reset form
+      setSelectedCaseId("")
+      setToolName({ en: "", ar: "" })
+      setFormData({
+        childName: "",
+        expertName: currentUser?.name || "",
+        startDate: "",
+        endDate: "",
+      })
+      setGoals([])
+      setSteps([])
+      setShowPreview(false)
+    }
   }
 
   const renderGoalItem = (goal: SimplePlanGoal, index: number) => (
@@ -415,6 +471,7 @@ export default function PlanBuilderPage({
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
                 placeholder="Select a case..."
+                disabled={!!editAssignmentId}
               />
             </CardContent>
           </Card>
@@ -569,7 +626,13 @@ export default function PlanBuilderPage({
                 isSubmitting
               }
             >
-              {isSubmitting ? "Creating..." : "Create Plan"}
+              {isSubmitting
+                ? editAssignmentId
+                  ? "Saving..."
+                  : "Creating..."
+                : editAssignmentId
+                  ? "Save Changes"
+                  : "Create Plan"}
             </Button>
           </div>
         </div>

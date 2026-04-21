@@ -12,7 +12,7 @@ export default function EditPlanPage({ params }: EditPageProps) {
   const router = useRouter()
 
   useEffect(() => {
-    router.push(`/dashboard/admin/tools/plan/${id}`)
+    router.push(`/dashboard/admin/tools/plan/new?edit=${id}`)
   }, [id, router])
 
   return (

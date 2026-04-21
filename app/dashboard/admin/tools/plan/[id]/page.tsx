@@ -13,10 +13,8 @@ export default function PlanViewPage({ params }: PlanViewPageProps) {
   const router = useRouter()
 
   useEffect(() => {
-    // Redirect to assignment detail page
-    // Since plan is case-specific, there's no tool template
-    // The ID is the assignment ID in case_tools
-    router.push(`/dashboard/admin/assignments/${id}`)
+    // Redirect to plan edit page (new page with edit param)
+    router.push(`/dashboard/admin/tools/plan/new?edit=${id}`)
   }, [id, router])
 
   return (

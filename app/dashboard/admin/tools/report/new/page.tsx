@@ -19,16 +19,17 @@ import type { ReportConfig } from "@/types/tool"
 export default function ReportBuilderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ caseId?: string }>
+  searchParams: Promise<{ caseId?: string; edit?: string }>
 }) {
   const router = useRouter()
-  const { assignTool } = useAssignments()
+  const { assignTool, updateAssignment, assignments } = useAssignments()
   const { getProfileById } = useProfiles()
   const { currentUser } = useAuth()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [reportTypeId, setReportTypeId] = useState<string>("")
   const [typeError, setTypeError] = useState<string>("")
+  const [editAssignmentId, setEditAssignmentId] = useState<string>("")
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const [isInitializing, setIsInitializing] = useState(true)
@@ -79,8 +80,29 @@ export default function ReportBuilderPage({
     const initFromUrl = async () => {
       try {
         const params = await searchParams
+        const editId = params?.edit
         const caseIdFromUrl = params?.caseId
-        if (caseIdFromUrl) {
+
+        // Edit mode - load existing assignment
+        if (editId) {
+          setEditAssignmentId(editId)
+          const existingAssignment = assignments.find((a) => a.id === editId)
+          if (existingAssignment) {
+            const config = existingAssignment.config as ReportConfig
+            setSelectedCaseId(existingAssignment.case)
+            setReportName({
+              en: existingAssignment.name_en || "",
+              ar: existingAssignment.name_ar || "",
+            })
+            setChildName(config?.childName || "")
+            setExpertName(config?.expertName || "")
+            setFixedFields({
+              date: config?.date || "",
+              assessment: config?.assessment || "",
+              suggestions: config?.suggestions || "",
+            })
+          }
+        } else if (caseIdFromUrl) {
           handleCaseSelect(caseIdFromUrl)
         }
       } catch (e) {
@@ -90,7 +112,7 @@ export default function ReportBuilderPage({
       }
     }
     initFromUrl()
-  }, [])
+  }, [assignments])
 
   const handleCaseSelect = (caseId: string) => {
     setSelectedCaseId(caseId)
@@ -129,38 +151,53 @@ export default function ReportBuilderPage({
         suggestions: fixedFields.suggestions,
       }
 
-      // Create case document directly in case_tools (no tool template)
-      await assignTool({
-        case: selectedCaseId,
-        type: reportTypeId,
-        name_en: reportName.en,
-        name_ar: reportName.ar,
-        is_not_template: true,
-        config,
-        is_visible_to_user: true,
-        status: "completed",
-      })
+      // Edit mode - update existing assignment
+      if (editAssignmentId) {
+        await updateAssignment(editAssignmentId, {
+          name_en: reportName.en,
+          name_ar: reportName.ar,
+          config,
+        })
+        router.push(`/dashboard/admin/assignments/${editAssignmentId}`)
+      } else {
+        // Create case document directly in case_tools (no tool template)
+        await assignTool({
+          case: selectedCaseId,
+          type: reportTypeId,
+          name_en: reportName.en,
+          name_ar: reportName.ar,
+          is_not_template: true,
+          config,
+          is_visible_to_user: true,
+          status: "completed",
+        })
 
-      // Redirect to assignments page
-      router.push(`/dashboard/admin/assignments`)
+        // Redirect to assignments page
+        router.push(`/dashboard/admin/assignments`)
+      }
     } catch (error) {
-      console.error("Failed to create report and assignment:", error)
+      console.error(editAssignmentId ? "Failed to update report:" : "Failed to create report:", error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleCancel = () => {
-    // Reset form
-    setSelectedCaseId("")
-    setReportName({ en: "", ar: "" })
-    setExpertName(currentUser?.name || "")
-    setFixedFields({
-      date: "",
-      assessment: "",
-      suggestions: "",
-    })
-    setShowPreview(false)
+    if (editAssignmentId) {
+      router.push(`/dashboard/admin/assignments/${editAssignmentId}`)
+    } else {
+      // Reset form
+      setSelectedCaseId("")
+      setReportName({ en: "", ar: "" })
+      setExpertName(currentUser?.name || "")
+      setChildName("")
+      setFixedFields({
+        date: "",
+        assessment: "",
+        suggestions: "",
+      })
+      setShowPreview(false)
+    }
   }
 
   const isFormValid =
@@ -216,6 +253,7 @@ export default function ReportBuilderPage({
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
                 placeholder="Select a case..."
+                disabled={!!editAssignmentId}
               />
               {!selectedCaseId && (
                 <p className="mt-2 text-sm text-destructive">
@@ -338,7 +376,13 @@ export default function ReportBuilderPage({
               onClick={handleSubmit}
               disabled={!isFormValid || isSubmitting}
             >
-              {isSubmitting ? "Creating..." : "Create Report"}
+              {isSubmitting
+                ? editAssignmentId
+                  ? "Saving..."
+                  : "Creating..."
+                : editAssignmentId
+                  ? "Save Changes"
+                  : "Create Report"}
             </Button>
           </div>
         </div>

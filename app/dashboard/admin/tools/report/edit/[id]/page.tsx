@@ -12,7 +12,7 @@ export default function EditReportPage({ params }: EditPageProps) {
   const router = useRouter()
 
   useEffect(() => {
-    router.push(`/dashboard/admin/tools/report/${id}`)
+    router.push(`/dashboard/admin/tools/report/new?edit=${id}`)
   }, [id, router])
 
   return (

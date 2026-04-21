@@ -25,6 +25,7 @@ interface CaseSearchComboboxProps {
   placeholder?: string
   emptyMessage?: string
   className?: string
+  disabled?: boolean
 }
 
 export function CaseSearchCombobox({
@@ -33,6 +34,7 @@ export function CaseSearchCombobox({
   placeholder = "Select a case...",
   emptyMessage = "No cases found.",
   className,
+  disabled = false,
 }: CaseSearchComboboxProps) {
   const [open, setOpen] = useState(false)
   const { profiles } = useProfiles()
@@ -46,6 +48,7 @@ export function CaseSearchCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          disabled={disabled}
           className={cn("w-full justify-between", className)}
         >
           {selectedCase ? selectedCase.name : placeholder}
