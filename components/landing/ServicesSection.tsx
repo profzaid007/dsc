@@ -52,7 +52,7 @@ export function ServicesSection() {
 
   return (
     <section id="services" className="scroll-mt-16 py-16 md:py-24" style={{ backgroundColor: "oklch(0.97 0 0)" }}>
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="mx-auto max-w-6xl px-6">
         <h2
           className="mb-10 border-s-4 ps-4 text-2xl font-bold md:text-3xl"
           style={{
@@ -63,19 +63,16 @@ export function ServicesSection() {
           {t(services.sectionTitle, lang)}
         </h2>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <ServiceCard
-            title={services.individual.title}
-            description={services.individual.description}
-            bullets={services.individual.bullets}
-            lang={lang}
-          />
-          <ServiceCard
-            title={services.institutional.title}
-            description={services.institutional.description}
-            bullets={services.institutional.bullets}
-            lang={lang}
-          />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {services.items.map((service, index) => (
+            <ServiceCard
+              key={index}
+              title={service.title}
+              description={service.description}
+              bullets={service.bullets}
+              lang={lang}
+            />
+          ))}
         </div>
       </div>
     </section>
