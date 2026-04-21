@@ -65,12 +65,12 @@ export const SITE_CONTENT: SiteContent = {
 
   hero: {
     headline: {
-      en: "Unlock Your Development Secrets",
-      ar: "اكتشف أسرار تطورك",
+      en: "Development Secrets Consultancy (DSC)",
+      ar: "(DSC) استشارية أسرار التطور",
     },
     subheadline: {
-      en: "Expert consultancy to help individuals and institutions achieve breakthrough growth — through strategy, mentorship, and execution.",
-      ar: "استشارات متخصصة تساعد الأفراد والمؤسسات على تحقيق نمو استثنائي — من خلال الاستراتيجية والإرشاد والتنفيذ.",
+      en: "From Comprehensive Scientific Diagnosis to Innovation and  Global Leadership in the Age of Artificial Intelligence",
+      ar: "من التشخيص العلمي الشامل إلى الابتكار والريادة العالمية في عصر الذكاء  الاصطناعي",
     },
     cta: { en: "Book a Free Consultation", ar: "احجز استشارة مجانية" },
   },
@@ -78,8 +78,8 @@ export const SITE_CONTENT: SiteContent = {
   about: {
     sectionTitle: { en: "About DSC", ar: "عن DSC" },
     paragraph1: {
-      en: "Development Secrets Consultancy (DSC) is a premier consultancy firm dedicated to unlocking the full potential of ambitious individuals and forward-thinking institutions. We combine deep expertise with a human-first approach to deliver lasting, measurable results.",
-      ar: "Development Secrets Consultancy (DSC) هي شركة استشارية رائدة مكرّسة للكشف عن الإمكانات الكاملة للأفراد الطموحين والمؤسسات ذات التفكير المستقبلي. نجمع بين الخبرة العميقة والنهج الإنساني أولاً لتقديم نتائج دائمة وقابلة للقياس.",
+      en: "An integrated scientific platform that begins with precise multidimensional diagnosis of human and institutional potential,  followed by professional reporting, customized treatment and  development plans, continuous follow-up, and measurable  transformation toward excellence, employability, innovation,  and global leadership.",
+      ar: "منظومة علمية متكاملة تبدأ بالتشخيص الدقيق متعدد الأبعاد للإمكانات الفردية  والمؤسسية، ثم إعداد تقارير احترافية، وبناء خطط علاجية وتطويرية مخصصة، مع  متابعة التنفيذ وقياس الأثر؛ للوصول إلى التميز، والتوظيف، والابتكار، والريادة  العالمية.",
     },
     paragraph2: {
       en: "Whether you are launching your first venture, scaling an existing business, or developing your organisation's leadership, DSC provides the guidance, frameworks, and support to get you there.",
