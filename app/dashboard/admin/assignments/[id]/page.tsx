@@ -1,10 +1,10 @@
 "use client"
 
-import { use, useState, useEffect } from "react"
+import { use, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
-import { toolTypesCollection } from "@/lib/pb-collections"
+import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
 import {
   Card,
@@ -19,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SurveyPreview } from "@/components/tool-renderers/SurveyPreview"
 import { MultipleChoicePreview } from "@/components/tool-renderers/MultipleChoicePreview"
 import { MediaPreview } from "@/components/tool-renderers/MediaPreview"
+import { PlanPreview } from "@/components/tool-renderers/PlanPreview"
+import { ReportPreview } from "@/components/tool-renderers/ReportPreview"
 import {
   ArrowLeft,
   FileText,
@@ -27,12 +29,16 @@ import {
   FileBarChart,
   Layers,
   Paperclip,
+  Download,
+  Edit,
 } from "lucide-react"
 import Link from "next/link"
 import type {
   SurveyConfig,
   MultipleChoiceConfig,
   MediaConfig,
+  PlanConfig,
+  ReportConfig,
 } from "@/types/tool"
 import type { AssignmentStatus } from "@/types/assignment"
 
@@ -81,43 +87,26 @@ export default function AssignmentDetailPage({
   const router = useRouter()
   const { lang } = useLang()
   const { assignments } = useAssignments()
-  const { profiles } = useProfiles()
-
-  const [toolTypes, setToolTypes] = useState<Map<string, string>>(new Map()) // id -> name
-  const [toolTypesLoaded, setToolTypesLoaded] = useState(false)
-
-  // Fetch tool types on mount
-  useEffect(() => {
-    const fetchToolTypes = async () => {
-      try {
-        const types = await toolTypesCollection.getAll()
-        const typeMap = new Map<string, string>()
-        types.forEach((type) => {
-          typeMap.set(type.id, type.name)
-        })
-        setToolTypes(typeMap)
-        setToolTypesLoaded(true)
-      } catch (error) {
-        console.error("Failed to fetch tool types:", error)
-      }
-    }
-    fetchToolTypes()
-  }, [])
+  const { profiles, isLoading: profilesLoading } = useProfiles()
+  const { toolTypes, isLoading: toolTypesLoading, fetchToolTypes, getToolTypeById } = useToolTypes()
 
   const assignment = assignments.find((a) => a.id === assignmentId)
   const profile = assignment
     ? profiles.find((p) => p.id === assignment.case)
     : undefined
 
-  // Get type name from tool type ID
-  const typeName = assignment?.type
-    ? toolTypes.get(assignment.type) || "Unknown"
-    : "Unknown"
+  useEffect(() => {
+    fetchToolTypes()
+  }, [fetchToolTypes])
 
-  // Use stored config from assignment
+  const toolType = assignment?.type ? getToolTypeById(assignment.type) : undefined
+  const typeName = toolType?.name || "Unknown"
+
   const config = assignment?.config
 
-  if (!toolTypesLoaded) {
+  const isLoading = toolTypesLoading || profilesLoading
+
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <p className="text-muted-foreground">Loading...</p>
@@ -125,7 +114,7 @@ export default function AssignmentDetailPage({
     )
   }
 
-  if (!assignment || !profile) {
+  if (!assignment) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <h2 className="mb-4 text-xl font-medium">Assignment not found</h2>
@@ -136,7 +125,22 @@ export default function AssignmentDetailPage({
     )
   }
 
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <h2 className="mb-4 text-xl font-medium">Case not found</h2>
+        <p className="mb-4 text-muted-foreground">
+          The linked case for this assignment was deleted.
+        </p>
+        <Button onClick={() => router.push("/dashboard/admin/assignments")}>
+          Back to Assignments
+        </Button>
+      </div>
+    )
+  }
+
   const Icon = toolTypeIcons[typeName] || FileText
+  const canEdit = typeName === "plan" || typeName === "report"
 
   const renderToolPreview = () => {
     if (!config) return null
@@ -161,6 +165,10 @@ export default function AssignmentDetailPage({
             </p>
           </div>
         )
+      case "plan":
+        return <PlanPreview config={config as PlanConfig} />
+      case "report":
+        return <ReportPreview config={config as ReportConfig} />
       default:
         return (
           <div className="rounded-lg border bg-muted/30 p-6">
@@ -170,6 +178,205 @@ export default function AssignmentDetailPage({
           </div>
         )
     }
+  }
+
+  const renderSurveyResponse = (surveyConfig: SurveyConfig) => {
+    const responses = assignment.responses || {}
+    const questions = surveyConfig.questions || []
+
+    if (questions.length === 0) {
+      return <p className="text-muted-foreground">No questions in this survey.</p>
+    }
+
+    return (
+      <div className="space-y-4">
+        {questions.map((question, idx) => {
+          const answer = responses[question.id]
+          return (
+            <div key={question.id} className="rounded-lg border p-4">
+              <div className="flex items-start gap-2">
+                <Badge variant="outline" className="mt-0.5">
+                  {idx + 1}
+                </Badge>
+                <div className="flex-1">
+                  <p className="font-medium">{question.text}</p>
+                  <div className="mt-2 rounded bg-muted/30 p-3">
+                    {answer !== undefined && answer !== null && answer !== "" ? (
+                      <p className="text-sm">{String(answer)}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No answer</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderMultipleChoiceResponse = (mcConfig: MultipleChoiceConfig) => {
+    const responses = assignment.responses || {}
+    const questions = mcConfig.questions || []
+
+    if (questions.length === 0) {
+      return <p className="text-muted-foreground">No questions in this survey.</p>
+    }
+
+    return (
+      <div className="space-y-4">
+        {questions.map((question, idx) => {
+          const answer = responses[question.id]
+          return (
+            <div key={question.id} className="rounded-lg border p-4">
+              <div className="flex items-start gap-2">
+                <Badge variant="outline" className="mt-0.5">
+                  {idx + 1}
+                </Badge>
+                <div className="flex-1">
+                  <p className="font-medium">{question.text}</p>
+                  <div className="mt-2 space-y-1">
+                    {answer !== undefined && answer !== null ? (
+                      Array.isArray(answer) ? (
+                        answer.map((val, i) => (
+                          <p key={i} className="text-sm">
+                            {question.options?.find(o => o.value === val)?.label || val}
+                          </p>
+                        ))
+                      ) : (
+                        <p className="text-sm">
+                          {question.options?.find(o => o.value === answer)?.label || String(answer)}
+                        </p>
+                      )
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No answer</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderMediaResponse = (mediaConfig: MediaConfig) => {
+    const responses = assignment.responses || {}
+    const items = mediaConfig.items || []
+
+    if (items.length === 0) {
+      return <p className="text-muted-foreground">No media items in this assignment.</p>
+    }
+
+    return (
+      <div className="space-y-4">
+        {items.map((item, idx) => {
+          const answer = responses[item.id]
+          return (
+            <div key={item.id} className="rounded-lg border p-4">
+              <div className="flex items-start gap-2">
+                <Badge variant="outline" className="mt-0.5">
+                  {idx + 1}
+                </Badge>
+                <div className="flex-1">
+                  <p className="font-medium">{item.question}</p>
+                  <div className="mt-2 rounded bg-muted/30 p-3">
+                    {item.responseType === "text" ? (
+                      answer ? (
+                        <p className="text-sm">{String(answer)}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No answer</p>
+                      )
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {answer ? `File: ${answer}` : "No file uploaded"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderAttachmentResponse = () => {
+    const responses = assignment.responses || {}
+    const responseKeys = Object.keys(responses)
+
+    if (responseKeys.length === 0 && (!assignment.media || assignment.media.length === 0)) {
+      return <p className="text-muted-foreground">No files uploaded yet.</p>
+    }
+
+    return (
+      <div className="space-y-4">
+        {responseKeys.length > 0 && (
+          <div className="rounded-lg border p-4">
+            <h4 className="mb-2 font-medium">File Responses</h4>
+            <ul className="space-y-2">
+              {responseKeys.map((key) => (
+                <li key={key} className="flex items-center gap-2">
+                  <span className="text-sm">{key}:</span>
+                  <span className="text-sm text-muted-foreground">{String(responses[key])}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {assignment.media && assignment.media.length > 0 && (
+          <div className="rounded-lg border p-4">
+            <h4 className="mb-2 font-medium">Uploaded Files</h4>
+            <ul className="space-y-2">
+              {assignment.media.map((file, idx) => (
+                <li key={idx}>
+                  <a
+                    href={file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <Download className="h-4 w-4" />
+                    File {idx + 1}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderGenericResponse = () => {
+    return (
+      <div className="space-y-4">
+        {assignment.media && assignment.media.length > 0 && (
+          <div className="rounded-lg border p-4">
+            <h4 className="mb-2 font-medium">Uploaded Files</h4>
+            <ul className="space-y-2">
+              {assignment.media.map((file, idx) => (
+                <li key={idx}>
+                  <a
+                    href={file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <Download className="h-4 w-4" />
+                    File {idx + 1}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    )
   }
 
   const renderResponseView = () => {
@@ -190,47 +397,31 @@ export default function AssignmentDetailPage({
       !assignment.responses ||
       Object.keys(assignment.responses).length === 0
     ) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12">
-          <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="mb-2 text-lg font-medium">No Responses</h3>
-          <p className="text-muted-foreground">
-            No response data available for this assignment.
-          </p>
-        </div>
-      )
+      if (!assignment.media || assignment.media.length === 0) {
+        return (
+          <div className="flex flex-col items-center justify-center py-12">
+            <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-medium">No Responses</h3>
+            <p className="text-muted-foreground">
+              No response data available for this assignment.
+            </p>
+          </div>
+        )
+      }
     }
 
-    return (
-      <div className="space-y-4">
-        <div className="rounded-lg border bg-muted/30 p-4">
-          <h4 className="mb-2 font-medium">Response Data</h4>
-          <pre className="max-h-96 overflow-auto rounded bg-background p-4 text-sm">
-            {JSON.stringify(assignment.responses, null, 2)}
-          </pre>
-        </div>
-
-        {assignment.media && assignment.media.length > 0 && (
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <h4 className="mb-2 font-medium">Uploaded Files</h4>
-            <ul className="space-y-2">
-              {assignment.media.map((file, idx) => (
-                <li key={idx} className="text-sm">
-                  <a
-                    href={file}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    File {idx + 1}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    )
+    switch (typeName) {
+      case "survey":
+        return renderSurveyResponse(config as SurveyConfig)
+      case "multiple_answer":
+        return renderMultipleChoiceResponse(config as MultipleChoiceConfig)
+      case "media_question":
+        return renderMediaResponse(config as MediaConfig)
+      case "attachment_request":
+        return renderAttachmentResponse()
+      default:
+        return renderGenericResponse()
+    }
   }
 
   return (
@@ -254,6 +445,14 @@ export default function AssignmentDetailPage({
             </p>
           </div>
         </div>
+        {canEdit && (
+          <Link href={`/dashboard/admin/tools/${typeName}/edit/${assignmentId}`}>
+            <Button variant="outline">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Assignment Info Card */}

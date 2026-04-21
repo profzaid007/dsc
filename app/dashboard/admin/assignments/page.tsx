@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
-import { toolTypesCollection } from "@/lib/pb-collections"
+import { useToolTypes } from "@/hooks/useToolTypes"
 import {
   Card,
   CardContent,
@@ -86,6 +86,7 @@ export default function AssignmentsPage() {
   const { assignments, deleteAssignment, updateAssignment, isLoading } =
     useAssignments()
   const { profiles } = useProfiles()
+  const { toolTypes, isLoading: toolTypesLoading, fetchToolTypes, getToolTypeById } = useToolTypes()
 
   const [searchQuery, setSearchQuery] = useState("")
   const [filterCase, setFilterCase] = useState("")
@@ -93,26 +94,10 @@ export default function AssignmentsPage() {
   const [filterStatus, setFilterStatus] = useState<AssignmentStatus | "all">(
     "all"
   )
-  const [toolTypes, setToolTypes] = useState<Map<string, string>>(new Map()) // id -> name
-  const [toolTypesLoaded, setToolTypesLoaded] = useState(false)
 
-  // Fetch tool types on mount
   useEffect(() => {
-    const fetchToolTypes = async () => {
-      try {
-        const types = await toolTypesCollection.getAll()
-        const typeMap = new Map<string, string>()
-        types.forEach((type) => {
-          typeMap.set(type.id, type.name)
-        })
-        setToolTypes(typeMap)
-        setToolTypesLoaded(true)
-      } catch (error) {
-        console.error("Failed to fetch tool types:", error)
-      }
-    }
     fetchToolTypes()
-  }, [])
+  }, [fetchToolTypes])
 
   const getCaseName = (caseId: string) => {
     const profile = profiles.find((p) => p.id === caseId)
@@ -120,7 +105,8 @@ export default function AssignmentsPage() {
   }
 
   const getToolTypeName = (typeId: string) => {
-    return toolTypes.get(typeId) || "Unknown"
+    const toolType = getToolTypeById(typeId)
+    return toolType?.name || "Unknown"
   }
 
   const filteredAssignments = assignments.filter((assignment) => {
@@ -241,7 +227,7 @@ export default function AssignmentsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading || !toolTypesLoaded ? (
+          {isLoading || toolTypesLoading ? (
             <p className="py-8 text-center text-muted-foreground">Loading...</p>
           ) : filteredAssignments.length === 0 ? (
             <div className="py-12 text-center">
