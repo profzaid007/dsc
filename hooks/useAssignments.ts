@@ -66,6 +66,7 @@ export function useAssignments(caseId?: string) {
     try {
       const updated = await caseToolsCollection.update(id, data)
       setAssignments((prev) => prev.map((a) => (a.id === id ? updated : a)))
+      fetchAssignments() 
     } catch (error) {
       console.error("Failed to update assignment:", error)
       throw error
