@@ -12,11 +12,13 @@ import { cn } from "@/lib/utils"
 
 interface SurveyPreviewProps {
   config: SurveyConfig
+  responses?: Record<string, unknown>
+  readOnly?: boolean
 }
 
-export function SurveyPreview({ config }: SurveyPreviewProps) {
+export function SurveyPreview({ config, responses = {}, readOnly = false }: SurveyPreviewProps) {
   const { lang } = useLang()
-  const [answers, setAnswers] = useState<Record<string, unknown>>({})
+  const [answers, setAnswers] = useState<Record<string, unknown>>(responses)
 
   const handleSingleAnswer = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }))
@@ -116,7 +118,8 @@ export function SurveyPreview({ config }: SurveyPreviewProps) {
                           <Checkbox
                             id={`preview-${question.id}-${opt.id}`}
                             checked={isChecked}
-                            onCheckedChange={(checked) =>
+                            disabled={readOnly}
+                            onCheckedChange={readOnly ? undefined : (checked) =>
                               handleMultipleAnswer(
                                 question.id,
                                 opt.value,
@@ -132,7 +135,7 @@ export function SurveyPreview({ config }: SurveyPreviewProps) {
                         <td key={opt.id} className="p-2 text-center">
                           <RadioGroup
                             value={selectedSingle || ""}
-                            onValueChange={(v) =>
+                            onValueChange={readOnly ? undefined : (v) =>
                               handleSingleAnswer(question.id, v)
                             }
                           >

@@ -14,11 +14,13 @@ import { Textarea } from "../ui/textarea"
 
 interface MultipleChoicePreviewProps {
   config: MultipleChoiceConfig
+  responses?: Record<string, unknown>
+  readOnly?: boolean
 }
 
-export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
+export function MultipleChoicePreview({ config, responses = {}, readOnly = false }: MultipleChoicePreviewProps) {
   const { lang } = useLang()
-  const [answers, setAnswers] = useState<Record<string, unknown>>({})
+  const [answers, setAnswers] = useState<Record<string, unknown>>(responses)
   const [showAnswers, setShowAnswers] = useState(false)
 
   const handleAnswer = (questionId: string, value: unknown) => {
@@ -153,21 +155,25 @@ export function MultipleChoicePreview({ config }: MultipleChoicePreviewProps) {
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">{config.title[lang]}</h3>
       {sortedQuestions.map((q, idx) => renderQuestion(q, idx))}
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowAnswers(!showAnswers)}
-        >
-          {showAnswers ? "Hide Answers" : "Show Correct Answers"}
-        </Button>
-      </div>
-      <div className="rounded-lg bg-muted/30 p-4">
-        <p className="mb-2 text-sm font-medium">Your Answers:</p>
-        <pre className="overflow-auto text-xs">
-          {JSON.stringify(answers, null, 2)}
-        </pre>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAnswers(!showAnswers)}
+          >
+            {showAnswers ? "Hide Answers" : "Show Correct Answers"}
+          </Button>
+        </div>
+      )}
+      {!readOnly && (
+        <div className="rounded-lg bg-muted/30 p-4">
+          <p className="mb-2 text-sm font-medium">Your Answers:</p>
+          <pre className="overflow-auto text-xs">
+            {JSON.stringify(answers, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

@@ -7,22 +7,25 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Play, Pause } from "lucide-react"
 
 interface MediaPreviewProps {
   config: MediaConfig
+  responses?: Record<string, string>
+  readOnly?: boolean
 }
 
-export function MediaPreview({ config }: MediaPreviewProps) {
+export function MediaPreview({ config, responses = {}, readOnly = false }: MediaPreviewProps) {
   const { lang } = useLang()
-  const [responses, setResponses] = useState<Record<string, string>>({})
+  const [localResponses, setLocalResponses] = useState<Record<string, string>>(responses)
   const [playingId, setPlayingId] = useState<string | null>(null)
 
   const sortedItems = [...config.items].sort((a, b) => a.order - b.order)
 
   const handleResponse = (itemId: string, value: string) => {
-    setResponses((prev) => ({ ...prev, [itemId]: value }))
+    setLocalResponses((prev) => ({ ...prev, [itemId]: value }))
   }
+
+  const currentResponses = readOnly ? responses : localResponses
 
   const renderMedia = (item: MediaItem) => {
     if (item.mediaType === "image") {
@@ -84,20 +87,23 @@ export function MediaPreview({ config }: MediaPreviewProps) {
                 placeholder={
                   lang === "ar" ? "اكتب إجابتك..." : "Type your answer..."
                 }
-                value={responses[item.id] || ""}
-                onChange={(e) => handleResponse(item.id, e.target.value)}
+                value={currentResponses[item.id] || ""}
+                onChange={readOnly ? undefined : (e) => handleResponse(item.id, e.target.value)}
                 className="mt-2"
+                readOnly={readOnly}
               />
             )}
           </div>
+</div>
+        ))}
+      {!readOnly && (
+        <div className="rounded-lg bg-muted/30 p-4">
+          <p className="mb-2 text-sm font-medium">Responses:</p>
+          <pre className="overflow-auto text-xs">
+            {JSON.stringify(localResponses, null, 2)}
+          </pre>
         </div>
-      ))}
-      <div className="rounded-lg bg-muted/30 p-4">
-        <p className="mb-2 text-sm font-medium">Responses:</p>
-        <pre className="overflow-auto text-xs">
-          {JSON.stringify(responses, null, 2)}
-        </pre>
-      </div>
+      )}
     </div>
   )
 }

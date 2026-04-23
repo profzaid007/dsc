@@ -412,11 +412,11 @@ export default function AssignmentDetailPage({
 
     switch (typeName) {
       case "survey":
-        return renderSurveyResponse(config as SurveyConfig)
+        return <SurveyPreview config={config as SurveyConfig} responses={assignment.responses} readOnly />
       case "multiple_answer":
-        return renderMultipleChoiceResponse(config as MultipleChoiceConfig)
+        return <MultipleChoicePreview config={config as MultipleChoiceConfig} responses={assignment.responses} readOnly />
       case "media_question":
-        return renderMediaResponse(config as MediaConfig)
+        return <MediaPreview config={config as MediaConfig} responses={assignment.responses as Record<string, string>} readOnly />
       case "attachment_request":
         return renderAttachmentResponse()
       default:
