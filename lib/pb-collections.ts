@@ -13,10 +13,7 @@ function transformToolFromDB(dbTool: Record<string, unknown>): Tool {
       en: (dbTool.name_en as string) || "",
       ar: (dbTool.name_ar as string) || "",
     },
-    description: {
-      en: (dbTool.description_en as string) || "",
-      ar: (dbTool.description_ar as string) || "",
-    },
+    description: (dbTool.description as string) || "",
     type: dbTool.type as Tool["type"],
     serviceType: (dbTool.serviceType as Tool["serviceType"]) || "individual",
     status: (dbTool.status as Tool["status"]) || "active",
@@ -35,8 +32,7 @@ function transformToolToDB(tool: Partial<Tool>): Record<string, unknown> {
     dbData.name_ar = tool.name.ar
   }
   if (tool.description) {
-    dbData.description_en = tool.description.en
-    dbData.description_ar = tool.description.ar
+    dbData.description = tool.description
   }
   if (tool.type) dbData.type = tool.type
   if (tool.serviceType) dbData.serviceType = tool.serviceType

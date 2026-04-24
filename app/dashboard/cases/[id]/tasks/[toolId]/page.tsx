@@ -578,7 +578,7 @@ export default function TakeSurveyToolPage({
     return (
       <div key={item.id} className="space-y-3 rounded-lg border bg-card p-4">
         <Label className="text-base font-medium">
-          {(item.question as unknown as { en: string; ar: string })[lang]}
+          {item.question}
         </Label>
 
         {/* Display existing media (question media) */}

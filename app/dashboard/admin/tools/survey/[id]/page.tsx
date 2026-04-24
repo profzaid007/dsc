@@ -241,7 +241,7 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
               <span className="text-sm font-medium text-muted-foreground">
                 Description
               </span>
-              <p className="text-sm">{tool.description[lang]}</p>
+              <p className="text-sm">{tool.description}</p>
             </div>
           )}
         </CardContent>
