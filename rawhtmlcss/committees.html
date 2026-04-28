@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Committee Management</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --sidebar-bg: #f3f4f6;
+      --sidebar-title-bg: #f9fafb;
+      --content-bg: #f5f7fa;
+      --text-primary: #222;
+      --text-secondary: #444;
+      --text-muted: #888;
+      --active-bg: #e0e7ef;
+      --primary-color: #1976d2;
+      --border-color: #e0e0e0;
+      --card-bg: #fff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--content-bg);
+      color: var(--text-primary);
+    }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+    }
+
+    .sidebar-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 24px 18px 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--sidebar-title-bg);
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      padding: 12px 0;
+    }
+
+    .nav-item {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      border-radius: 0 20px 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      opacity: 0.7;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: var(--active-bg);
+      color: var(--primary-color);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 32px 40px;
+      min-height: 100vh;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-placeholder {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      text-align: center;
+      margin-top: 80px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    /* Dashboard Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-primary:hover { background: #1565c0; }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text-primary);
+      border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover { background: #f5f5f5; }
+
+    .btn-danger {
+      background: #fff;
+      color: #d32f2f;
+      border: 1px solid #d32f2f;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    .data-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .data-table tr:hover {
+      background: #fafafa;
+    }
+
+    /* Status Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-success { background: #e8f5e9; color: #2e7d32; }
+    .badge-warning { background: #fff3e0; color: #ef6c00; }
+    .badge-info { background: #e3f2fd; color: #1565c0; }
+    .badge-committee { background: #f3e5f5; color: #7b1fa2; }
+    .badge-team { background: #e8eaf6; color: #303f9f; }
+    .badge-counsel { background: #fce4ec; color: #c2185b; }
+
+    /* Section Title */
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* List Items */
+    .item-list {
+      list-style: none;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      max-height: 450px;
+      overflow-y: auto;
+    }
+
+    .list-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .list-item:last-child { border-bottom: none; }
+
+    .list-item-content strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .list-item-content span {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Attendance */
+    .attendance-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .attendance-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .attendance-select {
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* Chips */
+    .chip {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #f0f0f0;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    /* Action buttons in table */
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Committee Management</div>
+      <nav class="nav-menu">
+        <a class="nav-item" data-page=" committees-home">
+          <span class="nav-icon">&#9783;</span>
+          Overview
+        </a>
+        <a class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">&#9632;</span>
+          Dashboard
+        </a>
+        <a class="nav-item" data-page="management">
+          <span class="nav-icon">&#9827;</span>
+          Management
+        </a>
+        <a class="nav-item" data-page="meeting">
+          <span class="nav-icon">&#128197;</span>
+          Meetings
+        </a>
+        <a class="nav-item" data-page="meetingDocs">
+          <span class="nav-icon">&#128196;</span>
+          Documents
+        </a>
+        <a class="nav-item" data-page="tasks">
+          <span class="nav-icon">&#9745;</span>
+          Tasks
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <!-- Home/Overview -->
+      <div class="page" id="committees-home">
+        <div class="page-placeholder">Committee Management Description: Organize committees, manage members, schedule meetings, and track tasks effectively.</div>
+      </div>
+
+      <!-- Dashboard Page -->
+      <div class="page" id="dashboard">
+        <h2 class="section-title">Committee Dashboard</h2>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">8</div>
+            <div class="stat-label">Total Committees</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">45</div>
+            <div class="stat-label">Total Members</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">12</div>
+            <div class="stat-label">Meetings This Month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">28</div>
+            <div class="stat-label">Pending Tasks</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Active Committees Overview</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Committee</th>
+                <th>Type</th>
+                <th>Leader</th>
+                <th>Members</th>
+                <th>Next Meeting</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-table">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Recent Activity</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Activity</th>
+                <th>Committee</th>
+                <th>By</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2024-04-28</td>
+                <td>Meeting scheduled</td>
+                <td>Strategic Planning</td>
+                <td>Ahmed Al-Rashid</td>
+              </tr>
+              <tr>
+                <td>2024-04-27</td>
+                <td>New member added</td>
+                <td>Finance Committee</td>
+                <td>Sarah Johnson</td>
+              </tr>
+              <tr>
+                <td>2024-04-26</td>
+                <td>Task completed</td>
+                <td>IT Steering</td>
+                <td>Omar Khalil</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Management Page -->
+      <div class="page" id="management">
+        <h2 class="section-title">Committee Management</h2>
+        
+        <!-- Add Committee Form -->
+        <div class="card">
+          <h3 class="card-title">Add New Committee</h3>
+          <form id="committee-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Committee Name *</label>
+                <input type="text" class="form-input" name="name" placeholder="Enter committee name" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Type</label>
+                <select class="form-select" name="type">
+                  <option value="committee">Committee</option>
+                  <option value="team">Team</option>
+                  <option value="counsel">Counsel</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Objectives/Description *</label>
+              <textarea class="form-textarea" name="description" rows="3" placeholder="Describe committee objectives" required></textarea>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-input" name="startDate">
+              </div>
+              <div class="form-group">
+                <label class="form-label">End Date</label>
+                <input type="date" class="form-input" name="endDate">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Permissions</label>
+                <input type="text" class="form-input" name="permissions" placeholder="e.g., Read, Write, Approve">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Committee Leader *</label>
+                <select class="form-select" name="leaderId" required>
+                  <option value="">Select leader</option>
+                  <option value="u1">Ahmed Al-Rashid</option>
+                  <option value="u2">Fatima Hassan</option>
+                  <option value="u3">Omar Khalil</option>
+                  <option value="u4">Sara Ahmed</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Members</label>
+                <select class="form-select" name="memberIds" multiple style="height: 100px;">
+                  <option value="u1">Ahmed Al-Rashid</option>
+                  <option value="u2">Fatima Hassan</option>
+                  <option value="u3">Omar Khalil</option>
+                  <option value="u4">Sara Ahmed</option>
+                  <option value="u5">Youssef Mohamed</option>
+                  <option value="u6">Leila Salem</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Committee</button>
+          </form>
+        </div>
+
+        <!-- Committees Table -->
+        <div class="card">
+          <h3 class="card-title">Existing Committees</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Objectives</th>
+                <th>Period</th>
+                <th>Type</th>
+                <th>Permissions</th>
+                <th>Leader</th>
+                <th>Members</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="committees-table">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Meetings Page -->
+      <div class="page" id="meeting">
+        <h2 class="section-title">Meeting Management</h2>
+        
+        <div class="card">
+          <h3 class="card-title">Schedule New Meeting</h3>
+          <form id="meeting-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Committee *</label>
+                <select class="form-select" name="committeeId" required>
+                  <option value="">Select committee</option>
+                  <option value="c1">Strategic Planning Committee</option>
+                  <option value="c2">Finance Committee</option>
+                  <option value="c3">IT Steering Committee</option>
+                  <option value="c4">HR Advisory Committee</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Meeting Title</label>
+                <input type="text" class="form-input" name="meetingTitle" placeholder="Optional title">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Date *</label>
+                <input type="date" class="form-input" name="date" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time *</label>
+                <input type="time" class="form-input" name="time" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Attendance</label>
+              <div class="attendance-grid">
+                <div>
+                  <div class="attendance-item">
+                    <span>Ahmed Al-Rashid</span>
+                    <select class="attendance-select">
+                      <option value="">Select</option>
+                      <option value="present">Present (حاضر)</option>
+                      <option value="absent">Absent (اعتذار)</option>
+                    </select>
+                  </div>
+                  <div class="attendance-item">
+                    <span>Fatima Hassan</span>
+                    <select class="attendance-select">
+                      <option value="">Select</option>
+                      <option value="present">Present (حاضر)</option>
+                      <option value="absent">Absent (اعتذار)</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <div class="attendance-item">
+                    <span>Omar Khalil</span>
+                    <select class="attendance-select">
+                      <option value="">Select</option>
+                      <option value="present">Present (حاضر)</option>
+                      <option value="absent">Absent (اعتذار)</option>
+                    </select>
+                  </div>
+                  <div class="attendance-item">
+                    <span>Sara Ahmed</span>
+                    <select class="attendance-select">
+                      <option value="">Select</option>
+                      <option value="present">Present (حاضر)</option>
+                      <option value="absent">Absent (اعتذار)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Meeting Notes</label>
+              <textarea class="form-textarea" name="notes" rows="4" placeholder="Agenda items, decisions, action items..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Schedule Meeting</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Scheduled Meetings</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Committee</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="meetings-table">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Meeting Documents Page -->
+      <div class="page" id="meetingDocs">
+        <h2 class="section-title">Meeting Documents</h2>
+        
+        <div class="card">
+          <h3 class="card-title">Upload Document</h3>
+          <form>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Committee</label>
+                <select class="form-select">
+                  <option value="">Select committee</option>
+                  <option value="c1">Strategic Planning Committee</option>
+                  <option value="c2">Finance Committee</option>
+                  <option value="c3">IT Steering Committee</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Meeting Date</label>
+                <select class="form-select">
+                  <option value="">Select meeting</option>
+                  <option value="m1">2024-04-25 - Strategic Planning</option>
+                  <option value="m2">2024-04-20 - Finance</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Document Title</label>
+              <input type="text" class="form-input" placeholder="Document title">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Upload File</label>
+              <input type="file" class="form-input" style="padding: 8px;">
+            </div>
+            <button type="button" class="btn btn-primary">Upload Document</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Document Library</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Document</th>
+                <th>Committee</th>
+                <th>Meeting Date</th>
+                <th>Uploaded By</th>
+                <th>Upload Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Meeting Minutes - Q1 Review</td>
+                <td>Strategic Planning</td>
+                <td>2024-04-25</td>
+                <td>Ahmed Al-Rashid</td>
+                <td>2024-04-26</td>
+                <td><button class="btn btn-secondary btn-sm">View</button></td>
+              </tr>
+              <tr>
+                <td>Budget Proposal FY2025</td>
+                <td>Finance Committee</td>
+                <td>2024-04-20</td>
+                <td>Fatima Hassan</td>
+                <td>2024-04-21</td>
+                <td><button class="btn btn-secondary btn-sm">View</button></td>
+              </tr>
+              <tr>
+                <td>IT Infrastructure Plan</td>
+                <td>IT Steering</td>
+                <td>2024-04-15</td>
+                <td>Omar Khalil</td>
+                <td>2024-04-16</td>
+                <td><button class="btn btn-secondary btn-sm">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tasks Page -->
+      <div class="page" id="tasks">
+        <h2 class="section-title">Task Management</h2>
+        
+        <div class="card">
+          <h3 class="card-title">Create Task</h3>
+          <form>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Task Title *</label>
+                <input type="text" class="form-input" placeholder="Task description" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Committee</label>
+                <select class="form-select">
+                  <option value="">Select committee</option>
+                  <option value="c1">Strategic Planning Committee</option>
+                  <option value="c2">Finance Committee</option>
+                  <option value="c3">IT Steering Committee</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Assigned To</label>
+                <select class="form-select">
+                  <option value="">Select member</option>
+                  <option value="u1">Ahmed Al-Rashid</option>
+                  <option value="u2">Fatima Hassan</option>
+                  <option value="u3">Omar Khalil</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Due Date</label>
+                <input type="date" class="form-input">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select class="form-select">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Status</label>
+                <select class="form-select">
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" rows="3" placeholder="Task details..."></textarea>
+            </div>
+            <button type="button" class="btn btn-primary">Create Task</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">All Tasks</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Committee</th>
+                <th>Assigned To</th>
+                <th>Due Date</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-table">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // Mock Data
+    const committeesData = [
+      { id: 1, name: 'Strategic Planning Committee', type: 'committee', description: 'Long-term strategic planning and vision setting', startDate: '2024-01-01', endDate: '2024-12-31', permissions: 'Full Access', leader: 'Ahmed Al-Rashid', members: ['Fatima Hassan', 'Omar Khalil', 'Sara Ahmed'] },
+      { id: 2, name: 'Finance Committee', type: 'committee', description: 'Financial oversight and budget management', startDate: '2024-01-01', endDate: '2024-12-31', permissions: 'Read/Write', leader: 'Sarah Johnson', members: ['Mark Chen', 'Lisa Moore'] },
+      { id: 3, name: 'IT Steering Committee', type: 'committee', description: 'Technology strategy and IT governance', startDate: '2024-03-01', endDate: '2025-02-28', permissions: 'Full Access', leader: 'Omar Khalil', members: ['James Wilson', 'Anna Lee', 'David Park'] },
+      { id: 4, name: 'HR Advisory Committee', type: 'counsel', description: 'HR policies and employee welfare', startDate: '2024-02-01', endDate: '2025-01-31', permissions: 'Read Only', leader: 'Sara Ahmed', members: ['Youssef Mohamed', 'Leila Salem'] },
+    ];
+
+    const meetingsData = [
+      { id: 1, committee: 'Strategic Planning Committee', date: '2024-04-25', time: '10:00', present: 'Ahmed Al-Rashid, Fatima Hassan', absent: 'Omar Khalil', notes: 'Q1 review completed' },
+      { id: 2, committee: 'Finance Committee', date: '2024-04-20', time: '14:00', present: 'Sarah Johnson, Mark Chen', absent: 'Lisa Moore', notes: 'Budget approval' },
+      { id: 3, committee: 'IT Steering Committee', date: '2024-04-22', time: '11:00', present: 'Omar Khalil, James Wilson', absent: '', notes: 'Infrastructure upgrade plan' },
+    ];
+
+    const tasksData = [
+      { id: 1, title: 'Prepare Q2 Strategy Document', committee: 'Strategic Planning', assignee: 'Ahmed Al-Rashid', dueDate: '2024-05-15', priority: 'High', status: 'In Progress' },
+      { id: 2, title: 'Review Budget Proposal', committee: 'Finance', assignee: 'Sarah Johnson', dueDate: '2024-05-10', priority: 'High', status: 'Pending' },
+      { id: 3, title: 'IT Infrastructure Assessment', committee: 'IT Steering', assignee: 'Omar Khalil', dueDate: '2024-05-20', priority: 'Medium', status: 'Pending' },
+      { id: 4, title: 'Employee Survey Analysis', committee: 'HR Advisory', assignee: 'Sara Ahmed', dueDate: '2024-05-05', priority: 'Medium', status: 'Completed' },
+    ];
+
+    // Render Functions
+    function renderDashboard() {
+      const tbody = document.getElementById('dashboard-table');
+      tbody.innerHTML = committeesData.map(c => `
+        <tr>
+          <td><strong>${c.name}</strong></td>
+          <td><span class="badge badge-${c.type}">${c.type.charAt(0).toUpperCase() + c.type.slice(1)}</span></td>
+          <td>${c.leader}</td>
+          <td>${c.members.length} members</td>
+          <td>2024-05-01</td>
+          <td><span class="badge badge-success">Active</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCommittees() {
+      const tbody = document.getElementById('committees-table');
+      tbody.innerHTML = committeesData.map(c => `
+        <tr>
+          <td><strong>${c.name}</strong></td>
+          <td>${c.description.substring(0, 50)}...</td>
+          <td>${c.startDate} - ${c.endDate}</td>
+          <td><span class="badge badge-${c.type}">${c.type.charAt(0).toUpperCase() + c.type.slice(1)}</span></td>
+          <td>${c.permissions}</td>
+          <td>${c.leader}</td>
+          <td>${c.members.map(m => `<span class="chip">${m}</span>`).join('')}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-secondary btn-sm">Edit</button>
+              <button class="btn btn-danger btn-sm">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderMeetings() {
+      const tbody = document.getElementById('meetings-table');
+      tbody.innerHTML = meetingsData.map(m => `
+        <tr>
+          <td><strong>${m.committee}</strong></td>
+          <td>${m.date}</td>
+          <td>${m.time}</td>
+          <td>${m.present || '-'}</td>
+          <td>${m.absent || '-'}</td>
+          <td>${m.notes}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderTasks() {
+      const tbody = document.getElementById('tasks-table');
+      tbody.innerHTML = tasksData.map(t => {
+        let statusBadge = '';
+        if (t.status === 'Completed') statusBadge = 'badge-success';
+        else if (t.status === 'In Progress') statusBadge = 'badge-info';
+        else statusBadge = 'badge-warning';
+        
+        let priorityBadge = '';
+        if (t.priority === 'High') priorityBadge = 'badge-warning';
+        else if (t.priority === 'Medium') priorityBadge = 'badge-info';
+        else priorityBadge = 'badge-success';
+
+        return `
+          <tr>
+            <td><strong>${t.title}</strong></td>
+            <td>${t.committee}</td>
+            <td>${t.assignee}</td>
+            <td>${t.dueDate}</td>
+            <td><span class="badge ${priorityBadge}">${t.priority}</span></td>
+            <td><span class="badge ${statusBadge}">${t.status}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-secondary btn-sm">Edit</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+
+        const pageId = this.dataset.page;
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+      });
+    });
+
+    // Initialize
+    renderDashboard();
+    renderCommittees();
+    renderMeetings();
+    renderTasks();
+  </script>
+</body>
+</html>

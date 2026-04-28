@@ -12,6 +12,8 @@ import {
   LogOut,
   FolderKanban,
   ClipboardList,
+  GraduationCap,
+  UserSquare,
 } from "lucide-react"
 
 const adminNavigation = [
@@ -24,6 +26,16 @@ const adminNavigation = [
     name: { en: "Assignments", ar: "التعيينات" },
     href: "/dashboard/admin/assignments",
     icon: ClipboardList,
+  },
+  {
+    name: { en: "Training", ar: "التدريب" },
+    href: "/dashboard/admin/training",
+    icon: GraduationCap,
+  },
+  {
+    name: { en: "Committees", ar: "اللجان" },
+    href: "/dashboard/admin/committees",
+    icon: UserSquare,
   },
 ]
 

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Management</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --sidebar-bg: #f3f4f6;
+      --sidebar-title-bg: #f9fafb;
+      --content-bg: #f5f7fa;
+      --text-primary: #222;
+      --text-secondary: #444;
+      --text-muted: #888;
+      --active-bg: #e0e7ef;
+      --primary-color: #1976d2;
+      --border-color: #e0e0e0;
+      --card-bg: #fff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--content-bg);
+      color: var(--text-primary);
+    }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+    }
+
+    .sidebar-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 24px 18px 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--sidebar-title-bg);
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      padding: 12px 0;
+    }
+
+    .nav-item {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      border-radius: 0 20px 20px 0;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: var(--active-bg);
+      color: var(--primary-color);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 32px 40px;
+      min-height: 100vh;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-placeholder {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      text-align: center;
+      margin-top: 80px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    /* Search Bar */
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .search-input, .form-input, .form-select {
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      width: 100%;
+    }
+
+    .search-input:focus, .form-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    /* Two Column Layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    /* List */
+    .item-list {
+      list-style: none;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .list-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .list-item:last-child { border-bottom: none; }
+
+    .list-item-content strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .list-item-content span {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-primary:hover { background: #1565c0; }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text-primary);
+      border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover { background: #f5f5f5; }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    .data-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .data-table tr:hover {
+      background: #fafafa;
+    }
+
+    /* Status Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-success { background: #e8f5e9; color: #2e7d32; }
+    .badge-warning { background: #fff3e0; color: #ef6c00; }
+    .badge-info { background: #e3f2fd; color: #1565c0; }
+
+    /* Section Title */
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: #eee;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Training Management</div>
+      <nav class="nav-menu">
+        <a class="nav-item" data-page="training-home">Overview</a>
+        <a class="nav-item active" data-page="programs">Programs</a>
+        <a class="nav-item" data-page="awareness">Awareness Sessions</a>
+        <a class="nav-item" data-page="certificates">Certificates</a>
+        <a class="nav-item" data-page="registration">Registration</a>
+        <a class="nav-item" data-page="reports">Reports</a>
+        <a class="nav-item" data-page="scheduling">Scheduling</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Home/Overview -->
+      <div class="page" id="training-home">
+        <div class="page-placeholder">Training Description: Manage all training programs, awareness sessions, certificates, and participant registrations in one place.</div>
+      </div>
+
+      <!-- Programs Page -->
+      <div class="page" id="programs">
+        <h2 class="section-title">Training Programs</h2>
+        <div class="two-col">
+          <!-- List -->
+          <div class="card">
+            <h3 class="card-title">Current Programs</h3>
+            <div class="search-bar">
+              <input type="text" class="search-input" placeholder="Search programs..." id="program-search">
+            </div>
+            <ul class="item-list" id="programs-list">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+
+          <!-- Form -->
+          <div class="card">
+            <h3 class="card-title">Add/Edit Program</h3>
+            <form id="program-form">
+              <div class="form-group">
+                <label class="form-label">Program Name *</label>
+                <input type="text" class="form-input" name="name" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <select class="form-select" name="category">
+                    <option value="">Select category</option>
+                    <option value="Technical">Technical</option>
+                    <option value="Leadership">Leadership</option>
+                    <option value="Soft Skills">Soft Skills</option>
+                    <option value="Compliance">Compliance</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Duration (Days) *</label>
+                  <input type="number" class="form-input" name="days" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Trainer</label>
+                <input type="text" class="form-input" name="trainer">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Coordinator *</label>
+                <input type="text" class="form-input" name="coordinator" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Type</label>
+                  <select class="form-select" name="type">
+                    <option value="Online">Online</option>
+                    <option value="In-Person">In-Person</option>
+                    <option value="Hybrid">Hybrid</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Location</label>
+                  <input type="text" class="form-input" name="location">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Goals/Objectives</label>
+                <textarea class="form-input" name="goals" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-input" name="notes" rows="2"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Add Program</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Awareness Sessions Page -->
+      <div class="page" id="awareness">
+        <h2 class="section-title">Awareness Sessions</h2>
+        <div class="two-col">
+          <div class="card">
+            <h3 class="card-title">Current Sessions</h3>
+            <div class="search-bar">
+              <input type="text" class="search-input" placeholder="Search sessions...">
+            </div>
+            <ul class="item-list" id="sessions-list">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Add/Edit Session</h3>
+            <form id="session-form">
+              <div class="form-group">
+                <label class="form-label">Topic *</label>
+                <input type="text" class="form-input" name="topic" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <select class="form-select" name="category">
+                    <option value="">Select</option>
+                    <option value="Orientation">Orientation</option>
+                    <option value="Safety">Safety</option>
+                    <option value="Health">Health</option>
+                    <option value="Security">Security</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Target Audience</label>
+                  <select class="form-select" name="audience">
+                    <option value="">Select</option>
+                    <option value="All Staff">All Staff</option>
+                    <option value="Managers">Managers</option>
+                    <option value="New Hires">New Hires</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Time From</label>
+                  <input type="time" class="form-input" name="timeFrom">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Time To</label>
+                  <input type="time" class="form-input" name="timeTo">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Speaker</label>
+                  <input type="text" class="form-input" name="speaker">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Coordinator</label>
+                  <input type="text" class="form-input" name="coordinator">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Type</label>
+                  <select class="form-select" name="type">
+                    <option value="Workshop">Workshop</option>
+                    <option value="Seminar">Seminar</option>
+                    <option value="Webinar">Webinar</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Location</label>
+                  <input type="text" class="form-input" name="location">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-input" name="notes" rows="2"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Add Session</button>
+              <button type="button" class="btn btn-secondary" style="margin-left: 8px;">Recurring Schedule</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Certificates Page -->
+      <div class="page" id="certificates">
+        <h2 class="section-title">Certificates</h2>
+        <div class="two-col">
+          <div class="card">
+            <h3 class="card-title">Issued Certificates</h3>
+            <div class="search-bar">
+              <input type="text" class="search-input" placeholder="Search certificates...">
+            </div>
+            <ul class="item-list" id="certificates-list">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Add Certificate</h3>
+            <form id="certificate-form">
+              <div class="form-group">
+                <label class="form-label">Student Name *</label>
+                <input type="text" class="form-input" name="studentName" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Program *</label>
+                <input type="text" class="form-input" name="programName" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Issue Date</label>
+                  <input type="date" class="form-input" name="issueDate">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Certificate Number</label>
+                  <input type="text" class="form-input" name="certificateNumber">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-input" name="notes" rows="2"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Add Certificate</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registration Page -->
+      <div class="page" id="registration">
+        <h2 class="section-title">Registration Management</h2>
+        <div class="card">
+          <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search registrations..." style="max-width: 300px;">
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Participant</th>
+                <th>Program</th>
+                <th>Registration Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="registration-table">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Reports Page -->
+      <div class="page" id="reports">
+        <h2 class="section-title">Training Reports</h2>
+        <div class="card">
+          <h3 class="card-title">Summary Statistics</h3>
+          <div class="two-col" style="margin-bottom: 24px;">
+            <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 2rem; font-weight: bold; color: #1565c0;">156</div>
+              <div style="color: #666;">Total Trained</div>
+            </div>
+            <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 2rem; font-weight: bold; color: #2e7d32;">24</div>
+              <div style="color: #666;">Programs Completed</div>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Program</th>
+                <th>Participants</th>
+                <th>Completion Rate</th>
+                <th>Avg. Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Leadership Fundamentals</td>
+                <td>45</td>
+                <td><span class="badge badge-success">92%</span></td>
+                <td>85%</td>
+              </tr>
+              <tr>
+                <td>Data Analysis Workshop</td>
+                <td>32</td>
+                <td><span class="badge badge-success">88%</span></td>
+                <td>78%</td>
+              </tr>
+              <tr>
+                <td>Safety Compliance Training</td>
+                <td>79</td>
+                <td><span class="badge badge-warning">75%</span></td>
+                <td>82%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Scheduling Page -->
+      <div class="page" id="scheduling">
+        <h2 class="section-title">Scheduling</h2>
+        <div class="card">
+          <h3 class="card-title">Upcoming Sessions</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Session</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Location</th>
+                <th>Capacity</th>
+                <th>Enrolled</th>
+              </tr>
+            </thead>
+            <tbody id="scheduling-table">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Mock Data
+    const programsData = [
+      { id: 1, name: 'Leadership Fundamentals', category: 'Leadership', days: 5, trainer: 'Dr. Sarah Johnson', coordinator: 'Ahmed Al-Rashid', type: 'In-Person', location: 'Training Room A' },
+      { id: 2, name: 'Data Analysis Workshop', category: 'Technical', days: 3, trainer: 'Mark Chen', coordinator: 'Fatima Hassan', type: 'Online', location: 'Virtual' },
+      { id: 3, name: 'Effective Communication', category: 'Soft Skills', days: 2, trainer: 'Lisa Moore', coordinator: 'Omar Khalil', type: 'In-Person', location: 'Conference Hall' },
+      { id: 4, name: 'Safety Compliance Training', category: 'Compliance', days: 1, trainer: 'James Wilson', coordinator: 'Sara Ahmed', type: 'Hybrid', location: 'Main Office' },
+    ];
+
+    const sessionsData = [
+      { id: 1, topic: 'New Employee Orientation', category: 'Orientation', audience: 'New Hires', timeFrom: '09:00', timeTo: '12:00', speaker: 'HR Director', coordinator: 'Maya Sami' },
+      { id: 2, topic: 'Workplace Safety Awareness', category: 'Safety', audience: 'All Staff', timeFrom: '14:00', timeTo: '16:00', speaker: 'Safety Officer', coordinator: 'Khaled Mansour' },
+      { id: 3, topic: 'Cybersecurity Best Practices', category: 'Security', audience: 'Managers', timeFrom: '10:00', timeTo: '11:30', speaker: 'IT Manager', coordinator: 'Rana Ali' },
+    ];
+
+    const certificatesData = [
+      { id: 1, studentName: 'Ahmed Mohamed', programName: 'Leadership Fundamentals', issueDate: '2024-03-15', certificateNumber: 'CERT-001234' },
+      { id: 2, studentName: 'Fatima Ali', programName: 'Data Analysis Workshop', issueDate: '2024-03-20', certificateNumber: 'CERT-001235' },
+      { id: 3, studentName: 'Omar Hassan', programName: 'Effective Communication', issueDate: '2024-04-01', certificateNumber: 'CERT-001236' },
+    ];
+
+    const registrationData = [
+      { id: 1, participant: 'Youssef Ahmed', program: 'Leadership Fundamentals', regDate: '2024-04-10', status: 'Confirmed' },
+      { id: 2, participant: 'Leila Salem', program: 'Data Analysis Workshop', regDate: '2024-04-12', status: 'Pending' },
+      { id: 3, participant: 'Tariq Ibrahim', program: 'Safety Compliance', regDate: '2024-04-14', status: 'Confirmed' },
+    ];
+
+    const schedulingData = [
+      { session: 'Leadership Fundamentals', date: '2024-05-01', time: '09:00 - 16:00', location: 'Training Room A', capacity: 25, enrolled: 18 },
+      { session: 'Data Analysis Workshop', date: '2024-05-05', time: '10:00 - 13:00', location: 'Virtual', capacity: 30, enrolled: 22 },
+      { session: 'Effective Communication', date: '2024-05-10', time: '14:00 - 17:00', location: 'Conference Hall', capacity: 20, enrolled: 15 },
+    ];
+
+    // Render Functions
+    function renderPrograms() {
+      const list = document.getElementById('programs-list');
+      list.innerHTML = programsData.map(p => `
+        <li class="list-item">
+          <div class="list-item-content">
+            <strong>${p.name}</strong>
+            <span>${p.category} | ${p.days} days | ${p.type}</span>
+          </div>
+          <button class="btn btn-secondary" onclick="editProgram(${p.id})">Edit</button>
+        </li>
+      `).join('');
+    }
+
+    function renderSessions() {
+      const list = document.getElementById('sessions-list');
+      list.innerHTML = sessionsData.map(s => `
+        <li class="list-item">
+          <div class="list-item-content">
+            <strong>${s.topic}</strong>
+            <span>${s.category} | ${s.timeFrom} - ${s.timeTo}</span>
+          </div>
+          <button class="btn btn-secondary">Edit</button>
+        </li>
+      `).join('');
+    }
+
+    function renderCertificates() {
+      const list = document.getElementById('certificates-list');
+      list.innerHTML = certificatesData.map(c => `
+        <li class="list-item">
+          <div class="list-item-content">
+            <strong>${c.studentName}</strong>
+            <span>${c.programName} | ${c.certificateNumber}</span>
+          </div>
+          <button class="btn btn-secondary">Edit</button>
+        </li>
+      `).join('');
+    }
+
+    function renderRegistrations() {
+      const tbody = document.getElementById('registration-table');
+      tbody.innerHTML = registrationData.map(r => `
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.participant}</td>
+          <td>${r.program}</td>
+          <td>${r.regDate}</td>
+          <td><span class="badge ${r.status === 'Confirmed' ? 'badge-success' : 'badge-warning'}">${r.status}</span></td>
+          <td>
+            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;">View</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderScheduling() {
+      const tbody = document.getElementById('scheduling-table');
+      tbody.innerHTML = schedulingData.map(s => `
+        <tr>
+          <td>${s.session}</td>
+          <td>${s.date}</td>
+          <td>${s.time}</td>
+          <td>${s.location}</td>
+          <td>${s.capacity}</td>
+          <td>${s.enrolled} / ${s.capacity}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        // Update active state
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+
+        // Show corresponding page
+        const pageId = this.dataset.page;
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        
+        if (pageId === 'training-home') {
+          document.getElementById('training-home').classList.add('active');
+        } else {
+          document.getElementById(pageId).classList.add('active');
+        }
+      });
+    });
+
+    // Initialize
+    renderPrograms();
+    renderSessions();
+    renderCertificates();
+    renderRegistrations();
+    renderScheduling();
+  </script>
+</body>
+</html>
