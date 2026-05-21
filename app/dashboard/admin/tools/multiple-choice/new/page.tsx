@@ -3,6 +3,9 @@
 import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
+import { useAssignments } from "@/hooks/useAssignments"
+import { useProfiles } from "@/hooks/useProfiles"
+import { useLang } from "@/lib/lang-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,18 +49,23 @@ const DEFAULT_OPTIONS = [
 
 interface MultipleChoiceBuilderPageProps {
   params?: Promise<{ id?: string }>
+  searchParams?: Promise<{ caseId?: string }>
 }
 
 export default function MultipleChoiceBuilderPage({
   params,
+  searchParams,
 }: MultipleChoiceBuilderPageProps = {}) {
   const router = useRouter()
+  const { lang } = useLang()
   const {
     addTool,
     updateTool,
     getToolById,
     isLoading: isToolsLoading,
   } = useTools()
+  const { assignTool } = useAssignments()
+  const { getProfileById } = useProfiles()
   const { toolTypes, fetchToolTypes } = useToolTypes()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -65,8 +73,13 @@ export default function MultipleChoiceBuilderPage({
 
   // Edit mode detection
   const resolvedParams = params ? use(params) : undefined
+  const resolvedSearchParams = searchParams ? use(searchParams) : undefined
   const editId = resolvedParams?.id
+  const caseId = resolvedSearchParams?.caseId
   const isEditMode = !!editId
+
+  const [isTemplate, setIsTemplate] = useState(true)
+  const selectedCase = caseId ? getProfileById(caseId) : null
 
   const [formData, setFormData] = useState({
     nameEn: "",
@@ -137,14 +150,28 @@ export default function MultipleChoiceBuilderPage({
       const toolTypes = await fetchToolTypes()
       const type = toolTypes.find((t) => t.name === "multiple_answer")?.id
 
-      await addTool({
-        name: { en: formData.nameEn, ar: formData.nameAr },
-        type: type,
-        serviceType: "individual",
-        status: "active",
-        config,
-      })
-      router.push(`/dashboard/admin/tools`)
+      if (!isTemplate && caseId) {
+        await assignTool({
+          case: caseId,
+          type: type,
+          name_en: formData.nameEn,
+          name_ar: formData.nameAr,
+          is_not_template: true,
+          config,
+          is_visible_to_user: true,
+          status: "pending",
+        })
+        router.push(`/dashboard/admin/cases/${caseId}`)
+      } else {
+        await addTool({
+          name: { en: formData.nameEn, ar: formData.nameAr },
+          type: type,
+          serviceType: "individual",
+          status: "active",
+          config,
+        })
+        router.push(`/dashboard/admin/tools`)
+      }
     }
   }
 
@@ -333,6 +360,46 @@ export default function MultipleChoiceBuilderPage({
               </div>
             </CardContent>
           </Card>
+
+          {caseId && selectedCase && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {lang === "ar" ? "معلومات الحالة" : "Case Information"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">
+                    {lang === "ar" ? "الحالة:" : "Case:"}
+                  </span>
+                  <span>{selectedCase.name}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {(caseId || !isEditMode) && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isTemplate"
+                    checked={isTemplate}
+                    onCheckedChange={(checked) => setIsTemplate(checked === true)}
+                  />
+                  <label
+                    htmlFor="isTemplate"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {lang === "ar"
+                      ? "حفظ كقالب (متاح للاستخدام المستقبلي)"
+                      : "Save as template (available for future use)"}
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">

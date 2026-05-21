@@ -14,6 +14,7 @@ import {
   ClipboardList,
   GraduationCap,
   UserSquare,
+  BookOpen,
 } from "lucide-react"
 
 const adminNavigation = [
@@ -33,9 +34,9 @@ const adminNavigation = [
     icon: GraduationCap,
   },
   {
-    name: { en: "Committees", ar: "اللجان" },
-    href: "/dashboard/admin/committees",
-    icon: UserSquare,
+    name: { en: "Public Lectures", ar: "المحاضرات العامة" },
+    href: "/dashboard/admin/public-lectures",
+    icon: BookOpen,
   },
 ]
 
@@ -118,6 +119,21 @@ export function DashboardSidebar() {
         >
           <Users className="h-5 w-5" />
           Cases
+        </Link>
+
+        {/* Public Lectures - shown for both admin and user */}
+        <Link
+          href="/dashboard/public-lectures"
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+            pathname === "/dashboard/public-lectures" ||
+              pathname.startsWith("/dashboard/public-lectures/")
+              ? "bg-white/20 text-white"
+              : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
+          )}
+        >
+          <BookOpen className="h-5 w-5" />
+          Public Lectures
         </Link>
 
         {/* Admin section - only for admins */}

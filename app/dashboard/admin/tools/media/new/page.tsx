@@ -3,6 +3,9 @@
 import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
+import { useAssignments } from "@/hooks/useAssignments"
+import { useProfiles } from "@/hooks/useProfiles"
+import { useLang } from "@/lib/lang-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -38,18 +41,23 @@ function generateId(): string {
 
 interface MediaBuilderPageProps {
   params?: Promise<{ id?: string }>
+  searchParams?: Promise<{ caseId?: string }>
 }
 
 export default function MediaBuilderPage({
   params,
+  searchParams,
 }: MediaBuilderPageProps = {}) {
   const router = useRouter()
+  const { lang } = useLang()
   const {
     addTool,
     updateTool,
     getToolById,
     isLoading: isToolsLoading,
   } = useTools()
+  const { assignTool } = useAssignments()
+  const { getProfileById } = useProfiles()
   const { fetchToolTypes } = useToolTypes()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,8 +66,13 @@ export default function MediaBuilderPage({
 
   // Edit mode detection
   const resolvedParams = params ? use(params) : undefined
+  const resolvedSearchParams = searchParams ? use(searchParams) : undefined
   const editId = resolvedParams?.id
+  const caseId = resolvedSearchParams?.caseId
   const isEditMode = !!editId
+
+  const [isTemplate, setIsTemplate] = useState(true)
+  const selectedCase = caseId ? getProfileById(caseId) : null
 
   const [formData, setFormData] = useState({
     nameEn: "",
@@ -168,20 +181,51 @@ export default function MediaBuilderPage({
       })
       router.push(`/dashboard/admin/tools/media/${editId}`)
     } else {
-      const record = await pb.collection("tools").create(mediaFormData)
-      const uploadedUrls = (record.media as string[]).map((filename) =>
-        pb.files.getUrl(record, filename)
-      )
-      const finalConfig: MediaConfig = {
-        title: { en: formData.nameEn, ar: formData.nameAr },
-        items: updatedItems.map((item, idx) => ({
-          ...item,
-          mediaUrl: uploadedUrls[idx] || item.mediaUrl,
-        })),
-        media: uploadedUrls,
+      const toolTypes = await fetchToolTypes()
+      const type = toolTypes.find((t) => t.name === "media_question")?.id
+
+      if (!isTemplate && caseId) {
+        const record = await pb.collection("tools").create(mediaFormData)
+        const uploadedUrls = (record.media as string[]).map((filename) =>
+          pb.files.getUrl(record, filename)
+        )
+        const finalConfig: MediaConfig = {
+          title: { en: formData.nameEn, ar: formData.nameAr },
+          items: updatedItems.map((item, idx) => ({
+            ...item,
+            mediaUrl: uploadedUrls[idx] || item.mediaUrl,
+          })),
+          media: uploadedUrls,
+        }
+        await updateTool(record.id, { config: finalConfig })
+
+        await assignTool({
+          case: caseId,
+          type: type,
+          name_en: formData.nameEn,
+          name_ar: formData.nameAr,
+          is_not_template: true,
+          config: finalConfig,
+          is_visible_to_user: true,
+          status: "pending",
+        })
+        router.push(`/dashboard/admin/cases/${caseId}`)
+      } else {
+        const record = await pb.collection("tools").create(mediaFormData)
+        const uploadedUrls = (record.media as string[]).map((filename) =>
+          pb.files.getUrl(record, filename)
+        )
+        const finalConfig: MediaConfig = {
+          title: { en: formData.nameEn, ar: formData.nameAr },
+          items: updatedItems.map((item, idx) => ({
+            ...item,
+            mediaUrl: uploadedUrls[idx] || item.mediaUrl,
+          })),
+          media: uploadedUrls,
+        }
+        await updateTool(record.id, { config: finalConfig })
+        router.push(`/dashboard/admin/tools`)
       }
-      await updateTool(record.id, { config: finalConfig })
-      router.push(`/dashboard/admin/tools`)
     }
   }
 
@@ -344,6 +388,46 @@ export default function MediaBuilderPage({
               </div>
             </CardContent>
           </Card>
+
+          {caseId && selectedCase && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {lang === "ar" ? "معلومات الحالة" : "Case Information"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">
+                    {lang === "ar" ? "الحالة:" : "Case:"}
+                  </span>
+                  <span>{selectedCase.name}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {(caseId || !isEditMode) && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isTemplate"
+                    checked={isTemplate}
+                    onCheckedChange={(checked) => setIsTemplate(checked === true)}
+                  />
+                  <label
+                    htmlFor="isTemplate"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {lang === "ar"
+                      ? "حفظ كقالب (متاح للاستخدام المستقبلي)"
+                      : "Save as template (available for future use)"}
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
