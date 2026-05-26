@@ -3,6 +3,7 @@
 import { LangProvider, useLang } from "@/lib/lang-context"
 import { DirectionProvider } from "@/components/form/DirectionProvider"
 import { Navbar } from "@/components/layout/Navbar"
+import { FooterSection } from "@/components/landing/FooterSection"
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { lang } = useLang()
@@ -12,6 +13,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-svh flex-col bg-transparent">
         <Navbar />
         <main className="flex flex-1 flex-col">{children}</main>
+        <FooterSection />
       </div>
     </DirectionProvider>
   )

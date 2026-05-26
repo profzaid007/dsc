@@ -1,0 +1,122 @@
+[
+  {
+    "id": "1",
+    "portalName": "Special Needs Portal",
+    "tagline": "Supporting Abilities, Empowering Potential",
+    "heroTitle": "We discover abilities, provide support, and build potential gaps",
+    "heroText": "We offer early intervention programs and personalized support plans for every individual.",
+    "ctaLabel": "Get Started Now",
+    "ctaHref": "#",
+    "accent": "#008f53",
+    "secondary": "#0f3090",
+    "menu": ["Home", "About Us", "Services", "Resources", "Blog", "For Families", "For Professionals", "Contact Us"],
+    "services": [
+      "Autism Spectrum Disorder",
+      "ADHD",
+      "Learning Disabilities",
+      "Speech & Language Disorders",
+      "Intellectual Disability",
+      "Behavior Challenges",
+      "Sensory Processing Disorder",
+      "Motor Skills Development",
+      "Family Support",
+      "Assessments & Evaluations"
+    ]
+  },
+  {
+    "id": "2",
+    "portalName": "Mental Health Portal",
+    "tagline": "Better Balance, Better Living",
+    "heroTitle": "Confidential care and practical tools for emotional wellbeing",
+    "heroText": "Access counseling tracks, stress-management plans, and guided support from qualified professionals.",
+    "ctaLabel": "Start Your Wellness Plan",
+    "ctaHref": "#",
+    "accent": "#631a7b",
+    "secondary": "#0f3090",
+    "menu": ["Home", "About", "Care Programs", "Self-Help Library", "Professionals", "Community", "Blog", "Contact"],
+    "services": [
+      "Anxiety Support",
+      "Depression Care",
+      "Family Counseling",
+      "Trauma Recovery",
+      "Burnout Prevention",
+      "Youth Mental Health",
+      "Mindfulness Programs",
+      "Crisis Guidance",
+      "Workplace Wellbeing",
+      "Assessment Services"
+    ]
+  },
+  {
+    "id": "4",
+    "portalName": "Innovation Portal",
+    "tagline": "From Ideas to Impact",
+    "heroTitle": "Turn bold concepts into tested, scalable solutions",
+    "heroText": "Discover innovation labs, prototyping resources, and advisory tracks that accelerate real outcomes.",
+    "ctaLabel": "Explore Innovation Tracks",
+    "ctaHref": "#",
+    "accent": "#df9b00",
+    "secondary": "#0f3090",
+    "menu": ["Home", "About", "Labs", "Programs", "Case Studies", "Partners", "Events", "Contact"],
+    "services": [
+      "Innovation Strategy",
+      "Prototype Validation",
+      "Design Sprints",
+      "Research Support",
+      "Product Discovery",
+      "Market Readiness",
+      "Digital Transformation",
+      "AI Use Cases",
+      "Funding Preparation",
+      "Implementation Coaching"
+    ]
+  },
+  {
+    "id": "5",
+    "portalName": "Education Portal",
+    "tagline": "Learning That Moves Forward",
+    "heroTitle": "Build modern learning journeys for students and educators",
+    "heroText": "From curriculum support to digital classrooms, we help institutions deliver measurable learning growth.",
+    "ctaLabel": "Browse Education Services",
+    "ctaHref": "#",
+    "accent": "#0f3090",
+    "secondary": "#008f53",
+    "menu": ["Home", "About", "Programs", "Schools", "Teachers", "Resources", "Events", "Contact"],
+    "services": [
+      "Curriculum Design",
+      "Teacher Training",
+      "Learning Assessment",
+      "Inclusive Education",
+      "Digital Learning",
+      "Student Support",
+      "Parent Engagement",
+      "Institutional Planning",
+      "STEM Development",
+      "Accreditation Readiness"
+    ]
+  },
+  {
+    "id": "6",
+    "portalName": "Institutional Portal",
+    "tagline": "Performance Through Strategy",
+    "heroTitle": "Enable institutions to perform with clarity, systems, and evidence",
+    "heroText": "Access consulting, diagnostics, and strategic implementation models tailored to organizational goals.",
+    "ctaLabel": "Request Institutional Plan",
+    "ctaHref": "#",
+    "accent": "#121e31",
+    "secondary": "#00a4e4",
+    "menu": ["Home", "About", "Consulting", "Diagnostics", "Resources", "Partners", "Insights", "Contact"],
+    "services": [
+      "Strategic Planning",
+      "Policy Development",
+      "Operational Excellence",
+      "Leadership Programs",
+      "Change Management",
+      "Governance Models",
+      "Quality Assurance",
+      "KPI Frameworks",
+      "Capacity Building",
+      "Impact Measurement"
+    ]
+  }
+]

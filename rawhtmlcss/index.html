@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSC - Development Secrets Consultancy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* RESET & BASE STYLES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        /* HEADER */
+        .header {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 40px;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-placeholder {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #d4af37 0%, #aa7c11 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .brand-text h1 {
+            font-size: 1.8rem;
+            color: #0b1a30;
+            font-weight: 700;
+        }
+
+        .brand-text h1 span {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #555;
+            margin-left: 5px;
+        }
+
+        .brand-text p {
+            font-size: 0.9rem;
+            color: #0076a3;
+            font-weight: 600;
+        }
+
+        .lang-switch a {
+            color: #0b1a30;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            text-align: center;
+            padding: 50px 20px 30px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h2 {
+            color: #0b2545;
+            font-size: 2.2rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            color: #555555;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* CARDS CONTAINER */
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto 80px auto;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+
+        /* CARD INDIVIDUAL STYLING */
+        .card {
+            background: #fdfdfd;
+            border: 1px solid #eef0f2;
+            border-radius: 12px;
+            width: 240px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        /* Badge circular styling */
+        .badge {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        /* Special DSC logo container inside Card 1 */
+        .logo-badge {
+            width: 75px;
+            height: 75px;
+            background-color: #0a1128;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 2px solid #b89742;
+        }
+
+        /* Dummy Images styling (Match with real visuals in production) */
+        .card-image {
+            width: 100%;
+            height: 150px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Colored themes assignment */
+        .card-green .badge { background-color: #008f53; }
+        .card-green .card-image { background-color: #e2f3ec; background-image: linear-gradient(135deg, #a3daf2, #e2f3ec); }
+
+        .card-purple .badge { background-color: #631a7b; }
+        .card-purple .card-image { background-color: #f3eafa; background-image: linear-gradient(135deg, #eae5f6, #f3eafa); }
+
+        .card-orange .badge { background-color: #df9b00; }
+        .card-orange .card-image { background-color: #fef4e2; background-image: linear-gradient(135deg, #ffe9c4, #fef4e2); }
+
+        .card-blue .badge { background-color: #0f3090; }
+        .card-blue .card-image { background-color: #e6ecfa; background-image: linear-gradient(135deg, #c9d6f7, #e6ecfa); }
+
+        .card-darkblue .badge { background-color: #121e31; }
+        .card-darkblue .card-image { background-color: #e2e7ec; background-image: linear-gradient(135deg, #b0bec5, #e2e7ec); }
+
+        /* BUTTONS */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            text-align: center;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-green { background-color: #008f53; }
+        .btn-green:hover { background-color: #007543; }
+
+        .btn-purple { background-color: #631a7b; }
+        .btn-purple:hover { background-color: #4e1462; }
+
+        .btn-orange { background-color: #df9b00; }
+        .btn-orange:hover { background-color: #bd8300; }
+
+        .btn-blue { background-color: #0f3090; }
+        .btn-blue:hover { background-color: #0b236a; }
+
+        .btn-darkblue { background-color: #121e31; }
+        .btn-darkblue:hover { background-color: #080f1a; }
+
+        /* FOOTER STYLING */
+        .footer {
+            background-color: #0b1a30;
+            color: #ffffff;
+            padding: 50px 40px 30px 40px;
+            font-size: 0.85rem;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-col {
+            flex: 1;
+            min-width: 170px;
+        }
+
+        .footer-about {
+            flex: 2;
+            min-width: 250px;
+        }
+
+        .footer-logo {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .company-sub {
+            font-size: 0.8rem;
+            color: #00a4e4;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .company-desc {
+            color: #a3b8cc;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .footer-col h3 {
+            color: #ffffff;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            position: relative;
+            font-weight: 600;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-col ul li a {
+            color: #a3b8cc;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-col ul li a:hover {
+            color: #ffffff;
+        }
+
+        /* Social Media Icons */
+        .social-icons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .social-icons a {
+            width: 32px;
+            height: 32px;
+            background-color: #172d4a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .social-icons a:hover {
+            background-color: #00a4e4;
+        }
+
+        /* Contact Details & QR Column */
+        .footer-contact p {
+            margin-bottom: 12px;
+            color: #a3b8cc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-contact p i {
+            color: #00a4e4;
+            width: 14px;
+        }
+
+        .qr-placeholder {
+            margin-top: 20px;
+            background-color: white;
+            width: 90px;
+            height: 90px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-placeholder i {
+            font-size: 4rem;
+            color: #0b1a30;
+        }
+
+        /* RESPONSIVE LAYOUT adjustments */
+        @media (max-width: 1024px) {
+            .cards-container {
+                gap: 15px;
+            }
+            .card {
+                width: 45%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            .logo-area {
+                flex-direction: column;
+            }
+            .hero h2 {
+                font-size: 1.6rem;
+            }
+            .card {
+                width: 100%;
+            }
+            .footer-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-container">
+            <div class="logo-area">
+                <div class="logo-placeholder">DSC</div>
+                <div class="brand-text">
+                    <h1>DSC <span>Development Secrets Consultancy</span></h1>
+                    <p>Your Partner in Personal & Professional Growth</p>
+                </div>
+            </div>
+            <div class="lang-switch">
+                <a href="#">اللغة العربية</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h2>FROM WHERE YOU WANT TO START YOUR JOURNEY?</h2>
+        <p>Choose the path that fits your goals, and let DSC transform scientific assessment into measurable results in the age of digital transformation and AI.</p>
+    </section>
+
+    <main class="cards-container">
+        <div class="card card-green">
+            <div class="card-header">
+                <div class="logo-badge">DSC</div>
+            </div>
+            <div class="card-image img-child"></div>
+            <a href="portal.html?id=1" class="btn btn-green">Enter Portal</a>
+        </div>
+
+        <div class="card card-purple">
+            <div class="card-header">
+                <span class="badge">2</span>
+            </div>
+            <div class="card-image img-professional"></div>
+            <a href="portal.html?id=2" class="btn btn-purple">Enter Portal</a>
+        </div>
+
+        <div class="card card-orange">
+            <div class="card-header">
+                <span class="badge">4</span>
+            </div>
+            <div class="card-image img-innovation"></div>
+            <a href="portal.html?id=4" class="btn btn-orange">Enter Portal</a>
+        </div>
+
+        <div class="card card-blue">
+            <div class="card-header">
+                <span class="badge">5</span>
+            </div>
+            <div class="card-image img-education"></div>
+            <a href="portal.html?id=5" class="btn btn-blue">Enter Portal</a>
+        </div>
+
+        <div class="card card-darkblue">
+            <div class="card-header">
+                <span class="badge">6</span>
+            </div>
+            <div class="card-image img-business"></div>
+            <a href="portal.html?id=6" class="btn btn-darkblue">Enter Portal</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col footer-about">
+                <div class="footer-logo">DSC</div>
+                <p class="company-sub">Development Secrets Consultancy</p>
+                <p class="company-desc">Your Partner in Personal & Professional Growth. We help organizations unlock their potential and maximize impact through research-driven solutions.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Why DSC</a></li>
+                    <li><a href="#">Services</a></li>
+                    <li><a href="#">Programs & Courses</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>Main Portals</h3>
+                <ul>
+                    <li><a href="#">Special Needs Portal</a></li>
+                    <li><a href="#">Mental Health Portal</a></li>
+                    <li><a href="#">Education Portal</a></li>
+                    <li><a href="#">Learning Portal</a></li>
+                    <li><a href="#">Institutional Portal</a></li>
+                    <li><a href="#">Experts & Partners Portal</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>Resources</h3>
+                <ul>
+                    <li><a href="#">Articles</a></li>
+                    <li><a href="#">Guides & Tools</a></li>
+                    <li><a href="#">Training & Workshops</a></li>
+                    <li><a href="#">Events & Webinars</a></li>
+                    <li><a href="#">Success Stories</a></li>
+                    <li><a href="#">Publications</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>Support Center</h3>
+                <ul>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">FAQs</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms & Conditions</a></li>
+                    <li><a href="#">Refund Policy</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col footer-contact">
+                <h3>Contact Us</h3>
+                <p><i class="fas fa-phone"></i> +966 50 123 4567</p>
+                <p><i class="fas fa-envelope"></i> info@dsc.com</p>
+                <p><i class="fas fa-globe"></i> www.dsc.com</p>
+                <p><i class="fas fa-map-marker-alt"></i> Riyadh, Kingdom of Saudi Arabia</p>
+                <div class="qr-placeholder">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
+
+```
