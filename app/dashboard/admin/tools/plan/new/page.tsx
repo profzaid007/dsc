@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
@@ -48,7 +48,7 @@ export default function PlanBuilderPage({
   searchParams: Promise<{ caseId?: string; edit?: string }>
 }) {
   const router = useRouter()
-  const { assignTool, updateAssignment, assignments } = useAssignments()
+  const { assignTool, updateAssignment, assignments, isLoading: isAssignmentsLoading } = useAssignments()
   const { getProfileById } = useProfiles()
   const { currentUser } = useAuth()
   const [editAssignmentId, setEditAssignmentId] = useState<string>("")
@@ -59,6 +59,7 @@ export default function PlanBuilderPage({
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const [isInitializing, setIsInitializing] = useState(true)
+  const hasInitialized = useRef(false)
 
   // Tool name for this specific plan instance (only bilingual field)
   const [toolName, setToolName] = useState({
@@ -101,8 +102,35 @@ export default function PlanBuilderPage({
     }
   }, [currentUser])
 
-  // Initialize from URL caseId
+  const handleCaseSelect = useCallback((caseId: string) => {
+    setSelectedCaseId(caseId)
+    if (caseId) {
+      const caseProfile = getProfileById(caseId)
+      if (caseProfile) {
+        setFormData((prev) => ({
+          ...prev,
+          childName: caseProfile.name,
+        }))
+        // Auto-generate tool name if empty
+        setToolName((prev) => ({
+          en: prev.en || `${caseProfile.name} - Plan`,
+          ar: prev.ar || `${caseProfile.name} - خطة`,
+        }))
+      }
+    } else {
+      // Reset fields when case is cleared
+      setFormData((prev) => ({
+        ...prev,
+        childName: "",
+      }))
+    }
+  }, [getProfileById])
+
+  // Initialize from URL caseId - runs once after assignments load
   useEffect(() => {
+    if (isAssignmentsLoading) return
+    if (hasInitialized.current) return
+
     const initFromUrl = async () => {
       try {
         const params = await searchParams
@@ -155,34 +183,11 @@ export default function PlanBuilderPage({
         console.error("Failed to read searchParams:", e)
       } finally {
         setIsInitializing(false)
+        hasInitialized.current = true
       }
     }
     initFromUrl()
-  }, [assignments])
-
-  const handleCaseSelect = (caseId: string) => {
-    setSelectedCaseId(caseId)
-    if (caseId) {
-      const caseProfile = getProfileById(caseId)
-      if (caseProfile) {
-        setFormData((prev) => ({
-          ...prev,
-          childName: caseProfile.name,
-        }))
-        // Auto-generate tool name if empty
-        setToolName((prev) => ({
-          en: prev.en || `${caseProfile.name} - Plan`,
-          ar: prev.ar || `${caseProfile.name} - خطة`,
-        }))
-      }
-    } else {
-      // Reset fields when case is cleared
-      setFormData((prev) => ({
-        ...prev,
-        childName: "",
-      }))
-    }
-  }
+  }, [isAssignmentsLoading, assignments, searchParams, handleCaseSelect])
 
   const addGoal = () => {
     setGoals([
@@ -425,6 +430,14 @@ export default function PlanBuilderPage({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <p className="text-destructive">{typeError}</p>
+      </div>
+    )
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     )
   }

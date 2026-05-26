@@ -65,7 +65,7 @@ export default function TakeSurveyToolPage({
   const router = useRouter()
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
-  const { assignments, updateAssignment, updateAssignmentWithFiles } =
+  const { assignments, updateAssignment, updateAssignmentWithFiles, isLoading: isAssignmentsLoading } =
     useAssignments(caseId)
   const { getToolTypeById, fetchToolTypes } = useToolTypes()
 
@@ -114,18 +114,28 @@ export default function TakeSurveyToolPage({
   )
   const [filesToRemove, setFilesToRemove] = useState<string[]>([])
 
+  const hasFetchedToolTypes = useRef(false)
+  const hasInitializedAnswers = useRef(false)
+  const hasInitializedFiles = useRef(false)
+
   useEffect(() => {
+    if (hasFetchedToolTypes.current) return
+    hasFetchedToolTypes.current = true
     fetchToolTypes()
   }, [fetchToolTypes])
 
+  // Initialize answers from existing responses - only once
   useEffect(() => {
+    if (hasInitializedAnswers.current) return
     if (existingResponses && Object.keys(existingResponses).length > 0) {
       setAnswers(existingResponses)
+      hasInitializedAnswers.current = true
     }
   }, [existingResponses])
 
-  // Initialize existing files from assignment media
+  // Initialize existing files from assignment media - only once
   useEffect(() => {
+    if (hasInitializedFiles.current) return
     if (assignment?.media && assignment.media.length > 0) {
       // Group files by response key from responses data
       const filesByKey: Record<string, string[]> = {}
@@ -149,12 +159,17 @@ export default function TakeSurveyToolPage({
       }
 
       setExistingFiles(filesByKey)
+      hasInitializedFiles.current = true
     }
   }, [assignment?.media, assignment?.responses])
 
-  console.log(assignment)
-  console.log(profile)
-  console.log(config)
+  if (isAssignmentsLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
 
   if (!assignment || !profile || !config) {
     return (
@@ -194,15 +209,31 @@ export default function TakeSurveyToolPage({
     if (isMultipleChoiceTool && mcConfig) {
       mcConfig.questions.forEach((q) => {
         if (q.required) {
-          const answer = answers[q.id]
-          if (
-            answer === undefined ||
-            answer === null ||
-            (typeof answer === "string" && answer.trim() === "") ||
-            (typeof answer === "number" && isNaN(answer)) ||
-            (Array.isArray(answer) && answer.length === 0)
-          ) {
-            missing.push(q.id)
+          if (q.answerType === "media") {
+            if (q.responseType === "text") {
+              const answer = answers[q.id]
+              if (!answer || (typeof answer === "string" && answer.trim() === "")) {
+                missing.push(q.id)
+              }
+            } else if (q.responseType === "video" || q.responseType === "audio") {
+              const hasNewFile = uploadedFiles[q.id]
+              const hasExistingFile =
+                existingFiles[q.id] && existingFiles[q.id].length > 0
+              if (!hasNewFile && !hasExistingFile) {
+                missing.push(q.id)
+              }
+            }
+          } else {
+            const answer = answers[q.id]
+            if (
+              answer === undefined ||
+              answer === null ||
+              (typeof answer === "string" && answer.trim() === "") ||
+              (typeof answer === "number" && isNaN(answer)) ||
+              (Array.isArray(answer) && answer.length === 0)
+            ) {
+              missing.push(q.id)
+            }
           }
         }
       })
@@ -261,6 +292,16 @@ export default function TakeSurveyToolPage({
           } else if (uploadedFiles[item.id]) {
             // File will be uploaded, reference will be added after upload
             finalResponses[item.id] = uploadedFiles[item.id].file.name
+          }
+        })
+      }
+
+      if (isMultipleChoiceTool && mcConfig) {
+        mcConfig.questions.forEach((q) => {
+          if (q.answerType === "media" && (q.responseType === "video" || q.responseType === "audio")) {
+            if (uploadedFiles[q.id]) {
+              finalResponses[q.id] = uploadedFiles[q.id].file.name
+            }
           }
         })
       }
@@ -483,6 +524,7 @@ export default function TakeSurveyToolPage({
   const renderMCQuestion = (question: MCQuestion) => {
     const value = answers[question.id] as string | number | string[] | undefined
     const hasError = errors.includes(question.id)
+    const isMedia = question.answerType === "media"
 
     return (
       <div className="space-y-3">
@@ -492,6 +534,32 @@ export default function TakeSurveyToolPage({
             <span className="ms-1 text-destructive">*</span>
           )}
         </Label>
+
+        {/* Media prompt */}
+        {isMedia && question.mediaUrl && (
+          <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
+            {question.mediaType === "image" && (
+              <img
+                src={question.mediaUrl}
+                alt="Media"
+                className="h-full w-full object-contain"
+              />
+            )}
+            {question.mediaType === "video" && (
+              <video
+                src={question.mediaUrl}
+                controls
+                className="h-full w-full object-contain"
+              />
+            )}
+            {question.mediaType === "audio" && (
+              <div className="p-4">
+                <audio src={question.mediaUrl} controls className="w-full" />
+              </div>
+            )}
+          </div>
+        )}
+
         {question.answerType === "text" && (
           <Input
             placeholder={
@@ -557,6 +625,161 @@ export default function TakeSurveyToolPage({
             ))}
           </div>
         )}
+
+        {/* Media question response */}
+        {isMedia && question.responseType === "text" && (
+          <Input
+            placeholder={
+              lang === "ar" ? "اكتب إجابتك..." : "Type your answer..."
+            }
+            value={(value as string) || ""}
+            onChange={(e) => handleAnswer(question.id, e.target.value)}
+          />
+        )}
+        {isMedia && (question.responseType === "video" || question.responseType === "audio") && (
+          <div className="space-y-3">
+            {(() => {
+              const hasNewUpload = uploadedFiles[question.id]
+              const hasExistingFile =
+                existingFiles[question.id] &&
+                existingFiles[question.id].length > 0 &&
+                !filesToRemove.includes(existingFiles[question.id][0])
+
+              return (
+                <>
+                  {/* Show existing uploaded file */}
+                  {hasExistingFile && !hasNewUpload && (
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {question.responseType === "video" ? (
+                            <Video className="h-5 w-5" />
+                          ) : (
+                            <Music className="h-5 w-5" />
+                          )}
+                          <span className="text-sm">
+                            {existingFiles[question.id][0].split("_").pop()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              window.open(
+                                getFileUrl(existingFiles[question.id][0]),
+                                "_blank"
+                              )
+                            }
+                          >
+                            <Play className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleRemoveExistingFile(existingFiles[question.id][0])
+                            }
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        {question.responseType === "video" ? (
+                          <video
+                            src={getFileUrl(existingFiles[question.id][0])}
+                            controls
+                            className="w-full rounded"
+                            style={{ maxHeight: "200px" }}
+                          />
+                        ) : (
+                          <audio
+                            src={getFileUrl(existingFiles[question.id][0])}
+                            controls
+                            className="w-full"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show new file being uploaded */}
+                  {hasNewUpload && (
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {question.responseType === "video" ? (
+                            <Video className="h-5 w-5" />
+                          ) : (
+                            <Music className="h-5 w-5" />
+                          )}
+                          <span className="text-sm">
+                            {uploadedFiles[question.id].file.name}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFile(question.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {uploadedFiles[question.id].preview && (
+                        <div className="mt-2">
+                          {question.responseType === "video" ? (
+                            <video
+                              src={uploadedFiles[question.id].preview}
+                              controls
+                              className="w-full rounded"
+                              style={{ maxHeight: "200px" }}
+                            />
+                          ) : (
+                            <audio
+                              src={uploadedFiles[question.id].preview}
+                              controls
+                              className="w-full"
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Upload button */}
+                  {!hasExistingFile && !hasNewUpload && (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept={
+                          question.responseType === "video"
+                            ? "video/*"
+                            : "audio/*"
+                        }
+                        onChange={(e) => handleFileSelect(question.id, e)}
+                        className="hidden"
+                        id={`media-upload-${question.id}`}
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          document
+                            .getElementById(`media-upload-${question.id}`)
+                            ?.click()
+                        }
+                      >
+                        <Upload className="me-2 h-4 w-4" />
+                        {lang === "ar" ? "اختيار ملف" : "Choose File"}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )
+            })()}
+          </div>
+        )}
+
         {hasError && (
           <div className="flex items-center gap-1 text-sm text-destructive">
             <AlertCircle className="h-4 w-4" />
@@ -1043,9 +1266,6 @@ export default function TakeSurveyToolPage({
                         {question.options?.find(
                           (o) => o.value === answers[question.id]
                         )?.label || "-"}
-                        {question.options?.find(
-                          (o) => o.value === answers[question.id]
-                        )?.label || "-"}
                       </span>
                     )}
                     {question.answerType === "multiple_choice" && (
@@ -1061,6 +1281,48 @@ export default function TakeSurveyToolPage({
                             }
                           </span>
                         ))}
+                      </div>
+                    )}
+                    {question.answerType === "media" && (
+                      <div>
+                        {question.responseType === "text" ? (
+                          <span className="font-medium">
+                            {String(answers[question.id] || "-")}
+                          </span>
+                        ) : (
+                          <div>
+                            {assignment.responses?.[question.id] ? (
+                              <div className="flex items-center gap-2">
+                                {question.responseType === "video" ? (
+                                  <Video className="h-5 w-5" />
+                                ) : (
+                                  <Music className="h-5 w-5" />
+                                )}
+                                <span className="font-medium">
+                                  {(assignment.responses[question.id] as string)
+                                    .split("_")
+                                    .pop()}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    window.open(
+                                      getFileUrl(
+                                        assignment.responses[question.id] as string
+                                      ),
+                                      "_blank"
+                                    )
+                                  }
+                                >
+                                  {lang === "ar" ? "تشغيل" : "Play"}
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

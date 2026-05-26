@@ -1,10 +1,10 @@
 "use client"
 
-import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { SmartLink } from "@/components/smart-link"
 import {
   LayoutDashboard,
   Users,
@@ -13,7 +13,6 @@ import {
   FolderKanban,
   ClipboardList,
   GraduationCap,
-  UserSquare,
   BookOpen,
 } from "lucide-react"
 
@@ -55,7 +54,7 @@ function renderNavItem(
     pathname === item.href || pathname.startsWith(item.href + "/")
 
   return (
-    <Link
+    <SmartLink
       key={item.href}
       href={item.href}
       className={cn(
@@ -68,14 +67,14 @@ function renderNavItem(
     >
       <item.icon className="h-5 w-5" />
       {item.name.en}
-    </Link>
+    </SmartLink>
   )
 }
 
 export function DashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { currentUser, isAdmin, logout } = useAuth()
+  const { currentUser, isAdmin, logout, isLoading: isAuthLoading } = useAuth()
 
   const handleLogout = () => {
     logout()
@@ -85,14 +84,14 @@ export function DashboardSidebar() {
   return (
     <aside className="flex min-h-screen w-64 flex-col bg-primary text-primary-foreground">
       <div className="border-b border-primary/20 p-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <SmartLink href="/dashboard" className="flex items-center gap-2">
           <span className="text-xl font-bold">DSC</span>
-        </Link>
+        </SmartLink>
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
         {/* Dashboard - shown for both admin and user */}
-        <Link
+        <SmartLink
           href="/dashboard"
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
@@ -103,10 +102,10 @@ export function DashboardSidebar() {
         >
           <LayoutDashboard className="h-5 w-5" />
           Dashboard
-        </Link>
+        </SmartLink>
 
         {/* Cases - shown for both admin and user */}
-        <Link
+        <SmartLink
           href={isAdmin ? "/dashboard/admin/cases" : "/dashboard/cases"}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
@@ -119,10 +118,10 @@ export function DashboardSidebar() {
         >
           <Users className="h-5 w-5" />
           Cases
-        </Link>
+        </SmartLink>
 
         {/* Public Lectures - shown for both admin and user */}
-        <Link
+        <SmartLink
           href="/dashboard/public-lectures"
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
@@ -134,7 +133,7 @@ export function DashboardSidebar() {
         >
           <BookOpen className="h-5 w-5" />
           Public Lectures
-        </Link>
+        </SmartLink>
 
         {/* Admin section - only for admins */}
         {isAdmin && (
@@ -150,17 +149,29 @@ export function DashboardSidebar() {
       </nav>
 
       <div className="border-t border-primary/20 p-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-            <FolderKanban className="h-5 w-5" />
+        {isAuthLoading ? (
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 animate-pulse">
+              <FolderKanban className="h-5 w-5 opacity-50" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="h-3.5 w-20 rounded bg-white/10 animate-pulse" />
+              <div className="h-2.5 w-28 rounded bg-white/10 animate-pulse" />
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{currentUser?.name}</p>
-            <p className="truncate text-xs text-primary-foreground/70">
-              {currentUser?.email}
-            </p>
+        ) : (
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+              <FolderKanban className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{currentUser?.name}</p>
+              <p className="truncate text-xs text-primary-foreground/70">
+                {currentUser?.email}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
         <Button
           variant="ghost"
           size="sm"

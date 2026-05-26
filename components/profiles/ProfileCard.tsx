@@ -1,8 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import type { Profile } from "@/types/profile"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SmartLink } from "@/components/smart-link"
 import { Calendar } from "lucide-react"
 
 interface ProfileCardProps {
@@ -12,7 +12,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({ profile, lang = "en" }: ProfileCardProps) {
   return (
-    <Link href={`/dashboard/cases/${profile.id}`}>
+    <SmartLink href={`/dashboard/cases/${profile.id}`}>
       <Card className="h-full cursor-pointer transition-all hover:shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">{profile.name}</CardTitle>
@@ -27,6 +27,6 @@ export function ProfileCard({ profile, lang = "en" }: ProfileCardProps) {
           </div>
         </CardContent>
       </Card>
-    </Link>
+    </SmartLink>
   )
 }

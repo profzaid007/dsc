@@ -5,10 +5,15 @@ import { useProfiles } from "@/hooks/useProfiles"
 import { ProfileCard } from "@/components/profiles/ProfileCard"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { PageLoader } from "@/components/ui/page-loader"
 import { FolderKanban, Plus } from "lucide-react"
 
 export default function ProfilesPage() {
-  const { profiles } = useProfiles()
+  const { profiles, isLoading } = useProfiles()
+
+  if (isLoading) {
+    return <PageLoader text="Loading cases..." />
+  }
 
   return (
     <div className="space-y-6">

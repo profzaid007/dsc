@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { PageLoader } from "@/components/ui/page-loader"
+import { SkeletonTable } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -43,7 +45,7 @@ import {
   Paperclip,
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
-import Link from "next/link"
+import { SmartLink } from "@/components/smart-link"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import type { AssignmentStatus } from "@/types/assignment"
 
@@ -83,10 +85,11 @@ const statusLabels: Record<AssignmentStatus, string> = {
 
 export default function AssignmentsPage() {
   const router = useRouter()
-  const { assignments, deleteAssignment, updateAssignment, isLoading } =
+  const { assignments, deleteAssignment, updateAssignment, isLoading: isAssignmentsLoading } =
     useAssignments()
-  const { profiles } = useProfiles()
-  const { toolTypes, isLoading: toolTypesLoading, fetchToolTypes, getToolTypeById } = useToolTypes()
+  const { profiles, isLoading: isProfilesLoading } = useProfiles()
+  const { toolTypes, isLoading: isToolTypesLoading, fetchToolTypes, getToolTypeById } = useToolTypes()
+  const hasFetched = useRef(false)
 
   const [searchQuery, setSearchQuery] = useState("")
   const [filterCase, setFilterCase] = useState("")
@@ -96,6 +99,8 @@ export default function AssignmentsPage() {
   )
 
   useEffect(() => {
+    if (hasFetched.current) return
+    hasFetched.current = true
     fetchToolTypes()
   }, [fetchToolTypes])
 
@@ -144,6 +149,29 @@ export default function AssignmentsPage() {
   const uniqueToolTypes = Array.from(
     new Set(assignments.map((a) => a.type))
   ).filter(Boolean)
+
+  const isLoading = isAssignmentsLoading || isProfilesLoading || isToolTypesLoading
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.back()}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-primary">Assignments</h1>
+              <p className="text-muted-foreground">
+                Manage tool assignments to cases
+              </p>
+            </div>
+          </div>
+        </div>
+        <SkeletonTable rows={6} />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -227,9 +255,7 @@ export default function AssignmentsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading || toolTypesLoading ? (
-            <p className="py-8 text-center text-muted-foreground">Loading...</p>
-          ) : filteredAssignments.length === 0 ? (
+          {filteredAssignments.length === 0 ? (
             <div className="py-12 text-center">
               <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="mb-2 text-lg font-medium">No assignments found</h3>
@@ -259,20 +285,20 @@ export default function AssignmentsPage() {
                   return (
                     <TableRow key={assignment.id}>
                       <TableCell className="font-medium">
-                        <Link
+                        <SmartLink
                           href={`/dashboard/cases/${assignment.case}`}
                           className="hover:text-primary hover:underline"
                         >
                           {getCaseName(assignment.case)}
-                        </Link>
+                        </SmartLink>
                       </TableCell>
                       <TableCell>
-                        <Link
+                        <SmartLink
                           href={`/dashboard/admin/assignments/${assignment.id}`}
                           className="hover:text-primary hover:underline"
                         >
                           {assignment.name_en || "Unnamed Assignment"}
-                        </Link>
+                        </SmartLink>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 text-muted-foreground">
@@ -304,13 +330,13 @@ export default function AssignmentsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Link
+                          <SmartLink
                             href={`/dashboard/admin/assignments/${assignment.id}`}
                           >
                             <Button variant="ghost" size="sm">
                               <Eye className="h-4 w-4" />
                             </Button>
-                          </Link>
+                          </SmartLink>
                           <Button
                             variant="ghost"
                             size="sm"

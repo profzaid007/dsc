@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState, useEffect } from "react"
+import { use, useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
 import { useAssignments } from "@/hooks/useAssignments"
@@ -68,6 +68,7 @@ export default function SurveyBuilderPage({
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const hasInitialized = useRef(false)
   const resolvedParams = params ? use(params) : undefined
   const resolvedSearchParams = searchParams ? use(searchParams) : undefined
   const editId = resolvedParams?.id
@@ -105,22 +106,24 @@ export default function SurveyBuilderPage({
   const [questions, setQuestions] = useState<SurveyQuestion[]>([])
 
   useEffect(() => {
-    if (isEditMode && editId && !isToolsLoading) {
-      setIsLoading(true)
-      const tool = getToolById(editId)
-      if (tool && tool.config) {
-        const config = tool.config as SurveyConfig
-        setFormData({
-          nameEn: tool.name.en,
-          nameAr: tool.name.ar,
-          answerType: config.answerType || "single_choice",
-        })
-        setOptions(config.options || [])
-        setQuestions(config.questions || [])
-      }
-      setIsLoading(false)
+    if (!isEditMode || !editId || isToolsLoading) return
+    if (hasInitialized.current) return
+
+    setIsLoading(true)
+    const tool = getToolById(editId)
+    if (tool && tool.config) {
+      const config = tool.config as SurveyConfig
+      setFormData({
+        nameEn: tool.name.en,
+        nameAr: tool.name.ar,
+        answerType: config.answerType || "single_choice",
+      })
+      setOptions(config.options || [])
+      setQuestions(config.questions || [])
     }
-  }, [isEditMode, editId, isToolsLoading])
+    setIsLoading(false)
+    hasInitialized.current = true
+  }, [isEditMode, editId, isToolsLoading, getToolById])
 
   const addOption = () => {
     const newOption: SurveyOption = {
@@ -184,6 +187,10 @@ export default function SurveyBuilderPage({
     } else {
       const toolTypes = await fetchToolTypes()
       const type = toolTypes.find((t) => t.name === "survey")?.id
+      if (!type) {
+        setIsSubmitting(false)
+        return
+      }
 
       if (!isTemplate && caseId) {
         await assignTool({

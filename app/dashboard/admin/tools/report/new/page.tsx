@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
@@ -22,7 +22,7 @@ export default function ReportBuilderPage({
   searchParams: Promise<{ caseId?: string; edit?: string }>
 }) {
   const router = useRouter()
-  const { assignTool, updateAssignment, assignments } = useAssignments()
+  const { assignTool, updateAssignment, assignments, isLoading: isAssignmentsLoading } = useAssignments()
   const { getProfileById } = useProfiles()
   const { currentUser } = useAuth()
   const [showPreview, setShowPreview] = useState(false)
@@ -33,6 +33,7 @@ export default function ReportBuilderPage({
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const [isInitializing, setIsInitializing] = useState(true)
+  const hasInitialized = useRef(false)
 
   // Child name - from case selection
   const [childName, setChildName] = useState("")
@@ -75,8 +76,30 @@ export default function ReportBuilderPage({
     }
   }, [currentUser])
 
-  // Initialize from URL caseId
+  const handleCaseSelect = useCallback((caseId: string) => {
+    setSelectedCaseId(caseId)
+    if (caseId) {
+      const caseProfile = getProfileById(caseId)
+      if (caseProfile) {
+        // Auto-populate child name and report name
+        setChildName(caseProfile.name)
+        setReportName({
+          en: `${caseProfile.name} - Report`,
+          ar: `${caseProfile.name} - تقرير`,
+        })
+      }
+    } else {
+      // Reset name fields when case is cleared
+      setChildName("")
+      setReportName({ en: "", ar: "" })
+    }
+  }, [getProfileById])
+
+  // Initialize from URL caseId - runs once after assignments load
   useEffect(() => {
+    if (isAssignmentsLoading) return
+    if (hasInitialized.current) return
+
     const initFromUrl = async () => {
       try {
         const params = await searchParams
@@ -109,29 +132,11 @@ export default function ReportBuilderPage({
         console.error("Failed to read searchParams:", e)
       } finally {
         setIsInitializing(false)
+        hasInitialized.current = true
       }
     }
     initFromUrl()
-  }, [assignments])
-
-  const handleCaseSelect = (caseId: string) => {
-    setSelectedCaseId(caseId)
-    if (caseId) {
-      const caseProfile = getProfileById(caseId)
-      if (caseProfile) {
-        // Auto-populate child name and report name
-        setChildName(caseProfile.name)
-        setReportName({
-          en: `${caseProfile.name} - Report`,
-          ar: `${caseProfile.name} - تقرير`,
-        })
-      }
-    } else {
-      // Reset name fields when case is cleared
-      setChildName("")
-      setReportName({ en: "", ar: "" })
-    }
-  }
+  }, [isAssignmentsLoading, assignments, searchParams, handleCaseSelect])
 
   const handleSubmit = async () => {
     if (!selectedCaseId || !reportName.en || !expertName || !reportTypeId)
@@ -207,6 +212,14 @@ export default function ReportBuilderPage({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <p className="text-destructive">{typeError}</p>
+      </div>
+    )
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     )
   }

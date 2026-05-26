@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useLang } from "@/lib/lang-context"
 import type { MultipleChoiceConfig, MCQuestion } from "@/types/tool"
 import { Card, CardContent } from "@/components/ui/card"
@@ -23,8 +23,51 @@ export function MultipleChoicePreview({ config, responses = {}, readOnly = false
   const [answers, setAnswers] = useState<Record<string, unknown>>(responses)
   const [showAnswers, setShowAnswers] = useState(false)
 
+  // Sync responses prop when in readOnly mode (displaying saved answers)
+  useEffect(() => {
+    if (readOnly) {
+      setAnswers(responses)
+    }
+  }, [responses, readOnly])
+
   const handleAnswer = (questionId: string, value: unknown) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }))
+  }
+
+  const renderMedia = (question: MCQuestion) => {
+    if (!question.mediaUrl) {
+      return (
+        <div className="flex h-32 items-center justify-center rounded-lg border bg-muted/30 text-sm text-muted-foreground">
+          {lang === "ar" ? "لم يتم تحميل الوسائط" : "No media uploaded"}
+        </div>
+      )
+    }
+    if (question.mediaType === "image") {
+      return (
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
+          <img
+            src={question.mediaUrl}
+            alt="Media"
+            className="h-full w-full object-contain"
+          />
+        </div>
+      )
+    }
+    if (question.mediaType === "video") {
+      return (
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
+          <video src={question.mediaUrl} className="h-full w-full object-contain" />
+        </div>
+      )
+    }
+    if (question.mediaType === "audio") {
+      return (
+        <div className="flex items-center justify-center rounded-lg border bg-muted/30 p-4">
+          <audio src={question.mediaUrl} controls className="w-full" />
+        </div>
+      )
+    }
+    return null
   }
 
   const renderQuestion = (question: MCQuestion, index: number) => {
@@ -34,6 +77,7 @@ export function MultipleChoicePreview({ config, responses = {}, readOnly = false
       question.answerType === "multiple_choice"
     const correctOptions =
       question.options?.filter((o) => o.isCorrect).map((o) => o.value) || []
+    const isMedia = question.answerType === "media"
 
     return (
       <div
@@ -52,7 +96,9 @@ export function MultipleChoicePreview({ config, responses = {}, readOnly = false
           </Label>
         </div>
 
-        <div className="ms-7">
+        <div className="ms-7 space-y-3">
+          {isMedia && renderMedia(question)}
+
           {question.answerType === "text" && (
             <Textarea
               placeholder={
@@ -130,6 +176,25 @@ export function MultipleChoicePreview({ config, responses = {}, readOnly = false
                   </Label>
                 </div>
               ))}
+            </div>
+          )}
+          {isMedia && question.responseType === "text" && (
+            <Input
+              placeholder={
+                lang === "ar" ? "اكتب إجابتك..." : "Type your answer..."
+              }
+              value={(value as string) || ""}
+              onChange={(e) => handleAnswer(question.id, e.target.value)}
+            />
+          )}
+          {isMedia && question.responseType === "video" && (
+            <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+              {lang === "ar" ? "سجل فيديو إجابتك" : "Record video response"}
+            </div>
+          )}
+          {isMedia && question.responseType === "audio" && (
+            <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+              {lang === "ar" ? "سجل صوت إجابتك" : "Record audio response"}
             </div>
           )}
         </div>

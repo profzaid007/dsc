@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTools } from "@/hooks/useTools"
@@ -9,6 +9,8 @@ import type { Tool, ToolType } from "@/types/tool"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { PageLoader } from "@/components/ui/page-loader"
+import { SkeletonTable } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -68,15 +70,18 @@ const statusLabels: Record<Tool["status"], string> = {
 }
 
 export default function AdminToolsPage() {
-  const { tools, deleteTool } = useTools()
   const router = useRouter()
-  const { fetchToolTypes, getToolTypeById } = useToolTypes()
+  const { tools, deleteTool, isLoading: isToolsLoading } = useTools()
+  const { fetchToolTypes, getToolTypeById, isLoading: isToolTypesLoading } = useToolTypes()
   const [filterType, setFilterType] = useState<ToolType | "all">("all")
   const [filterStatus, setFilterStatus] = useState<Tool["status"] | "all">(
     "all"
   )
+  const hasFetched = useRef(false)
 
   useEffect(() => {
+    if (hasFetched.current) return
+    hasFetched.current = true
     fetchToolTypes()
   }, [fetchToolTypes])
 
@@ -117,6 +122,28 @@ export default function AdminToolsPage() {
     if (confirm("Are you sure you want to delete this tool?")) {
       await deleteTool(toolId)
     }
+  }
+
+  const isLoading = isToolsLoading || isToolTypesLoading
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Tools</h1>
+            <p className="text-muted-foreground">Manage tool templates</p>
+          </div>
+          <Link href="/dashboard/admin/tools/new">
+            <Button>
+              <Plus className="me-2 h-4 w-4" />
+              New Tool
+            </Button>
+          </Link>
+        </div>
+        <SkeletonTable rows={5} />
+      </div>
+    )
   }
 
   return (

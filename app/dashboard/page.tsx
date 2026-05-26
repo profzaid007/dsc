@@ -6,33 +6,55 @@ import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { PageLoader } from "@/components/ui/page-loader"
+import { SkeletonStats } from "@/components/ui/skeleton"
 import { Users, FolderKanban, ClipboardCheck, Activity } from "lucide-react"
 
 export default function DashboardPage() {
   const { currentUser } = useAuth()
-  const { profiles } = useProfiles()
-  const { assignments } = useAssignments()
+  const { profiles, isLoading: isProfilesLoading } = useProfiles()
+  const { assignments, isLoading: isAssignmentsLoading } = useAssignments()
+
+  const isLoading = isProfilesLoading || isAssignmentsLoading
 
   const stats = [
     {
       title: "Cases",
       value: profiles.length,
       icon: Users,
-      href: "/dashboard/profiles",
+      href: "/dashboard/cases",
     },
     {
       title: "Total Assignments",
       value: assignments.length,
       icon: ClipboardCheck,
-      href: "/dashboard/profiles",
+      href: "/dashboard/cases",
     },
     {
       title: "Completed",
       value: assignments.filter((a) => a.status === "completed").length,
       icon: Activity,
-      href: "/dashboard/profiles",
+      href: "/dashboard/cases",
     },
   ]
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, {currentUser?.name}</p>
+          </div>
+          <Link href="/dashboard/cases/new">
+            <Button>New Case</Button>
+          </Link>
+        </div>
+        <SkeletonStats count={3} />
+        <PageLoader text="Loading dashboard data..." className="mt-8" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

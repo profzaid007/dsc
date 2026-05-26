@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useLang } from "@/lib/lang-context"
 import type { SurveyConfig, SurveyQuestion, SurveyOption } from "@/types/tool"
 import { Card, CardContent } from "@/components/ui/card"
@@ -19,6 +19,13 @@ interface SurveyPreviewProps {
 export function SurveyPreview({ config, responses = {}, readOnly = false }: SurveyPreviewProps) {
   const { lang } = useLang()
   const [answers, setAnswers] = useState<Record<string, unknown>>(responses)
+
+  // Sync responses prop when in readOnly mode (displaying saved answers)
+  useEffect(() => {
+    if (readOnly) {
+      setAnswers(responses)
+    }
+  }, [responses, readOnly])
 
   const handleSingleAnswer = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }))

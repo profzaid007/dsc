@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
-import { useToolTypes } from "@/hooks/useToolTypes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { PageLoader } from "@/components/ui/page-loader"
+import { SkeletonTable } from "@/components/ui/skeleton"
+import { SmartLink } from "@/components/smart-link"
 import {
   Table,
   TableBody,
@@ -21,9 +22,6 @@ import {
   Plus,
   FolderKanban,
   User,
-  Calendar,
-  Mail,
-  Phone,
   Eye,
 } from "lucide-react"
 
@@ -36,9 +34,8 @@ interface AssignmentCount {
 }
 
 export default function AdminCasesPage() {
-  const router = useRouter()
-  const { profiles } = useProfiles()
-  const { assignments } = useAssignments()
+  const { profiles, isLoading: isProfilesLoading } = useProfiles()
+  const { assignments, isLoading: isAssignmentsLoading } = useAssignments()
 
   const [assignmentCounts, setAssignmentCounts] = useState<
     Record<string, AssignmentCount>
@@ -64,6 +61,28 @@ export default function AdminCasesPage() {
     })
     setAssignmentCounts(counts)
   }, [assignments])
+
+  const isLoading = isProfilesLoading || isAssignmentsLoading
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Cases</h1>
+            <p className="text-muted-foreground">Manage all cases</p>
+          </div>
+          <Link href="/dashboard/cases/new">
+            <Button>
+              <Plus className="me-2 h-4 w-4" />
+              New Case
+            </Button>
+          </Link>
+        </div>
+        <SkeletonTable rows={6} />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -179,12 +198,12 @@ export default function AdminCasesPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/dashboard/admin/cases/${profile.id}`}>
+                      <SmartLink href={`/dashboard/admin/cases/${profile.id}`}>
                         <Button variant="ghost" size="sm">
                           <Eye className="me-1 h-4 w-4" />
                           View
                         </Button>
-                      </Link>
+                      </SmartLink>
                     </TableCell>
                   </TableRow>
                 )
