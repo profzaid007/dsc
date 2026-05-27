@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -263,12 +263,12 @@ export function LectureForm({
           <CardTitle>Thumbnail Image</CardTitle>
         </CardHeader>
         <CardContent>
-          <MediaUpload
-            onUpload={handleMediaUpload}
-            initialUrls={formData.thumbnail ? [formData.thumbnail] : []}
-            maxFiles={1}
-            acceptedTypes={["image/*"]}
-          />
+          {React.createElement(MediaUpload as any, {
+            onUpload: handleMediaUpload,
+            initialUrls: formData.thumbnail ? [formData.thumbnail] : [],
+            maxFiles: 1,
+            acceptedTypes: ["image/*"],
+          })}
         </CardContent>
       </Card>
 

@@ -6,6 +6,7 @@ import { useTools } from "@/hooks/useTools"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
+import { caseToolsCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,13 +21,17 @@ import {
 } from "@/components/ui/select"
 import { DragList } from "@/components/ui/drag-list"
 import { MultipleChoicePreview } from "@/components/tool-renderers/MultipleChoicePreview"
-import { ArrowLeft, Plus, Trash2, Eye, EyeOff, CheckCircle } from "lucide-react"
+import { MediaUpload } from "@/components/ui/media-upload"
+import { ArrowLeft, Plus, Trash2, Eye, EyeOff, CheckCircle, Image, Video, Music, X } from "lucide-react"
 import type {
   MultipleChoiceConfig,
   MCQuestion,
   MCAnswerType,
+  MediaType,
+  ResponseType,
 } from "@/types/tool"
 import { useToolTypes } from "@/hooks/useToolTypes"
+import pb from "@/lib/pb"
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -37,6 +42,7 @@ const ANSWER_TYPES: { value: MCAnswerType; label: string }[] = [
   { value: "number", label: "Number" },
   { value: "single_choice", label: "Single Choice (mark correct)" },
   { value: "multiple_choice", label: "Multiple Choice (mark correct)" },
+  { value: "media", label: "Media (image/video/audio)" },
 ]
 
 const DEFAULT_OPTIONS = [
@@ -87,6 +93,9 @@ export default function MultipleChoiceBuilderPage({
   })
 
   const [questions, setQuestions] = useState<MCQuestion[]>([])
+  const [pendingFiles, setPendingFiles] = useState<Map<string, File>>(new Map())
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [currentMediaQuestionId, setCurrentMediaQuestionId] = useState<string | null>(null)
 
   // Load existing data in edit mode
   useEffect(() => {
@@ -133,46 +142,183 @@ export default function MultipleChoiceBuilderPage({
     if (!formData.nameEn || questions.length === 0) return
     setIsSubmitting(true)
 
-    const config: MultipleChoiceConfig = {
+    const toolTypes = await fetchToolTypes()
+    const type = toolTypes.find((t) => t.name === "multiple_answer")?.id
+    if (!type) {
+      setIsSubmitting(false)
+      return
+    }
+
+    const baseQuestions = questions.map((q, idx) => ({ ...q, order: idx }))
+    const pendingEntries = Array.from(pendingFiles.entries())
+
+    const baseConfig: MultipleChoiceConfig = {
       title: { en: formData.nameEn, ar: formData.nameAr },
-      questions: questions.map((q, idx) => ({ ...q, order: idx })),
+      questions: baseQuestions,
       media: [],
     }
 
+    let finalConfig: MultipleChoiceConfig
+
+    // Helper: build finalConfig from uploaded URLs
+    const buildFinalConfig = (uploadedUrls: string[]): MultipleChoiceConfig => {
+      const finalQuestions = baseQuestions.map((q) => {
+        const pendingIndex = pendingEntries.findIndex(([id]) => id === q.id)
+        if (pendingIndex >= 0 && uploadedUrls[pendingIndex]) {
+          return { ...q, mediaUrl: uploadedUrls[pendingIndex] }
+        }
+        return q
+      })
+      return {
+        title: { en: formData.nameEn, ar: formData.nameAr },
+        questions: finalQuestions,
+        media: uploadedUrls,
+      }
+    }
+
     if (isEditMode && editId) {
+      const mediaFormData = new FormData()
+      for (const [, file] of pendingEntries) {
+        mediaFormData.append("media", file)
+      }
+      mediaFormData.append("config", JSON.stringify(baseConfig))
+
+      const record = await pb
+        .collection("tools")
+        .update(editId, mediaFormData)
+      const uploadedUrls = (record.media as string[]).map((filename) =>
+        pb.files.getUrl(record, filename)
+      )
+
+      finalConfig = buildFinalConfig(uploadedUrls)
+
       await updateTool(editId, {
         name: { en: formData.nameEn, ar: formData.nameAr },
-        config,
+        config: finalConfig,
       })
       router.push(`/dashboard/admin/tools/multiple-choice/${editId}`)
+      return
+    }
+
+    // Create mode: only 2 paths
+    if (!isTemplate && caseId) {
+      // Assignment: create in case_tools, upload media there
+      const assignment = await caseToolsCollection.create({
+        case: caseId,
+        type: type,
+        name_en: formData.nameEn,
+        name_ar: formData.nameAr,
+        is_not_template: true,
+        config: baseConfig,
+        status: "pending",
+        is_visible_to_user: true,
+        responses: {},
+        media: [],
+      })
+
+      if (pendingEntries.length > 0) {
+        const files = pendingEntries.map(([, file]) => file)
+        const updated = await caseToolsCollection.updateWithFiles(
+          assignment.id,
+          {},
+          files
+        )
+        const uploadedUrls = (updated.media as string[]).map((filename) =>
+          pb.files.getUrl(updated, filename)
+        )
+        finalConfig = buildFinalConfig(uploadedUrls)
+        await caseToolsCollection.update(assignment.id, { config: finalConfig })
+      } else {
+        finalConfig = baseConfig
+      }
+
+      router.push(`/dashboard/admin/cases/${caseId}`)
     } else {
+      // Template (with or without case): create in tools, upload media there
+      const mediaFormData = new FormData()
+      mediaFormData.append("name_en", formData.nameEn)
+      mediaFormData.append("name_ar", formData.nameAr)
+      mediaFormData.append("type", type)
+      mediaFormData.append("serviceType", "individual")
+      mediaFormData.append("status", "active")
+      mediaFormData.append("config", JSON.stringify(baseConfig))
+      for (const [, file] of pendingEntries) {
+        mediaFormData.append("media", file)
+      }
 
-      const toolTypes = await fetchToolTypes()
-      const type = toolTypes.find((t) => t.name === "multiple_answer")?.id
+      const record = await pb.collection("tools").create(mediaFormData)
+      const uploadedUrls = (record.media as string[]).map((filename) =>
+        pb.files.getUrl(record, filename)
+      )
 
-      if (!isTemplate && caseId) {
-        await assignTool({
+      finalConfig = buildFinalConfig(uploadedUrls)
+
+      await addTool({
+        name: { en: formData.nameEn, ar: formData.nameAr },
+        type: type,
+        serviceType: "individual",
+        status: "active",
+        config: finalConfig,
+      })
+
+      if (caseId) {
+        await caseToolsCollection.create({
           case: caseId,
           type: type,
           name_en: formData.nameEn,
           name_ar: formData.nameAr,
-          is_not_template: true,
-          config,
+          is_not_template: false,
+          config: finalConfig,
           is_visible_to_user: true,
           status: "pending",
+          responses: {},
+          media: [],
         })
-        router.push(`/dashboard/admin/cases/${caseId}`)
-      } else {
-        await addTool({
-          name: { en: formData.nameEn, ar: formData.nameAr },
-          type: type,
-          serviceType: "individual",
-          status: "active",
-          config,
-        })
-        router.push(`/dashboard/admin/tools`)
       }
+
+      router.push(`/dashboard/admin/tools`)
     }
+  }
+
+  const getMediaIcon = (type?: MediaType) => {
+    switch (type) {
+      case "image":
+        return Image
+      case "video":
+        return Video
+      case "audio":
+        return Music
+      default:
+        return Image
+    }
+  }
+
+  const handleMediaUpload = (data: {
+    file: File
+    mediaType: MediaType
+    responseType: ResponseType
+  }) => {
+    if (!currentMediaQuestionId) return
+    updateQuestion(currentMediaQuestionId, {
+      mediaType: data.mediaType,
+      mediaUrl: "",
+      responseType: data.responseType,
+    })
+    setPendingFiles((prev) => new Map(prev).set(currentMediaQuestionId, data.file))
+    setCurrentMediaQuestionId(null)
+  }
+
+  const handleRemoveMedia = (questionId: string) => {
+    updateQuestion(questionId, {
+      mediaType: undefined,
+      mediaUrl: undefined,
+      responseType: undefined,
+    })
+    setPendingFiles((prev) => {
+      const next = new Map(prev)
+      next.delete(questionId)
+      return next
+    })
   }
 
   const renderQuestionItem = (question: MCQuestion, index: number) => {
@@ -180,6 +326,11 @@ export default function MultipleChoiceBuilderPage({
       question.answerType === "single_choice" ||
       question.answerType === "multiple_choice"
     const showCorrect = showOptions
+    const isMedia = question.answerType === "media"
+    const pendingFile = pendingFiles.get(question.id)
+    const mediaPreviewSrc = pendingFile
+      ? URL.createObjectURL(pendingFile)
+      : question.mediaUrl
 
     return (
       <div className="flex-1 space-y-3">
@@ -199,7 +350,14 @@ export default function MultipleChoiceBuilderPage({
             <Button
               variant="ghost"
               size="icon-xs"
-              onClick={() => removeQuestion(question.id)}
+              onClick={() => {
+                removeQuestion(question.id)
+                setPendingFiles((prev) => {
+                  const next = new Map(prev)
+                  next.delete(question.id)
+                  return next
+                })
+              }}
             >
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
@@ -231,6 +389,79 @@ export default function MultipleChoiceBuilderPage({
             ))}
           </SelectContent>
         </Select>
+
+        {isMedia && (
+          <div className="space-y-3 rounded-md border p-3">
+            <Label className="text-xs">Media Prompt</Label>
+            {!question.mediaType ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setCurrentMediaQuestionId(question.id)
+                  setUploadOpen(true)
+                }}
+              >
+                <Plus className="me-1 h-3 w-3" />
+                Select Media
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="rounded-lg border bg-muted/30 p-2">
+                  {question.mediaType === "image" && mediaPreviewSrc && (
+                    <img
+                      src={mediaPreviewSrc}
+                      alt="Preview"
+                      className="h-32 w-full rounded object-cover"
+                    />
+                  )}
+                  {question.mediaType === "video" && mediaPreviewSrc && (
+                    <video
+                      src={mediaPreviewSrc}
+                      className="h-32 w-full rounded object-cover"
+                    />
+                  )}
+                  {question.mediaType === "audio" && (
+                    <div className="flex h-12 items-center justify-center rounded bg-muted">
+                      <Music className="h-6 w-6" />
+                    </div>
+                  )}
+                  {question.mediaType === "audio" && mediaPreviewSrc && (
+                    <audio src={mediaPreviewSrc} controls className="mt-2 w-full" />
+                  )}
+                  {!mediaPreviewSrc && (
+                    <div className="flex h-32 items-center justify-center text-muted-foreground">
+                      No preview
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {(() => {
+                      const Icon = getMediaIcon(question.mediaType)
+                      return <Icon className="h-4 w-4" />
+                    })()}
+                    <span className="capitalize">{question.mediaType}</span>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="capitalize">
+                      {question.responseType} response
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveMedia(question.id)}
+                  >
+                    <X className="me-1 h-3 w-3" />
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {showOptions && (
           <div className="space-y-2 rounded-md border p-3">
@@ -461,6 +692,12 @@ export default function MultipleChoiceBuilderPage({
           </div>
         )}
       </div>
+
+      <MediaUpload
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onUpload={handleMediaUpload}
+      />
     </div>
   )
 }

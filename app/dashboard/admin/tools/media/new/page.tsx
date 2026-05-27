@@ -141,6 +141,10 @@ export default function MediaBuilderPage({
 
     const toolTypes = await fetchToolTypes()
     const type = toolTypes.find((t) => t.name === "media_question")?.id
+    if (!type) {
+      setIsSubmitting(false)
+      return
+    }
 
     const updatedItems = items.map((item, idx) => ({ ...item, order: idx }))
 
@@ -181,9 +185,6 @@ export default function MediaBuilderPage({
       })
       router.push(`/dashboard/admin/tools/media/${editId}`)
     } else {
-      const toolTypes = await fetchToolTypes()
-      const type = toolTypes.find((t) => t.name === "media_question")?.id
-
       if (!isTemplate && caseId) {
         const record = await pb.collection("tools").create(mediaFormData)
         const uploadedUrls = (record.media as string[]).map((filename) =>

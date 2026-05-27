@@ -51,6 +51,7 @@ export type MCAnswerType =
   | "number"
   | "single_choice"
   | "multiple_choice"
+  | "media"
 
 export interface MCQuestionOption {
   value: string
@@ -65,6 +66,10 @@ export interface MCQuestion {
   options: MCQuestionOption[]
   required: boolean
   order: number
+  // Media question fields (used when answerType === "media")
+  mediaType?: MediaType
+  mediaUrl?: string
+  responseType?: ResponseType
 }
 
 export interface MultipleChoiceConfig {
