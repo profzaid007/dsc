@@ -64,12 +64,7 @@ export default function MultipleChoiceBuilderPage({
 }: MultipleChoiceBuilderPageProps = {}) {
   const router = useRouter()
   const { lang } = useLang()
-  const {
-    addTool,
-    updateTool,
-    getToolById,
-    isLoading: isToolsLoading,
-  } = useTools()
+  const { updateTool, getToolById, isLoading: isToolsLoading } = useTools()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
   const { toolTypes, fetchToolTypes } = useToolTypes()
@@ -253,11 +248,8 @@ export default function MultipleChoiceBuilderPage({
 
       finalConfig = buildFinalConfig(uploadedUrls)
 
-      await addTool({
+      await updateTool(record.id, {
         name: { en: formData.nameEn, ar: formData.nameAr },
-        type: type,
-        serviceType: "individual",
-        status: "active",
         config: finalConfig,
       })
 
