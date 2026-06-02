@@ -48,7 +48,7 @@ export function Navbar() {
 
   const accentColor = portal?.accent ?? "#0b1a30"
 
-  const showSidebar = !isAppRoute
+  const showSidebar = isHome
 
   return (
     <div className="w-full">
