@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n"
 import { PORTALS } from "@/lib/portals"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import Image from "next/image"
 
 const PORTAL_COLORS: Record<string, { accent: string; bg: string }> = {
   "1": { accent: "#008f53", bg: "bg-[#e2f3ec]" },
@@ -17,7 +18,6 @@ const PORTAL_COLORS: Record<string, { accent: string; bg: string }> = {
 function PortalCard({ portal }: { portal: (typeof PORTALS)[number] }) {
   const { lang } = useLang()
   const colors = PORTAL_COLORS[portal.id] ?? { accent: "#0a3d62", bg: "bg-muted" }
-
   return (
     <Card className="group relative w-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="flex flex-col items-center p-3">
@@ -38,14 +38,15 @@ function PortalCard({ portal }: { portal: (typeof PORTALS)[number] }) {
             </div>
           )}
         </div>
-
-        <div
-          className="mb-3 h-28 w-full rounded-lg"
-          style={{
-            background: `linear-gradient(135deg, ${colors.accent}30, ${colors.bg})`,
-          }}
-        />
-
+        <div className="relative mb-3 h-52 w-full overflow-hidden rounded-lg">
+          <Image
+            src={portal.image}
+            alt={portal.portalName.en}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+          />
+        </div>
         <Link href={`/portal/${portal.id}`} className="w-full">
           <Button
             className="w-full text-sm font-semibold transition-all hover:opacity-90"

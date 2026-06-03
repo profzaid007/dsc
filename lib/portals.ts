@@ -9,6 +9,7 @@ export interface Portal {
   ctaLabel: BilingualString;
   ctaHref: string;
   accent: string;
+  image: string; 
   secondary: string;
   menu: BilingualString[];
   services: BilingualString[];
@@ -18,6 +19,7 @@ export const PORTALS: Portal[] = [
   {
     id: "1",
     portalName: { en: "Special Needs Portal", ar: "بوابة الاحتياجات الخاصة" },
+    image: "/portals/portal-1.jpg",
     tagline: { en: "Supporting Abilities, Empowering Potential", ar: "دعم القدرات، تمكين الإمكانات" },
     heroTitle: {
       en: "We discover abilities, provide support, and build potential gaps",
@@ -58,6 +60,7 @@ export const PORTALS: Portal[] = [
     id: "2",
     portalName: { en: "Mental Health Portal", ar: "بوابة الصحة النفسية" },
     tagline: { en: "Better Balance, Better Living", ar: "توازن أفضل، حياة أفضل" },
+    image: "/portals/portal-2.jpg",
     heroTitle: {
       en: "Confidential care and practical tools for emotional wellbeing",
       ar: "رعاية سرية وأدوات عملية للصحة النفسية",
@@ -94,9 +97,10 @@ export const PORTALS: Portal[] = [
     ],
   },
   {
-    id: "4",
+    id: "3",
     portalName: { en: "Innovation Portal", ar: "بوابة الابتكار" },
     tagline: { en: "From Ideas to Impact", ar: "من الأفكار إلى الأثر" },
+    image: "/portals/portal-3.jpg",
     heroTitle: {
       en: "Turn bold concepts into tested, scalable solutions",
       ar: "حول المفاهيم الجريئة إلى حلول مختبرة وقابلة للتوسع",
@@ -133,8 +137,9 @@ export const PORTALS: Portal[] = [
     ],
   },
   {
-    id: "5",
+    id: "4",
     portalName: { en: "Education Portal", ar: "بوابة التعليم" },
+    image: "/portals/portal-4.jpg",
     tagline: { en: "Learning That Moves Forward", ar: "تعلم يتقدم للأمام" },
     heroTitle: {
       en: "Build modern learning journeys for students and educators",
@@ -172,8 +177,9 @@ export const PORTALS: Portal[] = [
     ],
   },
   {
-    id: "6",
+    id: "5",
     portalName: { en: "Institutional Portal", ar: "بوابة المؤسسات" },
+    image: "/portals/portal-5.jpg",
     tagline: { en: "Performance Through Strategy", ar: "الأداء من خلال الاستراتيجية" },
     heroTitle: {
       en: "Enable institutions to perform with clarity, systems, and evidence",
