@@ -1,5 +1,10 @@
 import type { BilingualString } from "@/types/form";
 
+export interface PortalService { 
+  icon: string 
+  name: BilingualString
+} 
+
 export interface Portal {
   id: string;
   portalName: BilingualString;
@@ -12,7 +17,7 @@ export interface Portal {
   image: string; 
   secondary: string;
   menu: BilingualString[];
-  services: BilingualString[];
+  services: PortalService[];
 }
 
 export const PORTALS: Portal[] = [
@@ -44,16 +49,16 @@ export const PORTALS: Portal[] = [
       { en: "Contact Us", ar: "تواصل معنا" },
     ],
     services: [
-      { en: "Autism Spectrum Disorder", ar: "اضطراب طيف التوحد" },
-      { en: "ADHD", ar: "ADHD" },
-      { en: "Learning Disabilities", ar: "صعوبات التعلم" },
-      { en: "Speech & Language Disorders", ar: "اضطرابات الكلام واللغة" },
-      { en: "Intellectual Disability", ar: "الإعاقة الذهنية" },
-      { en: "Behavior Challenges", ar: "التحديات السلوكية" },
-      { en: "Sensory Processing Disorder", ar: "اضطراب المعالجة الحسية" },
-      { en: "Motor Skills Development", ar: "تطوير المهارات الحركية" },
-      { en: "Family Support", ar: "دعم الأسرة" },
-      { en: "Assessments & Evaluations", ar: "التقييمات والفحوصات" },
+      { icon: "heartHandshake", name: { en: "Autism Spectrum Disorder", ar: "اضطراب طيف التوحد" } },
+      { icon: "zap", name: { en: "ADHD", ar: "ADHD" } },
+      { icon: "bookOpen", name: { en: "Learning Disabilities", ar: "صعوبات التعلم" } },
+      { icon: "messageCircle", name: { en: "Speech & Language Disorders", ar: "اضطرابات الكلام واللغة" } },
+      { icon: "brain", name: { en: "Intellectual Disability", ar: "الإعاقة الذهنية" } },
+      { icon: "heart", name: { en: "Behavior Challenges", ar: "التحديات السلوكية" } },
+      { icon: "eye", name: { en: "Sensory Processing Disorder", ar: "اضطراب المعالجة الحسية" } },
+      { icon: "accessibility", name: { en: "Motor Skills Development", ar: "تطوير المهارات الحركية" } },
+      { icon: "users", name: { en: "Family Support", ar: "دعم الأسرة" } },
+      { icon: "clipboardCheck", name: { en: "Assessments & Evaluations", ar: "التقييمات والفحوصات" } },
     ],
   },
   {
@@ -84,16 +89,16 @@ export const PORTALS: Portal[] = [
       { en: "Contact", ar: "تواصل معنا" },
     ],
     services: [
-      { en: "Anxiety Support", ar: "دعم القلق" },
-      { en: "Depression Care", ar: "رعاية الاكتئاب" },
-      { en: "Family Counseling", ar: "الإرشاد الأسري" },
-      { en: "Trauma Recovery", ar: "التعافي من الصدمات" },
-      { en: "Burnout Prevention", ar: "الوقاية من الإرهاق" },
-      { en: "Youth Mental Health", ar: "صحة الشباب النفسية" },
-      { en: "Mindfulness Programs", ar: "برامج الوعي الذاتي" },
-      { en: "Crisis Guidance", ar: "إرشاد الأزمات" },
-      { en: "Workplace Wellbeing", ar: "رفاهية مكان العمل" },
-      { en: "Assessment Services", ar: "خدمات التقييم" },
+      { icon: "Heart", name: { en: "Anxiety Support", ar: "دعم القلق" } },
+      { icon: "CloudMoon", name: { en: "Depression Care", ar: "رعاية الاكتئاب" } },
+      { icon: "Users", name: { en: "Family Counseling", ar: "الإرشاد الأسري" } },
+      { icon: "Shield", name: { en: "Trauma Recovery", ar: "التعافي من الصدمات" } },
+      { icon: "Flame", name: { en: "Burnout Prevention", ar: "الوقاية من الإرهاق" } },
+      { icon: "Smile", name: { en: "Youth Mental Health", ar: "صحة الشباب النفسية" } },
+      { icon: "Flower2", name: { en: "Mindfulness Programs", ar: "برامج الوعي الذاتي" } },
+      { icon: "PhoneCall", name: { en: "Crisis Guidance", ar: "إرشاد الأزمات" } },
+      { icon: "Building2", name: { en: "Workplace Wellbeing", ar: "رفاهية مكان العمل" } },
+      { icon: "ClipboardCheck", name: { en: "Assessment Services", ar: "خدمات التقييم" } },
     ],
   },
   {
@@ -124,16 +129,16 @@ export const PORTALS: Portal[] = [
       { en: "Contact", ar: "تواصل معنا" },
     ],
     services: [
-      { en: "Innovation Strategy", ar: "استراتيجية الابتكار" },
-      { en: "Prototype Validation", ar: "التحقق من النماذج الأولية" },
-      { en: "Design Sprints", ar: "سباقات التصميم" },
-      { en: "Research Support", ar: "دعم البحث" },
-      { en: "Product Discovery", ar: "اكتشاف المنتج" },
-      { en: "Market Readiness", ar: "جاهزية السوق" },
-      { en: "Digital Transformation", ar: "التحول الرقمي" },
-      { en: "AI Use Cases", ar: "حالات استخدام الذكاء الاصطناعي" },
-      { en: "Funding Preparation", ar: "التحضير للتمويل" },
-      { en: "Implementation Coaching", ar: "تدريب التنفيذ" },
+      { icon: "Lightbulb", name: { en: "Innovation Strategy", ar: "استراتيجية الابتكار" } },
+      { icon: "Beaker", name: { en: "Prototype Validation", ar: "التحقق من النماذج الأولية" } },
+      { icon: "Timer", name: { en: "Design Sprints", ar: "سباقات التصميم" } },
+      { icon: "Search", name: { en: "Research Support", ar: "دعم البحث" } },
+      { icon: "Compass", name: { en: "Product Discovery", ar: "اكتشاف المنتج" } },
+      { icon: "TrendingUp", name: { en: "Market Readiness", ar: "جاهزية السوق" } },
+      { icon: "RefreshCw", name: { en: "Digital Transformation", ar: "التحول الرقمي" } },
+      { icon: "Cpu", name: { en: "AI Use Cases", ar: "حالات استخدام الذكاء الاصطناعي" } },
+      { icon: "Wallet", name: { en: "Funding Preparation", ar: "التحضير للتمويل" } },
+      { icon: "GraduationCap", name: { en: "Implementation Coaching", ar: "تدريب التنفيذ" } },
     ],
   },
   {
@@ -164,16 +169,16 @@ export const PORTALS: Portal[] = [
       { en: "Contact", ar: "تواصل معنا" },
     ],
     services: [
-      { en: "Curriculum Design", ar: "تصميم المناهج" },
-      { en: "Teacher Training", ar: "تدريب المعلمين" },
-      { en: "Learning Assessment", ar: "تقييم التعلم" },
-      { en: "Inclusive Education", ar: "التعليم الشامل" },
-      { en: "Digital Learning", ar: "التعلم الرقمي" },
-      { en: "Student Support", ar: "دعم الطلاب" },
-      { en: "Parent Engagement", ar: "مشاركة أولياء الأمور" },
-      { en: "Institutional Planning", ar: "التخطيط المؤسسي" },
-      { en: "STEM Development", ar: "تطوير STEM" },
-      { en: "Accreditation Readiness", ar: "جاهزية الاعتماد" },
+      { icon: "BookOpen", name: { en: "Curriculum Design", ar: "تصميم المناهج" } },
+      { icon: "Presentation", name: { en: "Teacher Training", ar: "تدريب المعلمين" } },
+      { icon: "ClipboardList", name: { en: "Learning Assessment", ar: "تقييم التعلم" } },
+      { icon: "Accessibility", name: { en: "Inclusive Education", ar: "التعليم الشامل" } },
+      { icon: "Monitor", name: { en: "Digital Learning", ar: "التعلم الرقمي" } },
+      { icon: "UserCheck", name: { en: "Student Support", ar: "دعم الطلاب" } },
+      { icon: "HeartHandshake", name: { en: "Parent Engagement", ar: "مشاركة أولياء الأمور" } },
+      { icon: "Building", name: { en: "Institutional Planning", ar: "التخطيط المؤسسي" } },
+      { icon: "FlaskConical", name: { en: "STEM Development", ar: "تطوير STEM" } },
+      { icon: "Award", name: { en: "Accreditation Readiness", ar: "جاهزية الاعتماد" } },
     ],
   },
   {
@@ -204,16 +209,16 @@ export const PORTALS: Portal[] = [
       { en: "Contact", ar: "تواصل معنا" },
     ],
     services: [
-      { en: "Strategic Planning", ar: "التخطيط الاستراتيجي" },
-      { en: "Policy Development", ar: "تطوير السياسات" },
-      { en: "Operational Excellence", ar: "التميز التشغيلي" },
-      { en: "Leadership Programs", ar: "برامج القيادة" },
-      { en: "Change Management", ar: "إدارة التغيير" },
-      { en: "Governance Models", ar: "نماذج الحوكمة" },
-      { en: "Quality Assurance", ar: "ضمان الجودة" },
-      { en: "KPI Frameworks", ar: "أطر مؤشرات الأداء" },
-      { en: "Capacity Building", ar: "بناء القدرات" },
-      { en: "Impact Measurement", ar: "قياس الأثر" },
+      { icon: "ChartLine", name: { en: "Strategic Planning", ar: "التخطيط الاستراتيجي" } },
+      { icon: "FileText", name: { en: "Policy Development", ar: "تطوير السياسات" } },
+      { icon: "Settings", name: { en: "Operational Excellence", ar: "التميز التشغيلي" } },
+      { icon: "Crown", name: { en: "Leadership Programs", ar: "برامج القيادة" } },
+      { icon: "ArrowLeftRight", name: { en: "Change Management", ar: "إدارة التغيير" } },
+      { icon: "Scale", name: { en: "Governance Models", ar: "نماذج الحوكمة" } },
+      { icon: "ShieldCheck", name: { en: "Quality Assurance", ar: "ضمان الجودة" } },
+      { icon: "Gauge", name: { en: "KPI Frameworks", ar: "أطر مؤشرات الأداء" } },
+      { icon: "Layers", name: { en: "Capacity Building", ar: "بناء القدرات" } },
+      { icon: "Target", name: { en: "Impact Measurement", ar: "قياس الأثر" } },
     ],
   },
 ];

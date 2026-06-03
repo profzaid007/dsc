@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { t } from "@/lib/i18n"
 import { getPortalById, PORTALS } from "@/lib/portals"
 import { Button } from "@/components/ui/button"
+import { icons } from "lucide-react"
 
 interface PortalPageProps {
   params: Promise<{ id: string }>
@@ -45,21 +46,25 @@ export default async function PortalPage({ params }: PortalPageProps) {
       <section className="mx-auto max-w-7xl px-6 py-16">
         <h3 className="mb-8 text-center text-2xl font-bold">Our Services</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {portal.services.map((service, i) => (
-            <div
-              key={i}
-              className="rounded-lg border p-4 transition-shadow hover:shadow-md"
-              style={{ borderColor: `${portal.accent}30` }}
-            >
-              <div className="flex items-start gap-3">
+        {portal.services.map((service, i) => {
+          const iconKey = service.icon.charAt(0).toUpperCase() + service.icon.slice(1)
+          const Icon = icons[iconKey as keyof typeof icons]
+          return (
+            <div className="rounded-lg border p-4 transition-shadow hover:shadow-md" style={{ borderColor: `${portal.accent}30` }}>
+              <div className="flex flex-col items-center gap-4">
                 <div
-                  className="mt-1 h-2 w-2 rounded-full"
-                  style={{ backgroundColor: portal.accent }}
-                />
-                <span className="font-medium">{service.en}</span>
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `${portal.accent}12` }}
+                >
+                  {Icon && <Icon className="h-8 w-8" style={{ color: portal.accent }} />}
+                </div>
+                <span className="text-center text-sm font-medium leading-snug">
+                  {service.name.en}
+                </span>
               </div>
             </div>
-          ))}
+          )
+        })}
         </div>
       </section>
     </div>
