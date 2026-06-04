@@ -29,11 +29,14 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const isHome = pathname === "/"
-  const isPortal = pathname.startsWith("/portal/")
+  // const isPortal = pathname.startsWith("/portal/")
+  const isPortal = false 
   const isAppRoute = pathname.startsWith("/dashboard") || pathname === "/login"
 
-  const portalId = isPortal ? pathname.split("/portal/")[1] : null
+  // const portalId = isPortal ? pathname.split("/portal/")[1] : null
+  const portalId = null
   const portal = portalId ? getPortalById(portalId) : null
+
 
   const logoBg =
     portal?.accent ?? (isHome ? "#d4af37" : "#d4af37")

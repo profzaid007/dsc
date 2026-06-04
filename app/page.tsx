@@ -30,11 +30,11 @@ function PortalCard({ portal }: { portal: (typeof PORTALS)[number] }) {
               DSC
             </div>
           ) : (
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg"
-              style={{ backgroundColor: colors.accent }}
-            >
-              {portal.id}
+            <div className="mb-5">
+              <div className="rounded-lg py-4 px-4 text-center text-sm font-bold text-white"
+                 style={{ backgroundColor: `${colors.accent}12`, color: colors.accent, border: `1px solid ${colors.accent}30` }}>
+                {portal.title}
+              </div>
             </div>
           )}
         </div>
