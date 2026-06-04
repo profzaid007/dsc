@@ -9,6 +9,7 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
 import { getPortalById } from "@/lib/portals"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 const DEFAULT_SIDEBAR_ITEMS = [
@@ -29,20 +30,14 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const isHome = pathname === "/"
-  // const isPortal = pathname.startsWith("/portal/")
-  const isPortal = false 
+  const isPortal = pathname.startsWith("/portal/")
   const isAppRoute = pathname.startsWith("/dashboard") || pathname === "/login"
 
-  // const portalId = isPortal ? pathname.split("/portal/")[1] : null
-  const portalId = null
+  const portalId = isPortal ? pathname.split("/portal/")[1] : null
   const portal = portalId ? getPortalById(portalId) : null
 
-
-  const logoBg =
-    portal?.accent ?? (isHome ? "#d4af37" : "#d4af37")
-  const logoGradient = portal?.accent
-    ? `linear-gradient(135deg, ${portal.accent}, ${portal.secondary})`
-    : "radial-gradient(circle, #d4af37 0%, #aa7c11 100%)"
+  const logoBg = portal?.accent ?? (isHome ? "#d4af37" : "#d4af37")
+  const logoGradient = "radial-gradient(circle, #d4af37 0%, #aa7c11 100%)"
 
   const headerText = portal ? t(portal.portalName, lang) : "DSC"
   const subheading = portal
@@ -78,14 +73,14 @@ export function Navbar() {
             )}
 
             <Link href="/" className="flex items-center gap-4">
-              <div
-                className="flex h-[60px] w-[60px] items-center justify-center rounded-full text-white font-bold text-lg"
-                style={{
-                  background: logoGradient,
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                }}
-              >
-                {portal ? portal.id : "DSC"}
+              <div className="flex h-[60px] w-[60px] items-center justify-center">
+                <Image
+                  src="/logo.svg"
+                  alt="DSC Logo"
+                  width={60}
+                  height={60}
+                  className="object-contain"
+                />
               </div>
               <div className="hidden sm:block">
                 <h1
