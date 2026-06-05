@@ -22,21 +22,12 @@ function PortalCard({ portal }: { portal: (typeof PORTALS)[number] }) {
     <Card className="group relative w-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="flex flex-col items-center p-3">
         <div className="mb-3 flex h-16 w-16 items-center justify-center">
-          {portal.id === "1" ? (
-            <div
-              className="flex h-[60px] w-[60px] items-center justify-center rounded-full text-white font-bold text-xs border-2"
-              style={{ backgroundColor: "#0a1128", borderColor: colors.accent }}
-            >
-              DSC
+          <div className="mb-5">
+            <div className="rounded-lg py-4 px-4 text-center text-sm font-bold text-white"
+               style={{ backgroundColor: `${colors.accent}12`, color: colors.accent, border: `1px solid ${colors.accent}30` }}>
+              {portal.title}
             </div>
-          ) : (
-            <div className="mb-5">
-              <div className="rounded-lg py-4 px-4 text-center text-sm font-bold text-white"
-                 style={{ backgroundColor: `${colors.accent}12`, color: colors.accent, border: `1px solid ${colors.accent}30` }}>
-                {portal.title}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
         <div className="relative mb-3 h-52 w-full overflow-hidden rounded-lg">
           <Image

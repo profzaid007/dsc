@@ -14,13 +14,13 @@ import { cn } from "@/lib/utils"
 
 const DEFAULT_SIDEBAR_ITEMS = [
   { en: "Home", ar: "الرئيسية", href: "/" },
-  { en: "About", ar: "من نحن", href: "/" },
-  { en: "Care Programs", ar: "برامج الرعاية", href: "/" },
-  { en: "Self-Help Library", ar: "مكتبة المساعدة الذاتية", href: "/" },
-  { en: "Professionals", ar: "المتخصصون", href: "/" },
-  { en: "Community", ar: "المجتمع", href: "/" },
+  { en: "About Us", ar: "من نحن", href: "/" },
+  { en: "Services", ar: "خدماتنا", href: "/" },
+  { en: "Resources", ar: "الموارد", href: "/" },
   { en: "Blog", ar: "المدونة", href: "/" },
-  { en: "Contact", ar: "تواصل معنا", href: "/#contact" },
+  { en: "For Individuals", ar: "للأفراد", href: "/" },
+  { en: "For Organizations", ar: "للمنظمات", href: "/" },
+  { en: "Contact Us", ar: "اتصل بنا", href: "/#contact" }
 ]
 
 export function Navbar() {
@@ -143,12 +143,12 @@ export function Navbar() {
           className="hidden border-b md:block"
           style={{ backgroundColor: `${accentColor}08`, borderColor: `${accentColor}15` }}
         >
-          <div className="mx-auto flex max-w-[1400px] gap-1 px-4 sm:px-6 lg:px-10">
+          <div className="mx-auto flex max-w-[1400px] gap-4 justify-between px-4 sm:px-6 lg:px-10">
             {DEFAULT_SIDEBAR_ITEMS.map((item, i) => (
               <Link
                 key={i}
                 href={item.href}
-                className="px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                className="px-4 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-100"
                 style={{ borderBottom: "2px solid transparent" }}
                 onMouseEnter={(e) => (e.currentTarget.style.borderBottomColor = accentColor)}
                 onMouseLeave={(e) => (e.currentTarget.style.borderBottomColor = "transparent")}
