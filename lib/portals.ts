@@ -16,6 +16,7 @@ export interface Portal {
   ctaHref: string;
   accent: string;
   image: string; 
+  banner: string; 
   secondary: string;
   menu: BilingualString[];
   services: PortalService[];
@@ -27,6 +28,7 @@ export const PORTALS: Portal[] = [
     title: "Special Needs",
     portalName: { en: "Special Needs Portal", ar: "بوابة الاحتياجات الخاصة" },
     image: "/portals/portal-1.jpg",
+    banner: "/banners/banner-1.png",
     tagline: { en: "Supporting Abilities, Empowering Potential", ar: "دعم القدرات، تمكين الإمكانات" },
     heroTitle: {
       en: "We discover abilities, provide support, and build potential gaps",
@@ -69,6 +71,7 @@ export const PORTALS: Portal[] = [
     portalName: { en: "Mental Health Portal", ar: "بوابة الصحة النفسية" },
     tagline: { en: "Better Balance, Better Living", ar: "توازن أفضل، حياة أفضل" },
     image: "/portals/portal-2.jpg",
+    banner: "/banners/banner-2.png",
     heroTitle: {
       en: "Confidential care and practical tools for emotional wellbeing",
       ar: "رعاية سرية وأدوات عملية للصحة النفسية",
@@ -110,6 +113,7 @@ export const PORTALS: Portal[] = [
     portalName: { en: "Innovation Portal", ar: "بوابة الابتكار" },
     tagline: { en: "From Ideas to Impact", ar: "من الأفكار إلى الأثر" },
     image: "/portals/portal-3.jpg",
+    banner: "/banners/banner-3.png",
     heroTitle: {
       en: "Turn bold concepts into tested, scalable solutions",
       ar: "حول المفاهيم الجريئة إلى حلول مختبرة وقابلة للتوسع",
@@ -150,6 +154,7 @@ export const PORTALS: Portal[] = [
     title: "Education",
     portalName: { en: "Education Portal", ar: "بوابة التعليم" },
     image: "/portals/portal-4.jpg",
+    banner: "/banners/banner-4.png",
     tagline: { en: "Learning That Moves Forward", ar: "تعلم يتقدم للأمام" },
     heroTitle: {
       en: "Build modern learning journeys for students and educators",
@@ -191,6 +196,7 @@ export const PORTALS: Portal[] = [
     title: "Institution",
     portalName: { en: "Institutional Portal", ar: "بوابة المؤسسات" },
     image: "/portals/portal-5.jpg",
+    banner: "/banners/banner-5.png",
     tagline: { en: "Performance Through Strategy", ar: "الأداء من خلال الاستراتيجية" },
     heroTitle: {
       en: "Enable institutions to perform with clarity, systems, and evidence",

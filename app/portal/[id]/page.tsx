@@ -3,6 +3,7 @@ import { t } from "@/lib/i18n"
 import { getPortalById, PORTALS } from "@/lib/portals"
 import { Button } from "@/components/ui/button"
 import { icons } from "lucide-react"
+import Image from "next/image"
 
 interface PortalPageProps {
   params: Promise<{ id: string }>
@@ -18,28 +19,36 @@ export default async function PortalPage({ params }: PortalPageProps) {
 
   return (
     <div className="min-h-screen">
-      <section
-        className="py-20 text-center"
-        style={{
-          background: `linear-gradient(135deg, ${portal.accent}15, ${portal.secondary}10)`,
-        }}
-      >
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground">
-            {t(portal.heroTitle, "en")}
-          </h2>
-          <p className="mb-8 text-lg text-muted-foreground">
-            {t(portal.heroText, "en")}
-          </p>
-          <a href={portal.ctaHref}>
-            <Button
-              size="lg"
-              className="px-8 py-6 text-base font-semibold shadow-lg"
-              style={{ backgroundColor: portal.accent, color: "#fff" }}
-            >
-              {t(portal.ctaLabel, "en")}
-            </Button>
-          </a>
+      <section className="grid w-full min-h-[600px] grid-cols-2">
+        {/* Left — accent color + content */}
+        <div className="flex items-center px-12"
+             style={{ backgroundColor: portal.accent }}>
+          <div className="max-w-lg">
+            <h2 className="mb-4 text-5xl font-bold tracking-tight text-white">
+              {t(portal.heroTitle, "en")}
+            </h2>
+            <p className="mb-8 text-xl text-white/80">
+              {t(portal.heroText, "en")}
+            </p>
+            <a href={portal.ctaHref}>
+              <Button size="lg" className="px-8 py-6 text-base font-semibold shadow-lg"
+                      style={{ backgroundColor: "white", color: portal.accent }}>
+                {t(portal.ctaLabel, "en")}
+              </Button>
+            </a>
+          </div>
+        </div>
+        {/* Right — image with gradient blend */}
+        <div className="relative overflow-hidden">
+          <Image
+            src={portal.banner}
+            alt={portal.portalName.en}
+            fill
+            className="object-cover"
+            sizes="50vw"
+          />
+          <div className="absolute inset-0"
+               style={{ background: `linear-gradient(90deg, ${portal.accent}FF 0%, transparent 50%)` }} />
         </div>
       </section>
 
