@@ -10,21 +10,21 @@ import Image from "next/image"
 const PORTAL_COLORS: Record<string, { accent: string; bg: string }> = {
   "1": { accent: "#008f53", bg: "bg-[#e2f3ec]" },
   "2": { accent: "#631a7b", bg: "bg-[#f3eafa]" },
-  "4": { accent: "#df9b00", bg: "bg-[#fef4e2]" },
-  "5": { accent: "#0f3090", bg: "bg-[#e6ecfa]" },
-  "6": { accent: "#121e31", bg: "bg-[#e2e7ec]" },
+  "3": { accent: "#df9b00", bg: "bg-[#fef4e2]" },
+  "4": { accent: "#0f3090", bg: "bg-[#e6ecfa]" },
+  "5": { accent: "#121e31", bg: "bg-[#e2e7ec]" },
 }
 
 function PortalCard({ portal }: { portal: (typeof PORTALS)[number] }) {
   const { lang } = useLang()
   const colors = PORTAL_COLORS[portal.id] ?? { accent: "#0a3d62", bg: "bg-muted" }
   return (
-    <Card className="group relative w-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <Card className={`group relative w-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${colors.bg}`}>
       <div className="flex flex-col items-center p-3">
         <div className="mb-3 flex h-16 w-16 items-center justify-center">
           <div className="mb-5">
             <div className="rounded-lg py-4 px-4 text-center text-sm font-bold text-white"
-               style={{ backgroundColor: `${colors.accent}12`, color: colors.accent, border: `1px solid ${colors.accent}30` }}>
+               style={{color: colors.accent}}>
               {portal.title}
             </div>
           </div>
