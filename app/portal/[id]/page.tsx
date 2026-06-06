@@ -54,7 +54,7 @@ export default async function PortalPage({ params }: PortalPageProps) {
 
       <section className="mx-auto max-w-7xl px-6 py-16">
         <h3 className="mb-8 text-center text-2xl font-bold">Our Services</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
         {portal.services.map((service, i) => {
           const iconKey = service.icon.charAt(0).toUpperCase() + service.icon.slice(1)
           const Icon = icons[iconKey as keyof typeof icons]
@@ -63,7 +63,6 @@ export default async function PortalPage({ params }: PortalPageProps) {
               <div className="flex flex-col items-center gap-4">
                 <div
                   className="flex h-16 w-16 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `${portal.accent}12` }}
                 >
                   {Icon && <Icon className="h-8 w-8" style={{ color: portal.accent }} />}
                 </div>
