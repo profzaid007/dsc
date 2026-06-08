@@ -4,6 +4,7 @@ import { getPortalById, PORTALS } from "@/lib/portals"
 import { Button } from "@/components/ui/button"
 import { icons } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link" 
 
 interface PortalPageProps {
   params: Promise<{ id: string }>
@@ -59,7 +60,7 @@ export default async function PortalPage({ params }: PortalPageProps) {
           const iconKey = service.icon.charAt(0).toUpperCase() + service.icon.slice(1)
           const Icon = icons[iconKey as keyof typeof icons]
           return (
-            <div className="rounded-lg border p-4 transition-shadow hover:shadow-md" style={{ borderColor: `${portal.accent}30` }}>
+            <Link href={`/info/${service.id}`} className="block rounded-lg border p-4 transition-shadow hover:shadow-md" style={{ borderColor: `${portal.accent}30` }}>
               <div className="flex flex-col items-center gap-4">
                 <div
                   className="flex h-16 w-16 items-center justify-center rounded-2xl"
@@ -70,7 +71,7 @@ export default async function PortalPage({ params }: PortalPageProps) {
                   {service.name.en}
                 </span>
               </div>
-            </div>
+            </Link>
           )
         })}
         </div>
