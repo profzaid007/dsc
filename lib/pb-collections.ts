@@ -139,6 +139,16 @@ export const caseToolsCollection = {
   ): Promise<CaseTool> {
     const formData = new FormData()
 
+    // Preserve existing media files when adding new ones (PocketBase replaces all if not included)
+    if (files.length > 0 && (!filesToRemove || filesToRemove.length === 0)) {
+      const existing = await pb.collection("case_tools").getOne(id)
+      if (existing.media && Array.isArray(existing.media)) {
+        existing.media.forEach((filename: string) => {
+          formData.append("media", filename)
+        })
+      }
+    }
+
     // Add files to upload
     files.forEach((file) => {
       formData.append("media", file)
@@ -292,6 +302,16 @@ export const infoPagesCollection = {
     filesToRemove?: string[]
   ): Promise<InfoPage> {
     const formData = new FormData()
+
+    // Preserve existing media files when adding new ones (PocketBase replaces all if not included)
+    if (files.length > 0 && (!filesToRemove || filesToRemove.length === 0)) {
+      const existing = await pb.collection("info_pages").getOne(id)
+      if (existing.media && Array.isArray(existing.media)) {
+        existing.media.forEach((filename: string) => {
+          formData.append("media", filename)
+        })
+      }
+    }
 
     if (data.title !== undefined) formData.append("title", data.title)
     if (data.content !== undefined) formData.append("content", data.content)

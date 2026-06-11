@@ -58,6 +58,7 @@ export default function CmsServiceEditorPage() {
       try {
         const updated = await infoPagesCollection.update(page.id, {
           content: html,
+          media: page.media ?? [],
         })
         setPage(updated)
       } finally {
@@ -84,7 +85,9 @@ export default function CmsServiceEditorPage() {
     async (file: File): Promise<string> => {
       if (!page) throw new Error("No page loaded")
       const updated = await infoPagesCollection.updateWithFiles(page.id, {}, [file])
-      const filename = (updated.media as string[])[0]
+      const newMedia = updated.media as string[]
+      const filename = newMedia[newMedia.length - 1]
+      setPage((prev) => prev ? { ...prev, media: newMedia } : null)
       return pb.files.getUrl(updated, filename)
     },
     [page]

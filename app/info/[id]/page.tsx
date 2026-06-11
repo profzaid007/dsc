@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import pb from "@/lib/pb"
 import { getPortalById } from "@/lib/portals"
 import type { InfoPage } from "@/types/cms"
+import "suneditor/src/assets/css/suneditor-contents.css"
 
 interface InfoPageProps {
   params: Promise<{ id: string }>
