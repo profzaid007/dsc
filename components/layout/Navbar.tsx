@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, LogIn, Menu, X } from "lucide-react"
+import { LayoutDashboard, LogIn, Menu, X, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
@@ -24,7 +24,7 @@ const DEFAULT_SIDEBAR_ITEMS = [
 export function Navbar() {
   const pathname = usePathname()
   const { lang, toggleLang } = useLang()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const isHome = pathname === "/"
@@ -128,6 +128,20 @@ export function Navbar() {
                 <Link href="/dashboard">
                   <LayoutDashboard className="h-4 w-4" />
                   {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
+                </Link>
+              </Button>
+            )}
+
+            {isAdmin && (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="hidden gap-2 sm:inline-flex"
+              >
+                <Link href="/cms">
+                  <FileText className="h-4 w-4" />
+                  {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
                 </Link>
               </Button>
             )}

@@ -3,6 +3,7 @@ import type { User } from "@/types/user"
 import type { Profile } from "@/types/profile"
 import type { Tool, BilingualString } from "@/types/tool"
 import type { CaseTool } from "@/types/assignment"
+import type { InfoPage } from "@/types/cms"
 import { handlePocketBaseError } from "./pb"
 
 // Transform flat DB fields to nested TypeScript objects
@@ -243,6 +244,73 @@ export const toolTypesCollection = {
   // Clear cache (useful if tool types are modified)
   clearCache() {
     toolTypesCache.clear()
+  },
+}
+
+export const infoPagesCollection = {
+  async getBySlug(slug: string): Promise<InfoPage | null> {
+    try {
+      const data = await pb.collection("info_pages").getFirstListItem(`slug = "${slug}"`)
+      return data as unknown as InfoPage
+    } catch {
+      return null
+    }
+  },
+
+  async getPublishedBySlug(slug: string): Promise<InfoPage | null> {
+    try {
+      const data = await pb
+        .collection("info_pages")
+        .getFirstListItem(`slug = "${slug}" && is_published = true`)
+      return data as unknown as InfoPage
+    } catch {
+      return null
+    }
+  },
+
+  async create(data: { slug: string; title: string; content?: string }): Promise<InfoPage> {
+    const lorem =
+      "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>"
+    const result = await pb.collection("info_pages").create({
+      slug: data.slug,
+      title: data.title,
+      content: data.content || lorem,
+      is_published: false,
+    })
+    return result as unknown as InfoPage
+  },
+
+  async update(id: string, data: Partial<InfoPage>): Promise<InfoPage> {
+    const result = await pb.collection("info_pages").update(id, data)
+    return result as unknown as InfoPage
+  },
+
+  async updateWithFiles(
+    id: string,
+    data: Partial<InfoPage>,
+    files: File[],
+    filesToRemove?: string[]
+  ): Promise<InfoPage> {
+    const formData = new FormData()
+
+    if (data.title !== undefined) formData.append("title", data.title)
+    if (data.content !== undefined) formData.append("content", data.content)
+    if (data.is_published !== undefined) formData.append("is_published", String(data.is_published))
+
+    files.forEach((file) => {
+      formData.append("media", file)
+    })
+
+    if (filesToRemove && filesToRemove.length > 0) {
+      formData.append("media-", filesToRemove.join(","))
+    }
+
+    const result = await pb.collection("info_pages").update(id, formData)
+    return result as unknown as InfoPage
+  },
+
+  async delete(id: string): Promise<void> {
+    await pb.collection("info_pages").delete(id)
   },
 }
 
