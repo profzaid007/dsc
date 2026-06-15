@@ -3,7 +3,7 @@ import type { User } from "@/types/user"
 import type { Profile } from "@/types/profile"
 import type { Tool, BilingualString } from "@/types/tool"
 import type { CaseTool } from "@/types/assignment"
-import type { InfoPage } from "@/types/cms"
+import type { BlogPage, InfoPage } from "@/types/cms"
 import { handlePocketBaseError } from "./pb"
 
 // Transform flat DB fields to nested TypeScript objects
@@ -331,6 +331,204 @@ export const infoPagesCollection = {
 
   async delete(id: string): Promise<void> {
     await pb.collection("info_pages").delete(id)
+  },
+}
+
+function extractAuthorFromRecord(record: any): { author_id: string; author_name: string } {
+  const authorId = record.author_id as string
+  let authorName = ""
+  if (record.expand && record.expand.author_id) {
+    const author = record.expand.author_id as any
+    authorName = author.name || author.email || author.username || ""
+  }
+  return { author_id: authorId || "", author_name: authorName }
+}
+
+export const blogPagesCollection = {
+  async getAll(): Promise<BlogPage[]> {
+    const data = await pb.collection("blog_pages").getFullList({
+      sort: "-created",
+      expand: "author_id",
+    })
+    return data.map((item) => {
+      const { author_id, author_name } = extractAuthorFromRecord(item)
+      return {
+        id: item.id as string,
+        slug: item.slug as string,
+        title: item.title as string,
+        category: item.category as string,
+        content: item.content as string,
+        is_published: item.is_published as boolean,
+        media: (item.media as string[]) || [],
+        author_id,
+        author_name,
+        created: item.created as string,
+        updated: item.updated as string,
+      }
+    })
+  },
+
+  async getBySlug(slug: string): Promise<BlogPage | null> {
+    try {
+      const data = await pb
+        .collection("blog_pages")
+        .getFirstListItem(`slug = "${slug}"`, { expand: "author_id" })
+      const { author_id, author_name } = extractAuthorFromRecord(data)
+      return {
+        id: data.id as string,
+        slug: data.slug as string,
+        title: data.title as string,
+        category: data.category as string,
+        content: data.content as string,
+        is_published: data.is_published as boolean,
+        media: (data.media as string[]) || [],
+        author_id,
+        author_name,
+        created: data.created as string,
+        updated: data.updated as string,
+      }
+    } catch {
+      return null
+    }
+  },
+
+  async getPublishedBySlug(slug: string): Promise<BlogPage | null> {
+    try {
+      const data = await pb
+        .collection("blog_pages")
+        .getFirstListItem(`slug = "${slug}" && is_published = true`, { expand: "author_id" })
+      const { author_id, author_name } = extractAuthorFromRecord(data)
+      return {
+        id: data.id as string,
+        slug: data.slug as string,
+        title: data.title as string,
+        category: data.category as string,
+        content: data.content as string,
+        is_published: data.is_published as boolean,
+        media: (data.media as string[]) || [],
+        author_id,
+        author_name,
+        created: data.created as string,
+        updated: data.updated as string,
+      }
+    } catch {
+      return null
+    }
+  },
+
+  async create(data: {
+    slug: string
+    title: string
+    category?: string
+    content?: string
+    author_id?: string
+  }): Promise<BlogPage> {
+    const lorem =
+      "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>"
+    const currentUser = pb.authStore.model
+    const result = await pb.collection("blog_pages").create({
+      slug: data.slug,
+      title: data.title,
+      category: data.category || "",
+      content: data.content || lorem,
+      is_published: false,
+      author_id: data.author_id || currentUser?.id || "",
+    })
+    const { author_id, author_name } = extractAuthorFromRecord(result)
+    return {
+      id: result.id as string,
+      slug: result.slug as string,
+      title: result.title as string,
+      category: result.category as string,
+      content: result.content as string,
+      is_published: result.is_published as boolean,
+      media: (result.media as string[]) || [],
+      author_id,
+      author_name,
+      created: result.created as string,
+      updated: result.updated as string,
+    }
+  },
+
+  async update(id: string, data: Partial<BlogPage>): Promise<BlogPage> {
+    const result = await pb.collection("blog_pages").update(id, data)
+    const { author_id, author_name } = extractAuthorFromRecord(result)
+    return {
+      id: result.id as string,
+      slug: result.slug as string,
+      title: result.title as string,
+      category: result.category as string,
+      content: result.content as string,
+      is_published: result.is_published as boolean,
+      media: (result.media as string[]) || [],
+      author_id,
+      author_name,
+      created: result.created as string,
+      updated: result.updated as string,
+    }
+  },
+
+  async updateWithFiles(
+    id: string,
+    data: Partial<BlogPage>,
+    files: File[],
+    filesToRemove?: string[]
+  ): Promise<BlogPage> {
+    const formData = new FormData()
+
+    // Preserve existing media files when adding new ones
+    if (files.length > 0 && (!filesToRemove || filesToRemove.length === 0)) {
+      const existing = await pb.collection("blog_pages").getOne(id)
+      if (existing.media && Array.isArray(existing.media)) {
+        existing.media.forEach((filename: string) => {
+          formData.append("media", filename)
+        })
+      }
+    }
+
+    if (data.title !== undefined) formData.append("title", data.title)
+    if (data.slug !== undefined) formData.append("slug", data.slug)
+    if (data.category !== undefined) formData.append("category", data.category)
+    if (data.content !== undefined) formData.append("content", data.content)
+    if (data.is_published !== undefined)
+      formData.append("is_published", String(data.is_published))
+    if (data.author_id !== undefined) formData.append("author_id", data.author_id)
+
+    files.forEach((file) => {
+      formData.append("media", file)
+    })
+
+    if (filesToRemove && filesToRemove.length > 0) {
+      formData.append("media-", filesToRemove.join(","))
+    }
+
+    const result = await pb.collection("blog_pages").update(id, formData)
+    return result as unknown as BlogPage
+  },
+
+  async delete(id: string): Promise<void> {
+    await pb.collection("blog_pages").delete(id)
+  },
+}
+
+export const blogCategoriesCollection = {
+  async getAll(): Promise<{ id: string; name: string }[]> {
+    const data = await pb.collection("blog_categories").getFullList({
+      sort: "name",
+    })
+    return data.map((item) => ({
+      id: item.id as string,
+      name: item.name as string,
+    }))
+  },
+
+  async create(name: string): Promise<{ id: string; name: string }> {
+    const result = await pb.collection("blog_categories").create({ name })
+    return { id: result.id as string, name: result.name as string }
+  },
+
+  async delete(id: string): Promise<void> {
+    await pb.collection("blog_categories").delete(id)
   },
 }
 

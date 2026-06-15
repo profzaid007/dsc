@@ -22,7 +22,6 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: "Blog",
     href: "/cms/blog",
     icon: <Newspaper className="h-4 w-4" />,
-    disabled: true,
   },
 ]
 
