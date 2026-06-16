@@ -5,6 +5,7 @@ import pb, {
   getCurrentUser,
   isAuthenticated as checkAuth,
   isAdmin as checkIsAdmin,
+  isSuperAdmin as checkIsSuperAdmin,
   authWithPassword,
   logout as pbLogout,
 } from "@/lib/pb"
@@ -14,6 +15,7 @@ export function useAuth() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   const refreshAuth = useCallback(() => {
@@ -21,6 +23,7 @@ export function useAuth() {
     setCurrentUser(user)
     setIsAuthenticated(checkAuth())
     setIsAdmin(checkIsAdmin())
+    setIsSuperAdmin(checkIsSuperAdmin())
     setIsLoading(false)
   }, [])
 
@@ -51,12 +54,14 @@ export function useAuth() {
     setCurrentUser(null)
     setIsAuthenticated(false)
     setIsAdmin(false)
+    setIsSuperAdmin(false)
   }
 
   return {
     currentUser,
     isAuthenticated,
     isAdmin,
+    isSuperAdmin,
     isLoading,
     login,
     logout,

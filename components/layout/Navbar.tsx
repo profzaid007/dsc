@@ -14,11 +14,11 @@ import { cn } from "@/lib/utils"
 
 const DEFAULT_SIDEBAR_ITEMS = [
   { en: "Home", ar: "الرئيسية", href: "/" },
-  { en: "About Us", ar: "من نحن", href: "/" },
+  { en: "About Us", ar: "من نحن", href: "/about-us" },
   { en: "Services", ar: "خدماتنا", href: "/" },
   { en: "Resources", ar: "الموارد", href: "/" },
   { en: "Blog", ar: "المدونة", href: "/blog" },
-  { en: "Contact Us", ar: "اتصل بنا", href: "/#contact" }
+  { en: "Contact Us", ar: "اتصل بنا", href: "/contact-us" }
 ]
 
 export function Navbar() {

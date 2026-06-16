@@ -24,6 +24,11 @@ export function isAdmin(): boolean {
   return user?.role === "admin" || user?.role === "super_admin"
 }
 
+export function isSuperAdmin(): boolean {
+  const user = getCurrentUser()
+  return user?.role === "super_admin"
+}
+
 export async function authWithPassword(email: string, password: string) {
   const authData = await pb
     .collection("users")

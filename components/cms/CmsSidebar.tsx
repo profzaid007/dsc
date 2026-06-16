@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { FileText, Newspaper } from "lucide-react"
+import { FileText, Home, Newspaper } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarItem {
@@ -13,6 +13,11 @@ interface SidebarItem {
 }
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
+  {
+    label: "Home Pages",
+    href: "/cms/home-pages",
+    icon: <Home className="h-4 w-4" />,
+  },
   {
     label: "Info Pages",
     href: "/cms/info",

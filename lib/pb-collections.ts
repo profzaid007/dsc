@@ -3,7 +3,7 @@ import type { User } from "@/types/user"
 import type { Profile } from "@/types/profile"
 import type { Tool, BilingualString } from "@/types/tool"
 import type { CaseTool } from "@/types/assignment"
-import type { BlogPage, InfoPage } from "@/types/cms"
+import type { BlogPage, InfoPage, HomePage } from "@/types/cms"
 import { handlePocketBaseError } from "./pb"
 
 // Transform flat DB fields to nested TypeScript objects
@@ -331,6 +331,81 @@ export const infoPagesCollection = {
 
   async delete(id: string): Promise<void> {
     await pb.collection("info_pages").delete(id)
+  },
+}
+
+export const homePagesCollection = {
+  async getBySlug(slug: string): Promise<HomePage | null> {
+    try {
+      const data = await pb.collection("home_pages").getFirstListItem(`slug = "${slug}"`)
+      return data as unknown as HomePage
+    } catch {
+      return null
+    }
+  },
+
+  async getPublishedBySlug(slug: string): Promise<HomePage | null> {
+    try {
+      const data = await pb
+        .collection("home_pages")
+        .getFirstListItem(`slug = "${slug}" && is_published = true`)
+      return data as unknown as HomePage
+    } catch {
+      return null
+    }
+  },
+
+  async create(data: { slug: string; title: string; content?: string }): Promise<HomePage> {
+    const lorem = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>"
+    const result = await pb.collection("home_pages").create({
+      slug: data.slug,
+      title: data.title,
+      content: data.content || lorem,
+      is_published: false,
+    })
+    return result as unknown as HomePage
+  },
+
+  async update(id: string, data: Partial<HomePage>): Promise<HomePage> {
+    const result = await pb.collection("home_pages").update(id, data)
+    return result as unknown as HomePage
+  },
+
+  async updateWithFiles(
+    id: string,
+    data: Partial<HomePage>,
+    files: File[],
+    filesToRemove?: string[]
+  ): Promise<HomePage> {
+    const formData = new FormData()
+
+    if (files.length > 0 && (!filesToRemove || filesToRemove.length === 0)) {
+      const existing = await pb.collection("home_pages").getOne(id)
+      if (existing.media && Array.isArray(existing.media)) {
+        existing.media.forEach((filename: string) => {
+          formData.append("media", filename)
+        })
+      }
+    }
+
+    if (data.title !== undefined) formData.append("title", data.title)
+    if (data.content !== undefined) formData.append("content", data.content)
+    if (data.is_published !== undefined) formData.append("is_published", String(data.is_published))
+
+    files.forEach((file) => {
+      formData.append("media", file)
+    })
+
+    if (filesToRemove && filesToRemove.length > 0) {
+      formData.append("media-", filesToRemove.join(","))
+    }
+
+    const result = await pb.collection("home_pages").update(id, formData)
+    return result as unknown as HomePage
+  },
+
+  async delete(id: string): Promise<void> {
+    await pb.collection("home_pages").delete(id)
   },
 }
 
