@@ -56,10 +56,11 @@ export default function CmsServiceEditorPage() {
       if (!page) return
       setSaving(true)
       try {
-        const updated = await infoPagesCollection.update(page.id, {
-          content: html,
-          media: page.media ?? [],
-        })
+        const updateData: Record<string, unknown> = { content: html }
+        if (Array.isArray(page.media)) {
+          updateData.media = page.media
+        }
+        const updated = await infoPagesCollection.update(page.id, updateData as Partial<InfoPage>)
         setPage(updated)
       } finally {
         setSaving(false)
