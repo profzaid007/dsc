@@ -27,6 +27,7 @@ export default function CmsHomePageEditorPage() {
   const [deleting, setDeleting] = useState(false)
   const [title, setTitle] = useState("")
   const [slugValue, setSlugValue] = useState("")
+  const [resetKey, setResetKey] = useState(0)
 
   useEffect(() => {
     async function init() {
@@ -77,6 +78,13 @@ export default function CmsHomePageEditorPage() {
     },
     [page, title, slugValue, isSuperAdmin]
   )
+
+  const handleDiscard = useCallback(() => {
+    if (!page) return
+    setTitle(page.title)
+    setSlugValue(page.slug)
+    setResetKey(k => k + 1)
+  }, [page])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -197,11 +205,13 @@ export default function CmsHomePageEditorPage() {
       </div>
 
       <RichTextEditor
+        key={resetKey}
         title="Content"
         initialContent={page.content}
         onSave={handleSave}
         isSaving={saving}
         onImageUpload={handleImageUpload}
+        onDiscard={handleDiscard}
       />
 
       <div className="flex items-center justify-between">

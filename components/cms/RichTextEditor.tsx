@@ -15,7 +15,6 @@ interface RichTextEditorProps {
   title?: string
   onDiscard?: () => void
   onImageUpload?: (file: File) => Promise<string>
-  resetTrigger?: number
 }
 
 export function RichTextEditor({
@@ -25,7 +24,6 @@ export function RichTextEditor({
   title,
   onImageUpload,
   onDiscard,
-  resetTrigger
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<any>(null)
@@ -149,7 +147,7 @@ export function RichTextEditor({
       setContent(initialContent)
       lastSyncedInitialContent.current = initialContent
     }
-  }, [resetTrigger, initialContent])
+  }, [initialContent])
 
   // Destroy editor BEFORE React removes the DOM.
   // useLayoutEffect cleanup runs synchronously before DOM mutations,

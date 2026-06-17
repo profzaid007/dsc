@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Loader2, Plus, Pencil, Trash2, Settings } from "lucide-react"
+import { Eye, Loader2, Plus, Pencil, Trash2, Settings } from "lucide-react"
 
 export default function CmsBlogListPage() {
   const [posts, setPosts] = useState<BlogPage[]>([])
@@ -133,6 +133,12 @@ export default function CmsBlogListPage() {
                         variant="default"
                         className="bg-green-600 text-white"
                       >
+                        <Link
+                          href={`/blog/${post.slug}`}
+                          className="hover:underline"
+                        >
+                          <Eye className="mr-1 h-3 w-3" />
+                        </Link>
                         Published
                       </Badge>
                     ) : (

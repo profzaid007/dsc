@@ -160,7 +160,6 @@ export default function CmsHomePagesListPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
-                <TableHead>URL</TableHead>
                 <TableHead>Last Updated</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
@@ -170,7 +169,6 @@ export default function CmsHomePagesListPage() {
               {pages.map((page) => (
                 <TableRow key={page.id}>
                   <TableCell className="font-medium">{page.title}</TableCell>
-                  <TableCell className="text-muted-foreground">/{page.slug}</TableCell>
                   <TableCell>{new Date(page.updated).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <button

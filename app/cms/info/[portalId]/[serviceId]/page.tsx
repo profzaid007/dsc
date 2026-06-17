@@ -24,6 +24,7 @@ export default function CmsServiceEditorPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
 
   useEffect(() => {
     if (!service) return
@@ -68,6 +69,10 @@ export default function CmsServiceEditorPage() {
     },
     [page]
   )
+
+  const handleDiscard = useCallback(() => {
+    setResetKey(t => t + 1)
+  }, [])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -154,11 +159,13 @@ export default function CmsServiceEditorPage() {
 
       {page && (
         <RichTextEditor
+          key={resetKey}
           title={`Editing: ${service.name.en}`}
           initialContent={page.content}
           onSave={handleSave}
           isSaving={saving}
           onImageUpload={handleImageUpload}
+          onDiscard={handleDiscard}
         />
       )}
     </div>

@@ -53,7 +53,7 @@ export default function CmsBlogEditorPage() {
     []
   )
 
-  const [resetTrigger, setResetTrigger] = useState(0)
+  const [resetKey, setResetKey] = useState(0)
 
   const isInitialMount = useRef(true)
 
@@ -131,7 +131,7 @@ export default function CmsBlogEditorPage() {
     setContent(page.content)
     setIsPublished(page.is_published)
     setAuthorName(page.author_name)
-    setResetTrigger(t => t + 1)
+    setResetKey(t => t + 1)
   }, [page])
 
   const togglePublish = useCallback(async () => {
@@ -253,21 +253,22 @@ export default function CmsBlogEditorPage() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.name} className="capitalize">
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="category">Category</Label>
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger id="category" className="w-72">
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)] min-w-[160px]">
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.name} className="capitalize">
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
 
       <div className="space-y-2">
         <Label htmlFor="author">Author</Label>
@@ -276,18 +277,19 @@ export default function CmsBlogEditorPage() {
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
           placeholder="Author name"
+          className="max-w-xs w-72"
         />
       </div>
       </Card>
 
       <RichTextEditor
+        key={resetKey} 
         title="Content"
         initialContent={content}
         onSave={handleContentSave}
         isSaving={saving}
         onImageUpload={handleImageUpload}
         onDiscard={handleDiscard}
-        resetTrigger={resetTrigger}
       />
 
     </div>
