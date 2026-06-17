@@ -243,7 +243,7 @@ export default function CmsBlogEditorPage() {
           />
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="slug">Slug</Label>
           <Input
             id="slug"
@@ -251,7 +251,7 @@ export default function CmsBlogEditorPage() {
             readOnly
             placeholder="url-slug"
           />
-        </div>
+        </div> */}
 
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
