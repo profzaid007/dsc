@@ -15,10 +15,8 @@ export default async function BlogPage() {
       .getFullList({
         filter: "is_published = true",
         sort: "-created",
-        expand: "author_id",
       })
     posts = records.map((record) => {
-      const author = (record.expand as any)?.author_id
       return {
         id: record.id as string,
         slug: record.slug as string,
@@ -27,8 +25,7 @@ export default async function BlogPage() {
         content: record.content as string,
         is_published: record.is_published as boolean,
         media: (record.media as string[]) || [],
-        author_id: record.author_id as string,
-        author_name: author?.name || author?.email || author?.username || "",
+        author_name: (record.author_name as string) || "",
         created: record.created as string,
         updated: record.updated as string,
       }

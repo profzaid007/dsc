@@ -409,24 +409,17 @@ export const homePagesCollection = {
   },
 }
 
-function extractAuthorFromRecord(record: any): { author_id: string; author_name: string } {
-  const authorId = record.author_id as string
-  let authorName = ""
-  if (record.expand && record.expand.author_id) {
-    const author = record.expand.author_id as any
-    authorName = author.name || author.email || author.username || ""
-  }
-  return { author_id: authorId || "", author_name: authorName }
+function extractAuthorFromRecord(record: any): string {
+  return (record.author_name as string) || ""
 }
 
 export const blogPagesCollection = {
   async getAll(): Promise<BlogPage[]> {
     const data = await pb.collection("blog_pages").getFullList({
       sort: "-created",
-      expand: "author_id",
     })
     return data.map((item) => {
-      const { author_id, author_name } = extractAuthorFromRecord(item)
+      const author_name = extractAuthorFromRecord(item)
       return {
         id: item.id as string,
         slug: item.slug as string,
@@ -435,7 +428,6 @@ export const blogPagesCollection = {
         content: item.content as string,
         is_published: item.is_published as boolean,
         media: (item.media as string[]) || [],
-        author_id,
         author_name,
         created: item.created as string,
         updated: item.updated as string,
@@ -447,8 +439,8 @@ export const blogPagesCollection = {
     try {
       const data = await pb
         .collection("blog_pages")
-        .getFirstListItem(`slug = "${slug}"`, { expand: "author_id" })
-      const { author_id, author_name } = extractAuthorFromRecord(data)
+        .getFirstListItem(`slug = "${slug}"`)
+      const author_name = extractAuthorFromRecord(data)
       return {
         id: data.id as string,
         slug: data.slug as string,
@@ -457,7 +449,6 @@ export const blogPagesCollection = {
         content: data.content as string,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
-        author_id,
         author_name,
         created: data.created as string,
         updated: data.updated as string,
@@ -471,8 +462,8 @@ export const blogPagesCollection = {
     try {
       const data = await pb
         .collection("blog_pages")
-        .getFirstListItem(`slug = "${slug}" && is_published = true`, { expand: "author_id" })
-      const { author_id, author_name } = extractAuthorFromRecord(data)
+        .getFirstListItem(`slug = "${slug}" && is_published = true`)
+      const author_name = extractAuthorFromRecord(data)
       return {
         id: data.id as string,
         slug: data.slug as string,
@@ -481,7 +472,6 @@ export const blogPagesCollection = {
         content: data.content as string,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
-        author_id,
         author_name,
         created: data.created as string,
         updated: data.updated as string,
@@ -496,20 +486,19 @@ export const blogPagesCollection = {
     title: string
     category?: string
     content?: string
-    author_id?: string
+    author_name?: string
   }): Promise<BlogPage> {
     const lorem =
       "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>"
-    const currentUser = pb.authStore.model
     const result = await pb.collection("blog_pages").create({
       slug: data.slug,
       title: data.title,
       category: data.category || "",
       content: data.content || lorem,
       is_published: false,
-      author_id: data.author_id || currentUser?.id || "",
+      author_name: data.author_name || "",
     })
-    const { author_id, author_name } = extractAuthorFromRecord(result)
+    const author_name = extractAuthorFromRecord(result)
     return {
       id: result.id as string,
       slug: result.slug as string,
@@ -518,7 +507,6 @@ export const blogPagesCollection = {
       content: result.content as string,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
-      author_id,
       author_name,
       created: result.created as string,
       updated: result.updated as string,
@@ -527,7 +515,7 @@ export const blogPagesCollection = {
 
   async update(id: string, data: Partial<BlogPage>): Promise<BlogPage> {
     const result = await pb.collection("blog_pages").update(id, data)
-    const { author_id, author_name } = extractAuthorFromRecord(result)
+    const author_name = extractAuthorFromRecord(result)
     return {
       id: result.id as string,
       slug: result.slug as string,
@@ -536,7 +524,6 @@ export const blogPagesCollection = {
       content: result.content as string,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
-      author_id,
       author_name,
       created: result.created as string,
       updated: result.updated as string,
@@ -567,7 +554,7 @@ export const blogPagesCollection = {
     if (data.content !== undefined) formData.append("content", data.content)
     if (data.is_published !== undefined)
       formData.append("is_published", String(data.is_published))
-    if (data.author_id !== undefined) formData.append("author_id", data.author_id)
+    if (data.author_name !== undefined) formData.append("author_name", data.author_name)
 
     files.forEach((file) => {
       formData.append("media", file)

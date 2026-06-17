@@ -47,21 +47,19 @@ export default function CmsBlogEditorPage() {
   const [category, setCategory] = useState("")
   const [content, setContent] = useState("")
   const [isPublished, setIsPublished] = useState(false)
-  const [authorId, setAuthorId] = useState("")
+  const [authorName, setAuthorName] = useState("")
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     []
   )
-  const [users, setUsers] = useState<{ id: string; name: string }[]>([])
 
   const isInitialMount = useRef(true)
 
   useEffect(() => {
     async function load() {
-      const [data, cats, allUsers] = await Promise.all([
+      const [data, cats] = await Promise.all([
         blogPagesCollection.getBySlug(slug),
         blogCategoriesCollection.getAll(),
-        pb.collection("users").getFullList({ sort: "name", filter: 'role = "admin"' }),
       ])
       if (!data) {
         setLoading(false)
@@ -73,14 +71,8 @@ export default function CmsBlogEditorPage() {
       setCategory(data.category)
       setContent(data.content)
       setIsPublished(data.is_published)
-      setAuthorId(data.author_id)
+      setAuthorName(data.author_name)
       setCategories(cats)
-      setUsers(
-        allUsers.map((u: any) => ({
-          id: u.id,
-          name: u.name || u.email || u.username || "Unknown",
-        }))
-      )
       setLoading(false)
     }
     load()
@@ -103,7 +95,7 @@ export default function CmsBlogEditorPage() {
           title,
           slug: postSlug,
           category,
-          author_id: authorId,
+          author_name: authorName,
           content: overrideContent !== undefined ? overrideContent : content,
         })
         setPage(updated)
@@ -118,7 +110,7 @@ export default function CmsBlogEditorPage() {
         setSaving(false)
       }
     },
-    [page, title, postSlug, category, authorId, content, slug, router]
+    [page, title, postSlug, category, authorName, content, slug, router]
   )
 
   const handleContentSave = useCallback(
@@ -264,21 +256,15 @@ export default function CmsBlogEditorPage() {
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="author">Author</Label>
-          <Select value={authorId} onValueChange={setAuthorId}>
-            <SelectTrigger id="author">
-              <SelectValue placeholder="Select author" />
-            </SelectTrigger>
-            <SelectContent>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="author">Author</Label>
+        <Input
+          id="author"
+          value={authorName}
+          onChange={(e) => setAuthorName(e.target.value)}
+          placeholder="Author name"
+        />
+      </div>
       </Card>
 
       <RichTextEditor

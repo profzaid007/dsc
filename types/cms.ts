@@ -17,7 +17,6 @@ export interface BlogPage {
   content: string
   is_published: boolean
   media: string[]
-  author_id: string
   author_name: string
   created: string
   updated: string

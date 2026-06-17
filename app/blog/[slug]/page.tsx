@@ -19,10 +19,7 @@ export default async function BlogPostPage({
   try {
     const record = await pb
       .collection("blog_pages")
-      .getFirstListItem(`slug = "${slug}" && is_published = true`, {
-        expand: "author_id",
-      })
-    const author = (record.expand as any)?.author_id
+      .getFirstListItem(`slug = "${slug}" && is_published = true`)
     page = {
       id: record.id as string,
       slug: record.slug as string,
@@ -31,8 +28,7 @@ export default async function BlogPostPage({
       content: record.content as string,
       is_published: record.is_published as boolean,
       media: (record.media as string[]) || [],
-      author_id: record.author_id as string,
-      author_name: author?.name || author?.email || author?.username || "",
+      author_name: (record.author_name as string) || "",
       created: record.created as string,
       updated: record.updated as string,
     }
