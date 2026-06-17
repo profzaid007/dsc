@@ -106,7 +106,6 @@ export default function CmsBlogListPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
-                <TableHead>Slug</TableHead>
                 <TableHead>Author</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
@@ -123,9 +122,6 @@ export default function CmsBlogListPage() {
                     >
                       {post.title}
                     </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    /{post.slug}
                   </TableCell>
                   <TableCell>{post.author_name || "—"}</TableCell>
                   <TableCell>
