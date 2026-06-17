@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Loader2, Save } from "lucide-react"
+import { Loader2, Save, RotateCcw } from "lucide-react"
 
 import "suneditor/css/editor"
 import "suneditor/css/contents"
@@ -13,7 +13,9 @@ interface RichTextEditorProps {
   onSave: (html: string) => Promise<void>
   isSaving: boolean
   title?: string
+  onDiscard?: () => void
   onImageUpload?: (file: File) => Promise<string>
+  resetTrigger?: number
 }
 
 export function RichTextEditor({
@@ -22,6 +24,8 @@ export function RichTextEditor({
   isSaving,
   title,
   onImageUpload,
+  onDiscard,
+  resetTrigger
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<any>(null)
@@ -145,7 +149,7 @@ export function RichTextEditor({
       setContent(initialContent)
       lastSyncedInitialContent.current = initialContent
     }
-  }, [initialContent])
+  }, [resetTrigger, initialContent])
 
   // Destroy editor BEFORE React removes the DOM.
   // useLayoutEffect cleanup runs synchronously before DOM mutations,
@@ -199,19 +203,33 @@ export function RichTextEditor({
       {title && (
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">{title}</h2>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="mr-2 h-4 w-4" />
+          <div className="flex items-center gap-2">
+            {onDiscard && (
+              <Button variant="outline" onClick={onDiscard}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Discard Changes
+              </Button>
             )}
-            {isSaving ? "Saving..." : "Save"}
-          </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </div>
       )}
       <div ref={containerRef} className="rounded-md border" />
       {!title && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {onDiscard && (
+            <Button variant="outline" onClick={onDiscard}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Discard Changes
+            </Button>
+          )}
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

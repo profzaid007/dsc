@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Loader2, Plus, Pencil, Globe, Lock, Trash2 } from "lucide-react"
+import { Eye, Loader2, Plus, Pencil, Lock, Trash2 } from "lucide-react"
 import pb from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
 
@@ -179,7 +179,7 @@ export default function CmsHomePagesListPage() {
                     >
                       {page.is_published ? (
                         <Badge className="bg-green-600 text-white">
-                          <Globe className="mr-1 h-3 w-3" />
+                          <Eye className="mr-1 h-3 w-3" />
                           Published
                         </Badge>
                       ) : (
@@ -209,7 +209,7 @@ export default function CmsHomePagesListPage() {
                       {page.is_published && (
                         <Button variant="ghost" size="icon" asChild>
                           <Link href={`/${page.slug}`} target="_blank">
-                            <Globe className="h-4 w-4 text-green-600" />
+                            <Eye className="h-4 w-4 text-green-600" />
                           </Link>
                         </Button>
                       )}

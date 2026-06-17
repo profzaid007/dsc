@@ -53,6 +53,8 @@ export default function CmsBlogEditorPage() {
     []
   )
 
+  const [resetTrigger, setResetTrigger] = useState(0)
+
   const isInitialMount = useRef(true)
 
   useEffect(() => {
@@ -120,6 +122,17 @@ export default function CmsBlogEditorPage() {
     },
     [handleSave]
   )
+
+  const handleDiscard = useCallback(() => {
+    if (!page) return
+    setTitle(page.title)
+    setPostSlug(page.slug)
+    setCategory(page.category)
+    setContent(page.content)
+    setIsPublished(page.is_published)
+    setAuthorName(page.author_name)
+    setResetTrigger(t => t + 1)
+  }, [page])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -273,22 +286,10 @@ export default function CmsBlogEditorPage() {
         onSave={handleContentSave}
         isSaving={saving}
         onImageUpload={handleImageUpload}
+        onDiscard={handleDiscard}
+        resetTrigger={resetTrigger}
       />
 
-      <div className="flex items-center justify-between">
-        <Button
-          variant="destructive"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Trash2 className="mr-2 h-4 w-4" />
-          )}
-          Delete
-        </Button>
-      </div>
     </div>
   )
 }

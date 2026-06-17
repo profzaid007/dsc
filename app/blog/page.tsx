@@ -49,7 +49,7 @@ export default async function BlogPage() {
         <div className="space-y-4">
           {posts.map((post) => (
             <Link key={post.id} href={`/blog/${post.slug}`}>
-              <Card className="group flex flex-col gap-3 p-4 transition-all hover:shadow-md hover:-translate-y-0.5">
+              <Card className="group flex flex-col gap-5 p-4 mb-4 transition-all hover:shadow-md hover:-translate-y-0.5">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <Badge variant="secondary" className="capitalize">
                     {post.category}
