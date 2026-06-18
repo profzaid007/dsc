@@ -3,13 +3,15 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, LogIn, Menu, X, FileText } from "lucide-react"
+import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
 import { getPortalById } from "@/lib/portals"
 import Image from "next/image"
+import { BookConsultDialog } from "../BookConsultDialog"
+
 import { cn } from "@/lib/utils"
 
 const DEFAULT_SIDEBAR_ITEMS = [
@@ -36,6 +38,8 @@ export function Navbar() {
 
   const logoBg = portal?.accent ?? (isHome ? "#d4af37" : "#d4af37")
   const logoGradient = "radial-gradient(circle, #d4af37 0%, #aa7c11 100%)"
+
+  const [consultOpen, setConsultOpen] = useState(false)
 
   const headerText = portal ? t(portal.portalName, lang) : "DSC"
   const subheading = portal
@@ -145,6 +149,19 @@ export function Navbar() {
                 </Link>
               </Button>
             )}
+
+            <Button
+              variant="default"
+              size="sm"
+              className="hidden gap-2 sm:inline-flex"
+              onClick={() => setConsultOpen(true)}
+            >
+              <Calendar className="h-4 w-4" />
+              Book Consult
+            </Button>
+
+            <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
+
           </div>
         </div>
       </header>
