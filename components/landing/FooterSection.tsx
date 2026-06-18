@@ -72,19 +72,19 @@ export function FooterSection() {
             </h3>
             <div className="flex flex-col gap-1 text-sm text-white/60">
               <p className="flex items-center gap-2">
-                <i className="fas fa-phone w-4 text-[#00a4e4]" />
+                <span className="w-4" />
                 +966 50 123 4567
               </p>
               <p className="flex items-center gap-2">
-                <i className="fas fa-envelope w-4 text-[#00a4e4]" />
+                <span className="w-4" />
                 info@dsc.com
               </p>
               <p className="flex items-center gap-2">
-                <i className="fas fa-globe w-4 text-[#00a4e4]" />
+                <span className="w-4" />
                 www.dsc.com
               </p>
               <p className="flex items-center gap-2">
-                <i className="fas fa-map-marker-alt w-4 text-[#00a4e4]" />
+                <span className="w-4" />
                 {t(
                   {
                     en: "Riyadh, Kingdom of Saudi Arabia",
@@ -94,6 +94,35 @@ export function FooterSection() {
                 )}
               </p>
             </div>
+
+            <div className="flex items-center gap-3 mt-2 pl-6">
+              <a
+                href="[URL]"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
+              >
+                <i className="fab fa-instagram" />
+              </a>
+              <a
+                href="[URL]"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
+              >
+                <i className="fab fa-twitter" />
+              </a>
+
+              <a
+                href="[URL]"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
+              >
+                <i className="fab fa-linkedin-in" />
+              </a>
+            </div>
+
           </div>
         </div>
 
