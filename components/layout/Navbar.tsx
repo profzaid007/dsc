@@ -48,7 +48,7 @@ export function Navbar() {
 
   const accentColor = portal?.accent ?? "#0b1a30"
 
-  const showSidebar = isHome
+  const showSidebar = !isAppRoute
 
   return (
     <div className="w-full">
@@ -60,19 +60,17 @@ export function Navbar() {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between py-4">
           {/* Left: Logo + Hamburger (mobile) */}
           <div className="flex items-center gap-4">
-            {showSidebar && (
-              <button
-                className="mr-2 rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </button>
-            )}
+            <button
+              className="mr-2 rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
 
             <Link href="/" className="flex items-center gap-4">
               <div className="flex h-[60px] w-[60px] items-center justify-center">
@@ -113,7 +111,7 @@ export function Navbar() {
                 asChild
                 variant="outline"
                 size="sm"
-                className="hidden gap-2 sm:inline-flex"
+                className="gap-2 flex"
               >
                 <Link href="/login">
                   <LogIn className="h-4 w-4" />
@@ -127,7 +125,7 @@ export function Navbar() {
                 asChild
                 variant="outline"
                 size="sm"
-                className="hidden gap-2 sm:inline-flex"
+                className="gap-2 flex"
               >
                 <Link href="/dashboard">
                   <LayoutDashboard className="h-4 w-4" />
@@ -141,7 +139,7 @@ export function Navbar() {
                 asChild
                 variant="outline"
                 size="sm"
-                className="hidden gap-2 sm:inline-flex"
+                className="gap-2 flex"
               >
                 <Link href="/cms">
                   <FileText className="h-4 w-4" />
@@ -153,7 +151,7 @@ export function Navbar() {
             <Button
               variant="default"
               size="sm"
-              className="hidden gap-2 sm:inline-flex"
+              className="gap-2 flex"
               onClick={() => setConsultOpen(true)}
             >
               <Calendar className="h-4 w-4" />
@@ -190,7 +188,7 @@ export function Navbar() {
       )}
 
       {/* Sidebar - Mobile (collapsible) */}
-      {showSidebar && mobileMenuOpen && (
+      {mobileMenuOpen && (
         <nav
           className="border-b md:hidden"
           style={{ backgroundColor: `${accentColor}08`, borderColor: `${accentColor}15` }}
@@ -206,6 +204,62 @@ export function Navbar() {
                 {t({ en: item.en, ar: item.ar }, lang)}
               </Link>
             ))}
+            <div className="mt-2 border-t border-gray-200 pt-2 flex flex-col gap-2">
+              {!isAuthenticated && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 justify-start"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/login">
+                    <LogIn className="h-4 w-4" />
+                    {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
+                  </Link>
+                </Button>
+              )}
+              {isAuthenticated && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 justify-start"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/dashboard">
+                    <LayoutDashboard className="h-4 w-4" />
+                    {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
+                  </Link>
+                </Button>
+              )}
+              {isAdmin && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 justify-start"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/cms">
+                    <FileText className="h-4 w-4" />
+                    {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
+                  </Link>
+                </Button>
+              )}
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-2 justify-start"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  setConsultOpen(true)
+                }}
+              >
+                <Calendar className="h-4 w-4" />
+                Book Consult
+              </Button>
+            </div>
           </div>
         </nav>
       )}
