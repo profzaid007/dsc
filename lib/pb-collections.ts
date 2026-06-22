@@ -278,13 +278,13 @@ export const infoPagesCollection = {
     }
   },
 
-  async create(data: { slug: string; title: string; content?: string }): Promise<InfoPage> {
+  async create(data: { slug: string; title: string; content_en?: string }): Promise<InfoPage> {
     const lorem =
       "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>"
     const result = await pb.collection("info_pages").create({
       slug: data.slug,
       title: data.title,
-      content: data.content || lorem,
+      content_en: data.content_en || lorem,
       is_published: false,
     })
     return result as unknown as InfoPage
@@ -314,7 +314,7 @@ export const infoPagesCollection = {
     }
 
     if (data.title !== undefined) formData.append("title", data.title)
-    if (data.content !== undefined) formData.append("content", data.content)
+    if (data.content_en !== undefined) formData.append("content_en", data.content_en)
     if (data.is_published !== undefined) formData.append("is_published", String(data.is_published))
 
     files.forEach((file) => {
@@ -355,12 +355,12 @@ export const homePagesCollection = {
     }
   },
 
-  async create(data: { slug: string; title: string; content?: string }): Promise<HomePage> {
+  async create(data: { slug: string; title: string; content_en?: string }): Promise<HomePage> {
     const lorem = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>"
     const result = await pb.collection("home_pages").create({
       slug: data.slug,
-      title: data.title,
-      content: data.content || lorem,
+      title_en: data.title,
+      content_en: data.content_en || lorem,
       is_published: false,
     })
     return result as unknown as HomePage
@@ -388,8 +388,8 @@ export const homePagesCollection = {
       }
     }
 
-    if (data.title !== undefined) formData.append("title", data.title)
-    if (data.content !== undefined) formData.append("content", data.content)
+    if (data.title_en !== undefined) formData.append("title_en", data.title_en)
+    if (data.content_en !== undefined) formData.append("content_en", data.content_en)
     if (data.is_published !== undefined) formData.append("is_published", String(data.is_published))
 
     files.forEach((file) => {
@@ -423,9 +423,9 @@ export const blogPagesCollection = {
       return {
         id: item.id as string,
         slug: item.slug as string,
-        title: item.title as string,
+        title_en: item.title_en as string,
         category: item.category as string,
-        content: item.content as string,
+        content_en: item.content_en as string,
         is_published: item.is_published as boolean,
         media: (item.media as string[]) || [],
         author_name,
@@ -444,9 +444,9 @@ export const blogPagesCollection = {
       return {
         id: data.id as string,
         slug: data.slug as string,
-        title: data.title as string,
+        title_en: data.title_en as string,
         category: data.category as string,
-        content: data.content as string,
+        content_en: data.content_en as string,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
         author_name,
@@ -467,9 +467,9 @@ export const blogPagesCollection = {
       return {
         id: data.id as string,
         slug: data.slug as string,
-        title: data.title as string,
+        title_en: data.title_en as string,
         category: data.category as string,
-        content: data.content as string,
+        content_en: data.content_en as string,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
         author_name,
@@ -485,16 +485,16 @@ export const blogPagesCollection = {
     slug: string
     title: string
     category?: string
-    content?: string
+    content_en?: string
     author_name?: string
   }): Promise<BlogPage> {
     const lorem =
       "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>"
     const result = await pb.collection("blog_pages").create({
       slug: data.slug,
-      title: data.title,
+      title_en: data.title,
       category: data.category || "",
-      content: data.content || lorem,
+      content_en: data.content_en || lorem,
       is_published: false,
       author_name: data.author_name || "",
     })
@@ -502,9 +502,9 @@ export const blogPagesCollection = {
     return {
       id: result.id as string,
       slug: result.slug as string,
-      title: result.title as string,
+      title_en: result.title_en as string,
       category: result.category as string,
-      content: result.content as string,
+      content_en: result.content_en as string,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
       author_name,
@@ -519,9 +519,9 @@ export const blogPagesCollection = {
     return {
       id: result.id as string,
       slug: result.slug as string,
-      title: result.title as string,
+      title_en: result.title_en as string,
       category: result.category as string,
-      content: result.content as string,
+      content_en: result.content_en as string,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
       author_name,
@@ -548,10 +548,10 @@ export const blogPagesCollection = {
       }
     }
 
-    if (data.title !== undefined) formData.append("title", data.title)
+    if (data.title_en !== undefined) formData.append("title_en", data.title_en)
     if (data.slug !== undefined) formData.append("slug", data.slug)
     if (data.category !== undefined) formData.append("category", data.category)
-    if (data.content !== undefined) formData.append("content", data.content)
+    if (data.content_en !== undefined) formData.append("content_en", data.content_en)
     if (data.is_published !== undefined)
       formData.append("is_published", String(data.is_published))
     if (data.author_name !== undefined) formData.append("author_name", data.author_name)

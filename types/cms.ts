@@ -2,7 +2,7 @@ export interface InfoPage {
   id: string
   slug: string
   title: string
-  content: string
+  content_en: string
   is_published: boolean
   media: string[]
   created: string
@@ -12,9 +12,9 @@ export interface InfoPage {
 export interface BlogPage {
   id: string
   slug: string
-  title: string
+  title_en: string
   category: string
-  content: string
+  content_en: string
   is_published: boolean
   media: string[]
   author_name: string
@@ -30,8 +30,8 @@ export interface BlogCategory {
 export interface HomePage {
   id: string
   slug: string
-  title: string
-  content: string
+  title_en: string
+  content_en: string
   is_published: boolean
   media: string[]
   created: string

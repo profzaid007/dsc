@@ -76,7 +76,7 @@ export default function CmsHomePagesListPage() {
   }
 
   const handleDelete = async (page: HomePage) => {
-    if (!confirm(`Delete "${page.title}"? This cannot be undone.`)) return
+    if (!confirm(`Delete "${page.title_en}"? This cannot be undone.`)) return
     try {
       await homePagesCollection.delete(page.id)
       setPages((prev) => prev.filter((p) => p.id !== page.id))
@@ -168,7 +168,7 @@ export default function CmsHomePagesListPage() {
             <TableBody>
               {pages.map((page) => (
                 <TableRow key={page.id}>
-                  <TableCell className="font-medium">{page.title}</TableCell>
+                  <TableCell className="font-medium">{page.title_en}</TableCell>
                   <TableCell>{new Date(page.updated).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <button

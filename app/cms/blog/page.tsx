@@ -120,7 +120,7 @@ export default function CmsBlogListPage() {
                       href={`/cms/blog/${post.slug}`}
                       className="hover:underline"
                     >
-                      {post.title}
+                      {post.title_en}
                     </Link>
                   </TableCell>
                   <TableCell>{post.author_name || "—"}</TableCell>
@@ -155,7 +155,7 @@ export default function CmsBlogListPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(post.id, post.title)}
+                        onClick={() => handleDelete(post.id, post.title_en)}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>

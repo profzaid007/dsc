@@ -57,7 +57,7 @@ export default function CmsServiceEditorPage() {
       if (!page) return
       setSaving(true)
       try {
-        const updateData: Record<string, unknown> = { content: html }
+        const updateData: Record<string, unknown> = { content_en: html }
         if (Array.isArray(page.media)) {
           updateData.media = page.media
         }
@@ -161,7 +161,7 @@ export default function CmsServiceEditorPage() {
         <RichTextEditor
           key={resetKey}
           title={`Editing: ${service.name.en}`}
-          initialContent={page.content}
+          initialContent={page.content_en}
           onSave={handleSave}
           isSaving={saving}
           onImageUpload={handleImageUpload}

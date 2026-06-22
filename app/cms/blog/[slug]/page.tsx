@@ -68,10 +68,10 @@ export default function CmsBlogEditorPage() {
         return
       }
       setPage(data)
-      setTitle(data.title)
+      setTitle(data.title_en)
       setPostSlug(data.slug)
       setCategory(data.category)
-      setContent(data.content)
+      setContent(data.content_en)
       setIsPublished(data.is_published)
       setAuthorName(data.author_name)
       setCategories(cats)
@@ -94,14 +94,14 @@ export default function CmsBlogEditorPage() {
       setSaving(true)
       try {
         const updated = await blogPagesCollection.update(page.id, {
-          title,
+          title_en: title,
           slug: postSlug,
           category,
           author_name: authorName,
-          content: overrideContent !== undefined ? overrideContent : content,
+          content_en: overrideContent !== undefined ? overrideContent : content,
         })
         setPage(updated)
-        setContent(updated.content)
+        setContent(updated.content_en)
         // If slug changed, redirect to new slug
         if (updated.slug !== slug) {
           router.push(`/cms/blog/${updated.slug}`)
@@ -125,10 +125,10 @@ export default function CmsBlogEditorPage() {
 
   const handleDiscard = useCallback(() => {
     if (!page) return
-    setTitle(page.title)
+    setTitle(page.title_en)
     setPostSlug(page.slug)
     setCategory(page.category)
-    setContent(page.content)
+    setContent(page.content_en)
     setIsPublished(page.is_published)
     setAuthorName(page.author_name)
     setResetKey(t => t + 1)
@@ -166,7 +166,7 @@ export default function CmsBlogEditorPage() {
 
   const handleDelete = useCallback(async () => {
     if (!page) return
-    if (!confirm(`Delete "${page.title}"? This cannot be undone.`)) return
+    if (!confirm(`Delete "${page.title_en}"? This cannot be undone.`)) return
     setDeleting(true)
     try {
       await blogPagesCollection.delete(page.id)

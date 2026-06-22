@@ -20,9 +20,9 @@ export default async function BlogPage() {
       return {
         id: record.id as string,
         slug: record.slug as string,
-        title: record.title as string,
+        title_en: record.title_en as string,
         category: record.category as string,
-        content: record.content as string,
+        content_en: record.content_en as string,
         is_published: record.is_published as boolean,
         media: (record.media as string[]) || [],
         author_name: (record.author_name as string) || "",
@@ -65,10 +65,10 @@ export default async function BlogPage() {
                   )}
                 </div>
                 <h2 className="text-xl font-semibold group-hover:underline">
-                  {post.title}
+                  {post.title_en}
                 </h2>
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {post.content.replace(/<[^>]*>/g, "").slice(0, 200)}
+                  {post.content_en.replace(/<[^>]*>/g, "").slice(0, 200)}
                 </p>
               </Card>
             </Link>

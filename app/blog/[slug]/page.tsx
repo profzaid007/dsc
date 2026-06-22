@@ -25,9 +25,9 @@ export default async function BlogPostPage({
     page = {
       id: record.id as string,
       slug: record.slug as string,
-      title: record.title as string,
+      title_en: record.title_en as string,
       category: record.category as string,
-      content: record.content as string,
+        content_en: record.content_en as string,
       is_published: record.is_published as boolean,
       media: (record.media as string[]) || [],
       author_name: (record.author_name as string) || "",
@@ -80,12 +80,12 @@ export default async function BlogPostPage({
             </>
           )}
         </div>
-        <h1 className="text-3xl font-bold">{page.title}</h1>
+        <h1 className="text-3xl font-bold">{page.title_en}</h1>
       </div>
 
       <div
         className="cms-rendered sun-editor-editable space-y-4 text-gray-700 leading-relaxed [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:my-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:my-4 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:my-3 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic"
-        dangerouslySetInnerHTML={{ __html: sanitizeCmsContent(page.content) }}
+        dangerouslySetInnerHTML={{ __html: sanitizeCmsContent(page.content_en) }}
       />
     </div>
   )

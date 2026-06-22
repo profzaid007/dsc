@@ -46,7 +46,7 @@ export default function CmsHomePageEditorPage() {
 
       setPage(existingPage)
       if (existingPage) {
-        setTitle(existingPage.title)
+        setTitle(existingPage.title_en)
         setSlugValue(existingPage.slug)
       }
       setLoading(false)
@@ -60,9 +60,9 @@ export default function CmsHomePageEditorPage() {
       if (!page) return
       setSaving(true)
       try {
-        const updateData: Record<string, unknown> = { content: html }
+        const updateData: Record<string, unknown> = { content_en: html }
         if (isSuperAdmin) {
-          updateData.title = title
+          updateData.title_en = title
           updateData.slug = slugValue
         }
         if (Array.isArray(page.media)) {
@@ -70,7 +70,7 @@ export default function CmsHomePageEditorPage() {
         }
         const updated = await homePagesCollection.update(page.id, updateData as Partial<HomePage>)
         setPage(updated)
-        setTitle(updated.title)
+        setTitle(updated.title_en)
         setSlugValue(updated.slug)
       } finally {
         setSaving(false)
@@ -81,7 +81,7 @@ export default function CmsHomePageEditorPage() {
 
   const handleDiscard = useCallback(() => {
     if (!page) return
-    setTitle(page.title)
+    setTitle(page.title_en)
     setSlugValue(page.slug)
     setResetKey(k => k + 1)
   }, [page])
@@ -113,7 +113,7 @@ export default function CmsHomePageEditorPage() {
 
   const handleDelete = useCallback(async () => {
     if (!page) return
-    if (!confirm(`Delete "${page.title}"? This cannot be undone.`)) return
+    if (!confirm(`Delete "${page.title_en}"? This cannot be undone.`)) return
     setDeleting(true)
     try {
       await homePagesCollection.delete(page.id)
@@ -183,7 +183,7 @@ export default function CmsHomePageEditorPage() {
             </div>
           ) : (
             <div>
-              <h1 className="text-2xl font-bold">{page.title}</h1>
+              <h1 className="text-2xl font-bold">{page.title_en}</h1>
               <p className="text-muted-foreground">/{page.slug}</p>
             </div>
           )}
@@ -207,7 +207,7 @@ export default function CmsHomePageEditorPage() {
       <RichTextEditor
         key={resetKey}
         title="Content"
-        initialContent={page.content}
+        initialContent={page.content_en}
         onSave={handleSave}
         isSaving={saving}
         onImageUpload={handleImageUpload}
