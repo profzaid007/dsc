@@ -5,14 +5,18 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { getPortalById } from "@/lib/portals"
 import { infoPagesCollection } from "@/lib/pb-collections"
+import { localizedField, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 import pb from "@/lib/pb"
 import type { InfoPage } from "@/types/cms"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft, Loader2, Languages } from "lucide-react"
 
 export default function CmsServiceEditorPage() {
+  const { lang, toggleLang } = useLang()
   const params = useParams()
   const portalId = params.portalId as string
   const serviceId = params.serviceId as string
@@ -57,7 +61,8 @@ export default function CmsServiceEditorPage() {
       if (!page) return
       setSaving(true)
       try {
-        const updateData: Record<string, unknown> = { content_en: html }
+        const contentField = `content_${lang}` as const
+        const updateData: Record<string, unknown> = { [contentField]: html }
         if (Array.isArray(page.media)) {
           updateData.media = page.media
         }
@@ -67,7 +72,7 @@ export default function CmsServiceEditorPage() {
         setSaving(false)
       }
     },
-    [page]
+    [page, lang]
   )
 
   const handleDiscard = useCallback(() => {
@@ -143,6 +148,10 @@ export default function CmsServiceEditorPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={toggleLang}>
+            <Languages className="mr-2 h-4 w-4" />
+            {UI_STRINGS.language_label[lang]}
+          </Button>
           <div className="flex items-center gap-2">
             <Switch
               id="publish"
@@ -159,9 +168,9 @@ export default function CmsServiceEditorPage() {
 
       {page && (
         <RichTextEditor
-          key={resetKey}
-          title={`Editing: ${service.name.en}`}
-          initialContent={page.content_en}
+          key={`${resetKey}-${lang}`}
+          title={`Editing: ${service.name.en} (${lang === "en" ? "English" : "Arabic"})`}
+          initialContent={localizedField(page, lang, "content")}
           onSave={handleSave}
           isSaving={saving}
           onImageUpload={handleImageUpload}

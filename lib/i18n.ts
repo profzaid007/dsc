@@ -8,6 +8,16 @@ export function dir(lang: Lang): "ltr" | "rtl" {
   return lang === "ar" ? "rtl" : "ltr";
 }
 
+export function localizedField<T extends Record<string, any>>(
+  item: T,
+  lang: Lang,
+  field: string
+): string {
+  const val = item[`${field}_${lang}`]
+  if (val) return val
+  return item[`${field}_en`] || ""
+}
+
 export const UI_STRINGS: Record<string, BilingualString> = {
   next: { en: "Next", ar: "التالي" },
   back: { en: "Back", ar: "السابق" },

@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Lang } from "@/types/form";
 
 interface LangContextValue {
@@ -9,10 +10,37 @@ interface LangContextValue {
   toggleLang: () => void;
 }
 
+const LANG_COOKIE = "lang";
+
+function getCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+function setCookie(name: string, value: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=31536000;SameSite=Lax`;
+}
+
 const LangContext = createContext<LangContextValue | null>(null);
 
 export function LangProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const router = useRouter();
+  const [lang, setLang] = useState<Lang>(() => {
+    const stored = getCookie(LANG_COOKIE);
+    if (stored === "en" || stored === "ar") return stored;
+    return "en";
+  });
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    setCookie(LANG_COOKIE, lang);
+    if (initialized.current) {
+      router.refresh();
+    }
+    initialized.current = true;
+  }, [lang, router]);
 
   function toggleLang() {
     setLang((prev) => (prev === "en" ? "ar" : "en"));

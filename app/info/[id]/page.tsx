@@ -1,10 +1,13 @@
 import { sanitizeCmsContent } from "@/lib/sanitize"
 
 import Link from "next/link"
+import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import pb from "@/lib/pb"
+import { localizedField } from "@/lib/i18n"
 import { getPortalById } from "@/lib/portals"
 import type { InfoPage } from "@/types/cms"
+import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
 
 interface InfoPageProps {
@@ -13,6 +16,8 @@ interface InfoPageProps {
 
 export default async function InfoPage({ params }: InfoPageProps) {
   const { id } = await params
+  const cookieStore = await cookies()
+  const lang = (cookieStore.get("lang")?.value as Lang) || "en"
 
   let page: InfoPage | null = null
 
@@ -53,7 +58,7 @@ export default async function InfoPage({ params }: InfoPageProps) {
         </h1>
         <div
           className="cms-rendered sun-editor-editable space-y-4 text-gray-700 leading-relaxed [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:my-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:my-4 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:my-3 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic"
-          dangerouslySetInnerHTML={{ __html: sanitizeCmsContent(page.content_en) }}
+          dangerouslySetInnerHTML={{ __html: sanitizeCmsContent(localizedField(page, lang, "content")) }}
         />
       </div>
     )

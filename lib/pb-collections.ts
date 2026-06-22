@@ -315,6 +315,7 @@ export const infoPagesCollection = {
 
     if (data.title !== undefined) formData.append("title", data.title)
     if (data.content_en !== undefined) formData.append("content_en", data.content_en)
+    if (data.content_ar !== undefined) formData.append("content_ar", data.content_ar)
     if (data.is_published !== undefined) formData.append("is_published", String(data.is_published))
 
     files.forEach((file) => {
@@ -389,7 +390,9 @@ export const homePagesCollection = {
     }
 
     if (data.title_en !== undefined) formData.append("title_en", data.title_en)
+    if (data.title_ar !== undefined) formData.append("title_ar", data.title_ar)
     if (data.content_en !== undefined) formData.append("content_en", data.content_en)
+    if (data.content_ar !== undefined) formData.append("content_ar", data.content_ar)
     if (data.is_published !== undefined) formData.append("is_published", String(data.is_published))
 
     files.forEach((file) => {
@@ -424,8 +427,10 @@ export const blogPagesCollection = {
         id: item.id as string,
         slug: item.slug as string,
         title_en: item.title_en as string,
+        title_ar: item.title_ar as string | undefined,
         category: item.category as string,
         content_en: item.content_en as string,
+        content_ar: item.content_ar as string | undefined,
         is_published: item.is_published as boolean,
         media: (item.media as string[]) || [],
         author_name,
@@ -445,8 +450,10 @@ export const blogPagesCollection = {
         id: data.id as string,
         slug: data.slug as string,
         title_en: data.title_en as string,
+        title_ar: data.title_ar as string | undefined,
         category: data.category as string,
         content_en: data.content_en as string,
+        content_ar: data.content_ar as string | undefined,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
         author_name,
@@ -468,8 +475,10 @@ export const blogPagesCollection = {
         id: data.id as string,
         slug: data.slug as string,
         title_en: data.title_en as string,
+        title_ar: data.title_ar as string | undefined,
         category: data.category as string,
         content_en: data.content_en as string,
+        content_ar: data.content_ar as string | undefined,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
         author_name,
@@ -503,8 +512,10 @@ export const blogPagesCollection = {
       id: result.id as string,
       slug: result.slug as string,
       title_en: result.title_en as string,
+      title_ar: result.title_ar as string | undefined,
       category: result.category as string,
       content_en: result.content_en as string,
+      content_ar: result.content_ar as string | undefined,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
       author_name,
@@ -520,8 +531,10 @@ export const blogPagesCollection = {
       id: result.id as string,
       slug: result.slug as string,
       title_en: result.title_en as string,
+      title_ar: result.title_ar as string | undefined,
       category: result.category as string,
       content_en: result.content_en as string,
+      content_ar: result.content_ar as string | undefined,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
       author_name,
@@ -549,9 +562,11 @@ export const blogPagesCollection = {
     }
 
     if (data.title_en !== undefined) formData.append("title_en", data.title_en)
+    if (data.title_ar !== undefined) formData.append("title_ar", data.title_ar)
     if (data.slug !== undefined) formData.append("slug", data.slug)
     if (data.category !== undefined) formData.append("category", data.category)
     if (data.content_en !== undefined) formData.append("content_en", data.content_en)
+    if (data.content_ar !== undefined) formData.append("content_ar", data.content_ar)
     if (data.is_published !== undefined)
       formData.append("is_published", String(data.is_published))
     if (data.author_name !== undefined) formData.append("author_name", data.author_name)

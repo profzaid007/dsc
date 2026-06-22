@@ -4,17 +4,20 @@ import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { homePagesCollection } from "@/lib/pb-collections"
+import { localizedField, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 import pb from "@/lib/pb"
 import type { HomePage } from "@/types/cms"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Loader2, Trash2 } from "lucide-react"
+import { ArrowLeft, Loader2, Trash2, Languages } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 
 export default function CmsHomePageEditorPage() {
+  const { lang, toggleLang } = useLang()
   const { isSuperAdmin } = useAuth()
   const params = useParams()
   const router = useRouter()
@@ -60,9 +63,11 @@ export default function CmsHomePageEditorPage() {
       if (!page) return
       setSaving(true)
       try {
-        const updateData: Record<string, unknown> = { content_en: html }
+        const contentField = `content_${lang}` as const
+        const titleField = `title_${lang}` as const
+        const updateData: Record<string, unknown> = { [contentField]: html }
         if (isSuperAdmin) {
-          updateData.title_en = title
+          updateData[titleField] = title
           updateData.slug = slugValue
         }
         if (Array.isArray(page.media)) {
@@ -70,21 +75,21 @@ export default function CmsHomePageEditorPage() {
         }
         const updated = await homePagesCollection.update(page.id, updateData as Partial<HomePage>)
         setPage(updated)
-        setTitle(updated.title_en)
+        setTitle(localizedField(updated, lang, "title"))
         setSlugValue(updated.slug)
       } finally {
         setSaving(false)
       }
     },
-    [page, title, slugValue, isSuperAdmin]
+    [page, title, slugValue, isSuperAdmin, lang]
   )
 
   const handleDiscard = useCallback(() => {
     if (!page) return
-    setTitle(page.title_en)
+    setTitle(localizedField(page, lang, "title"))
     setSlugValue(page.slug)
     setResetKey(k => k + 1)
-  }, [page])
+  }, [page, lang])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -190,6 +195,10 @@ export default function CmsHomePageEditorPage() {
         </div>
 
         <div className="flex items-center gap-3 ml-6">
+          <Button variant="outline" size="sm" onClick={toggleLang}>
+            <Languages className="mr-2 h-4 w-4" />
+            {UI_STRINGS.language_label[lang]}
+          </Button>
           <div className="flex items-center gap-2">
             <Switch
               id="publish"
@@ -205,9 +214,9 @@ export default function CmsHomePageEditorPage() {
       </div>
 
       <RichTextEditor
-        key={resetKey}
-        title="Content"
-        initialContent={page.content_en}
+        key={`${resetKey}-${lang}`}
+        title={`Content (${lang === "en" ? "English" : "Arabic"})`}
+        initialContent={localizedField(page, lang, "content")}
         onSave={handleSave}
         isSaving={saving}
         onImageUpload={handleImageUpload}
