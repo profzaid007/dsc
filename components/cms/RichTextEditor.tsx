@@ -15,6 +15,7 @@ interface RichTextEditorProps {
   title?: string
   onDiscard?: () => void
   onImageUpload?: (file: File) => Promise<string>
+  onChange?: (html: string) => void
 }
 
 export function RichTextEditor({
@@ -24,17 +25,22 @@ export function RichTextEditor({
   title,
   onImageUpload,
   onDiscard,
+  onChange,
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<any>(null)
   const onImageUploadRef = useRef(onImageUpload)
+  const onChangeRef = useRef(onChange)
   const lastSyncedInitialContent = useRef<string>("")
   const [content, setContent] = useState(initialContent)
 
-  // Keep callback ref up-to-date without re-creating the editor
+  // Keep callback refs up-to-date without re-creating the editor
   useEffect(() => {
     onImageUploadRef.current = onImageUpload
   }, [onImageUpload])
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
 
   // Create editor once on mount
   useEffect(() => {
@@ -83,6 +89,7 @@ export function RichTextEditor({
         events: {
           onChange: (params: { data: string }) => {
             setContent(params.data)
+            onChangeRef.current?.(params.data)
           },
           onImageUploadBefore: async (params: any) => {
             const { info } = params

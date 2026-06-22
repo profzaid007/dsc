@@ -4,9 +4,8 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { blogPagesCollection, blogCategoriesCollection } from "@/lib/pb-collections"
-import { localizedField, UI_STRINGS } from "@/lib/i18n"
-import { useLang } from "@/lib/lang-context"
 import { BlogPage } from "@/types/cms"
+import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,8 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
-import { Loader2, ArrowLeft, Trash2, Languages } from "lucide-react"
+import { Loader2, ArrowLeft, Trash2 } from "lucide-react"
 import pb from "@/lib/pb"
 
 function slugify(text: string): string {
@@ -33,10 +33,10 @@ function slugify(text: string): string {
 }
 
 export default function CmsBlogEditorPage() {
-  const { lang, toggleLang } = useLang()
   const params = useParams()
   const router = useRouter()
   const slug = params.slug as string
+  const [activeLang, setActiveLang] = useState<Lang>("en")
 
   const [page, setPage] = useState<BlogPage | null>(null)
   const [loading, setLoading] = useState(true)
@@ -45,10 +45,12 @@ export default function CmsBlogEditorPage() {
   const [deleting, setDeleting] = useState(false)
 
   // Form state
-  const [title, setTitle] = useState("")
+  const [enTitle, setEnTitle] = useState("")
+  const [arTitle, setArTitle] = useState("")
   const [postSlug, setPostSlug] = useState("")
   const [category, setCategory] = useState("")
-  const [content, setContent] = useState("")
+  const [enContent, setEnContent] = useState("")
+  const [arContent, setArContent] = useState("")
   const [isPublished, setIsPublished] = useState(false)
   const [authorName, setAuthorName] = useState("")
 
@@ -71,10 +73,12 @@ export default function CmsBlogEditorPage() {
         return
       }
       setPage(data)
-      setTitle(data.title_en)
+      setEnTitle(data.title_en)
+      setArTitle(data.title_ar || "")
       setPostSlug(data.slug)
       setCategory(data.category)
-      setContent(data.content_en)
+      setEnContent(data.content_en)
+      setArContent(data.content_ar || "")
       setIsPublished(data.is_published)
       setAuthorName(data.author_name)
       setCategories(cats)
@@ -88,25 +92,32 @@ export default function CmsBlogEditorPage() {
       isInitialMount.current = false
       return
     }
-    setPostSlug(slugify(title))
-  }, [title])
+    // Auto-generate slug from English title
+    setPostSlug(slugify(enTitle))
+  }, [enTitle])
 
   const handleSave = useCallback(
     async (overrideContent?: string) => {
       if (!page) return
       setSaving(true)
       try {
-        const titleField = `title_${lang}` as const
-        const contentField = `content_${lang}` as const
+        const contentField = `content_${activeLang}` as const
+        const contentValue = overrideContent !== undefined
+          ? overrideContent
+          : (activeLang === "en" ? enContent : arContent)
         const updated = await blogPagesCollection.update(page.id, {
-          [titleField]: title,
+          title_en: enTitle,
+          title_ar: arTitle,
           slug: postSlug,
           category,
           author_name: authorName,
-          [contentField]: overrideContent !== undefined ? overrideContent : content,
+          [contentField]: contentValue,
         })
         setPage(updated)
-        setContent(localizedField(updated, lang, "content"))
+        setEnTitle(updated.title_en)
+        setArTitle(updated.title_ar || "")
+        setEnContent(updated.content_en)
+        setArContent(updated.content_ar || "")
         // If slug changed, redirect to new slug
         if (updated.slug !== slug) {
           router.push(`/cms/blog/${updated.slug}`)
@@ -117,27 +128,44 @@ export default function CmsBlogEditorPage() {
         setSaving(false)
       }
     },
-    [page, title, postSlug, category, authorName, content, slug, router, lang]
+    [page, enTitle, arTitle, postSlug, category, authorName, enContent, arContent, slug, router, activeLang]
+  )
+
+  const handleContentChange = useCallback(
+    (html: string) => {
+      if (activeLang === "en") {
+        setEnContent(html)
+      } else {
+        setArContent(html)
+      }
+    },
+    [activeLang]
   )
 
   const handleContentSave = useCallback(
     async (html: string) => {
-      setContent(html)
+      if (activeLang === "en") {
+        setEnContent(html)
+      } else {
+        setArContent(html)
+      }
       await handleSave(html)
     },
-    [handleSave]
+    [handleSave, activeLang]
   )
 
   const handleDiscard = useCallback(() => {
     if (!page) return
-    setTitle(localizedField(page, lang, "title"))
+    setEnTitle(page.title_en)
+    setArTitle(page.title_ar || "")
     setPostSlug(page.slug)
     setCategory(page.category)
-    setContent(localizedField(page, lang, "content"))
+    setEnContent(page.content_en)
+    setArContent(page.content_ar || "")
     setIsPublished(page.is_published)
     setAuthorName(page.author_name)
     setResetKey(t => t + 1)
-  }, [page, lang])
+  }, [page])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -223,10 +251,6 @@ export default function CmsBlogEditorPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={toggleLang}>
-            <Languages className="mr-2 h-4 w-4" />
-            {UI_STRINGS.language_label[lang]}
-          </Button>
           <div className="flex items-center gap-2">
             <Switch
               id="publish"
@@ -243,64 +267,85 @@ export default function CmsBlogEditorPage() {
 
       <Card className="space-y-4 p-4">
         <div className="space-y-2">
-          <Label htmlFor="title">Title ({lang === "en" ? "English" : "Arabic"})</Label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Post title"
-          />
+          <Label htmlFor="category">Category</Label>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger id="category" className="w-72">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)] min-w-[160px]">
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.name} className="capitalize">
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* <div className="space-y-2">
-          <Label htmlFor="slug">Slug</Label>
+        <div className="space-y-2">
+          <Label htmlFor="author">Author</Label>
           <Input
-            id="slug"
-            value={postSlug}
-            readOnly
-            placeholder="url-slug"
+            id="author"
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+            placeholder="Author name"
+            className="max-w-xs w-72"
           />
-        </div> */}
-
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger id="category" className="w-72">
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)] min-w-[160px]">
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.name} className="capitalize">
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-
-      <div className="space-y-2">
-        <Label htmlFor="author">Author</Label>
-        <Input
-          id="author"
-          value={authorName}
-          onChange={(e) => setAuthorName(e.target.value)}
-          placeholder="Author name"
-          className="max-w-xs w-72"
-        />
-      </div>
+        </div>
       </Card>
 
-      <RichTextEditor
-        key={`${resetKey}-${lang}`} 
-        title={`Content (${lang === "en" ? "English" : "Arabic"})`}
-        initialContent={content}
-        onSave={handleContentSave}
-        isSaving={saving}
-        onImageUpload={handleImageUpload}
-        onDiscard={handleDiscard}
-      />
+      <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
+        <TabsList>
+          <TabsTrigger value="en">English</TabsTrigger>
+          <TabsTrigger value="ar">Arabic</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
+      {activeLang === "en" ? (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="en-title">Title (English)</Label>
+            <Input
+              id="en-title"
+              value={enTitle}
+              onChange={(e) => setEnTitle(e.target.value)}
+              placeholder="Post title"
+            />
+          </div>
+          <RichTextEditor
+            key={`${resetKey}-en`}
+            title="English Content"
+            initialContent={enContent}
+            onSave={handleContentSave}
+            isSaving={saving}
+            onImageUpload={handleImageUpload}
+            onDiscard={handleDiscard}
+            onChange={handleContentChange}
+          />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="ar-title">Title (Arabic)</Label>
+            <Input
+              id="ar-title"
+              value={arTitle}
+              onChange={(e) => setArTitle(e.target.value)}
+              placeholder="عنوان المقال"
+            />
+          </div>
+          <RichTextEditor
+            key={`${resetKey}-ar`}
+            title="Arabic Content"
+            initialContent={arContent}
+            onSave={handleContentSave}
+            isSaving={saving}
+            onImageUpload={handleImageUpload}
+            onDiscard={handleDiscard}
+            onChange={handleContentChange}
+          />
+        </div>
+      )}
     </div>
   )
 }

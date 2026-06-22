@@ -45,7 +45,7 @@ export default async function BlogPostPage({
 
   if (!page) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-12">
+      <div className={`mx-auto ${lang === "ar" ? "mr-60" : "ml-60"} max-w-4xl px-6 py-12`}>
         <Link
           href="/blog"
           className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
@@ -63,7 +63,7 @@ export default async function BlogPostPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12">
+    <div className={`mx-auto ${lang === "ar" ? "mr-60" : "ml-60"} max-w-4xl px-6 py-12`}>
       <Link
         href="/blog"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
