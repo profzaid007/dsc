@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { ArrowLeft, Loader2, Trash2 } from "lucide-react"
+import { ArrowLeft, Loader2, Trash2, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 
@@ -87,13 +87,26 @@ export default function CmsHomePageEditorPage() {
     [page, enTitle, arTitle, slugValue, isSuperAdmin, activeLang]
   )
 
-  const handleDiscard = useCallback(() => {
+  const handleDiscard = useCallback(async () => {
     if (!page) return
-    setEnTitle(page.title_en)
-    setArTitle(page.title_ar || "")
-    setSlugValue(page.slug)
-    setResetKey(k => k + 1)
-  }, [page])
+    const original = await homePagesCollection.getBySlug(slug)
+
+    if (original) {
+      setPage(original)
+      setEnTitle(original.title_en)
+      setArTitle(original.title_ar || "")
+      setSlugValue(original.slug)
+    }
+
+    setResetKey(t => t + 1)
+  }, [page, slug])
+
+  const copyFromEnglish = useCallback(() => {
+    if (!page) return
+    setArTitle(enTitle)
+    setPage(prev => prev ? { ...prev, content_ar: prev.content_en, title_ar: prev.title_en } : null)
+    setResetKey(t => t + 1)
+  }, [page, enTitle])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -230,6 +243,13 @@ export default function CmsHomePageEditorPage() {
           </TabsContent>
 
           <TabsContent value="ar" className="mt-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="ar-title">Title (Arabic)</Label>
+              <Button variant="outline" size="sm" onClick={copyFromEnglish}>
+                <Copy className="mr-2 h-4 w-4" />
+                Copy from English
+              </Button>
+            </div>
             {isSuperAdmin && (
               <div className="space-y-2">
                 <Label htmlFor="ar-title">Title (Arabic)</Label>

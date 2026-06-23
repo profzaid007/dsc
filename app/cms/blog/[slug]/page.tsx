@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
-import { Loader2, ArrowLeft, Trash2 } from "lucide-react"
+import { Loader2, ArrowLeft, Trash2, Copy } from "lucide-react"
 import pb from "@/lib/pb"
 
 function slugify(text: string): string {
@@ -153,6 +153,12 @@ export default function CmsBlogEditorPage() {
     },
     [handleSave, activeLang]
   )
+
+  const copyFromEnglish = useCallback(() => {
+    setArTitle(enTitle)
+    setArContent(enContent)
+    setResetKey(t => t + 1)
+  }, [enTitle, enContent])
 
   const handleDiscard = useCallback(() => {
     if (!page) return
@@ -325,15 +331,19 @@ export default function CmsBlogEditorPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="space-y-2">
+          <div className="flex items-center justify-between">
             <Label htmlFor="ar-title">Title (Arabic)</Label>
-            <Input
-              id="ar-title"
-              value={arTitle}
-              onChange={(e) => setArTitle(e.target.value)}
-              placeholder="عنوان المقال"
-            />
+            <Button variant="outline" size="sm" onClick={copyFromEnglish}>
+              <Copy className="mr-2 h-4 w-4" />
+              Copy from English
+            </Button>
           </div>
+          <Input
+            id="ar-title"
+            value={arTitle}
+            onChange={(e) => setArTitle(e.target.value)}
+            placeholder="عنوان المقال"
+          />
           <RichTextEditor
             key={`${resetKey}-ar`}
             title="Arabic Content"

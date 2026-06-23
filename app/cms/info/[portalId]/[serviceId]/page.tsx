@@ -12,7 +12,8 @@ import { RichTextEditor } from "@/components/cms/RichTextEditor"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2, Copy } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function CmsServiceEditorPage() {
   const params = useParams()
@@ -72,9 +73,20 @@ export default function CmsServiceEditorPage() {
     [page, activeLang]
   )
 
-  const handleDiscard = useCallback(() => {
+  const handleDiscard = useCallback(async () => {
+    if (!service) return
+    const original = await infoPagesCollection.getBySlug(serviceId)
+
+    if (original) setPage(original)
     setResetKey(t => t + 1)
-  }, [])
+  }, [service, serviceId])
+
+
+  const copyFromEnglish = useCallback(() => {
+    if (!page) return
+    setPage(prev => prev ? { ...prev, content_ar: prev.content_en } : null)
+    setResetKey(t => t + 1)
+  }, [page])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -177,6 +189,13 @@ export default function CmsServiceEditorPage() {
             />
           </TabsContent>
           <TabsContent value="ar" className="mt-4">
+            <div className="mb-4 flex items-center justify-between">
+              <Label>Arabic Content</Label>
+              <Button variant="outline" size="sm" onClick={copyFromEnglish}>
+                <Copy className="mr-2 h-4 w-4" />
+                Copy from English
+              </Button>
+            </div>
             <RichTextEditor
               key={`${resetKey}-ar`}
               title="Arabic Content"
