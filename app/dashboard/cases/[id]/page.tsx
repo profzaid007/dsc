@@ -7,6 +7,7 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
+import { getToolTypeLabel } from "@/lib/tool-types"
 import {
   Card,
   CardContent,
@@ -173,7 +174,7 @@ export default function ProfileDetailPage({
                     const toolType = toolTypes.find(
                       (t) => t.id === assignment.type
                     )
-                    const toolTypeName = toolType?.name || "custom"
+                    const toolTypeName = getToolTypeLabel(toolType, lang)
                     return (
                       <div
                         key={assignment.id}
@@ -190,7 +191,7 @@ export default function ProfileDetailPage({
                               variant="outline"
                               className="text-xs capitalize"
                             >
-                              {toolTypeName.replace("_", " ")}
+                              {toolTypeName}
                             </Badge>
                           </div>
                         </div>
@@ -279,9 +280,7 @@ export default function ProfileDetailPage({
                 <History className="h-5 w-5" />
                 History
               </CardTitle>
-              <CardDescription>
-                Completed Tasks will be here
-              </CardDescription>
+              <CardDescription>Completed Tasks will be here</CardDescription>
             </CardHeader>
             <CardContent>
               {assignments.filter((a) => a.status === "completed").length ===

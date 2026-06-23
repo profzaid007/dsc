@@ -44,34 +44,16 @@ import {
   Pencil,
   Trash2,
   FileText,
-  ClipboardList as MultiAnswerIcon,
-  Image,
-  FileBarChart,
-  Layers,
-  Paperclip,
   Plus,
 } from "lucide-react"
 import Link from "next/link"
 import type { AssignmentStatus } from "@/types/assignment"
 import type { Tool, ToolType, ToolConfig } from "@/types/tool"
-
-const toolTypeIcons: Record<string, typeof FileText> = {
-  survey: FileText,
-  multiple_answer: MultiAnswerIcon,
-  media_question: Image,
-  report: FileBarChart,
-  plan: Layers,
-  attachment_request: Paperclip,
-}
-
-const toolTypeLabels: Record<string, string> = {
-  survey: "Survey",
-  multiple_answer: "Multiple Answer",
-  media_question: "Media Questions",
-  report: "Report",
-  plan: "Plan",
-  attachment_request: "Request for Attachment",
-}
+import {
+  getToolTypeLabel,
+  getToolTypeMeta,
+  toolTypeOrder,
+} from "@/lib/tool-types"
 
 const statusColors: Record<AssignmentStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -279,8 +261,9 @@ export default function AdminCaseDetailPage({
                       const toolType = toolTypes.find(
                         (t) => t.id === assignment.type
                       )
-                      const toolTypeName = toolType?.name || "custom"
-                      const Icon = toolTypeIcons[toolTypeName] || FileText
+                      const toolTypeName = toolType?.key || "custom"
+                      const Icon =
+                        getToolTypeMeta(toolTypeName)?.icon || FileText
 
                       return (
                         <TableRow key={assignment.id}>
@@ -291,7 +274,7 @@ export default function AdminCaseDetailPage({
                             <div className="flex items-center gap-1">
                               <Icon className="h-3 w-3 text-muted-foreground" />
                               <span className="text-xs">
-                                {toolTypeLabels[toolTypeName] || toolTypeName}
+                                {getToolTypeLabel(toolType, lang)}
                               </span>
                             </div>
                           </TableCell>
@@ -402,125 +385,107 @@ export default function AdminCaseDetailPage({
             <CardContent>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                 {/* Case-specific tools - direct create */}
-                {[
-                  {
-                    type: "plan",
-                    labelEn: "Plan",
-                    labelAr: "خطة",
-                    icon: Layers,
-                    route: "plan",
-                  },
-                  {
-                    type: "report",
-                    labelEn: "Report",
-                    labelAr: "تقرير",
-                    icon: FileBarChart,
-                    route: "report",
-                  },
-                  {
-                    type: "attachment_request",
-                    labelEn: "Attachment",
-                    labelAr: "مرفق",
-                    icon: Paperclip,
-                    route: "attachment",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.type}
-                    className="flex flex-col items-center gap-3 rounded-lg border p-4"
-                  >
-                    <item.icon className="h-8 w-8 text-muted-foreground" />
-                    <span className="font-medium">{item.labelEn}</span>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        router.push(
-                          `/dashboard/admin/tools/${item.route}/new?caseId=${caseId}`
-                        )
-                        setShowAssignModal(false)
-                      }}
-                    >
-                      {lang === "ar" ? "إنشاء" : "Create"}
-                    </Button>
-                  </div>
-                ))}
+                {toolTypeOrder
+                  .filter((key) =>
+                    ["plan", "report", "attachment_request"].includes(key)
+                  )
+                  .map((key) => {
+                    const toolType = toolTypes.find((item) => item.key === key)
+                    const meta = getToolTypeMeta(key)
+                    if (!toolType || !meta) return null
 
-                {/* Template-based tools - show template list or create new */}
-                {[
-                  {
-                    type: "survey",
-                    labelEn: "Survey",
-                    labelAr: "استبيان",
-                    icon: FileText,
-                    route: "survey",
-                  },
-                  {
-                    type: "multiple_answer",
-                    labelEn: "Multiple Choice",
-                    labelAr: "اختيار متعدد",
-                    icon: ClipboardList,
-                    route: "multiple-choice",
-                  },
-                  {
-                    type: "media_question",
-                    labelEn: "Media",
-                    labelAr: "وسائط",
-                    icon: Image,
-                    route: "media",
-                  },
-                ].map((item) => {
-                  const typeTools = tools.filter((t) => {
-                    const toolTypeObj = toolTypes.find((tt) => tt.id === t.type)
-                    return toolTypeObj?.name === item.type
-                  })
-
-                  return (
-                    <div
-                      key={item.type}
-                      className="flex flex-col items-center gap-3 rounded-lg border p-4"
-                    >
-                      <item.icon className="h-8 w-8 text-muted-foreground" />
-                      <span className="font-medium">{item.labelEn}</span>
-                      <div className="flex gap-2">
-                        {typeTools.length > 0 && (
-                          <Select
-                            onValueChange={(toolId) => {
-                              setSelectedToolId(toolId)
-                              setConfirmToolType(item.type)
-                            }}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue
-                                placeholder={
-                                  lang === "ar" ? "قوالب" : "Templates"
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {typeTools.map((tool) => (
-                                <SelectItem key={tool.id} value={tool.id}>
-                                  {tool.name.en}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
+                    return (
+                      <div
+                        key={toolType.id}
+                        className="flex flex-col items-center gap-3 rounded-lg border p-4"
+                      >
+                        <meta.icon className="h-8 w-8 text-muted-foreground" />
+                        <span className="font-medium">
+                          {getToolTypeLabel(toolType, lang)}
+                        </span>
                         <Button
                           size="sm"
-                          variant="outline"
                           onClick={() => {
                             router.push(
-                              `/dashboard/admin/tools/${item.route}/new?caseId=${caseId}`
+                              `/dashboard/admin/tools/${meta.route}/new?caseId=${caseId}`
                             )
                             setShowAssignModal(false)
                           }}
                         >
-                          {lang === "ar" ? "جديد" : "New"}
+                          {lang === "ar" ? "إنشاء" : "Create"}
                         </Button>
                       </div>
-                    </div>
+                    )
+                  })}
+
+                {/* Template-based tools - show template list or create new */}
+                {toolTypeOrder
+                  .filter((key) =>
+                    ["survey", "multiple_answer", "media_question"].includes(
+                      key
+                    )
                   )
-                })}
+                  .map((key) => {
+                    const toolType = toolTypes.find((item) => item.key === key)
+                    const meta = getToolTypeMeta(key)
+                    if (!toolType || !meta) return null
+
+                    const typeTools = tools.filter((t) => {
+                      const toolTypeObj = toolTypes.find(
+                        (tt) => tt.id === t.type
+                      )
+                      return toolTypeObj?.key === key
+                    })
+
+                    return (
+                      <div
+                        key={toolType.id}
+                        className="flex flex-col items-center gap-3 rounded-lg border p-4"
+                      >
+                        <meta.icon className="h-8 w-8 text-muted-foreground" />
+                        <span className="font-medium">
+                          {getToolTypeLabel(toolType, lang)}
+                        </span>
+                        <div className="flex gap-2">
+                          {typeTools.length > 0 && (
+                            <Select
+                              onValueChange={(toolId) => {
+                                setSelectedToolId(toolId)
+                                setConfirmToolType(key)
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue
+                                  placeholder={
+                                    lang === "ar" ? "قوالب" : "Templates"
+                                  }
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {typeTools.map((tool) => (
+                                  <SelectItem key={tool.id} value={tool.id}>
+                                    {tool.name.en}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              router.push(
+                                `/dashboard/admin/tools/${meta.route}/new?caseId=${caseId}`
+                              )
+                              setShowAssignModal(false)
+                            }}
+                          >
+                            {lang === "ar" ? "جديد" : "New"}
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  })}
               </div>
             </CardContent>
             <CardContent className="flex justify-end pt-0">
@@ -542,9 +507,7 @@ export default function AdminCaseDetailPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="mx-4 w-full max-w-sm">
             <CardHeader>
-              <CardTitle>
-                {lang === "ar" ? "تأكيد" : "Confirm"}
-              </CardTitle>
+              <CardTitle>{lang === "ar" ? "تأكيد" : "Confirm"}</CardTitle>
             </CardHeader>
             <CardContent>
               {selectedToolId ? (
@@ -556,8 +519,14 @@ export default function AdminCaseDetailPage({
               ) : (
                 <p>
                   {lang === "ar"
-                    ? `إنشاء ${toolTypeLabels[confirmToolType]} جديد لهذه الحالة؟`
-                    : `Create new ${toolTypeLabels[confirmToolType]} for this case?`}
+                    ? `إنشاء ${getToolTypeLabel(
+                        toolTypes.find((item) => item.key === confirmToolType),
+                        lang
+                      )} جديد لهذه الحالة؟`
+                    : `Create new ${getToolTypeLabel(
+                        toolTypes.find((item) => item.key === confirmToolType),
+                        lang
+                      )} for this case?`}
                 </p>
               )}
             </CardContent>
@@ -572,10 +541,7 @@ export default function AdminCaseDetailPage({
                 {lang === "ar" ? "إلغاء" : "Cancel"}
               </Button>
               {selectedToolId ? (
-                <Button
-                  onClick={handleAssignTool}
-                  disabled={isAssigning}
-                >
+                <Button onClick={handleAssignTool} disabled={isAssigning}>
                   {isAssigning
                     ? lang === "ar"
                       ? "جاري التعيين..."
@@ -587,16 +553,10 @@ export default function AdminCaseDetailPage({
               ) : (
                 <Button
                   onClick={() => {
-                    const routeMap: Record<string, string> = {
-                      plan: "plan",
-                      report: "report",
-                      attachment_request: "attachment",
-                      survey: "survey",
-                      multiple_answer: "multiple-choice",
-                      media_question: "media",
-                    }
+                    const route =
+                      getToolTypeMeta(confirmToolType)?.route || confirmToolType
                     router.push(
-                      `/dashboard/admin/tools/${routeMap[confirmToolType] || confirmToolType}/new?caseId=${caseId}`
+                      `/dashboard/admin/tools/${route}/new?caseId=${caseId}`
                     )
                     setShowAssignModal(false)
                     setConfirmToolType(null)

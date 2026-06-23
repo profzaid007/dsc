@@ -22,7 +22,18 @@ import {
 import { DragList } from "@/components/ui/drag-list"
 import { MultipleChoicePreview } from "@/components/tool-renderers/MultipleChoicePreview"
 import { MediaUpload } from "@/components/ui/media-upload"
-import { ArrowLeft, Plus, Trash2, Eye, EyeOff, CheckCircle, Image, Video, Music, X } from "lucide-react"
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  Image,
+  Video,
+  Music,
+  X,
+} from "lucide-react"
 import type {
   MultipleChoiceConfig,
   MCQuestion,
@@ -90,7 +101,9 @@ export default function MultipleChoiceBuilderPage({
   const [questions, setQuestions] = useState<MCQuestion[]>([])
   const [pendingFiles, setPendingFiles] = useState<Map<string, File>>(new Map())
   const [uploadOpen, setUploadOpen] = useState(false)
-  const [currentMediaQuestionId, setCurrentMediaQuestionId] = useState<string | null>(null)
+  const [currentMediaQuestionId, setCurrentMediaQuestionId] = useState<
+    string | null
+  >(null)
 
   // Load existing data in edit mode
   useEffect(() => {
@@ -138,7 +151,7 @@ export default function MultipleChoiceBuilderPage({
     setIsSubmitting(true)
 
     const toolTypes = await fetchToolTypes()
-    const type = toolTypes.find((t) => t.name === "multiple_answer")?.id
+    const type = toolTypes.find((t) => t.key === "multiple_answer")?.id
     if (!type) {
       setIsSubmitting(false)
       return
@@ -178,9 +191,7 @@ export default function MultipleChoiceBuilderPage({
       }
       mediaFormData.append("config", JSON.stringify(baseConfig))
 
-      const record = await pb
-        .collection("tools")
-        .update(editId, mediaFormData)
+      const record = await pb.collection("tools").update(editId, mediaFormData)
       const uploadedUrls = (record.media as string[]).map((filename) =>
         pb.files.getUrl(record, filename)
       )
@@ -296,7 +307,9 @@ export default function MultipleChoiceBuilderPage({
       mediaUrl: "",
       responseType: data.responseType,
     })
-    setPendingFiles((prev) => new Map(prev).set(currentMediaQuestionId, data.file))
+    setPendingFiles((prev) =>
+      new Map(prev).set(currentMediaQuestionId, data.file)
+    )
     setCurrentMediaQuestionId(null)
   }
 
@@ -420,7 +433,11 @@ export default function MultipleChoiceBuilderPage({
                     </div>
                   )}
                   {question.mediaType === "audio" && mediaPreviewSrc && (
-                    <audio src={mediaPreviewSrc} controls className="mt-2 w-full" />
+                    <audio
+                      src={mediaPreviewSrc}
+                      controls
+                      className="mt-2 w-full"
+                    />
                   )}
                   {!mediaPreviewSrc && (
                     <div className="flex h-32 items-center justify-center text-muted-foreground">
@@ -609,11 +626,13 @@ export default function MultipleChoiceBuilderPage({
                   <Checkbox
                     id="isTemplate"
                     checked={isTemplate}
-                    onCheckedChange={(checked) => setIsTemplate(checked === true)}
+                    onCheckedChange={(checked) =>
+                      setIsTemplate(checked === true)
+                    }
                   />
                   <label
                     htmlFor="isTemplate"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     {lang === "ar"
                       ? "حفظ كقالب (متاح للاستخدام المستقبلي)"

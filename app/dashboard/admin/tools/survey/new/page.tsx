@@ -186,7 +186,7 @@ export default function SurveyBuilderPage({
       router.push(`/dashboard/admin/tools/survey/${editId}`)
     } else {
       const toolTypes = await fetchToolTypes()
-      const type = toolTypes.find((t) => t.name === "survey")?.id
+      const type = toolTypes.find((t) => t.key === "survey")?.id
       if (!type) {
         setIsSubmitting(false)
         return
@@ -379,11 +379,13 @@ export default function SurveyBuilderPage({
                   <Checkbox
                     id="isTemplate"
                     checked={isTemplate}
-                    onCheckedChange={(checked) => setIsTemplate(checked === true)}
+                    onCheckedChange={(checked) =>
+                      setIsTemplate(checked === true)
+                    }
                   />
                   <label
                     htmlFor="isTemplate"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     {lang === "ar"
                       ? "حفظ كقالب (متاح للاستخدام المستقبلي)"

@@ -2,14 +2,11 @@
 
 import { useState, useCallback } from "react"
 import { toolTypesCollection } from "@/lib/pb-collections"
-
-interface ToolType {
-  id: string
-  name: string
-}
+import type { ToolTypeRecord } from "@/lib/tool-types"
+import type { BilingualString } from "@/types/tool"
 
 export function useToolTypes() {
-  const [toolTypes, setToolTypes] = useState<ToolType[]>([])
+  const [toolTypes, setToolTypes] = useState<ToolTypeRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,15 +28,23 @@ export function useToolTypes() {
   }, [])
 
   const getToolTypeById = useCallback(
-    (id: string | undefined): ToolType | undefined => {
+    (id: string | undefined): ToolTypeRecord | undefined => {
       if (!id) return undefined
       return toolTypes.find((t) => t.id === id)
     },
     [toolTypes]
   )
 
+  const getToolTypeByKey = useCallback(
+    (key: string | undefined): ToolTypeRecord | undefined => {
+      if (!key) return undefined
+      return toolTypes.find((t) => t.key === key)
+    },
+    [toolTypes]
+  )
+
   const getToolTypeByIdAsync = useCallback(
-    async (id: string | undefined): Promise<ToolType | undefined> => {
+    async (id: string | undefined): Promise<ToolTypeRecord | undefined> => {
       if (!id) return undefined
       // First check cache
       const cached = toolTypes.find((t) => t.id === id)
@@ -54,12 +59,25 @@ export function useToolTypes() {
     [toolTypes]
   )
 
+  const getToolTypeLabel = useCallback(
+    (
+      toolType: ToolTypeRecord | undefined,
+      lang: keyof BilingualString = "en"
+    ) => {
+      if (!toolType) return "Unknown"
+      return toolType.label[lang] || toolType.label.en || toolType.key
+    },
+    []
+  )
+
   return {
     toolTypes,
     isLoading,
     error,
     fetchToolTypes,
     getToolTypeById,
+    getToolTypeByKey,
     getToolTypeByIdAsync,
+    getToolTypeLabel,
   }
 }

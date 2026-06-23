@@ -4,6 +4,7 @@ import type { Profile } from "@/types/profile"
 import type { Tool, BilingualString } from "@/types/tool"
 import type { CaseTool } from "@/types/assignment"
 import type { BlogPage, InfoPage, HomePage } from "@/types/cms"
+import type { ToolTypeRecord } from "./tool-types"
 import { handlePocketBaseError } from "./pb"
 
 // Transform flat DB fields to nested TypeScript objects
@@ -202,20 +203,65 @@ export const caseToolsCollection = {
   },
 }
 
+function transformLookupToolType(
+  record: Record<string, unknown>
+): ToolTypeRecord {
+  const key = (record.key as string) || (record.name as string) || ""
+
+  return {
+    id: record.id as string,
+    key,
+    name: key,
+    label: {
+      en: (record.label_en as string) || (record.name_en as string) || key,
+      ar: (record.label_ar as string) || (record.name_ar as string) || key,
+    },
+  }
+}
+
 // Tool Types Collection with caching
-const toolTypesCache: Map<string, { id: string; name: string }> = new Map()
+const toolTypesCache: Map<string, ToolTypeRecord> = new Map()
+const toolTypesCacheById: Map<string, ToolTypeRecord> = new Map()
 
 export const toolTypesCollection = {
-  async getAll(): Promise<{ id: string; name: string }[]> {
-    const data = await pb.collection("tool_types").getFullList()
-    // Update cache
-    data.forEach((type) => {
-      toolTypesCache.set(type.name, { id: type.id, name: type.name })
-    })
-    return data.map((type) => ({ id: type.id, name: type.name }))
+  async getAll(): Promise<ToolTypeRecord[]> {
+    try {
+      const data = await pb.collection("lookups").getFullList({
+        filter: 'type = "tool_types"',
+      })
+
+      const records = data.map((type) =>
+        transformLookupToolType(type as unknown as Record<string, unknown>)
+      )
+
+      records.forEach((type) => {
+        toolTypesCache.set(type.key, type)
+        toolTypesCacheById.set(type.id, type)
+      })
+
+      return records
+    } catch {
+      const data = await pb.collection("tool_types").getFullList()
+      const records = data.map((type) => ({
+        id: type.id,
+        key: type.name,
+        name: type.name,
+        label: {
+          en: type.name,
+          ar: type.name,
+        },
+      }))
+
+      records.forEach((type) => {
+        toolTypesCache.set(type.key, type)
+        toolTypesCacheById.set(type.id, type)
+      })
+
+      return records
+    }
   },
 
-  async getByName(name: string): Promise<{ id: string; name: string }> {
+  async getByName(name: string): Promise<ToolTypeRecord> {
     // Check cache first
     if (toolTypesCache.has(name)) {
       return toolTypesCache.get(name)!
@@ -224,43 +270,84 @@ export const toolTypesCollection = {
     // Fetch from DB
     try {
       const type = await pb
-        .collection("tool_types")
-        .getFirstListItem(`name = "${name}"`)
-      // Cache it
-      toolTypesCache.set(name, { id: type.id, name: type.name })
-      return { id: type.id, name: type.name }
-    } catch (error) {
-      console.error(`Tool type "${name}" not found`)
-      throw new Error(`Tool type "${name}" not found`)
+        .collection("lookups")
+        .getFirstListItem(`type = "tool_types" && key = "${name}"`)
+      const record = transformLookupToolType(
+        type as unknown as Record<string, unknown>
+      )
+      toolTypesCache.set(record.key, record)
+      toolTypesCacheById.set(record.id, record)
+      return record
+    } catch {
+      try {
+        const type = await pb
+          .collection("tool_types")
+          .getFirstListItem(`name = "${name}"`)
+        const record = {
+          id: type.id,
+          key: type.name,
+          name: type.name,
+          label: {
+            en: type.name,
+            ar: type.name,
+          },
+        }
+        toolTypesCache.set(record.key, record)
+        toolTypesCacheById.set(record.id, record)
+        return record
+      } catch {
+        console.error(`Tool type "${name}" not found`)
+        throw new Error(`Tool type "${name}" not found`)
+      }
     }
   },
 
   // Get by ID (useful when you have the type ID from case_tools)
-  async getById(id: string): Promise<{ id: string; name: string }> {
+  async getById(id: string): Promise<ToolTypeRecord> {
     // Check cache first
-    for (const [name, typeData] of toolTypesCache.entries()) {
-      if (typeData.id === id) {
-        return typeData
-      }
+    if (toolTypesCacheById.has(id)) {
+      return toolTypesCacheById.get(id)!
     }
 
     // Fetch from DB
-    const type = await pb.collection("tool_types").getOne(id)
-    const result = { id: type.id, name: type.name }
-    toolTypesCache.set(type.name, result)
-    return result
+    try {
+      const type = await pb.collection("lookups").getOne(id)
+      const record = transformLookupToolType(
+        type as unknown as Record<string, unknown>
+      )
+      toolTypesCache.set(record.key, record)
+      toolTypesCacheById.set(record.id, record)
+      return record
+    } catch {
+      const type = await pb.collection("tool_types").getOne(id)
+      const record = {
+        id: type.id,
+        key: type.name,
+        name: type.name,
+        label: {
+          en: type.name,
+          ar: type.name,
+        },
+      }
+      toolTypesCache.set(record.key, record)
+      toolTypesCacheById.set(record.id, record)
+      return record
+    }
   },
 
   // Clear cache (useful if tool types are modified)
   clearCache() {
     toolTypesCache.clear()
+    toolTypesCacheById.clear()
   },
 }
 
 export const infoPagesCollection = {
   async getBySlug(slug: string): Promise<InfoPage | null> {
     try {
-      const data = await pb.collection("info_pages").getFirstListItem(`slug = "${slug}"`)
+      const data = await pb
+        .collection("info_pages")
+        .getFirstListItem(`slug = "${slug}"`)
       return data as unknown as InfoPage
     } catch {
       return null
@@ -278,7 +365,11 @@ export const infoPagesCollection = {
     }
   },
 
-  async create(data: { slug: string; title: string; content_en?: string }): Promise<InfoPage> {
+  async create(data: {
+    slug: string
+    title: string
+    content_en?: string
+  }): Promise<InfoPage> {
     const lorem =
       "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>"
     const result = await pb.collection("info_pages").create({
@@ -314,9 +405,12 @@ export const infoPagesCollection = {
     }
 
     if (data.title !== undefined) formData.append("title", data.title)
-    if (data.content_en !== undefined) formData.append("content_en", data.content_en)
-    if (data.content_ar !== undefined) formData.append("content_ar", data.content_ar)
-    if (data.is_published !== undefined) formData.append("is_published", String(data.is_published))
+    if (data.content_en !== undefined)
+      formData.append("content_en", data.content_en)
+    if (data.content_ar !== undefined)
+      formData.append("content_ar", data.content_ar)
+    if (data.is_published !== undefined)
+      formData.append("is_published", String(data.is_published))
 
     files.forEach((file) => {
       formData.append("media", file)
@@ -338,7 +432,9 @@ export const infoPagesCollection = {
 export const homePagesCollection = {
   async getBySlug(slug: string): Promise<HomePage | null> {
     try {
-      const data = await pb.collection("home_pages").getFirstListItem(`slug = "${slug}"`)
+      const data = await pb
+        .collection("home_pages")
+        .getFirstListItem(`slug = "${slug}"`)
       return data as unknown as HomePage
     } catch {
       return null
@@ -356,8 +452,13 @@ export const homePagesCollection = {
     }
   },
 
-  async create(data: { slug: string; title: string; content_en?: string }): Promise<HomePage> {
-    const lorem = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>"
+  async create(data: {
+    slug: string
+    title: string
+    content_en?: string
+  }): Promise<HomePage> {
+    const lorem =
+      "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>"
     const result = await pb.collection("home_pages").create({
       slug: data.slug,
       title_en: data.title,
@@ -391,9 +492,12 @@ export const homePagesCollection = {
 
     if (data.title_en !== undefined) formData.append("title_en", data.title_en)
     if (data.title_ar !== undefined) formData.append("title_ar", data.title_ar)
-    if (data.content_en !== undefined) formData.append("content_en", data.content_en)
-    if (data.content_ar !== undefined) formData.append("content_ar", data.content_ar)
-    if (data.is_published !== undefined) formData.append("is_published", String(data.is_published))
+    if (data.content_en !== undefined)
+      formData.append("content_en", data.content_en)
+    if (data.content_ar !== undefined)
+      formData.append("content_ar", data.content_ar)
+    if (data.is_published !== undefined)
+      formData.append("is_published", String(data.is_published))
 
     files.forEach((file) => {
       formData.append("media", file)
@@ -565,11 +669,14 @@ export const blogPagesCollection = {
     if (data.title_ar !== undefined) formData.append("title_ar", data.title_ar)
     if (data.slug !== undefined) formData.append("slug", data.slug)
     if (data.category !== undefined) formData.append("category", data.category)
-    if (data.content_en !== undefined) formData.append("content_en", data.content_en)
-    if (data.content_ar !== undefined) formData.append("content_ar", data.content_ar)
+    if (data.content_en !== undefined)
+      formData.append("content_en", data.content_en)
+    if (data.content_ar !== undefined)
+      formData.append("content_ar", data.content_ar)
     if (data.is_published !== undefined)
       formData.append("is_published", String(data.is_published))
-    if (data.author_name !== undefined) formData.append("author_name", data.author_name)
+    if (data.author_name !== undefined)
+      formData.append("author_name", data.author_name)
 
     files.forEach((file) => {
       formData.append("media", file)

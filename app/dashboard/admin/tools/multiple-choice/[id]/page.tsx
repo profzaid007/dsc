@@ -1,9 +1,10 @@
 "use client"
 
-import { use, useState } from "react"
+import { use, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
 import { useAssignments } from "@/hooks/useAssignments"
+import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
 import { toolTypesCollection } from "@/lib/pb-collections"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
@@ -17,41 +18,13 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  UserPlus,
-  FileText,
-  ClipboardList,
-  Image,
-  FileBarChart,
-  Layers,
-  Paperclip,
-} from "lucide-react"
+import { ArrowLeft, Edit, Trash2, UserPlus, FileText } from "lucide-react"
 import Link from "next/link"
-import type { ToolType, MultipleChoiceConfig } from "@/types/tool"
+import type { MultipleChoiceConfig } from "@/types/tool"
 import type { AssignmentStatus } from "@/types/assignment"
+import { getToolTypeLabel, getToolTypeMeta } from "@/lib/tool-types"
 
-const toolTypeIcons: Record<ToolType, typeof FileText> = {
-  survey: FileText,
-  multiple_answer: ClipboardList,
-  media_question: Image,
-  report: FileBarChart,
-  plan: Layers,
-  attachment_request: Paperclip,
-}
-
-const toolTypeLabels: Record<ToolType, string> = {
-  survey: "Survey",
-  multiple_answer: "Multiple Answer",
-  media_question: "Media Questions",
-  report: "Report",
-  plan: "Plan",
-  attachment_request: "Request for Attachment",
-}
-
-const statusColors: Record<AssignmentStatus | ToolType, string> = {
+const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
   assigned: "bg-blue-100 text-blue-800",
   in_progress: "bg-purple-100 text-purple-800",
@@ -81,8 +54,16 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
   const { lang } = useLang()
   const { getToolById, deleteTool } = useTools()
   const { assignTool } = useAssignments()
+  const { fetchToolTypes, getToolTypeByKey } = useToolTypes()
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const [isAssigning, setIsAssigning] = useState(false)
+  const hasFetched = useRef(false)
+
+  useEffect(() => {
+    if (hasFetched.current) return
+    hasFetched.current = true
+    fetchToolTypes()
+  }, [fetchToolTypes])
 
   const tool = getToolById(toolId)
   const config = tool?.config as MultipleChoiceConfig | undefined
@@ -98,7 +79,11 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
     )
   }
 
-  const Icon = toolTypeIcons["multiple_answer"]
+  const Icon = getToolTypeMeta("multiple_answer")?.icon || FileText
+  const toolTypeLabel = getToolTypeLabel(
+    getToolTypeByKey("multiple_answer"),
+    lang
+  )
 
   const handleAssign = async () => {
     if (!selectedCaseId || !tool) return
@@ -143,7 +128,7 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
               {tool.name[lang]}
             </h1>
             <p className="text-muted-foreground">
-              {toolTypeLabels["multiple_answer"]} • {tool.serviceType}
+              {toolTypeLabel} • {tool.serviceType}
             </p>
           </div>
         </div>
@@ -191,7 +176,7 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
               </span>
               <div>
                 <Badge className={statusColors["multiple_answer"]}>
-                  {toolTypeLabels["multiple_answer"]}
+                  {toolTypeLabel}
                 </Badge>
               </div>
             </div>

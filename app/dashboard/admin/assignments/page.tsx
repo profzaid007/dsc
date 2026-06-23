@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useToolTypes } from "@/hooks/useToolTypes"
+import { useLang } from "@/lib/lang-context"
 import {
   Card,
   CardContent,
@@ -37,37 +38,14 @@ import {
   Trash2,
   FileText,
   ClipboardList,
-  Image,
-  FileBarChart,
-  Layers,
   Search,
   Eye,
-  Paperclip,
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { SmartLink } from "@/components/smart-link"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import type { AssignmentStatus } from "@/types/assignment"
-
-// Tool type name to icon mapping
-const toolTypeIcons: Record<string, typeof FileText> = {
-  survey: FileText,
-  multiple_answer: ClipboardList,
-  media_question: Image,
-  report: FileBarChart,
-  plan: Layers,
-  attachment_request: Paperclip,
-}
-
-// Tool type name to label mapping
-const toolTypeLabels: Record<string, string> = {
-  survey: "Survey",
-  multiple_answer: "Multiple Answer",
-  media_question: "Media Questions",
-  report: "Report",
-  plan: "Plan",
-  attachment_request: "Request for Attachment",
-}
+import { getToolTypeLabel, getToolTypeMeta } from "@/lib/tool-types"
 
 const statusColors: Record<AssignmentStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -85,10 +63,20 @@ const statusLabels: Record<AssignmentStatus, string> = {
 
 export default function AssignmentsPage() {
   const router = useRouter()
-  const { assignments, deleteAssignment, updateAssignment, isLoading: isAssignmentsLoading } =
-    useAssignments()
+  const { lang } = useLang()
+  const {
+    assignments,
+    deleteAssignment,
+    updateAssignment,
+    isLoading: isAssignmentsLoading,
+  } = useAssignments()
   const { profiles, isLoading: isProfilesLoading } = useProfiles()
-  const { toolTypes, isLoading: isToolTypesLoading, fetchToolTypes, getToolTypeById } = useToolTypes()
+  const {
+    toolTypes,
+    isLoading: isToolTypesLoading,
+    fetchToolTypes,
+    getToolTypeById,
+  } = useToolTypes()
   const hasFetched = useRef(false)
 
   const [searchQuery, setSearchQuery] = useState("")
@@ -111,7 +99,7 @@ export default function AssignmentsPage() {
 
   const getToolTypeName = (typeId: string) => {
     const toolType = getToolTypeById(typeId)
-    return toolType?.name || "Unknown"
+    return toolType?.key || "Unknown"
   }
 
   const filteredAssignments = assignments.filter((assignment) => {
@@ -150,7 +138,8 @@ export default function AssignmentsPage() {
     new Set(assignments.map((a) => a.type))
   ).filter(Boolean)
 
-  const isLoading = isAssignmentsLoading || isProfilesLoading || isToolTypesLoading
+  const isLoading =
+    isAssignmentsLoading || isProfilesLoading || isToolTypesLoading
 
   if (isLoading) {
     return (
@@ -216,10 +205,10 @@ export default function AssignmentsPage() {
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 {uniqueToolTypes.map((typeId) => {
-                  const typeName = getToolTypeName(typeId)
+                  const toolType = getToolTypeById(typeId)
                   return (
                     <SelectItem key={typeId} value={typeId}>
-                      {toolTypeLabels[typeName] || typeName}
+                      {getToolTypeLabel(toolType, lang)}
                     </SelectItem>
                   )
                 })}
@@ -280,8 +269,9 @@ export default function AssignmentsPage() {
               </TableHeader>
               <TableBody>
                 {filteredAssignments.map((assignment) => {
+                  const toolType = getToolTypeById(assignment.type)
                   const typeName = getToolTypeName(assignment.type)
-                  const Icon = toolTypeIcons[typeName] || FileText
+                  const Icon = getToolTypeMeta(typeName)?.icon || FileText
                   return (
                     <TableRow key={assignment.id}>
                       <TableCell className="font-medium">
@@ -304,7 +294,7 @@ export default function AssignmentsPage() {
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Icon className="h-3 w-3" />
                           <span className="text-xs">
-                            {toolTypeLabels[typeName] || typeName}
+                            {getToolTypeLabel(toolType, lang)}
                           </span>
                         </div>
                       </TableCell>

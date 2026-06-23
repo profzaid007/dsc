@@ -65,14 +65,18 @@ export default function TakeSurveyToolPage({
   const router = useRouter()
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
-  const { assignments, updateAssignment, updateAssignmentWithFiles, isLoading: isAssignmentsLoading } =
-    useAssignments(caseId)
+  const {
+    assignments,
+    updateAssignment,
+    updateAssignmentWithFiles,
+    isLoading: isAssignmentsLoading,
+  } = useAssignments(caseId)
   const { getToolTypeById, fetchToolTypes } = useToolTypes()
 
   const assignment = assignments.find((a) => a.id === assignmentId) // Find by toolId
   const profile = getProfileById(caseId) // Get profile by case ID
   const toolType = assignment ? getToolTypeById(assignment.type) : undefined
-  const toolTypeName = toolType?.name || "unknown"
+  const toolTypeName = toolType?.key || "unknown"
 
   const isSurveyTool = toolTypeName === "survey"
   const isMultipleChoiceTool = toolTypeName === "multiple_answer"
@@ -212,10 +216,16 @@ export default function TakeSurveyToolPage({
           if (q.answerType === "media") {
             if (q.responseType === "text") {
               const answer = answers[q.id]
-              if (!answer || (typeof answer === "string" && answer.trim() === "")) {
+              if (
+                !answer ||
+                (typeof answer === "string" && answer.trim() === "")
+              ) {
                 missing.push(q.id)
               }
-            } else if (q.responseType === "video" || q.responseType === "audio") {
+            } else if (
+              q.responseType === "video" ||
+              q.responseType === "audio"
+            ) {
               const hasNewFile = uploadedFiles[q.id]
               const hasExistingFile =
                 existingFiles[q.id] && existingFiles[q.id].length > 0
@@ -298,7 +308,10 @@ export default function TakeSurveyToolPage({
 
       if (isMultipleChoiceTool && mcConfig) {
         mcConfig.questions.forEach((q) => {
-          if (q.answerType === "media" && (q.responseType === "video" || q.responseType === "audio")) {
+          if (
+            q.answerType === "media" &&
+            (q.responseType === "video" || q.responseType === "audio")
+          ) {
             if (uploadedFiles[q.id]) {
               finalResponses[q.id] = uploadedFiles[q.id].file.name
             }
@@ -636,149 +649,153 @@ export default function TakeSurveyToolPage({
             onChange={(e) => handleAnswer(question.id, e.target.value)}
           />
         )}
-        {isMedia && (question.responseType === "video" || question.responseType === "audio") && (
-          <div className="space-y-3">
-            {(() => {
-              const hasNewUpload = uploadedFiles[question.id]
-              const hasExistingFile =
-                existingFiles[question.id] &&
-                existingFiles[question.id].length > 0 &&
-                !filesToRemove.includes(existingFiles[question.id][0])
+        {isMedia &&
+          (question.responseType === "video" ||
+            question.responseType === "audio") && (
+            <div className="space-y-3">
+              {(() => {
+                const hasNewUpload = uploadedFiles[question.id]
+                const hasExistingFile =
+                  existingFiles[question.id] &&
+                  existingFiles[question.id].length > 0 &&
+                  !filesToRemove.includes(existingFiles[question.id][0])
 
-              return (
-                <>
-                  {/* Show existing uploaded file */}
-                  {hasExistingFile && !hasNewUpload && (
-                    <div className="rounded-lg border bg-muted/30 p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {question.responseType === "video" ? (
-                            <Video className="h-5 w-5" />
-                          ) : (
-                            <Music className="h-5 w-5" />
-                          )}
-                          <span className="text-sm">
-                            {existingFiles[question.id][0].split("_").pop()}
-                          </span>
+                return (
+                  <>
+                    {/* Show existing uploaded file */}
+                    {hasExistingFile && !hasNewUpload && (
+                      <div className="rounded-lg border bg-muted/30 p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {question.responseType === "video" ? (
+                              <Video className="h-5 w-5" />
+                            ) : (
+                              <Music className="h-5 w-5" />
+                            )}
+                            <span className="text-sm">
+                              {existingFiles[question.id][0].split("_").pop()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                window.open(
+                                  getFileUrl(existingFiles[question.id][0]),
+                                  "_blank"
+                                )
+                              }
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleRemoveExistingFile(
+                                  existingFiles[question.id][0]
+                                )
+                              }
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              window.open(
-                                getFileUrl(existingFiles[question.id][0]),
-                                "_blank"
-                              )
-                            }
-                          >
-                            <Play className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleRemoveExistingFile(existingFiles[question.id][0])
-                            }
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="mt-2">
-                        {question.responseType === "video" ? (
-                          <video
-                            src={getFileUrl(existingFiles[question.id][0])}
-                            controls
-                            className="w-full rounded"
-                            style={{ maxHeight: "200px" }}
-                          />
-                        ) : (
-                          <audio
-                            src={getFileUrl(existingFiles[question.id][0])}
-                            controls
-                            className="w-full"
-                          />
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Show new file being uploaded */}
-                  {hasNewUpload && (
-                    <div className="rounded-lg border bg-muted/30 p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {question.responseType === "video" ? (
-                            <Video className="h-5 w-5" />
-                          ) : (
-                            <Music className="h-5 w-5" />
-                          )}
-                          <span className="text-sm">
-                            {uploadedFiles[question.id].file.name}
-                          </span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveFile(question.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {uploadedFiles[question.id].preview && (
                         <div className="mt-2">
                           {question.responseType === "video" ? (
                             <video
-                              src={uploadedFiles[question.id].preview}
+                              src={getFileUrl(existingFiles[question.id][0])}
                               controls
                               className="w-full rounded"
                               style={{ maxHeight: "200px" }}
                             />
                           ) : (
                             <audio
-                              src={uploadedFiles[question.id].preview}
+                              src={getFileUrl(existingFiles[question.id][0])}
                               controls
                               className="w-full"
                             />
                           )}
                         </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
 
-                  {/* Upload button */}
-                  {!hasExistingFile && !hasNewUpload && (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="file"
-                        accept={
-                          question.responseType === "video"
-                            ? "video/*"
-                            : "audio/*"
-                        }
-                        onChange={(e) => handleFileSelect(question.id, e)}
-                        className="hidden"
-                        id={`media-upload-${question.id}`}
-                      />
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          document
-                            .getElementById(`media-upload-${question.id}`)
-                            ?.click()
-                        }
-                      >
-                        <Upload className="me-2 h-4 w-4" />
-                        {lang === "ar" ? "اختيار ملف" : "Choose File"}
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )
-            })()}
-          </div>
-        )}
+                    {/* Show new file being uploaded */}
+                    {hasNewUpload && (
+                      <div className="rounded-lg border bg-muted/30 p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {question.responseType === "video" ? (
+                              <Video className="h-5 w-5" />
+                            ) : (
+                              <Music className="h-5 w-5" />
+                            )}
+                            <span className="text-sm">
+                              {uploadedFiles[question.id].file.name}
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveFile(question.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {uploadedFiles[question.id].preview && (
+                          <div className="mt-2">
+                            {question.responseType === "video" ? (
+                              <video
+                                src={uploadedFiles[question.id].preview}
+                                controls
+                                className="w-full rounded"
+                                style={{ maxHeight: "200px" }}
+                              />
+                            ) : (
+                              <audio
+                                src={uploadedFiles[question.id].preview}
+                                controls
+                                className="w-full"
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Upload button */}
+                    {!hasExistingFile && !hasNewUpload && (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept={
+                            question.responseType === "video"
+                              ? "video/*"
+                              : "audio/*"
+                          }
+                          onChange={(e) => handleFileSelect(question.id, e)}
+                          className="hidden"
+                          id={`media-upload-${question.id}`}
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            document
+                              .getElementById(`media-upload-${question.id}`)
+                              ?.click()
+                          }
+                        >
+                          <Upload className="me-2 h-4 w-4" />
+                          {lang === "ar" ? "اختيار ملف" : "Choose File"}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
+            </div>
+          )}
 
         {hasError && (
           <div className="flex items-center gap-1 text-sm text-destructive">
@@ -800,9 +817,7 @@ export default function TakeSurveyToolPage({
 
     return (
       <div key={item.id} className="space-y-3 rounded-lg border bg-card p-4">
-        <Label className="text-base font-medium">
-          {item.question}
-        </Label>
+        <Label className="text-base font-medium">{item.question}</Label>
 
         {/* Display existing media (question media) */}
         {item.mediaUrl && (
@@ -1309,7 +1324,9 @@ export default function TakeSurveyToolPage({
                                   onClick={() =>
                                     window.open(
                                       getFileUrl(
-                                        assignment.responses[question.id] as string
+                                        assignment.responses[
+                                          question.id
+                                        ] as string
                                       ),
                                       "_blank"
                                     )

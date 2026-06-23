@@ -21,17 +21,7 @@ import { MultipleChoicePreview } from "@/components/tool-renderers/MultipleChoic
 import { MediaPreview } from "@/components/tool-renderers/MediaPreview"
 import { PlanPreview } from "@/components/tool-renderers/PlanPreview"
 import { ReportPreview } from "@/components/tool-renderers/ReportPreview"
-import {
-  ArrowLeft,
-  FileText,
-  ClipboardList,
-  Image,
-  FileBarChart,
-  Layers,
-  Paperclip,
-  Download,
-  Edit,
-} from "lucide-react"
+import { ArrowLeft, FileText, Download, Edit } from "lucide-react"
 import Link from "next/link"
 import type {
   SurveyConfig,
@@ -41,26 +31,7 @@ import type {
   ReportConfig,
 } from "@/types/tool"
 import type { AssignmentStatus } from "@/types/assignment"
-
-// Tool type name to icon mapping
-const toolTypeIcons: Record<string, typeof FileText> = {
-  survey: FileText,
-  multiple_answer: ClipboardList,
-  media_question: Image,
-  report: FileBarChart,
-  plan: Layers,
-  attachment_request: Paperclip,
-}
-
-// Tool type name to label mapping
-const toolTypeLabels: Record<string, string> = {
-  survey: "Survey",
-  multiple_answer: "Multiple Answer",
-  media_question: "Media Questions",
-  report: "Report",
-  plan: "Plan",
-  attachment_request: "Request for Attachment",
-}
+import { getToolTypeLabel, getToolTypeMeta } from "@/lib/tool-types"
 
 const statusColors: Record<AssignmentStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -88,7 +59,12 @@ export default function AssignmentDetailPage({
   const { lang } = useLang()
   const { assignments } = useAssignments()
   const { profiles, isLoading: profilesLoading } = useProfiles()
-  const { toolTypes, isLoading: toolTypesLoading, fetchToolTypes, getToolTypeById } = useToolTypes()
+  const {
+    toolTypes,
+    isLoading: toolTypesLoading,
+    fetchToolTypes,
+    getToolTypeById,
+  } = useToolTypes()
 
   const assignment = assignments.find((a) => a.id === assignmentId)
   const profile = assignment
@@ -99,8 +75,10 @@ export default function AssignmentDetailPage({
     fetchToolTypes()
   }, [fetchToolTypes])
 
-  const toolType = assignment?.type ? getToolTypeById(assignment.type) : undefined
-  const typeName = toolType?.name || "Unknown"
+  const toolType = assignment?.type
+    ? getToolTypeById(assignment.type)
+    : undefined
+  const typeName = toolType?.key || "Unknown"
 
   const config = assignment?.config
 
@@ -139,7 +117,7 @@ export default function AssignmentDetailPage({
     )
   }
 
-  const Icon = toolTypeIcons[typeName] || FileText
+  const Icon = getToolTypeMeta(typeName)?.icon || FileText
   const canEdit = typeName === "plan" || typeName === "report"
 
   const renderToolPreview = () => {
@@ -185,7 +163,9 @@ export default function AssignmentDetailPage({
     const questions = surveyConfig.questions || []
 
     if (questions.length === 0) {
-      return <p className="text-muted-foreground">No questions in this survey.</p>
+      return (
+        <p className="text-muted-foreground">No questions in this survey.</p>
+      )
     }
 
     return (
@@ -201,7 +181,9 @@ export default function AssignmentDetailPage({
                 <div className="flex-1">
                   <p className="font-medium">{question.text}</p>
                   <div className="mt-2 rounded bg-muted/30 p-3">
-                    {answer !== undefined && answer !== null && answer !== "" ? (
+                    {answer !== undefined &&
+                    answer !== null &&
+                    answer !== "" ? (
                       <p className="text-sm">{String(answer)}</p>
                     ) : (
                       <p className="text-sm text-muted-foreground">No answer</p>
@@ -221,7 +203,9 @@ export default function AssignmentDetailPage({
     const questions = mcConfig.questions || []
 
     if (questions.length === 0) {
-      return <p className="text-muted-foreground">No questions in this survey.</p>
+      return (
+        <p className="text-muted-foreground">No questions in this survey.</p>
+      )
     }
 
     return (
@@ -241,12 +225,14 @@ export default function AssignmentDetailPage({
                       Array.isArray(answer) ? (
                         answer.map((val, i) => (
                           <p key={i} className="text-sm">
-                            {question.options?.find(o => o.value === val)?.label || val}
+                            {question.options?.find((o) => o.value === val)
+                              ?.label || val}
                           </p>
                         ))
                       ) : (
                         <p className="text-sm">
-                          {question.options?.find(o => o.value === answer)?.label || String(answer)}
+                          {question.options?.find((o) => o.value === answer)
+                            ?.label || String(answer)}
                         </p>
                       )
                     ) : (
@@ -267,7 +253,11 @@ export default function AssignmentDetailPage({
     const items = mediaConfig.items || []
 
     if (items.length === 0) {
-      return <p className="text-muted-foreground">No media items in this assignment.</p>
+      return (
+        <p className="text-muted-foreground">
+          No media items in this assignment.
+        </p>
+      )
     }
 
     return (
@@ -287,7 +277,9 @@ export default function AssignmentDetailPage({
                       answer ? (
                         <p className="text-sm">{String(answer)}</p>
                       ) : (
-                        <p className="text-sm text-muted-foreground">No answer</p>
+                        <p className="text-sm text-muted-foreground">
+                          No answer
+                        </p>
                       )
                     ) : (
                       <p className="text-sm text-muted-foreground">
@@ -308,7 +300,10 @@ export default function AssignmentDetailPage({
     const responses = assignment.responses || {}
     const responseKeys = Object.keys(responses)
 
-    if (responseKeys.length === 0 && (!assignment.media || assignment.media.length === 0)) {
+    if (
+      responseKeys.length === 0 &&
+      (!assignment.media || assignment.media.length === 0)
+    ) {
       return <p className="text-muted-foreground">No files uploaded yet.</p>
     }
 
@@ -321,7 +316,9 @@ export default function AssignmentDetailPage({
               {responseKeys.map((key) => (
                 <li key={key} className="flex items-center gap-2">
                   <span className="text-sm">{key}:</span>
-                  <span className="text-sm text-muted-foreground">{String(responses[key])}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {String(responses[key])}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -412,11 +409,29 @@ export default function AssignmentDetailPage({
 
     switch (typeName) {
       case "survey":
-        return <SurveyPreview config={config as SurveyConfig} responses={assignment.responses} readOnly />
+        return (
+          <SurveyPreview
+            config={config as SurveyConfig}
+            responses={assignment.responses}
+            readOnly
+          />
+        )
       case "multiple_answer":
-        return <MultipleChoicePreview config={config as MultipleChoiceConfig} responses={assignment.responses} readOnly />
+        return (
+          <MultipleChoicePreview
+            config={config as MultipleChoiceConfig}
+            responses={assignment.responses}
+            readOnly
+          />
+        )
       case "media_question":
-        return <MediaPreview config={config as MediaConfig} responses={assignment.responses as Record<string, string>} readOnly />
+        return (
+          <MediaPreview
+            config={config as MediaConfig}
+            responses={assignment.responses as Record<string, string>}
+            readOnly
+          />
+        )
       case "attachment_request":
         return renderAttachmentResponse()
       default:
@@ -446,9 +461,11 @@ export default function AssignmentDetailPage({
           </div>
         </div>
         {canEdit && (
-          <Link href={`/dashboard/admin/tools/${typeName}/edit/${assignmentId}`}>
+          <Link
+            href={`/dashboard/admin/tools/${typeName}/edit/${assignmentId}`}
+          >
             <Button variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="mr-2 h-4 w-4" />
               Edit
             </Button>
           </Link>
@@ -490,7 +507,7 @@ export default function AssignmentDetailPage({
               </span>
               <div>
                 <Badge variant="outline">
-                  {toolTypeLabels[typeName] || typeName}
+                  {getToolTypeLabel(toolType, lang)}
                 </Badge>
               </div>
             </div>

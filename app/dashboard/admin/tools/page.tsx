@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
+import { useLang } from "@/lib/lang-context"
 import type { Tool, ToolType } from "@/types/tool"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { PageLoader } from "@/components/ui/page-loader"
 import { SkeletonTable } from "@/components/ui/skeleton"
 import {
   Select,
@@ -26,36 +26,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Plus, FileText, Pencil, Trash2, Eye } from "lucide-react"
 import {
-  Plus,
-  FileText,
-  ClipboardList,
-  Calendar,
-  FileBarChart,
-  Layers,
-  Paperclip,
-  Pencil,
-  Trash2,
-  Eye,
-} from "lucide-react"
-
-const toolTypeIcons: Record<ToolType, typeof FileText> = {
-  survey: FileText,
-  multiple_answer: ClipboardList,
-  media_question: Calendar,
-  report: FileBarChart,
-  plan: Layers,
-  attachment_request: Paperclip,
-}
-
-const toolTypeLabels: Record<ToolType, { en: string; ar: string }> = {
-  survey: { en: "Survey", ar: "استبيان" },
-  multiple_answer: { en: "Multiple Answer", ar: "إجابات متعددة" },
-  media_question: { en: "Media Questions", ar: "أسئلة الوسائط" },
-  report: { en: "Report", ar: "تقرير" },
-  plan: { en: "Plan", ar: "خطة" },
-  attachment_request: { en: "Request for Attachment", ar: "طلب مرفق" },
-}
+  getToolTypeLabel,
+  getToolTypeMeta,
+  toolTypeOrder,
+} from "@/lib/tool-types"
 
 const statusColors: Record<Tool["status"], string> = {
   active: "bg-green-100 text-green-800",
@@ -71,8 +47,14 @@ const statusLabels: Record<Tool["status"], string> = {
 
 export default function AdminToolsPage() {
   const router = useRouter()
+  const { lang } = useLang()
   const { tools, deleteTool, isLoading: isToolsLoading } = useTools()
-  const { fetchToolTypes, getToolTypeById, isLoading: isToolTypesLoading } = useToolTypes()
+  const {
+    toolTypes,
+    fetchToolTypes,
+    getToolTypeById,
+    isLoading: isToolTypesLoading,
+  } = useToolTypes()
   const [filterType, setFilterType] = useState<ToolType | "all">("all")
   const [filterStatus, setFilterStatus] = useState<Tool["status"] | "all">(
     "all"
@@ -87,26 +69,7 @@ export default function AdminToolsPage() {
 
   const getTypeName = (typeId: string): ToolType | undefined => {
     const toolType = getToolTypeById(typeId)
-    return toolType?.name as ToolType | undefined
-  }
-
-  const getTypeRoute = (typeName: ToolType): string => {
-    switch (typeName) {
-      case "survey":
-        return "survey"
-      case "multiple_answer":
-        return "multiple-choice"
-      case "media_question":
-        return "media"
-      case "report":
-        return "report"
-      case "plan":
-        return "plan"
-      case "attachment_request":
-        return "attachment-request"
-      default:
-        return "survey"
-    }
+    return toolType?.key as ToolType | undefined
   }
 
   const filteredTools = tools.filter((tool) => {
@@ -171,11 +134,16 @@ export default function AdminToolsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="survey">Survey</SelectItem>
-            <SelectItem value="multiple_answer">Multiple Answer</SelectItem>
-            <SelectItem value="media_question">Media Questions</SelectItem>
-            <SelectItem value="report">Report</SelectItem>
-            <SelectItem value="plan">Plan</SelectItem>
+            {toolTypeOrder
+              .flatMap((key) => {
+                const toolType = toolTypes.find((item) => item.key === key)
+                return toolType ? [toolType] : []
+              })
+              .map((toolType) => (
+                <SelectItem key={toolType.id} value={toolType.key}>
+                  {getToolTypeLabel(toolType, lang)}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
         <Select
@@ -222,13 +190,10 @@ export default function AdminToolsPage() {
             <TableBody>
               {filteredTools.map((tool) => {
                 const typeName = getTypeName(tool.type)
-                const Icon = typeName
-                  ? toolTypeIcons[typeName] || FileText
-                  : FileText
-                const typeLabel = typeName
-                  ? toolTypeLabels[typeName]?.en
-                  : "Unknown Type"
-                const typeRoute = typeName ? getTypeRoute(typeName) : "survey"
+                const typeRecord = getToolTypeById(tool.type)
+                const Icon = getToolTypeMeta(typeName)?.icon || FileText
+                const typeLabel = getToolTypeLabel(typeRecord, lang)
+                const typeRoute = getToolTypeMeta(typeName)?.route || "survey"
 
                 return (
                   <TableRow key={tool.id}>

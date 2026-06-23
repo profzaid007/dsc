@@ -1,6 +1,9 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useLang } from "@/lib/lang-context"
+import { useToolTypes } from "@/hooks/useToolTypes"
 import {
   Card,
   CardContent,
@@ -9,88 +12,38 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import {
-  FileText,
-  Brain,
-  Image,
-  FileBarChart,
-  Layers,
-  Paperclip,
-} from "lucide-react"
 import Link from "next/link"
-import type { ToolType } from "@/types/tool"
-
-const toolTypes: {
-  type: ToolType
-  label: { en: string; ar: string }
-  icon: typeof FileText
-  description: { en: string; ar: string }
-  href: string
-}[] = [
-  {
-    type: "survey",
-    label: { en: "Survey", ar: "استبيان" },
-    icon: FileText,
-    description: {
-      en: "Questions with answer types + options",
-      ar: "أسئلة بأنواع إجابات + خيارات",
-    },
-    href: "/dashboard/admin/tools/survey/new",
-  },
-  {
-    type: "multiple_answer",
-    label: { en: "Multiple Answer Builder", ar: "بناء الإجابات المتعددة" },
-    icon: Brain,
-    description: {
-      en: "Quiz with correct answer(s)",
-      ar: "اختبار بإجابة صحيحة",
-    },
-    href: "/dashboard/admin/tools/multiple-choice/new",
-  },
-  {
-    type: "media_question",
-    label: { en: "Media Questions", ar: "أسئلة الوسائط" },
-    icon: Image,
-    description: {
-      en: "Image/video/audio + question",
-      ar: "صورة/فيديو/صوت + سؤال",
-    },
-    href: "/dashboard/admin/tools/media/new",
-  },
-  {
-    type: "report",
-    label: { en: "Report", ar: "تقرير" },
-    icon: FileBarChart,
-    description: {
-      en: "Fixed fields + custom fields",
-      ar: "حقول ثابتة + حقول مخصصة",
-    },
-    href: "/dashboard/admin/tools/report/new",
-  },
-  {
-    type: "plan",
-    label: { en: "Plan", ar: "خطة" },
-    icon: Layers,
-    description: {
-      en: "Child info, goals, steps",
-      ar: "معلومات الطفل، الأهداف، الخطوات",
-    },
-    href: "/dashboard/admin/tools/plan/new",
-  },
-  {
-    type: "attachment_request",
-    label: { en: "Request for Attachment", ar: "طلب مرفق" },
-    icon: Paperclip,
-    description: {
-      en: "Request files from case/parent",
-      ar: "طلب ملفات من الحالة/الوالد",
-    },
-    href: "/dashboard/admin/tools/attachment-request/new",
-  },
-]
+import {
+  getToolTypeLabel,
+  getToolTypeMeta,
+  toolTypeOrder,
+} from "@/lib/tool-types"
 
 export default function NewToolPage() {
   const router = useRouter()
+  const { lang } = useLang()
+  const { toolTypes, fetchToolTypes } = useToolTypes()
+  const hasFetched = useRef(false)
+
+  useEffect(() => {
+    if (hasFetched.current) return
+    hasFetched.current = true
+    fetchToolTypes()
+  }, [fetchToolTypes])
+
+  const visibleToolTypes = toolTypeOrder.flatMap((key) => {
+    const toolType = toolTypes.find((item) => item.key === key)
+    const meta = getToolTypeMeta(key)
+    if (!toolType || !meta) return []
+
+    return [
+      {
+        ...toolType,
+        icon: meta.icon,
+        href: `/dashboard/admin/tools/${meta.route}/new`,
+      },
+    ]
+  })
 
   return (
     <div className="space-y-6">
@@ -105,15 +58,17 @@ export default function NewToolPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {toolTypes.map((tool) => (
-          <Link key={tool.type} href={tool.href}>
+        {visibleToolTypes.map((tool) => (
+          <Link key={tool.id} href={tool.href}>
             <Card className="h-full cursor-pointer transition-all hover:shadow-md">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <tool.icon className="h-5 w-5 text-primary" />
-                  <CardTitle>{tool.label.en}</CardTitle>
+                  <CardTitle>{getToolTypeLabel(tool, lang)}</CardTitle>
                 </div>
-                <CardDescription>{tool.description.en}</CardDescription>
+                {/* <CardDescription>
+                  {tool.key.replaceAll("_", " ")}
+                </CardDescription> */}
               </CardHeader>
             </Card>
           </Link>
