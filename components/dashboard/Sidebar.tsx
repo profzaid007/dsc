@@ -14,6 +14,7 @@ import {
   ClipboardList,
   GraduationCap,
   BookOpen,
+  Settings,
 } from "lucide-react"
 
 const adminNavigation = [
@@ -37,12 +38,19 @@ const adminNavigation = [
     href: "/dashboard/admin/public-lectures",
     icon: BookOpen,
   },
+  {
+    name: { en: "Settings", ar: "الإعدادات" },
+    href: "/dashboard/admin/settings",
+    icon: Settings,
+    superAdminOnly: true,
+  },
 ]
 
 type NavItem = {
   name: { en: string; ar: string }
   href: string
   icon: typeof LayoutDashboard
+  superAdminOnly?: boolean
 }
 
 function renderNavItem(
@@ -74,7 +82,13 @@ function renderNavItem(
 export function DashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { currentUser, isAdmin, logout, isLoading: isAuthLoading } = useAuth()
+  const {
+    currentUser,
+    isAdmin,
+    isSuperAdmin,
+    logout,
+    isLoading: isAuthLoading,
+  } = useAuth()
 
   const handleLogout = () => {
     logout()
@@ -143,7 +157,10 @@ export function DashboardSidebar() {
                 Admin
               </span>
             </div>
-            {adminNavigation.map((item) => renderNavItem(item, pathname, true))}
+            {adminNavigation.map((item) => {
+              if (item.superAdminOnly && !isSuperAdmin) return null
+              return renderNavItem(item, pathname, true)
+            })}
           </>
         )}
       </nav>
@@ -151,12 +168,12 @@ export function DashboardSidebar() {
       <div className="border-t border-primary/20 p-4">
         {isAuthLoading ? (
           <div className="mb-3 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 animate-pulse">
+            <div className="flex h-9 w-9 animate-pulse items-center justify-center rounded-full bg-white/10">
               <FolderKanban className="h-5 w-5 opacity-50" />
             </div>
             <div className="min-w-0 flex-1 space-y-1.5">
-              <div className="h-3.5 w-20 rounded bg-white/10 animate-pulse" />
-              <div className="h-2.5 w-28 rounded bg-white/10 animate-pulse" />
+              <div className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
+              <div className="h-2.5 w-28 animate-pulse rounded bg-white/10" />
             </div>
           </div>
         ) : (
@@ -165,7 +182,9 @@ export function DashboardSidebar() {
               <FolderKanban className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{currentUser?.name}</p>
+              <p className="truncate text-sm font-medium">
+                {currentUser?.name}
+              </p>
               <p className="truncate text-xs text-primary-foreground/70">
                 {currentUser?.email}
               </p>
