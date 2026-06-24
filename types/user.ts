@@ -1,4 +1,4 @@
-export type UserType = "individual" | "institution"
+export type UserType = "parent" | "individual" | "organization" | "expert"
 export type UserRole = "user" | "super_admin" | "admin"
 
 export interface User {
@@ -9,6 +9,8 @@ export interface User {
   role: UserRole
   is_active: boolean
   contact_number: string
+  organization_name?: string
+  user_type?: string // relation to lookups collection
   created: string
   updated: string
 }

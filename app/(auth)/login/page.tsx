@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import {
   Card,
@@ -83,9 +84,15 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 border-t pt-6">
-            <p className="text-center text-sm text-muted-foreground">
-              Contact admin to create an account
+          <div className="mt-6 border-t pt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/register"
+                className="font-medium text-primary hover:underline"
+              >
+                Register
+              </Link>
             </p>
           </div>
         </CardContent>

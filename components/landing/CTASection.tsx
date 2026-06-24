@@ -32,7 +32,7 @@ export function CTASection() {
             className="px-10 py-6 text-base font-semibold shadow-lg transition-opacity hover:opacity-90"
             style={{ backgroundColor: "var(--dsc-gold)", color: "#fff" }}
           >
-            <Link href="/apply">{t(SITE_CONTENT.cta.button, lang)}</Link>
+            <Link href="/register">{t(SITE_CONTENT.cta.button, lang)}</Link>
           </Button>
         </div>
       </div>

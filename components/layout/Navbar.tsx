@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText } from "lucide-react"
+import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText, UserPlus, User, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { getPortalById } from "@/lib/portals"
 import Image from "next/image"
 import { BookConsultDialog } from "../BookConsultDialog"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
 
@@ -40,6 +41,7 @@ export function Navbar() {
   const logoGradient = "radial-gradient(circle, #d4af37 0%, #aa7c11 100%)"
 
   const [consultOpen, setConsultOpen] = useState(false)
+  const [accountPopoverOpen, setAccountPopoverOpen] = useState(false)
 
   const headerText = portal ? t(portal.portalName, lang) : "DSC"
   const subheading = portal
@@ -107,17 +109,39 @@ export function Navbar() {
             </button>
 
             {!isAuthenticated && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="gap-2 flex"
-              >
-                <Link href="/login">
-                  <LogIn className="h-4 w-4" />
-                  {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
-                </Link>
-              </Button>
+              <Popover open={accountPopoverOpen} onOpenChange={setAccountPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 flex"
+                  >
+                    <User className="h-4 w-4" />
+                    {t({ en: "Account", ar: "الحساب" }, lang)}
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-48 p-2">
+                  <div className="flex flex-col gap-1">
+                    <Link
+                      href="/login"
+                      onClick={() => setAccountPopoverOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    >
+                      <LogIn className="h-4 w-4 text-muted-foreground" />
+                      {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setAccountPopoverOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    >
+                      <UserPlus className="h-4 w-4 text-muted-foreground" />
+                      {t({ en: "Register", ar: "التسجيل" }, lang)}
+                    </Link>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
 
             {isAuthenticated && (
@@ -206,18 +230,24 @@ export function Navbar() {
             ))}
             <div className="mt-2 border-t border-gray-200 pt-2 flex flex-col gap-2">
               {!isAuthenticated && (
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 justify-start"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Link href="/login">
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                  >
                     <LogIn className="h-4 w-4" />
                     {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
                   </Link>
-                </Button>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {t({ en: "Register", ar: "التسجيل" }, lang)}
+                  </Link>
+                </>
               )}
               {isAuthenticated && (
                 <Button

@@ -44,7 +44,7 @@ export function HeroSection() {
         </p>
 
         <div className="mt-10">
-          <Link href="/apply">
+          <Link href="/register">
             <Button
               size="lg"
               className="px-8 py-6 text-base font-semibold shadow-lg transition-all hover:scale-105 hover:shadow-xl"
