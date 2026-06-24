@@ -71,8 +71,9 @@ export default function LookupsPage() {
   }, [isAuthLoading, isSuperAdmin, router])
 
   useEffect(() => {
-    if (hasFetched.current) return
-    hasFetched.current = true
+    if (!hasFetched.current) {
+      hasFetched.current = true
+    }
     fetchLookups(filterType)
   }, [filterType, fetchLookups])
 
