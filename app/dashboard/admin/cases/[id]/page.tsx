@@ -421,7 +421,7 @@ export default function AdminCaseDetailPage({
                 {/* Template-based tools - show template list or create new */}
                 {toolTypeOrder
                   .filter((key) =>
-                    ["survey", "multiple_answer", "media_question"].includes(
+                    ["survey", "multiple_answer"].includes(
                       key
                     )
                   )

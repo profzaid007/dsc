@@ -1,7 +1,6 @@
 import {
   FileText,
   ClipboardList,
-  Image,
   FileBarChart,
   Layers,
   Paperclip,
@@ -22,7 +21,6 @@ export const toolTypeRegistry: Record<
 > = {
   survey: { icon: FileText, route: "survey" },
   multiple_answer: { icon: ClipboardList, route: "multiple-choice" },
-  media_question: { icon: Image, route: "media" },
   report: { icon: FileBarChart, route: "report" },
   plan: { icon: Layers, route: "plan" },
   attachment_request: { icon: Paperclip, route: "attachment-request" },
@@ -31,7 +29,6 @@ export const toolTypeRegistry: Record<
 export const toolTypeOrder: ToolType[] = [
   "survey",
   "multiple_answer",
-  "media_question",
   "report",
   "plan",
   "attachment_request",

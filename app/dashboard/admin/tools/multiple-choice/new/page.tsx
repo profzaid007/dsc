@@ -53,7 +53,6 @@ const ANSWER_TYPES: { value: MCAnswerType; label: string }[] = [
   { value: "number", label: "Number" },
   { value: "single_choice", label: "Single Choice (mark correct)" },
   { value: "multiple_choice", label: "Multiple Choice (mark correct)" },
-  { value: "media", label: "Media (image/video/audio)" },
 ]
 
 const DEFAULT_OPTIONS = [
@@ -331,7 +330,6 @@ export default function MultipleChoiceBuilderPage({
       question.answerType === "single_choice" ||
       question.answerType === "multiple_choice"
     const showCorrect = showOptions
-    const isMedia = question.answerType === "media"
     const pendingFile = pendingFiles.get(question.id)
     const mediaPreviewSrc = pendingFile
       ? URL.createObjectURL(pendingFile)
@@ -394,83 +392,6 @@ export default function MultipleChoiceBuilderPage({
             ))}
           </SelectContent>
         </Select>
-
-        {isMedia && (
-          <div className="space-y-3 rounded-md border p-3">
-            <Label className="text-xs">Media Prompt</Label>
-            {!question.mediaType ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setCurrentMediaQuestionId(question.id)
-                  setUploadOpen(true)
-                }}
-              >
-                <Plus className="me-1 h-3 w-3" />
-                Select Media
-              </Button>
-            ) : (
-              <div className="space-y-3">
-                <div className="rounded-lg border bg-muted/30 p-2">
-                  {question.mediaType === "image" && mediaPreviewSrc && (
-                    <img
-                      src={mediaPreviewSrc}
-                      alt="Preview"
-                      className="h-32 w-full rounded object-cover"
-                    />
-                  )}
-                  {question.mediaType === "video" && mediaPreviewSrc && (
-                    <video
-                      src={mediaPreviewSrc}
-                      className="h-32 w-full rounded object-cover"
-                    />
-                  )}
-                  {question.mediaType === "audio" && (
-                    <div className="flex h-12 items-center justify-center rounded bg-muted">
-                      <Music className="h-6 w-6" />
-                    </div>
-                  )}
-                  {question.mediaType === "audio" && mediaPreviewSrc && (
-                    <audio
-                      src={mediaPreviewSrc}
-                      controls
-                      className="mt-2 w-full"
-                    />
-                  )}
-                  {!mediaPreviewSrc && (
-                    <div className="flex h-32 items-center justify-center text-muted-foreground">
-                      No preview
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {(() => {
-                      const Icon = getMediaIcon(question.mediaType)
-                      return <Icon className="h-4 w-4" />
-                    })()}
-                    <span className="capitalize">{question.mediaType}</span>
-                    <span className="text-muted-foreground">•</span>
-                    <span className="capitalize">
-                      {question.responseType} response
-                    </span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveMedia(question.id)}
-                  >
-                    <X className="me-1 h-3 w-3" />
-                    Remove
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {showOptions && (
           <div className="space-y-2 rounded-md border p-3">

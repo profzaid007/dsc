@@ -1,7 +1,6 @@
 export type ToolType =
   | "survey"
   | "multiple_answer"
-  | "media_question"
   | "report"
   | "plan"
   | "attachment_request"
