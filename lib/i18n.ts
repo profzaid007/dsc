@@ -42,3 +42,12 @@ export const UI_STRINGS: Record<string, BilingualString> = {
     ar: "استمارة استقبال العملاء",
   },
 };
+
+export function formatDate(dateStr: string, locale: string = "en"): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+}

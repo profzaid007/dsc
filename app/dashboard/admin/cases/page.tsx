@@ -25,6 +25,8 @@ import {
   Eye,
 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n"
+
 interface AssignmentCount {
   total: number
   pending: number
@@ -142,7 +144,7 @@ export default function AdminCasesPage() {
                         {profile.name}
                       </div>
                     </TableCell>
-                    <TableCell>{profile.date_of_birth}</TableCell>
+                    <TableCell>{formatDate(profile.date_of_birth)}</TableCell>
                     <TableCell className="capitalize">
                       {profile.gender}
                     </TableCell>

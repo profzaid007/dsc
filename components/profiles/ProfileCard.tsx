@@ -4,6 +4,7 @@ import type { Profile } from "@/types/profile"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SmartLink } from "@/components/smart-link"
 import { Calendar } from "lucide-react"
+import { formatDate } from "@/lib/i18n"
 
 interface ProfileCardProps {
   profile: Profile
@@ -20,7 +21,7 @@ export function ProfileCard({ profile, lang = "en" }: ProfileCardProps) {
         <CardContent>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>{profile.date_of_birth}</span>
+            <span>{formatDate(profile.date_of_birth, lang)}</span>
           </div>
           <div className="mt-2 text-sm text-muted-foreground capitalize">
             {profile.gender} | {profile.grade}

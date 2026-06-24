@@ -55,6 +55,8 @@ import {
   toolTypeOrder,
 } from "@/lib/tool-types"
 
+import { formatDate } from "@/lib/i18n"
+
 const statusColors: Record<AssignmentStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
   assigned: "bg-blue-100 text-blue-800",
@@ -172,7 +174,7 @@ export default function AdminCaseDetailPage({
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date of Birth</span>
-                  <span className="font-medium">{profile.date_of_birth}</span>
+                  <span className="font-medium">{formatDate(profile.date_of_birth, lang)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Gender</span>

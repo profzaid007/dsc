@@ -32,6 +32,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
+import { formatDate } from "@/lib/i18n"
+
 export default function ProfileDetailPage({
   params,
 }: {
@@ -104,7 +106,7 @@ export default function ProfileDetailPage({
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date of Birth</span>
-                  <span className="font-medium">{profile.date_of_birth}</span>
+                  <span className="font-medium">{formatDate(profile.date_of_birth, lang)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Gender</span>
