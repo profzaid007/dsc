@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText, UserPlus, User, ChevronDown } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText, UserPlus, User, ChevronDown, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
@@ -11,9 +11,6 @@ import { useAuth } from "@/hooks/useAuth"
 import { getPortalById } from "@/lib/portals"
 import Image from "next/image"
 import { BookConsultDialog } from "../BookConsultDialog"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-
-import { cn } from "@/lib/utils"
 
 const DEFAULT_SIDEBAR_ITEMS = [
   { en: "Home", ar: "الرئيسية", href: "/" },
@@ -27,8 +24,9 @@ const DEFAULT_SIDEBAR_ITEMS = [
 export function Navbar() {
   const pathname = usePathname()
   const { lang, toggleLang } = useLang()
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const router = useRouter()
 
   const isHome = pathname === "/"
   const isPortal = pathname.startsWith("/portal/")
@@ -109,39 +107,24 @@ export function Navbar() {
             </button>
 
             {!isAuthenticated && (
-              <Popover open={accountPopoverOpen} onOpenChange={setAccountPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 flex"
+                <div className="flex flex-row gap-1">
+                  <Link
+                    href="/login"
+                    onClick={() => setAccountPopoverOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
                   >
-                    <User className="h-4 w-4" />
-                    {t({ en: "Account", ar: "الحساب" }, lang)}
-                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-48 p-2">
-                  <div className="flex flex-col gap-1">
-                    <Link
-                      href="/login"
-                      onClick={() => setAccountPopoverOpen(false)}
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
-                    >
-                      <LogIn className="h-4 w-4 text-muted-foreground" />
-                      {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setAccountPopoverOpen(false)}
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
-                    >
-                      <UserPlus className="h-4 w-4 text-muted-foreground" />
-                      {t({ en: "Register", ar: "التسجيل" }, lang)}
-                    </Link>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                    <LogIn className="h-4 w-4 text-muted-foreground" />
+                    {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setAccountPopoverOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4 text-muted-foreground" />
+                    {t({ en: "Register", ar: "التسجيل" }, lang)}
+                  </Link>
+                </div>
             )}
 
             {isAuthenticated && (
@@ -172,17 +155,34 @@ export function Navbar() {
               </Button>
             )}
 
-            <Button
-              variant="default"
-              size="sm"
-              className="gap-2 flex"
-              onClick={() => setConsultOpen(true)}
-            >
-              <Calendar className="h-4 w-4" />
-              Book Consult
-            </Button>
+            {!isAuthenticated && (
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-2 flex"
+                onClick={() => setConsultOpen(true)}
+              >
+                <Calendar className="h-4 w-4" />
+                Book Consult
+              </Button>
+            )}
 
             <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
+
+            {isAuthenticated && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 flex"
+                onClick={() => { 
+                  logout() 
+                  router.push("/")
+                }}
+              >
+                <LogOut className="h-4 w-4" />
+                  {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
+              </Button>
+            )}
 
           </div>
         </div>
