@@ -58,7 +58,7 @@ export function LectureCard({
     })
   }
 
-  const isPast = new Date(lecture.dateTime) < new Date()
+  const isPast = new Date(lecture.schedule.dateTime) < new Date()
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -92,26 +92,28 @@ export function LectureCard({
         <h3 className="line-clamp-2 text-lg font-semibold">
           {lecture.title[lang]}
         </h3>
-        <p className="text-sm text-muted-foreground">{lecture.speaker}</p>
+        <p className="text-sm text-muted-foreground">
+          {lecture.speaker.name[lang]}
+        </p>
       </CardHeader>
 
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{formatDate(lecture.dateTime)}</span>
+          <span>{formatDate(lecture.schedule.dateTime)}</span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
           <span>
-            {formatTime(lecture.dateTime)} · {lecture.duration}{" "}
+            {formatTime(lecture.schedule.dateTime)} · {lecture.duration}{" "}
             {lang === "ar" ? "دقيقة" : "min"}
           </span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-4 w-4" />
-          <span className="truncate">{lecture.location}</span>
+          <span className="truncate">{lecture.schedule.location}</span>
         </div>
 
         {lecture.maxParticipants && (

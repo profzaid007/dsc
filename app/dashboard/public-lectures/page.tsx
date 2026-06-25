@@ -38,7 +38,9 @@ export default function UserLecturesPage() {
         lecture.title[lang]
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        lecture.speaker.toLowerCase().includes(searchTerm.toLowerCase())
+        lecture.speaker.name[lang]
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
     )
   }
 

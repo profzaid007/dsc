@@ -13,8 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { MediaUpload } from "@/components/ui/media-upload"
-import type { CreateLectureInput, UpdateLectureInput } from "@/types/lecture"
+import type { CreateLectureInput } from "@/types/lecture"
 
 interface LectureFormProps {
   initialData?: Partial<CreateLectureInput>
@@ -30,6 +29,22 @@ const statusOptions = [
   { value: "cancelled", label: "Cancelled" },
 ]
 
+const emptyForm: CreateLectureInput = {
+  title: { en: "", ar: "" },
+  description: { en: "", ar: "" },
+  speaker: {
+    name: { en: "", ar: "" },
+    role: { en: "", ar: "" },
+  },
+  schedule: { dateTime: "", location: "" },
+  duration: 60,
+  meetingLink: "",
+  recordingUrl: "",
+  maxParticipants: undefined,
+  thumbnail: "",
+  status: "draft",
+}
+
 export function LectureForm({
   initialData,
   onSubmit,
@@ -37,28 +52,65 @@ export function LectureForm({
   isSubmitting = false,
   submitLabel = "Create Lecture",
 }: LectureFormProps) {
-  const [formData, setFormData] = useState<CreateLectureInput>({
-    title: { en: "", ar: "" },
-    description: { en: "", ar: "" },
-    speaker: "",
-    speakerRole: "",
-    dateTime: "",
-    duration: 60,
-    location: "",
-    meetingLink: "",
-    maxParticipants: undefined,
-    thumbnail: "",
-    status: "draft",
+  const [formData, setFormData] = useState<CreateLectureInput>(() => ({
+    ...emptyForm,
     ...initialData,
-  })
+    // Ensure nested objects are fully present when editing an existing lecture
+    speaker: {
+      ...emptyForm.speaker,
+      ...initialData?.speaker,
+      name: { ...emptyForm.speaker.name, ...initialData?.speaker?.name },
+      role: { ...emptyForm.speaker.role, ...initialData?.speaker?.role },
+    },
+    schedule: {
+      ...emptyForm.schedule,
+      ...initialData?.schedule,
+    },
+    title: { ...emptyForm.title, ...initialData?.title },
+    description: { ...emptyForm.description, ...initialData?.description },
+  }))
+
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | undefined>(
+    () => {
+      const thumb = initialData?.thumbnail
+      return typeof thumb === "string" ? thumb : undefined
+    }
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     await onSubmit(formData)
   }
 
-  const handleMediaUpload = (urls: string[]) => {
-    setFormData({ ...formData, thumbnail: urls[0] || "" })
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFormData({ ...formData, thumbnail: file })
+    setThumbnailPreview(URL.createObjectURL(file))
+  }
+
+  const updateSpeaker = (
+    field: "name" | "role",
+    lang: "en" | "ar",
+    value: string
+  ) => {
+    setFormData({
+      ...formData,
+      speaker: {
+        ...formData.speaker,
+        [field]: {
+          ...formData.speaker[field],
+          [lang]: value,
+        },
+      },
+    })
+  }
+
+  const updateSchedule = (field: keyof typeof formData.schedule, value: string) => {
+    setFormData({
+      ...formData,
+      schedule: { ...formData.schedule, [field]: value },
+    })
   }
 
   return (
@@ -111,7 +163,10 @@ export function LectureForm({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    description: { ...formData.description, en: e.target.value },
+                    description: {
+                      ...formData.description,
+                      en: e.target.value,
+                    },
                   })
                 }
                 placeholder="Enter lecture description in English"
@@ -127,7 +182,10 @@ export function LectureForm({
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    description: { ...formData.description, ar: e.target.value },
+                    description: {
+                      ...formData.description,
+                      ar: e.target.value,
+                    },
                   })
                 }
                 placeholder="أدخل وصف المحاضرة بالعربية"
@@ -147,26 +205,46 @@ export function LectureForm({
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="speaker">Speaker Name *</Label>
+              <Label htmlFor="speakerNameEn">Speaker Name (English) *</Label>
               <Input
-                id="speaker"
-                value={formData.speaker}
-                onChange={(e) =>
-                  setFormData({ ...formData, speaker: e.target.value })
-                }
-                placeholder="Enter speaker name"
+                id="speakerNameEn"
+                value={formData.speaker.name.en}
+                onChange={(e) => updateSpeaker("name", "en", e.target.value)}
+                placeholder="Enter speaker name in English"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="speakerRole">Speaker Role/Title</Label>
+              <Label htmlFor="speakerNameAr">Speaker Name (Arabic) *</Label>
               <Input
-                id="speakerRole"
-                value={formData.speakerRole || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, speakerRole: e.target.value })
-                }
+                id="speakerNameAr"
+                value={formData.speaker.name.ar}
+                onChange={(e) => updateSpeaker("name", "ar", e.target.value)}
+                placeholder="أدخل اسم المتحدث بالعربية"
+                required
+                dir="rtl"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="speakerRoleEn">Speaker Role/Title (English)</Label>
+              <Input
+                id="speakerRoleEn"
+                value={formData.speaker.role.en}
+                onChange={(e) => updateSpeaker("role", "en", e.target.value)}
                 placeholder="e.g., Child Psychologist"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="speakerRoleAr">Speaker Role/Title (Arabic)</Label>
+              <Input
+                id="speakerRoleAr"
+                value={formData.speaker.role.ar}
+                onChange={(e) => updateSpeaker("role", "ar", e.target.value)}
+                placeholder="مثال: أخصائية نفسية للأطفال"
+                dir="rtl"
               />
             </div>
           </div>
@@ -184,10 +262,8 @@ export function LectureForm({
               <Input
                 id="dateTime"
                 type="datetime-local"
-                value={formData.dateTime}
-                onChange={(e) =>
-                  setFormData({ ...formData, dateTime: e.target.value })
-                }
+                value={formData.schedule.dateTime}
+                onChange={(e) => updateSchedule("dateTime", e.target.value)}
                 required
               />
             </div>
@@ -215,10 +291,8 @@ export function LectureForm({
               <Label htmlFor="location">Location *</Label>
               <Input
                 id="location"
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
+                value={formData.schedule.location}
+                onChange={(e) => updateSchedule("location", e.target.value)}
                 placeholder="e.g., Main Conference Hall"
                 required
               />
@@ -255,6 +329,19 @@ export function LectureForm({
               placeholder="https://zoom.us/j/..."
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="recordingUrl">Recording URL</Label>
+            <Input
+              id="recordingUrl"
+              type="url"
+              value={formData.recordingUrl || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, recordingUrl: e.target.value })
+              }
+              placeholder="https://example.com/recording/..."
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -262,13 +349,22 @@ export function LectureForm({
         <CardHeader>
           <CardTitle>Thumbnail Image</CardTitle>
         </CardHeader>
-        <CardContent>
-          {React.createElement(MediaUpload as any, {
-            onUpload: handleMediaUpload,
-            initialUrls: formData.thumbnail ? [formData.thumbnail] : [],
-            maxFiles: 1,
-            acceptedTypes: ["image/*"],
-          })}
+        <CardContent className="space-y-4">
+          {thumbnailPreview && (
+            <div className="relative h-48 w-full overflow-hidden rounded-lg bg-muted">
+              <img
+                src={thumbnailPreview}
+                alt="Thumbnail preview"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
+          <Input
+            id="thumbnail"
+            type="file"
+            accept="image/*"
+            onChange={handleThumbnailChange}
+          />
         </CardContent>
       </Card>
 

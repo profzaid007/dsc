@@ -19,16 +19,17 @@ import {
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import type { LectureRegistration, LectureAttendance } from "@/types/lecture"
+import type { LectureRegistration } from "@/types/lecture"
 import { useLang } from "@/lib/lang-context"
-import { Check, X, Save } from "lucide-react"
+import { Check, X } from "lucide-react"
+
+interface AttendanceRow {
+  registration: LectureRegistration
+  attended: boolean
+}
 
 interface AttendanceSheetProps {
-  registrations: Array<{
-    registration: LectureRegistration
-    attendance?: LectureAttendance
-  }>
+  registrations: AttendanceRow[]
   onMarkAttendance: (
     registrationId: string,
     attended: boolean,
@@ -48,9 +49,7 @@ export function AttendanceSheet({
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const activeRegistrations = registrations.filter(
-    (item) => item.registration.status !== "cancelled"
-  )
+  const activeRegistrations = registrations
 
   const handleToggle = (registrationId: string) => {
     const newSelected = new Set(selectedIds)
@@ -75,11 +74,7 @@ export function AttendanceSheet({
   const handleMarkAll = async (attended: boolean) => {
     setIsSubmitting(true)
     for (const registrationId of selectedIds) {
-      await onMarkAttendance(
-        registrationId,
-        attended,
-        notes[registrationId]
-      )
+      await onMarkAttendance(registrationId, attended, notes[registrationId])
     }
     setIsSubmitting(false)
     setSelectedIds(new Set())
@@ -160,7 +155,9 @@ export function AttendanceSheet({
                   />
                 </TableHead>
                 <TableHead>{lang === "ar" ? "الاسم" : "Name"}</TableHead>
-                <TableHead>{lang === "ar" ? "البريد الإلكتروني" : "Email"}</TableHead>
+                <TableHead>
+                  {lang === "ar" ? "البريد الإلكتروني" : "Email"}
+                </TableHead>
                 <TableHead>{lang === "ar" ? "الحضور" : "Attendance"}</TableHead>
                 <TableHead>{lang === "ar" ? "ملاحظات" : "Notes"}</TableHead>
               </TableRow>
@@ -188,29 +185,15 @@ export function AttendanceSheet({
                     <TableCell>{item.registration.userName}</TableCell>
                     <TableCell>{item.registration.email}</TableCell>
                     <TableCell>
-                      {item.attendance ? (
-                        <span
-                          className={`inline-flex items-center gap-1 text-sm ${
-                            item.attendance.attended
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {item.attendance.attended ? (
-                            <>
-                              <Check className="h-4 w-4" />
-                              {lang === "ar" ? "حاضر" : "Present"}
-                            </>
-                          ) : (
-                            <>
-                              <X className="h-4 w-4" />
-                              {lang === "ar" ? "غائب" : "Absent"}
-                            </>
-                          )}
+                      {item.attended ? (
+                        <span className="inline-flex items-center gap-1 text-sm text-green-600">
+                          <Check className="h-4 w-4" />
+                          {lang === "ar" ? "حاضر" : "Present"}
                         </span>
                       ) : (
-                        <span className="text-muted-foreground text-sm">
-                          {lang === "ar" ? "لم يُسجل" : "Not marked"}
+                        <span className="inline-flex items-center gap-1 text-sm text-red-600">
+                          <X className="h-4 w-4" />
+                          {lang === "ar" ? "غائب" : "Absent"}
                         </span>
                       )}
                     </TableCell>

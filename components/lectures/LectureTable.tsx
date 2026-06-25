@@ -82,8 +82,8 @@ export function LectureTable({
               <TableCell className="font-medium max-w-xs truncate">
                 {lecture.title[lang]}
               </TableCell>
-              <TableCell>{lecture.speaker}</TableCell>
-              <TableCell>{formatDate(lecture.dateTime)}</TableCell>
+              <TableCell>{lecture.speaker.name[lang]}</TableCell>
+              <TableCell>{formatDate(lecture.schedule.dateTime)}</TableCell>
               <TableCell>
                 <Badge variant={statusVariants[lecture.status]}>
                   {statusLabels[lecture.status][lang]}

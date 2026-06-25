@@ -37,7 +37,9 @@ export default function AdminLecturesPage() {
   const filteredLectures = lectures.filter((lecture) => {
     const matchesSearch =
       lecture.title[lang].toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lecture.speaker.toLowerCase().includes(searchTerm.toLowerCase())
+      lecture.speaker.name[lang]
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
     const matchesStatus =
       statusFilter === "all" || lecture.status === statusFilter
     return matchesSearch && matchesStatus
@@ -57,7 +59,7 @@ export default function AdminLecturesPage() {
 
   const getRegistrationCount = (lectureId: string) => {
     return getRegistrationsByLecture(lectureId).filter(
-      (reg) => reg.status !== "cancelled"
+      (reg) => reg.status !== "absent"
     ).length
   }
 

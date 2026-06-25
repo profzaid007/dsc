@@ -104,7 +104,7 @@ export default function LectureDetailPage({
     })
   }
 
-  const isPast = new Date(lecture.dateTime) < new Date()
+  const isPast = new Date(lecture.schedule.dateTime) < new Date()
 
   return (
     <div className="space-y-6">
@@ -130,7 +130,9 @@ export default function LectureDetailPage({
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
             <h1 className="mb-2 text-3xl font-bold">{lecture.title[lang]}</h1>
-            <p className="text-lg text-white/90">{lecture.speaker}</p>
+            <p className="text-lg text-white/90">
+              {lecture.speaker.name[lang]}
+            </p>
           </div>
         </div>
       )}
@@ -143,7 +145,7 @@ export default function LectureDetailPage({
               <CardHeader>
                 <h1 className="text-3xl font-bold">{lecture.title[lang]}</h1>
                 <p className="text-lg text-muted-foreground">
-                  {lecture.speaker}
+                  {lecture.speaker.name[lang]}
                 </p>
               </CardHeader>
             </Card>
@@ -174,11 +176,13 @@ export default function LectureDetailPage({
                   <User className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{lecture.speaker}</h3>
-                  {lecture.speakerRole && (
+                  <h3 className="text-lg font-semibold">
+                    {lecture.speaker.name[lang]}
+                  </h3>
+                  {lecture.speaker.role[lang] && (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Briefcase className="h-4 w-4" />
-                      <span>{lecture.speakerRole}</span>
+                      <span>{lecture.speaker.role[lang]}</span>
                     </div>
                   )}
                 </div>
@@ -199,9 +203,11 @@ export default function LectureDetailPage({
               <div className="flex items-center gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{formatDate(lecture.dateTime)}</p>
+                  <p className="font-medium">
+                    {formatDate(lecture.schedule.dateTime)}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    {formatTime(lecture.dateTime)}
+                    {formatTime(lecture.schedule.dateTime)}
                   </p>
                 </div>
               </div>
@@ -222,7 +228,7 @@ export default function LectureDetailPage({
               <div className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{lecture.location}</p>
+                  <p className="font-medium">{lecture.schedule.location}</p>
                 </div>
               </div>
 
@@ -241,7 +247,7 @@ export default function LectureDetailPage({
                 </>
               )}
 
-              {lecture.meetingLink && (
+              {lecture.meetingLink && isRegistered && (
                 <>
                   <Separator />
                   <div className="flex items-center gap-3">
@@ -253,6 +259,23 @@ export default function LectureDetailPage({
                       className="font-medium text-primary hover:underline"
                     >
                       {lang === "ar" ? "رابط الاجتماع" : "Join Meeting"}
+                    </a>
+                  </div>
+                </>
+              )}
+
+              {lecture.recordingUrl && (
+                <>
+                  <Separator />
+                  <div className="flex items-center gap-3">
+                    <ExternalLink className="h-5 w-5 text-muted-foreground" />
+                    <a
+                      href={lecture.recordingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {lang === "ar" ? "مشاهدة التسجيل" : "Watch Recording"}
                     </a>
                   </div>
                 </>

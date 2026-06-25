@@ -14,14 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { useLectures } from "@/hooks/useLectures"
 import { LectureForm, ReportCard } from "@/components/lectures"
 import { AttendanceSheet } from "@/components/lectures/AttendanceSheet"
@@ -168,7 +160,9 @@ export default function AdminLectureDetailPage({
                 {statusLabels[lecture.status][lang]}
               </Badge>
             </div>
-            <p className="text-muted-foreground">{lecture.speaker}</p>
+              <p className="text-muted-foreground">
+                {lecture.speaker.name[lang]}
+              </p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -224,7 +218,7 @@ export default function AdminLectureDetailPage({
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{formatDate(lecture.dateTime)}</span>
+                      <span>{formatDate(lecture.schedule.dateTime)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
@@ -235,7 +229,7 @@ export default function AdminLectureDetailPage({
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{lecture.location}</span>
+                      <span>{lecture.schedule.location}</span>
                     </div>
                     {lecture.meetingLink && (
                       <div className="flex items-center gap-2">
@@ -250,6 +244,21 @@ export default function AdminLectureDetailPage({
                         </a>
                       </div>
                     )}
+                    {lecture.recordingUrl && (
+                      <div className="flex items-center gap-2">
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        <a
+                          href={lecture.recordingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {lang === "ar"
+                            ? "رابط التسجيل"
+                            : "Recording Link"}
+                        </a>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -261,10 +270,12 @@ export default function AdminLectureDetailPage({
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <p className="font-medium">{lecture.speaker}</p>
-                      {lecture.speakerRole && (
+                      <p className="font-medium">
+                        {lecture.speaker.name[lang]}
+                      </p>
+                      {lecture.speaker.role[lang] && (
                         <p className="text-muted-foreground">
-                          {lecture.speakerRole}
+                          {lecture.speaker.role[lang]}
                         </p>
                       )}
                     </div>
@@ -388,27 +399,27 @@ export default function AdminLectureDetailPage({
                           {new Date(reg.registeredAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              reg.status === "attended"
-                                ? "default"
-                                : reg.status === "cancelled"
-                                  ? "destructive"
-                                  : "secondary"
-                            }
-                          >
-                            {reg.status === "attended"
+                        <Badge
+                          variant={
+                            reg.status === "attended"
+                              ? "default"
+                              : reg.status === "absent"
+                                ? "destructive"
+                                : "secondary"
+                          }
+                        >
+                          {reg.status === "attended"
+                            ? lang === "ar"
+                              ? "حضر"
+                              : "Attended"
+                            : reg.status === "absent"
                               ? lang === "ar"
-                                ? "حضر"
-                                : "Attended"
-                              : reg.status === "cancelled"
-                                ? lang === "ar"
-                                  ? "ملغي"
-                                  : "Cancelled"
-                                : lang === "ar"
-                                  ? "مسجل"
-                                  : "Registered"}
-                          </Badge>
+                                ? "غائب"
+                                : "Absent"
+                              : lang === "ar"
+                                ? "مسجل"
+                                : "Registered"}
+                        </Badge>
                         </TableCell>
                       </TableRow>
                     ))
@@ -444,16 +455,13 @@ export default function AdminLectureDetailPage({
                       {lang === "ar" ? "البريد الإلكتروني" : "Email"}
                     </TableHead>
                     <TableHead>{lang === "ar" ? "الحضور" : "Attended"}</TableHead>
-                    <TableHead>
-                      {lang === "ar" ? "وقت الحضور" : "Attended At"}
-                    </TableHead>
                     <TableHead>{lang === "ar" ? "ملاحظات" : "Notes"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {attendance.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                      <TableCell colSpan={4} className="text-center py-8">
                         {lang === "ar"
                           ? "لا توجد بيانات حضور"
                           : "No attendance data"}
@@ -465,32 +473,19 @@ export default function AdminLectureDetailPage({
                         <TableCell>{item.registration.userName}</TableCell>
                         <TableCell>{item.registration.email}</TableCell>
                         <TableCell>
-                          {item.attendance ? (
-                            item.attendance.attended ? (
-                              <span className="flex items-center gap-1 text-green-600">
-                                <CheckCircle className="h-4 w-4" />
-                                {lang === "ar" ? "حاضر" : "Present"}
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1 text-red-600">
-                                <XCircle className="h-4 w-4" />
-                                {lang === "ar" ? "غائب" : "Absent"}
-                              </span>
-                            )
+                          {item.attended ? (
+                            <span className="flex items-center gap-1 text-green-600">
+                              <CheckCircle className="h-4 w-4" />
+                              {lang === "ar" ? "حاضر" : "Present"}
+                            </span>
                           ) : (
-                            <span className="text-muted-foreground">
-                              {lang === "ar" ? "لم يُسجل" : "Not marked"}
+                            <span className="flex items-center gap-1 text-red-600">
+                              <XCircle className="h-4 w-4" />
+                              {lang === "ar" ? "غائب" : "Absent"}
                             </span>
                           )}
                         </TableCell>
-                        <TableCell>
-                          {item.attendance?.attendedAt
-                            ? new Date(
-                                item.attendance.attendedAt
-                              ).toLocaleString()
-                            : "-"}
-                        </TableCell>
-                        <TableCell>{item.attendance?.notes || "-"}</TableCell>
+                        <TableCell>{item.registration.notes || "-"}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -543,9 +538,9 @@ export default function AdminLectureDetailPage({
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">
-                          {lang === "ar" ? "الإلغاءات:" : "Cancellations:"}
+                          {lang === "ar" ? "الغائبون:" : "Absent:"}
                         </span>
-                        <span className="font-medium">{stats?.cancellationCount}</span>
+                        <span className="font-medium">{stats?.absentCount}</span>
                       </li>
                     </ul>
                   </div>
@@ -564,14 +559,16 @@ export default function AdminLectureDetailPage({
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "المتحدث:" : "Speaker:"}
                         </span>
-                        <span className="font-medium">{lecture.speaker}</span>
+                        <span className="font-medium">
+                          {lecture.speaker.name[lang]}
+                        </span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "التاريخ:" : "Date:"}
                         </span>
                         <span className="font-medium">
-                          {formatDate(lecture.dateTime)}
+                          {formatDate(lecture.schedule.dateTime)}
                         </span>
                       </li>
                       <li className="flex justify-between">
@@ -586,7 +583,9 @@ export default function AdminLectureDetailPage({
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "الموقع:" : "Location:"}
                         </span>
-                        <span className="font-medium">{lecture.location}</span>
+                        <span className="font-medium">
+                          {lecture.schedule.location}
+                        </span>
                       </li>
                     </ul>
                   </div>

@@ -5,17 +5,27 @@ export interface BilingualString {
   ar: string
 }
 
+export interface SpeakerInfo {
+  name: BilingualString
+  role: BilingualString
+}
+
+export interface ScheduleInfo {
+  dateTime: string
+  location: string
+}
+
 export interface Lecture {
   id: string
   title: BilingualString
   description: BilingualString
-  speaker: string
-  speakerRole?: string
-  dateTime: string
+  speaker: SpeakerInfo
+  schedule: ScheduleInfo
   duration: number
-  location: string
   meetingLink?: string
+  recordingUrl?: string
   maxParticipants?: number
+  currentRegistrations: number
   thumbnail?: string
   status: LectureStatus
   created: string
@@ -30,14 +40,8 @@ export interface LectureRegistration {
   email: string
   phone?: string
   registeredAt: string
-  status: "registered" | "attended" | "cancelled"
-}
-
-export interface LectureAttendance {
-  registrationId: string
-  attended: boolean
-  attendedAt?: string
   notes?: string
+  status: "registered" | "attended" | "absent"
 }
 
 export interface LectureStats {
@@ -45,9 +49,14 @@ export interface LectureStats {
   totalAttended: number
   attendanceRate: number
   noShowCount: number
-  cancellationCount: number
+  absentCount: number
 }
 
-export type CreateLectureInput = Omit<Lecture, "id" | "created" | "updated">
+export type CreateLectureInput = Omit<
+  Lecture,
+  "id" | "created" | "updated" | "currentRegistrations" | "thumbnail"
+> & {
+  thumbnail?: string | File
+}
 
 export type UpdateLectureInput = Partial<CreateLectureInput>

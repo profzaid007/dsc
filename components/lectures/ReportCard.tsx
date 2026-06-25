@@ -71,17 +71,17 @@ export function ReportCard({ stats }: ReportCardProps) {
         </CardContent>
       </Card>
 
-      {stats.cancellationCount > 0 && (
+      {stats.absentCount > 0 && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {lang === "ar" ? "الإلغاءات" : "Cancellations"}
+              {lang === "ar" ? "الغائبون" : "Absent"}
             </CardTitle>
             <UserMinus className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.cancellationCount}
+              {stats.absentCount}
             </div>
           </CardContent>
         </Card>
