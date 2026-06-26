@@ -111,7 +111,7 @@ export function Navbar() {
                   <Link
                     href="/login"
                     onClick={() => setAccountPopoverOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    className="hidden md:flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
                   >
                     <LogIn className="h-4 w-4 text-muted-foreground" />
                     {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
@@ -119,7 +119,7 @@ export function Navbar() {
                   <Link
                     href="/register"
                     onClick={() => setAccountPopoverOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    className="hidden md:flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
                   >
                     <UserPlus className="h-4 w-4 text-muted-foreground" />
                     {t({ en: "Register", ar: "التسجيل" }, lang)}
