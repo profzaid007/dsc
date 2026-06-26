@@ -49,80 +49,81 @@ export function FooterSection() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-              {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
-            </h3>
-            <nav className="flex flex-col gap-1">
-              {PORTALS.map((portal, i) => (
-                <Link
-                  key={i}
-                  href={`/portal/${portal.id}`}
-                  className="text-sm text-white/60 transition-colors hover:text-white"
+          <div className="grid grid-cols-2 gap-4 md:col-span-2">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
+                {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
+              </h3>
+              <nav className="flex flex-col gap-1">
+                {PORTALS.map((portal, i) => (
+                  <Link
+                    key={i}
+                    href={`/portal/${portal.id}`}
+                    className="text-sm text-white/60 transition-colors hover:text-white"
+                  >
+                    {t(portal.portalName, lang)}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <h3 className="text-sm font-semibold uppercase tracking-wider pl-6 text-white">
+                {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
+              </h3>
+              <div className="flex flex-col gap-1 text-sm text-white/60">
+                <p className="flex items-center gap-2">
+                  <span className="w-4" />
+                  +966 50 123 4567
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="w-4" />
+                  info@dsc.com
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="w-4" />
+                  www.dsc.com
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="w-4" />
+                  {t(
+                    {
+                      en: "Riyadh, Kingdom of Saudi Arabia",
+                      ar: "الرياض، المملكة العربية السعودية",
+                    },
+                    lang
+                  )}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 mt-2 pl-6">
+                <a
+                  href="[URL]"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
                 >
-                  {t(portal.portalName, lang)}
-                </Link>
-              ))}
-            </nav>
-          </div>
+                  <i className="fab fa-instagram" />
+                </a>
+                <a
+                  href="[URL]"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
+                >
+                  <i className="fab fa-twitter" />
+                </a>
 
-          <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold uppercase tracking-wider pl-6 text-white">
-              {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
-            </h3>
-            <div className="flex flex-col gap-1 text-sm text-white/60">
-              <p className="flex items-center gap-2">
-                <span className="w-4" />
-                +966 50 123 4567
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-4" />
-                info@dsc.com
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-4" />
-                www.dsc.com
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-4" />
-                {t(
-                  {
-                    en: "Riyadh, Kingdom of Saudi Arabia",
-                    ar: "الرياض، المملكة العربية السعودية",
-                  },
-                  lang
-                )}
-              </p>
+                <a
+                  href="[URL]"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
+                >
+                  <i className="fab fa-linkedin-in" />
+                </a>
+              </div>
             </div>
-
-            <div className="flex items-center gap-3 mt-2 pl-6">
-              <a
-                href="[URL]"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
-              >
-                <i className="fab fa-instagram" />
-              </a>
-              <a
-                href="[URL]"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
-              >
-                <i className="fab fa-twitter" />
-              </a>
-
-              <a
-                href="[URL]"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
-              >
-                <i className="fab fa-linkedin-in" />
-              </a>
-            </div>
-
           </div>
         </div>
 
