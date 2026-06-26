@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { blogPagesCollection, blogCategoriesCollection } from "@/lib/pb-collections"
 import { BlogPage } from "@/types/cms"
 import type { Lang } from "@/types/form"
@@ -22,6 +23,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Loader2, ArrowLeft, Trash2, Copy } from "lucide-react"
 import pb from "@/lib/pb"
+
+function extractThumbnail(record: Record<string, unknown>): string {
+  const t = record.thumbnail
+  if (!t) return ""
+  if (Array.isArray(t)) return t[0] || ""
+  return t as string
+}
 
 function slugify(text: string): string {
   return text
@@ -53,6 +61,8 @@ export default function CmsBlogEditorPage() {
   const [arContent, setArContent] = useState("")
   const [isPublished, setIsPublished] = useState(false)
   const [authorName, setAuthorName] = useState("")
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     []
@@ -61,16 +71,38 @@ export default function CmsBlogEditorPage() {
   const [resetKey, setResetKey] = useState(0)
 
   const isInitialMount = useRef(true)
+  const pageRecordRef = useRef<Record<string, unknown> | null>(null)
 
   useEffect(() => {
     async function load() {
-      const [data, cats] = await Promise.all([
-        blogPagesCollection.getBySlug(slug),
+      const [rawRecords, cats] = await Promise.all([
+        pb.collection("blog_pages").getFullList({ filter: `slug = "${slug}"`, limit: 1 }),
         blogCategoriesCollection.getAll(),
       ])
-      if (!data) {
+      const rawRecord = rawRecords[0] as Record<string, unknown> | undefined
+      if (!rawRecord) {
         setLoading(false)
         return
+      }
+      pageRecordRef.current = rawRecord
+
+      const thumbFile = extractThumbnail(rawRecord)
+      setThumbnailUrl(thumbFile ? pb.files.getUrl(rawRecord, thumbFile) : null)
+
+      const data: BlogPage = {
+        id: rawRecord.id as string,
+        slug: rawRecord.slug as string,
+        title_en: rawRecord.title_en as string,
+        title_ar: rawRecord.title_ar as string | undefined,
+        category: rawRecord.category as string,
+        content_en: rawRecord.content_en as string,
+        content_ar: rawRecord.content_ar as string | undefined,
+        is_published: rawRecord.is_published as boolean,
+        media: (rawRecord.media as string[]) || [],
+        thumbnail: thumbFile,
+        author_name: (rawRecord.author_name as string) || "",
+        created: rawRecord.created as string,
+        updated: rawRecord.updated as string,
       }
       setPage(data)
       setEnTitle(data.title_en)
@@ -170,6 +202,11 @@ export default function CmsBlogEditorPage() {
     setArContent(page.content_ar || "")
     setIsPublished(page.is_published)
     setAuthorName(page.author_name)
+    setThumbnailUrl(
+      page.thumbnail && pageRecordRef.current
+        ? pb.files.getUrl(pageRecordRef.current, page.thumbnail)
+        : null
+    )
     setResetKey(t => t + 1)
   }, [page])
 
@@ -202,6 +239,37 @@ export default function CmsBlogEditorPage() {
     },
     [page]
   )
+
+  const handleThumbnailUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file || !page) return
+      setUploadingThumbnail(true)
+      try {
+        const updated = await blogPagesCollection.updateThumbnail(page.id, file)
+        setPage(updated)
+        pageRecordRef.current = updated as unknown as Record<string, unknown>
+        setThumbnailUrl(pb.files.getUrl(updated as never, updated.thumbnail))
+      } catch {
+        alert("Failed to upload thumbnail.")
+      } finally {
+        setUploadingThumbnail(false)
+      }
+    },
+    [page]
+  )
+
+  const handleRemoveThumbnail = useCallback(async () => {
+    if (!page) return
+    try {
+      const updated = await blogPagesCollection.removeThumbnail(page.id)
+      setPage(updated)
+      pageRecordRef.current = updated as unknown as Record<string, unknown>
+      setThumbnailUrl(null)
+    } catch {
+      alert("Failed to remove thumbnail.")
+    }
+  }, [page])
 
   const handleDelete = useCallback(async () => {
     if (!page) return
@@ -297,6 +365,39 @@ export default function CmsBlogEditorPage() {
             placeholder="Author name"
             className="max-w-xs w-72"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Thumbnail</Label>
+          {thumbnailUrl && (
+            <div className="relative mb-2 w-48 overflow-hidden rounded-lg border">
+              <Image
+                src={thumbnailUrl}
+                alt="Thumbnail"
+                width={192}
+                height={108}
+                className="h-auto w-full object-cover"
+              />
+              <Button
+                variant="destructive"
+                size="sm"
+                className="absolute right-1 top-1"
+                onClick={handleRemoveThumbnail}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailUpload}
+              disabled={uploadingThumbnail}
+              className="w-72"
+            />
+            {uploadingThumbnail && <Loader2 className="h-4 w-4 animate-spin" />}
+          </div>
         </div>
       </Card>
 
