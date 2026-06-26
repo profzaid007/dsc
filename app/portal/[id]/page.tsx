@@ -20,19 +20,19 @@ export default async function PortalPage({ params }: PortalPageProps) {
 
   return (
     <div className="min-h-screen">
-      <section className="grid w-full min-h-[600px] grid-cols-2">
+      <section className="grid w-full min-h-[300px] lg:min-h-[600px] grid-cols-2">
         {/* Left — accent color + content */}
-        <div className="flex items-center px-12"
+        <div className="flex items-center px-4 lg:px-12"
              style={{ backgroundColor: portal.accent }}>
           <div className="max-w-lg">
-            <h2 className="mb-4 text-5xl font-bold tracking-tight text-white">
+            <h2 className="mb-4 text-1xl lg:text-5xl font-bold tracking-tight text-white">
               {t(portal.heroTitle, "en")}
             </h2>
-            <p className="mb-8 text-xl text-white/80">
+            <p className="mb-8 text-sm lg:text-xl text-white/80">
               {t(portal.heroText, "en")}
             </p>
             <a href={portal.ctaHref}>
-              <Button size="lg" className="px-8 py-6 text-base font-semibold shadow-lg"
+              <Button size="lg" className="px-4 py-3 text-xs lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg"
                       style={{ backgroundColor: "white", color: portal.accent }}>
                 {t(portal.ctaLabel, "en")}
               </Button>
@@ -45,8 +45,8 @@ export default async function PortalPage({ params }: PortalPageProps) {
             src={portal.banner}
             alt={portal.portalName.en}
             fill
-            className="object-cover"
-            sizes="50vw"
+            className="object-cover object-[20%_center] lg:object-center"
+            sizes="(max-width: 1024px) 100vw, 50vw"
           />
           <div className="absolute inset-0"
                style={{ background: `linear-gradient(90deg, ${portal.accent}FF 0%, transparent 50%)` }} />

@@ -61,7 +61,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold tracking-tight text-[#0b2545] md:text-4xl">
             {t(
               {
-                en: "FROM WHERE YOU WANT TO START YOUR JOURNEY?",
+                en: "Where do you want to start your journey?",
                 ar: "من أين تريد أن تبدأ رحلتك؟",
               },
               lang
@@ -80,7 +80,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto w-full max-w-[1400px] flex-1 px-6 pb-20">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {PORTALS.map((portal) => (
             <PortalCard key={portal.id} portal={portal} />
           ))}
