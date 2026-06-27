@@ -520,6 +520,13 @@ function extractAuthorFromRecord(record: any): string {
   return (record.author_name as string) || ""
 }
 
+function extractThumbnail(record: any): string {
+  const t = record.thumbnail
+  if (!t) return ""
+  if (Array.isArray(t)) return t[0] || ""
+  return t as string
+}
+
 export const blogPagesCollection = {
   async getAll(): Promise<BlogPage[]> {
     const data = await pb.collection("blog_pages").getFullList({
@@ -537,6 +544,7 @@ export const blogPagesCollection = {
         content_ar: item.content_ar as string | undefined,
         is_published: item.is_published as boolean,
         media: (item.media as string[]) || [],
+        thumbnail: extractThumbnail(item),
         author_name,
         created: item.created as string,
         updated: item.updated as string,
@@ -560,6 +568,7 @@ export const blogPagesCollection = {
         content_ar: data.content_ar as string | undefined,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
+        thumbnail: extractThumbnail(data),
         author_name,
         created: data.created as string,
         updated: data.updated as string,
@@ -585,6 +594,7 @@ export const blogPagesCollection = {
         content_ar: data.content_ar as string | undefined,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
+        thumbnail: extractThumbnail(data),
         author_name,
         created: data.created as string,
         updated: data.updated as string,
@@ -622,6 +632,7 @@ export const blogPagesCollection = {
       content_ar: result.content_ar as string | undefined,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
+      thumbnail: extractThumbnail(result),
       author_name,
       created: result.created as string,
       updated: result.updated as string,
@@ -641,6 +652,7 @@ export const blogPagesCollection = {
       content_ar: result.content_ar as string | undefined,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
+      thumbnail: extractThumbnail(result),
       author_name,
       created: result.created as string,
       updated: result.updated as string,
@@ -686,6 +698,23 @@ export const blogPagesCollection = {
       formData.append("media-", filesToRemove.join(","))
     }
 
+    const result = await pb.collection("blog_pages").update(id, formData)
+    return result as unknown as BlogPage
+  },
+
+  async updateThumbnail(
+    id: string,
+    file: File
+  ): Promise<BlogPage> {
+    const formData = new FormData()
+    formData.append("thumbnail", file)
+    const result = await pb.collection("blog_pages").update(id, formData)
+    return result as unknown as BlogPage
+  },
+
+  async removeThumbnail(id: string): Promise<BlogPage> {
+    const formData = new FormData()
+    formData.append("thumbnail", "")
     const result = await pb.collection("blog_pages").update(id, formData)
     return result as unknown as BlogPage
   },

@@ -35,6 +35,7 @@ export default async function BlogPostPage({
       content_ar: record.content_ar as string | undefined,
       is_published: record.is_published as boolean,
       media: (record.media as string[]) || [],
+      thumbnail: "",
       author_name: (record.author_name as string) || "",
       created: record.created as string,
       updated: record.updated as string,
