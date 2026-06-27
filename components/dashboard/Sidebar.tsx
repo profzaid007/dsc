@@ -134,6 +134,21 @@ export function DashboardSidebar() {
           Cases
         </SmartLink>
 
+        {/* Training - shown for both admin and user */}
+        <SmartLink
+          href="/dashboard/training"
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+            pathname === "/dashboard/training" ||
+              pathname.startsWith("/dashboard/training/")
+              ? "bg-white/20 text-white"
+              : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
+          )}
+        >
+          <GraduationCap className="h-5 w-5" />
+          Training
+        </SmartLink>
+
         {/* Public Lectures - shown for both admin and user */}
         <SmartLink
           href="/dashboard/public-lectures"
