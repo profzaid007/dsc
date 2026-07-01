@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ const emptyForm: CreateLectureInput = {
     role: { en: "", ar: "" },
   },
   schedule: { dateTime: "", location: "" },
+  is_public: false,
   duration: 60,
   meetingLink: "",
   recordingUrl: "",
@@ -372,7 +374,22 @@ export function LectureForm({
         <CardHeader>
           <CardTitle>Status</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="is_public">Public Visibility</Label>
+              <p className="text-sm text-muted-foreground">
+                Show this lecture on the public lectures page
+              </p>
+            </div>
+            <Switch
+              id="is_public"
+              checked={formData.is_public}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, is_public: checked })
+              }
+            />
+          </div>
           <Select
             value={formData.status}
             onValueChange={(value) =>

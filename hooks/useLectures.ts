@@ -23,12 +23,16 @@ export function useLectures() {
     setIsLoading(true)
     setError(null)
     try {
-      const [lecturesData, registrationsData] = await Promise.all([
-        lecturesCollection.getAll(),
-        lectureRegistrationsCollection.getAll(),
-      ])
+
+      let lecturesData: Lecture[] = []
+      let registrationsData: LectureRegistration[] = []
+
+      lecturesData = await lecturesCollection.getAll()
       setLectures(lecturesData)
+
+      registrationsData = await lectureRegistrationsCollection.getAll()
       setRegistrations(registrationsData)
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load lectures")
       console.error("Failed to load lectures:", err)

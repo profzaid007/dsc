@@ -7,7 +7,7 @@ import type {
 } from "@/types/lecture"
 
 const LECTURES_COLLECTION = "public_lectures"
-const REGISTRATIONS_COLLECTION = "lecture_registrations"
+const REGISTRATIONS_COLLECTION = "event_registrations"
 
 // ---------------------------------------------------------------------------
 // Transformers: between PocketBase flat/snake-case and app nested/camelCase
@@ -34,6 +34,7 @@ export function lectureFromDB(record: Record<string, unknown>): Lecture {
     recordingUrl: (record.recording_url as string) || undefined,
     maxParticipants: (record.max_participants as number) || undefined,
     currentRegistrations: (record.current_registrations as number) || 0,
+    is_public: record.is_public as boolean,
     thumbnail: getThumbnailUrl(record),
     status: record.status as Lecture["status"],
     created: record.created as string,
@@ -53,6 +54,7 @@ function lectureToDB(
   if (data.duration !== undefined) dbData.duration = data.duration
   if (data.meetingLink !== undefined) dbData.meeting_link = data.meetingLink
   if (data.recordingUrl !== undefined) dbData.recording_url = data.recordingUrl
+  if (data.is_public !== undefined) dbData.is_public = data.is_public
   if (data.maxParticipants !== undefined)
     dbData.max_participants = data.maxParticipants
   if (data.status !== undefined) dbData.status = data.status
@@ -127,6 +129,7 @@ export const lecturesCollection = {
     const data = await pb.collection(LECTURES_COLLECTION).getFullList({
       sort: "-created",
     })
+    console.log(data)
     return data.map((item) => lectureFromDB(item as unknown as Record<string, unknown>))
   },
 

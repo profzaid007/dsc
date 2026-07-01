@@ -27,6 +27,7 @@ export interface Lecture {
   maxParticipants?: number
   currentRegistrations: number
   thumbnail?: string
+  is_public: boolean
   status: LectureStatus
   created: string
   updated: string
