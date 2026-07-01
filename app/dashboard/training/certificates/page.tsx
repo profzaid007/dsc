@@ -64,8 +64,8 @@ export default function MyCertificatesPage() {
               key={certificate.id}
               certificate={certificate}
               onDownload={() => {
-                if (certificate.downloadUrl) {
-                  window.open(certificate.downloadUrl, "_blank")
+                if (certificate.file) {
+                  window.open(certificate.file, "_blank")
                 }
               }}
             />

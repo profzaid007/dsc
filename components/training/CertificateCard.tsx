@@ -54,7 +54,7 @@ export function CertificateCard({
           </Badge>
           {onDownload && (
             <Button variant="outline" size="sm" onClick={onDownload}>
-              {certificate.downloadUrl ? (
+              {certificate.file ? (
                 <>
                   <Download className="me-1 h-3.5 w-3.5" />
                   {lang === "ar" ? "تحميل" : "Download"}

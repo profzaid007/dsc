@@ -1,3 +1,4 @@
+import pb from "./pb"
 import type {
   TrainingProgram,
   AwarenessSession,
@@ -8,405 +9,571 @@ import type {
   CreateSessionInput,
   UpdateSessionInput,
   CreateRegistrationInput,
+  CreateCertificateInput,
+  UpdateCertificateInput,
+  TrainerInfo,
+  ProgramSchedule,
+  AwarenessSchedule,
 } from "@/types/training"
 
-const PROGRAMS_COLLECTION = "training_programs"
-const SESSIONS_COLLECTION = "awareness_sessions"
-const REGISTRATIONS_COLLECTION = "training_registrations"
-const CERTIFICATES_COLLECTION = "training_certificates"
+const PROGRAMS_COLLECTION = "programs"
+const AWARENESS_COLLECTION = "awareness"
+const REGISTRATIONS_COLLECTION = "event_registrations"
+const CERTIFICATES_COLLECTION = "event_certificates"
 
 // ---------------------------------------------------------------------------
-// Mock data for development (replace with real PocketBase calls later)
+// Thumbnail URL helper
 // ---------------------------------------------------------------------------
 
-const mockPrograms: TrainingProgram[] = [
-  {
-    id: "prog-1",
-    title: { en: "Leadership Fundamentals", ar: "أساسيات القيادة" },
-    description: {
-      en: "A comprehensive program designed to develop essential leadership skills for emerging leaders. Learn effective communication, decision-making, and team management strategies.",
-      ar: "برنامج شامل مصمم لتطوير مهارات القيادة الأساسية للقادة الناشئين. تعلم استراتيجيات التواصل الفعال واتخاذ القرار وإدارة الفريق.",
-    },
-    category: { en: "Leadership", ar: "القيادة" },
-    trainer: {
-      name: { en: "Dr. Sarah Johnson", ar: "د. سارة جونسون" },
-      role: { en: "Leadership Coach", ar: "مدربة قيادة" },
-    },
-    coordinator: "Ahmed Al-Rashid",
-    type: "in_person",
-    location: "Training Room A",
-    duration: 5,
-    goals: {
-      en: "Develop leadership skills, improve team management, enhance decision-making",
-      ar: "تطوير مهارات القيادة، تحسين إدارة الفريق، تعزيز اتخاذ القرار",
-    },
-    schedule: {
-      startDate: "2025-07-01",
-      endDate: "2025-07-05",
-      sessions: [
-        { date: "2025-07-01", timeFrom: "09:00", timeTo: "16:00", location: "Training Room A" },
-        { date: "2025-07-02", timeFrom: "09:00", timeTo: "16:00", location: "Training Room A" },
-        { date: "2025-07-03", timeFrom: "09:00", timeTo: "16:00", location: "Training Room B" },
-        { date: "2025-07-04", timeFrom: "09:00", timeTo: "16:00", location: "Training Room A" },
-        { date: "2025-07-05", timeFrom: "09:00", timeTo: "14:00", location: "Conference Hall" },
-      ],
-    },
-    maxParticipants: 25,
-    currentRegistrations: 18,
-    status: "published",
-    created: "2025-01-15T10:00:00Z",
-    updated: "2025-01-15T10:00:00Z",
-  },
-  {
-    id: "prog-2",
-    title: { en: "Data Analysis Workshop", ar: "ورشة تحليل البيانات" },
-    description: {
-      en: "Master the art of data analysis using modern tools and techniques. This hands-on workshop covers statistical analysis, data visualization, and reporting.",
-      ar: "أتقن فن تحليل البيانات باستخدام الأدوات والتقنيات الحديثة. تغطي هذه الورشة العملية التحليل الإحصائي وتصور البيانات والتقارير.",
-    },
-    category: { en: "Technical", ar: "تقني" },
-    trainer: {
-      name: { en: "Mark Chen", ar: "مارك تشن" },
-      role: { en: "Data Scientist", ar: "عالم بيانات" },
-    },
-    coordinator: "Fatima Hassan",
-    type: "online",
-    location: "Virtual",
-    duration: 3,
-    goals: {
-      en: "Learn data analysis tools, statistical methods, data visualization",
-      ar: "تعلم أدوات تحليل البيانات، الطرق الإحصائية، تصور البيانات",
-    },
-    schedule: {
-      startDate: "2025-07-15",
-      endDate: "2025-07-17",
-      sessions: [
-        { date: "2025-07-15", timeFrom: "10:00", timeTo: "13:00", location: "Virtual" },
-        { date: "2025-07-16", timeFrom: "10:00", timeTo: "13:00", location: "Virtual" },
-        { date: "2025-07-17", timeFrom: "10:00", timeTo: "13:00", location: "Virtual" },
-      ],
-    },
-    maxParticipants: 30,
-    currentRegistrations: 22,
-    status: "published",
-    created: "2025-01-20T10:00:00Z",
-    updated: "2025-01-20T10:00:00Z",
-  },
-  {
-    id: "prog-3",
-    title: { en: "Effective Communication", ar: "التواصل الفعال" },
-    description: {
-      en: "Enhance your communication skills for better professional and personal relationships. Learn presentation skills, active listening, and persuasive communication.",
-      ar: "طور مهاراتك في التواصل لعلاقات مهنية وشخصية أفضل. تعلم مهارات العرض والإصغاء النشط والتواصل المقنع.",
-    },
-    category: { en: "Soft Skills", ar: "مهارات شخصية" },
-    trainer: {
-      name: { en: "Lisa Moore", ar: "ليسا مور" },
-      role: { en: "Communication Expert", ar: "خبيرة تواصل" },
-    },
-    coordinator: "Omar Khalil",
-    type: "hybrid",
-    location: "Conference Hall",
-    duration: 2,
-    goals: {
-      en: "Improve presentation skills, active listening, persuasive communication",
-      ar: "تحسين مهارات العرض، الإصغاء النشط، التواصل المقنع",
-    },
-    schedule: {
-      startDate: "2025-08-01",
-      endDate: "2025-08-02",
-      sessions: [
-        { date: "2025-08-01", timeFrom: "14:00", timeTo: "17:00", location: "Conference Hall" },
-        { date: "2025-08-02", timeFrom: "14:00", timeTo: "17:00", location: "Conference Hall" },
-      ],
-    },
-    maxParticipants: 20,
-    currentRegistrations: 15,
-    status: "published",
-    created: "2025-02-01T10:00:00Z",
-    updated: "2025-02-01T10:00:00Z",
-  },
-  {
-    id: "prog-4",
-    title: { en: "Safety Compliance Training", ar: "تدريب الامتثال للسلامة" },
-    description: {
-      en: "Essential safety training for all staff members. Learn workplace safety regulations, emergency procedures, and risk assessment.",
-      ar: "تدريب سلامة أساسي لجميع أعضاء الموظفين. تعلم لوائح سلامة مكان العمل وإجراءات الطوارئ وتقييم المخاطر.",
-    },
-    category: { en: "Compliance", ar: "الامتثال" },
-    trainer: {
-      name: { en: "James Wilson", ar: "جيمس ويلسون" },
-      role: { en: "Safety Officer", ar: "مسؤول السلامة" },
-    },
-    coordinator: "Sara Ahmed",
-    type: "in_person",
-    location: "Main Office",
-    duration: 1,
-    goals: {
-      en: "Understand safety regulations, emergency procedures, risk assessment",
-      ar: "فهم لوائح السلامة، إجراءات الطوارئ، تقييم المخاطر",
-    },
-    schedule: {
-      startDate: "2025-06-15",
-      endDate: "2025-06-15",
-      sessions: [
-        { date: "2025-06-15", timeFrom: "09:00", timeTo: "16:00", location: "Main Office" },
-      ],
-    },
-    maxParticipants: 50,
-    currentRegistrations: 35,
-    status: "completed",
-    created: "2025-01-10T10:00:00Z",
-    updated: "2025-01-10T10:00:00Z",
-  },
-]
+function getThumbnailUrl(record: Record<string, unknown>): string | undefined {
+  const thumbnail = record.thumbnail
+  if (!thumbnail) return undefined
+  if (Array.isArray(thumbnail) && thumbnail.length > 0) {
+    return pb.files.getUrl(record as never, thumbnail[0] as string)
+  }
+  return undefined
+}
 
-const mockSessions: AwarenessSession[] = [
-  {
-    id: "sess-1",
-    title: { en: "New Employee Orientation", ar: "توجيه الموظفين الجدد" },
-    description: {
-      en: "Welcome session for all new employees to familiarize them with company policies, culture, and procedures.",
-      ar: "جلسة ترحيبية لجميع الموظفين الجدد للتعرف على سياسات الشركة وثقافتها وإجراءاتها.",
-    },
-    category: { en: "Orientation", ar: "توجيه" },
-    targetAudience: { en: "New Hires", ar: "موظفون جدد" },
-    speaker: {
-      name: { en: "HR Director", ar: "مدير الموارد البشرية" },
-      role: { en: "HR Lead", ar: "رئيس الموارد البشرية" },
-    },
-    coordinator: "Maya Sami",
-    type: "seminar",
-    location: "Main Conference Room",
-    date: "2025-07-10",
-    timeFrom: "09:00",
-    timeTo: "12:00",
-    maxParticipants: 40,
-    currentRegistrations: 28,
-    status: "published",
-    created: "2025-06-01T10:00:00Z",
-    updated: "2025-06-01T10:00:00Z",
-  },
-  {
-    id: "sess-2",
-    title: { en: "Workplace Safety Awareness", ar: "التوعية بسلامة مكان العمل" },
-    description: {
-      en: "Interactive session on maintaining a safe work environment, identifying hazards, and emergency response protocols.",
-      ar: "جلسة تفاعلية حول الحفاظ على بيئة عمل آمنة وتحديد المخاطر وبروتوكولات الاستجابة للطوارئ.",
-    },
-    category: { en: "Safety", ar: "السلامة" },
-    targetAudience: { en: "All Staff", ar: "جميع الموظفين" },
-    speaker: {
-      name: { en: "Safety Officer", ar: "مسؤول السلامة" },
-      role: { en: "Safety Expert", ar: "خبير سلامة" },
-    },
-    coordinator: "Khaled Mansour",
-    type: "workshop",
-    location: "Training Room A",
-    date: "2025-07-20",
-    timeFrom: "14:00",
-    timeTo: "16:00",
-    maxParticipants: 30,
-    currentRegistrations: 22,
-    status: "published",
-    created: "2025-06-05T10:00:00Z",
-    updated: "2025-06-05T10:00:00Z",
-  },
-  {
-    id: "sess-3",
-    title: { en: "Cybersecurity Best Practices", ar: "أفضل ممارسات الأمن السيبراني" },
-    description: {
-      en: "Learn essential cybersecurity practices to protect company data and systems from digital threats.",
-      ar: "تعلم ممارسات الأمن السيبراني الأساسية لحماية بيانات وأنظمة الشركة من التهديدات الرقمية.",
-    },
-    category: { en: "Security", ar: "الأمن" },
-    targetAudience: { en: "Managers", ar: "المديرين" },
-    speaker: {
-      name: { en: "IT Manager", ar: "مدير تكنولوجيا المعلومات" },
-      role: { en: "IT Security Lead", ar: "رئيس أمن المعلومات" },
-    },
-    coordinator: "Rana Ali",
-    type: "webinar",
-    location: "Virtual",
-    date: "2025-07-25",
-    timeFrom: "10:00",
-    timeTo: "11:30",
-    maxParticipants: 50,
-    currentRegistrations: 35,
-    status: "published",
-    created: "2025-06-10T10:00:00Z",
-    updated: "2025-06-10T10:00:00Z",
-  },
-]
-
-const mockRegistrations: TrainingRegistration[] = [
-  {
-    id: "reg-1",
-    programId: "prog-1",
-    userId: "user-1",
-    userName: "Youssef Ahmed",
-    email: "youssef@example.com",
-    registeredAt: "2025-04-10T10:00:00Z",
-    status: "completed",
-    certificateId: "cert-1",
-  },
-  {
-    id: "reg-2",
-    programId: "prog-2",
-    userId: "user-2",
-    userName: "Leila Salem",
-    email: "leila@example.com",
-    registeredAt: "2025-04-12T10:00:00Z",
-    status: "registered",
-  },
-]
-
-const mockCertificates: TrainingCertificate[] = [
-  {
-    id: "cert-1",
-    userId: "user-1",
-    userName: "Youssef Ahmed",
-    programId: "prog-1",
-    programName: { en: "Leadership Fundamentals", ar: "أساسيات القيادة" },
-    issueDate: "2025-07-05",
-    certificateNumber: "CERT-TR-001234",
-    downloadUrl: "#",
-  },
-  {
-    id: "cert-2",
-    userId: "user-1",
-    userName: "Youssef Ahmed",
-    programId: "prog-4",
-    programName: { en: "Safety Compliance Training", ar: "تدريب الامتثال للسلامة" },
-    issueDate: "2025-06-15",
-    certificateNumber: "CERT-TR-001235",
-    downloadUrl: "#",
-  },
-]
+function getFileUrl(record: Record<string, unknown>, fieldName: string): string | undefined {
+  const file = record[fieldName]
+  if (!file) return undefined
+  if (Array.isArray(file) && file.length > 0) {
+    return pb.files.getUrl(record as never, file[0] as string)
+  }
+  if (typeof file === "string") {
+    return pb.files.getUrl(record as never, file)
+  }
+  return undefined
+}
 
 // ---------------------------------------------------------------------------
-// Programs
+// Programs transformers
+// ---------------------------------------------------------------------------
+
+export function programFromDB(record: Record<string, unknown>): TrainingProgram {
+  return {
+    id: record.id as string,
+    title: record.name as TrainingProgram["title"],
+    category: record.category as TrainingProgram["category"],
+    trainer: record.trainer_name as TrainerInfo,
+    coordinator: typeof record.coordinator === "string"
+      ? record.coordinator
+      : (record.coordinator as Record<string, string>)?.en || "",
+    type: record.type as TrainingProgram["type"],
+    location: typeof record.location === "string"
+      ? record.location
+      : (record.location as Record<string, string>)?.en || "",
+    duration: record.duration as number,
+    goals: record.goals as TrainingProgram["goals"],
+    notes: typeof record.notes === "string"
+      ? record.notes
+      : (record.notes as Record<string, string>)?.en || undefined,
+    schedule: record.schedule as ProgramSchedule,
+    maxParticipants: (record.max_participants as number) || undefined,
+    currentRegistrations: (record.current_registrations as number) || 0,
+    thumbnail: getThumbnailUrl(record),
+    meetingLink: (record.meeting_link as string) || undefined,
+    recordingUrl: (record.recording_url as string) || undefined,
+    isPublic: record.is_public === true,
+    status: record.status as TrainingProgram["status"],
+    created: record.created as string,
+    updated: record.updated as string,
+  }
+}
+
+function programToDB(
+  data: Partial<CreateProgramInput | UpdateProgramInput>
+): Record<string, unknown> {
+  const dbData: Record<string, unknown> = {}
+
+  if (data.title !== undefined) dbData.name = data.title
+  if (data.category !== undefined) dbData.category = data.category
+  if (data.trainer !== undefined) dbData.trainer_name = data.trainer
+  if (data.coordinator !== undefined) dbData.coordinator = data.coordinator
+  if (data.type !== undefined) dbData.type = data.type
+  if (data.location !== undefined) dbData.location = data.location
+  if (data.duration !== undefined) dbData.duration = data.duration
+  if (data.goals !== undefined) dbData.goals = data.goals
+  if (data.notes !== undefined) dbData.notes = data.notes
+  if (data.schedule !== undefined) dbData.schedule = data.schedule
+  if (data.maxParticipants !== undefined)
+    dbData.max_participants = data.maxParticipants
+  if (data.meetingLink !== undefined) dbData.meeting_link = data.meetingLink
+  if (data.recordingUrl !== undefined) dbData.recording_url = data.recordingUrl
+  if (data.isPublic !== undefined) dbData.is_public = data.isPublic
+  if (data.status !== undefined) dbData.status = data.status
+
+  return dbData
+}
+
+function buildProgramFormData(
+  data: Partial<CreateProgramInput | UpdateProgramInput>,
+  file?: File
+): FormData {
+  const formData = new FormData()
+  const dbData = programToDB(data)
+
+  Object.entries(dbData).forEach(([key, value]) => {
+    if (value === undefined) return
+    if (typeof value === "string") {
+      formData.append(key, value)
+    } else {
+      formData.append(key, JSON.stringify(value))
+    }
+  })
+
+  if (file) {
+    formData.append("thumbnail", file)
+  }
+
+  return formData
+}
+
+// ---------------------------------------------------------------------------
+// Awareness transformers
+// ---------------------------------------------------------------------------
+
+export function sessionFromDB(record: Record<string, unknown>): AwarenessSession {
+  return {
+    id: record.id as string,
+    title: record.topic as AwarenessSession["title"],
+    category: record.category as AwarenessSession["category"],
+    targetAudience: record.target_audience as AwarenessSession["targetAudience"],
+    speaker: record.speaker as TrainerInfo,
+    coordinator: typeof record.coordinator === "string"
+      ? record.coordinator
+      : (record.coordinator as Record<string, string>)?.en || "",
+    type: record.type as AwarenessSession["type"],
+    location: typeof record.location === "string"
+      ? record.location
+      : (record.location as Record<string, string>)?.en || "",
+    duration: record.duration as number,
+    schedule: record.schedule as AwarenessSchedule,
+    notes: typeof record.notes === "string"
+      ? record.notes
+      : (record.notes as Record<string, string>)?.en || undefined,
+    maxParticipants: (record.max_participants as number) || undefined,
+    currentRegistrations: (record.current_registrations as number) || 0,
+    thumbnail: getThumbnailUrl(record),
+    meetingLink: (record.meeting_link as string) || undefined,
+    recordingUrl: (record.recording_url as string) || undefined,
+    isPublic: record.is_public === true,
+    status: record.status as AwarenessSession["status"],
+    created: record.created as string,
+    updated: record.updated as string,
+  }
+}
+
+function sessionToDB(
+  data: Partial<CreateSessionInput | UpdateSessionInput>
+): Record<string, unknown> {
+  const dbData: Record<string, unknown> = {}
+
+  if (data.title !== undefined) dbData.topic = data.title
+  if (data.category !== undefined) dbData.category = data.category
+  if (data.targetAudience !== undefined) dbData.target_audience = data.targetAudience
+  if (data.speaker !== undefined) dbData.speaker = data.speaker
+  if (data.coordinator !== undefined) dbData.coordinator = data.coordinator
+  if (data.type !== undefined) dbData.type = data.type
+  if (data.location !== undefined) dbData.location = data.location
+  if (data.duration !== undefined) dbData.duration = data.duration
+  if (data.schedule !== undefined) dbData.schedule = data.schedule
+  if (data.notes !== undefined) dbData.notes = data.notes
+  if (data.maxParticipants !== undefined)
+    dbData.max_participants = data.maxParticipants
+  if (data.meetingLink !== undefined) dbData.meeting_link = data.meetingLink
+  if (data.recordingUrl !== undefined) dbData.recording_url = data.recordingUrl
+  if (data.isPublic !== undefined) dbData.is_public = data.isPublic
+  if (data.status !== undefined) dbData.status = data.status
+
+  return dbData
+}
+
+function buildSessionFormData(
+  data: Partial<CreateSessionInput | UpdateSessionInput>,
+  file?: File
+): FormData {
+  const formData = new FormData()
+  const dbData = sessionToDB(data)
+
+  Object.entries(dbData).forEach(([key, value]) => {
+    if (value === undefined) return
+    if (typeof value === "string") {
+      formData.append(key, value)
+    } else {
+      formData.append(key, JSON.stringify(value))
+    }
+  })
+
+  if (file) {
+    formData.append("thumbnail", file)
+  }
+
+  return formData
+}
+
+// ---------------------------------------------------------------------------
+// Registrations transformers
+// ---------------------------------------------------------------------------
+
+export function registrationFromDB(
+  record: Record<string, unknown>
+): TrainingRegistration {
+  return {
+    id: record.id as string,
+    programId: (record.program_id as string) || undefined,
+    awarenessId: (record.awareness_id as string) || undefined,
+    lectureId: (record.lecture_id as string) || undefined,
+    userId: (record.user_id as string) || "",
+    userName: (record.user_name as string) || "",
+    email: (record.email as string) || "",
+    phone: (record.phone as string) || undefined,
+    registeredAt: (record.registered_at as string) || (record.created as string),
+    status: (record.status as TrainingRegistration["status"]) || "registered",
+    certificateId: (record.certificate_id as string) || undefined,
+  }
+}
+
+function registrationToDB(
+  data: Partial<TrainingRegistration>
+): Record<string, unknown> {
+  const dbData: Record<string, unknown> = {}
+
+  if (data.programId !== undefined) dbData.program_id = data.programId
+  if (data.awarenessId !== undefined) dbData.awareness_id = data.awarenessId
+  if (data.lectureId !== undefined) dbData.lecture_id = data.lectureId
+  if (data.userId !== undefined) dbData.user_id = data.userId
+  if (data.userName !== undefined) dbData.user_name = data.userName
+  if (data.email !== undefined) dbData.email = data.email
+  if (data.phone !== undefined) dbData.phone = data.phone
+  if (data.registeredAt !== undefined) dbData.registered_at = data.registeredAt
+  if (data.status !== undefined) dbData.status = data.status
+  if (data.certificateId !== undefined) dbData.certificate_id = data.certificateId
+
+  return dbData
+}
+
+// ---------------------------------------------------------------------------
+// Certificates transformers
+// ---------------------------------------------------------------------------
+
+export function certificateFromDB(
+  record: Record<string, unknown>
+): TrainingCertificate {
+  return {
+    id: record.id as string,
+    userId: (record.user_id as string) || "",
+    programId: (record.program_id as string) || undefined,
+    awarenessId: (record.awareness_id as string) || undefined,
+    userName: (record.name as string) || "",
+    programName: (record.program_name as TrainingCertificate["programName"]) || { en: "", ar: "" },
+    issueDate: (record.issue_date as string) || "",
+    certificateNumber: String(record.certificate_no || record.certificate_number || ""),
+    notes: (record.notes as string) || undefined,
+    file: getFileUrl(record, "file"),
+  }
+}
+
+function certificateToDB(
+  data: Partial<CreateCertificateInput | UpdateCertificateInput>
+): Record<string, unknown> {
+  const dbData: Record<string, unknown> = {}
+
+  if (data.userId !== undefined) dbData.user_id = data.userId
+  if (data.programId !== undefined) dbData.program_id = data.programId
+  if (data.awarenessId !== undefined) dbData.awareness_id = data.awarenessId
+  if (data.userName !== undefined) dbData.name = data.userName
+  if (data.programName !== undefined) dbData.program_name = data.programName
+  if (data.issueDate !== undefined) dbData.issue_date = data.issueDate
+  if (data.certificateNumber !== undefined) dbData.certificate_no = data.certificateNumber
+  if (data.notes !== undefined) dbData.notes = data.notes
+
+  return dbData
+}
+
+function buildCertificateFormData(
+  data: Partial<CreateCertificateInput | UpdateCertificateInput>,
+  file?: File
+): FormData {
+  const formData = new FormData()
+  const dbData = certificateToDB(data)
+  for (const [key, value] of Object.entries(dbData)) {
+    if (typeof value === "object" && value !== null) {
+      formData.append(key, JSON.stringify(value))
+    } else if (value !== undefined) {
+      formData.append(key, String(value))
+    }
+  }
+  if (file) formData.append("file", file)
+  return formData
+}
+
+// ---------------------------------------------------------------------------
+// Programs collection
 // ---------------------------------------------------------------------------
 
 export const trainingProgramsCollection = {
   async getAll(): Promise<TrainingProgram[]> {
-    return mockPrograms
+    const data = await pb.collection(PROGRAMS_COLLECTION).getFullList({
+      sort: "-created",
+    })
+    return data.map((item) => programFromDB(item as unknown as Record<string, unknown>))
   },
 
   async getPublished(): Promise<TrainingProgram[]> {
-    return mockPrograms.filter((p) => p.status === "published" || p.status === "in_progress")
+    const data = await pb.collection(PROGRAMS_COLLECTION).getFullList({
+      filter: 'status = "published" || status = "in_progress"',
+      sort: "schedule.startDate",
+    })
+    return data.map((item) => programFromDB(item as unknown as Record<string, unknown>))
   },
 
-  async getById(id: string): Promise<TrainingProgram | undefined> {
-    return mockPrograms.find((p) => p.id === id)
+  async getById(id: string): Promise<TrainingProgram> {
+    const data = await pb.collection(PROGRAMS_COLLECTION).getOne(id)
+    return programFromDB(data as unknown as Record<string, unknown>)
   },
 
-  async create(_data: CreateProgramInput): Promise<TrainingProgram> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+  async create(data: CreateProgramInput, file?: File): Promise<TrainingProgram> {
+    const result = file
+      ? await pb
+          .collection(PROGRAMS_COLLECTION)
+          .create(buildProgramFormData(data, file))
+      : await pb.collection(PROGRAMS_COLLECTION).create(programToDB(data))
+    return programFromDB(result as unknown as Record<string, unknown>)
   },
 
-  async update(_id: string, _data: UpdateProgramInput): Promise<TrainingProgram> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+  async update(
+    id: string,
+    data: UpdateProgramInput,
+    file?: File
+  ): Promise<TrainingProgram> {
+    const result = file
+      ? await pb
+          .collection(PROGRAMS_COLLECTION)
+          .update(id, buildProgramFormData(data, file))
+      : await pb.collection(PROGRAMS_COLLECTION).update(id, programToDB(data))
+    return programFromDB(result as unknown as Record<string, unknown>)
   },
 
-  async delete(_id: string): Promise<void> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+  async delete(id: string): Promise<void> {
+    await pb.collection(PROGRAMS_COLLECTION).delete(id)
+  },
+
+  async incrementRegistrations(id: string, delta: number): Promise<void> {
+    const existing = await pb.collection(PROGRAMS_COLLECTION).getOne(id)
+    const current = (existing.current_registrations as number) || 0
+    await pb
+      .collection(PROGRAMS_COLLECTION)
+      .update(id, { current_registrations: Math.max(0, current + delta) })
   },
 }
 
 // ---------------------------------------------------------------------------
-// Sessions
+// Awareness sessions collection
 // ---------------------------------------------------------------------------
 
 export const trainingSessionsCollection = {
   async getAll(): Promise<AwarenessSession[]> {
-    return mockSessions
+    const data = await pb.collection(AWARENESS_COLLECTION).getFullList({
+      sort: "-created",
+    })
+    return data.map((item) => sessionFromDB(item as unknown as Record<string, unknown>))
   },
 
   async getPublished(): Promise<AwarenessSession[]> {
-    return mockSessions.filter((s) => s.status === "published")
+    const data = await pb.collection(AWARENESS_COLLECTION).getFullList({
+      filter: 'status = "published"',
+      sort: "schedule.date",
+    })
+    return data.map((item) => sessionFromDB(item as unknown as Record<string, unknown>))
   },
 
-  async getById(id: string): Promise<AwarenessSession | undefined> {
-    return mockSessions.find((s) => s.id === id)
+  async getById(id: string): Promise<AwarenessSession> {
+    const data = await pb.collection(AWARENESS_COLLECTION).getOne(id)
+    return sessionFromDB(data as unknown as Record<string, unknown>)
   },
 
-  async create(_data: CreateSessionInput): Promise<AwarenessSession> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+  async create(data: CreateSessionInput, file?: File): Promise<AwarenessSession> {
+    const result = file
+      ? await pb
+          .collection(AWARENESS_COLLECTION)
+          .create(buildSessionFormData(data, file))
+      : await pb.collection(AWARENESS_COLLECTION).create(sessionToDB(data))
+    return sessionFromDB(result as unknown as Record<string, unknown>)
   },
 
-  async update(_id: string, _data: UpdateSessionInput): Promise<AwarenessSession> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+  async update(
+    id: string,
+    data: UpdateSessionInput,
+    file?: File
+  ): Promise<AwarenessSession> {
+    const result = file
+      ? await pb
+          .collection(AWARENESS_COLLECTION)
+          .update(id, buildSessionFormData(data, file))
+      : await pb.collection(AWARENESS_COLLECTION).update(id, sessionToDB(data))
+    return sessionFromDB(result as unknown as Record<string, unknown>)
   },
 
-  async delete(_id: string): Promise<void> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+  async delete(id: string): Promise<void> {
+    await pb.collection(AWARENESS_COLLECTION).delete(id)
+  },
+
+  async incrementRegistrations(id: string, delta: number): Promise<void> {
+    const existing = await pb.collection(AWARENESS_COLLECTION).getOne(id)
+    const current = (existing.current_registrations as number) || 0
+    await pb
+      .collection(AWARENESS_COLLECTION)
+      .update(id, { current_registrations: Math.max(0, current + delta) })
   },
 }
 
 // ---------------------------------------------------------------------------
-// Registrations
+// Registrations collection
 // ---------------------------------------------------------------------------
 
 export const trainingRegistrationsCollection = {
   async getAll(): Promise<TrainingRegistration[]> {
-    return mockRegistrations
+    const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
+      sort: "-created",
+      filter: `program_id != "" || awareness_id != ""`,
+    })
+    return data.map((item) => registrationFromDB(item as unknown as Record<string, unknown>))
   },
 
   async getByProgram(programId: string): Promise<TrainingRegistration[]> {
-    return mockRegistrations.filter((r) => r.programId === programId)
+    const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
+      filter: `program_id = "${programId}"`,
+      sort: "-created",
+    })
+    return data.map((item) => registrationFromDB(item as unknown as Record<string, unknown>))
   },
 
-  async getBySession(sessionId: string): Promise<TrainingRegistration[]> {
-    return mockRegistrations.filter((r) => r.sessionId === sessionId)
+  async getByAwareness(sessionId: string): Promise<TrainingRegistration[]> {
+    const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
+      filter: `awareness_id = "${sessionId}"`,
+      sort: "-created",
+    })
+    return data.map((item) => registrationFromDB(item as unknown as Record<string, unknown>))
   },
 
   async getByUser(userId: string): Promise<TrainingRegistration[]> {
-    return mockRegistrations.filter((r) => r.userId === userId)
+    const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
+      filter: `user_id = "${userId}"`,
+      sort: "-created",
+    })
+    return data.map((item) => registrationFromDB(item as unknown as Record<string, unknown>))
   },
 
-  async getUserRegistration(
-    programId: string | undefined,
-    sessionId: string | undefined,
+  async getUserProgramRegistration(
+    programId: string,
     userId: string
   ): Promise<TrainingRegistration | undefined> {
-    return mockRegistrations.find(
-      (r) =>
-        r.userId === userId &&
-        (programId ? r.programId === programId : r.sessionId === sessionId)
-    )
+    const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
+      filter: `program_id = "${programId}" && user_id = "${userId}" && status != "cancelled"`,
+    })
+    return data.length > 0
+      ? registrationFromDB(data[0] as unknown as Record<string, unknown>)
+      : undefined
   },
 
-  async create(_data: CreateRegistrationInput): Promise<TrainingRegistration> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+  async getUserAwarenessRegistration(
+    sessionId: string,
+    userId: string
+  ): Promise<TrainingRegistration | undefined> {
+    const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
+      filter: `awareness_id = "${sessionId}" && user_id = "${userId}" && status != "cancelled"`,
+    })
+    return data.length > 0
+      ? registrationFromDB(data[0] as unknown as Record<string, unknown>)
+      : undefined
+  },
+
+  async create(
+    data: CreateRegistrationInput
+  ): Promise<TrainingRegistration> {
+    const result = await pb
+      .collection(REGISTRATIONS_COLLECTION)
+      .create(registrationToDB(data))
+    return registrationFromDB(result as unknown as Record<string, unknown>)
   },
 
   async update(
-    _id: string,
-    _data: Partial<TrainingRegistration>
+    id: string,
+    data: Partial<TrainingRegistration>
   ): Promise<TrainingRegistration> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+    const result = await pb
+      .collection(REGISTRATIONS_COLLECTION)
+      .update(id, registrationToDB(data))
+    return registrationFromDB(result as unknown as Record<string, unknown>)
   },
 
-  async delete(_id: string): Promise<void> {
-    throw new Error("Not implemented - PocketBase collection not created yet")
+  async delete(id: string): Promise<void> {
+    await pb.collection(REGISTRATIONS_COLLECTION).delete(id)
   },
 }
 
 // ---------------------------------------------------------------------------
-// Certificates
+// Certificates collection
 // ---------------------------------------------------------------------------
 
 export const trainingCertificatesCollection = {
   async getAll(): Promise<TrainingCertificate[]> {
-    return mockCertificates
+    const data = await pb.collection(CERTIFICATES_COLLECTION).getFullList({
+      sort: "-created",
+    })
+    return data.map((item) => certificateFromDB(item as unknown as Record<string, unknown>))
   },
 
   async getByUser(userId: string): Promise<TrainingCertificate[]> {
-    return mockCertificates.filter((c) => c.userId === userId)
+    const data = await pb.collection(CERTIFICATES_COLLECTION).getFullList({
+      filter: `user_id = "${userId}"`,
+      sort: "-created",
+    })
+    return data.map((item) => certificateFromDB(item as unknown as Record<string, unknown>))
+  },
+
+  async getByProgram(programId: string): Promise<TrainingCertificate[]> {
+    const data = await pb.collection(CERTIFICATES_COLLECTION).getFullList({
+      filter: `program_id = "${programId}"`,
+      sort: "-created",
+    })
+    return data.map((item) => certificateFromDB(item as unknown as Record<string, unknown>))
   },
 
   async getById(id: string): Promise<TrainingCertificate | undefined> {
-    return mockCertificates.find((c) => c.id === id)
+    try {
+      const data = await pb.collection(CERTIFICATES_COLLECTION).getOne(id)
+      return certificateFromDB(data as unknown as Record<string, unknown>)
+    } catch {
+      return undefined
+    }
+  },
+
+  async create(
+    data: CreateCertificateInput,
+    file?: File
+  ): Promise<TrainingCertificate> {
+    const formData = buildCertificateFormData(data, file)
+    const result = await pb
+      .collection(CERTIFICATES_COLLECTION)
+      .create(formData)
+    return certificateFromDB(result as unknown as Record<string, unknown>)
+  },
+
+  async update(
+    id: string,
+    data: UpdateCertificateInput,
+    file?: File
+  ): Promise<TrainingCertificate> {
+    const formData = buildCertificateFormData(data, file)
+    const result = await pb
+      .collection(CERTIFICATES_COLLECTION)
+      .update(id, formData)
+    return certificateFromDB(result as unknown as Record<string, unknown>)
+  },
+
+  async delete(id: string): Promise<void> {
+    await pb.collection(CERTIFICATES_COLLECTION).delete(id)
   },
 }

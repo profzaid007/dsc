@@ -100,9 +100,9 @@ export default function SessionDetailPage({
   }
 
   const typeLabels = {
-    workshop: { en: "Workshop", ar: "ورشة عمل" },
-    seminar: { en: "Seminar", ar: "ندوة" },
-    webinar: { en: "Webinar", ar: "محاضرة عبر الإنترنت" },
+    online: { en: "Online", ar: "عبر الإنترنت" },
+    in_person: { en: "In-Person", ar: "حضوري" },
+    hybrid: { en: "Hybrid", ar: "مختلط" },
   }
 
   return (
@@ -153,34 +153,6 @@ export default function SessionDetailPage({
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "عن هذه الجلسة" : "About this Session"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {session.description[lang]}
-              </p>
-            </CardContent>
-          </Card>
-
-          {session.goals && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {lang === "ar" ? "الأهداف" : "Goals & Objectives"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {session.goals[lang]}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>
                 {lang === "ar" ? "المتحدث" : "Speaker"}
               </CardTitle>
             </CardHeader>
@@ -218,7 +190,7 @@ export default function SessionDetailPage({
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    {formatDate(session.date)}
+                    {formatDate(session.schedule.date)}
                   </p>
                 </div>
               </div>
@@ -229,7 +201,7 @@ export default function SessionDetailPage({
                 <Clock className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    {session.timeFrom} - {session.timeTo}
+                    {session.schedule.timeFrom} - {session.schedule.timeTo}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {lang === "ar" ? "المدة" : "Duration"}

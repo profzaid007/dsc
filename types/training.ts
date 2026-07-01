@@ -12,8 +12,6 @@ export type ProgramStatus =
 
 export type ProgramType = "online" | "in_person" | "hybrid"
 
-export type SessionType = "workshop" | "seminar" | "webinar"
-
 export type RegistrationStatus =
   | "registered"
   | "attended"
@@ -30,7 +28,6 @@ export interface SessionSchedule {
   timeFrom: string
   timeTo: string
   location: string
-  topic?: BilingualString
 }
 
 export interface ProgramSchedule {
@@ -39,10 +36,16 @@ export interface ProgramSchedule {
   sessions: SessionSchedule[]
 }
 
+export interface AwarenessSchedule {
+  date: string
+  timeFrom: string
+  timeTo: string
+  location: string
+}
+
 export interface TrainingProgram {
   id: string
   title: BilingualString
-  description: BilingualString
   category: BilingualString
   trainer: TrainerInfo
   coordinator: string
@@ -55,6 +58,9 @@ export interface TrainingProgram {
   maxParticipants?: number
   currentRegistrations: number
   thumbnail?: string
+  meetingLink?: string
+  recordingUrl?: string
+  isPublic: boolean
   status: ProgramStatus
   created: string
   updated: string
@@ -63,21 +69,21 @@ export interface TrainingProgram {
 export interface AwarenessSession {
   id: string
   title: BilingualString
-  description: BilingualString
   category: BilingualString
   targetAudience: BilingualString
   speaker: TrainerInfo
   coordinator: string
-  type: SessionType
+  type: ProgramType
   location: string
-  date: string
-  timeFrom: string
-  timeTo: string
-  goals?: BilingualString
+  duration: number
+  schedule: AwarenessSchedule
   notes?: string
   maxParticipants?: number
   currentRegistrations: number
   thumbnail?: string
+  meetingLink?: string
+  recordingUrl?: string
+  isPublic: boolean
   status: ProgramStatus
   created: string
   updated: string
@@ -86,7 +92,8 @@ export interface AwarenessSession {
 export interface TrainingRegistration {
   id: string
   programId?: string
-  sessionId?: string
+  awarenessId?: string
+  lectureId?: string
   userId: string
   userName: string
   email: string
@@ -99,12 +106,14 @@ export interface TrainingRegistration {
 export interface TrainingCertificate {
   id: string
   userId: string
+  programId?: string
+  awarenessId?: string
   userName: string
-  programId: string
   programName: BilingualString
   issueDate: string
   certificateNumber: string
-  downloadUrl?: string
+  notes?: string
+  file?: string
 }
 
 export interface TrainingStats {
@@ -134,3 +143,10 @@ export type CreateRegistrationInput = Omit<
 >
 
 export type UpdateRegistrationInput = Partial<CreateRegistrationInput>
+
+export type CreateCertificateInput = Omit<
+  TrainingCertificate,
+  "id" | "file"
+> & { file?: string | File }
+
+export type UpdateCertificateInput = Partial<CreateCertificateInput>

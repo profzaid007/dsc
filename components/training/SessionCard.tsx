@@ -34,9 +34,9 @@ const statusColors = {
 }
 
 const typeLabels = {
-  workshop: { en: "Workshop", ar: "ورشة عمل" },
-  seminar: { en: "Seminar", ar: "ندوة" },
-  webinar: { en: "Webinar", ar: "محاضرة عبر الإنترنت" },
+  online: { en: "Online", ar: "عبر الإنترنت" },
+  in_person: { en: "In-Person", ar: "حضوري" },
+  hybrid: { en: "Hybrid", ar: "مختلط" },
 }
 
 export function SessionCard({
@@ -58,7 +58,7 @@ export function SessionCard({
     })
   }
 
-  const isPast = new Date(session.date) < new Date()
+  const isPast = new Date(session.schedule.date) < new Date()
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -107,13 +107,13 @@ export function SessionCard({
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{formatDate(session.date)}</span>
+          <span>{formatDate(session.schedule.date)}</span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
           <span>
-            {session.timeFrom} - {session.timeTo}
+            {session.schedule.timeFrom} - {session.schedule.timeTo}
           </span>
         </div>
 
@@ -137,10 +137,6 @@ export function SessionCard({
           <Presentation className="h-4 w-4" />
           <span>{session.targetAudience[lang]}</span>
         </div>
-
-        <p className="line-clamp-2 text-sm text-muted-foreground">
-          {session.description[lang]}
-        </p>
 
         <div className="flex gap-2 pt-2">
           {onView && (

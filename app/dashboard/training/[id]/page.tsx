@@ -163,34 +163,6 @@ export default function ProgramDetailPage({
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "عن هذا البرنامج" : "About this Program"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {program.description[lang]}
-              </p>
-            </CardContent>
-          </Card>
-
-          {program.goals && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {lang === "ar" ? "الأهداف" : "Goals & Objectives"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {program.goals[lang]}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>
                 {lang === "ar" ? "جدول البرنامج" : "Program Schedule"}
               </CardTitle>
             </CardHeader>

@@ -142,10 +142,6 @@ export function ProgramCard({
           <span>{program.category[lang]}</span>
         </div>
 
-        <p className="line-clamp-2 text-sm text-muted-foreground">
-          {program.description[lang]}
-        </p>
-
         <div className="flex gap-2 pt-2">
           {onView && (
             <Button variant="outline" className="flex-1" onClick={onView}>
