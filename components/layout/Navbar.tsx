@@ -18,6 +18,7 @@ const DEFAULT_SIDEBAR_ITEMS = [
   { en: "Services", ar: "خدماتنا", href: "/" },
   { en: "Resources", ar: "الموارد", href: "/" },
   { en: "Blog", ar: "المدونة", href: "/blog" },
+  { en: "Public Lectures", ar: "المدونة", href: "/public_lectures" },
   { en: "Contact Us", ar: "اتصل بنا", href: "/contact-us" }
 ]
 

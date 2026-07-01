@@ -8,6 +8,7 @@ import type {
 
 const LECTURES_COLLECTION = "public_lectures"
 const REGISTRATIONS_COLLECTION = "event_registrations"
+const PUBLIC_LECTURES_PUBLIC_COLLECTION = "public_lectures_public"
 
 // ---------------------------------------------------------------------------
 // Transformers: between PocketBase flat/snake-case and app nested/camelCase
@@ -234,5 +235,23 @@ export const lectureRegistrationsCollection = {
 
   async delete(id: string): Promise<void> {
     await pb.collection(REGISTRATIONS_COLLECTION).delete(id)
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Public Lectures Public
+// ---------------------------------------------------------------------------
+
+export const publicLecturesPublicCollection = {
+  async getAll(): Promise<Lecture[]> {
+    const data = await pb.collection(PUBLIC_LECTURES_PUBLIC_COLLECTION).getFullList({
+      sort: "-created",
+    })
+    return data.map((item) => lectureFromDB(item as unknown as Record<string, unknown>))
+  },
+
+  async getById(id: string): Promise<Lecture> {
+    const data = await pb.collection(PUBLIC_LECTURES_PUBLIC_COLLECTION).getOne(id)
+    return lectureFromDB(data as unknown as Record<string, unknown>)
   },
 }
