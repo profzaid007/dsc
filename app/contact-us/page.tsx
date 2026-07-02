@@ -12,7 +12,7 @@ import { Phone, Mail, MapPin, Loader2, Send } from "lucide-react"
 export default function ContactPage() {
   const { lang } = useLang()
   const [name, setName] = useState("")
-  const [contact, setContact] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("")
   const [email, setEmail] = useState("")
   const [description, setDescription] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -114,7 +114,7 @@ export default function ContactPage() {
                         {t({ en: "Phone", ar: "الهاتف" }, lang)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        +966 50 123 4567
+                        +962 788 689123
                       </p>
                     </div>
                   </div>
@@ -145,6 +145,30 @@ export default function ContactPage() {
                           },
                           lang
                         )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <i className="fab fa-whatsapp mt-0.5" style={{ color: goldColor, fontSize: 20 }} />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {t({ en: "WhatsApp", ar: "واتساب" }, lang)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        +962 788 689123
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <Phone className="h-5 w-5 shrink-0 mt-0.5" style={{ color: goldColor }} />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {t({ en: "Telephone", ar: "هاتف ثابت" }, lang)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        +962 6 5652527
                       </p>
                     </div>
                   </div>
@@ -190,7 +214,7 @@ export default function ContactPage() {
                       onClick={() => {
                         setDone(false)
                         setName("")
-                        setContact("")
+                        setPhoneNumber("")
                         setEmail("")
                         setDescription("")
                       }}
@@ -220,16 +244,17 @@ export default function ContactPage() {
 
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                        {t({ en: "Contact", ar: "رقم التواصل" }, lang)}
+                        {t({ en: "Phone Number", ar: "رقم الهاتف" }, lang)}
                       </label>
                       <Input
+                        type="tel"
                         required
-                        value={contact}
-                        onChange={(e) => setContact(e.target.value)}
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder={t(
                           {
-                            en: "Phone number",
-                            ar: "رقم الهاتف",
+                            en: "Your phone number",
+                            ar: "رقم هاتفك",
                           },
                           lang
                         )}

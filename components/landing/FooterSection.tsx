@@ -74,7 +74,7 @@ export function FooterSection() {
               <div className="flex flex-col gap-1 text-sm text-white/60">
                 <p className="flex items-center gap-2">
                   <span className="w-4" />
-                  +966 50 123 4567
+                  +962 7988 689123
                 </p>
                 <p className="flex items-center gap-2">
                   <span className="w-4" />
@@ -98,7 +98,23 @@ export function FooterSection() {
 
               <div className="flex items-center gap-3 mt-2 pl-6">
                 <a
-                  href="[URL]"
+                  href="https://wa.me/message/XGN76UVRTVL7C1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
+                >
+                  <i className="fab fa-whatsapp" />
+                </a>
+                <a
+                  href="https://www.facebook.com/share/p/1JMnR99g2Z/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
+                >
+                  <i className="fab fa-facebook-f" />
+                </a>
+                <a
+                  href="https://www.instagram.com/drgeniusdsc?igsh=MXI2eHl5djJ2N2phbA=="
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
@@ -106,7 +122,7 @@ export function FooterSection() {
                   <i className="fab fa-instagram" />
                 </a>
                 <a
-                  href="[URL]"
+                  href="https://x.com/DrGeniusDSC"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
@@ -115,7 +131,7 @@ export function FooterSection() {
                 </a>
 
                 <a
-                  href="[URL]"
+                  href="https://www.linkedin.com/in/radwan-abusaif-ab5089323?utm_source=share_via&utm_content=profile&utm_medium=member_android"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
@@ -128,7 +144,7 @@ export function FooterSection() {
         </div>
 
         <div className="mt-6 border-t border-white/10 pt-3 text-center text-xs text-white/40">
-          © 2025 Development Secrets Consultancy.{" "}
+          © 2026 Development Secrets Consultancy.{" "}
           {t({ en: "All rights reserved.", ar: "جميع الحقوق محفوظة." }, lang)}
         </div>
       </div>
