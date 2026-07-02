@@ -88,8 +88,8 @@ export function FooterSection() {
                   <span className="w-4" />
                   {t(
                     {
-                      en: "Riyadh, Kingdom of Saudi Arabia",
-                      ar: "الرياض، المملكة العربية السعودية",
+                       en: "Amman / Jordan",
+                        ar: "عمان / الأردن",
                     },
                     lang
                   )}
