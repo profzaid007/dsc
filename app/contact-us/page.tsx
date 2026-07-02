@@ -140,8 +140,8 @@ export default function ContactPage() {
                       <p className="text-sm text-muted-foreground">
                         {t(
                           {
-                            en: "Riyadh, Kingdom of Saudi Arabia",
-                            ar: "الرياض، المملكة العربية السعودية",
+                            en: "Amman / Jordan",
+                            ar: "عمان / الأردن",
                           },
                           lang
                         )}
