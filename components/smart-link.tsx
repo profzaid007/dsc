@@ -10,6 +10,7 @@ interface SmartLinkProps {
   href: string
   children: React.ReactNode
   className?: string
+  title?: string
   onClick?: () => void
   disabled?: boolean
   prefetch?: boolean
@@ -19,6 +20,7 @@ export function SmartLink({
   href,
   children,
   className,
+  title,
   onClick,
   disabled,
   prefetch,
@@ -56,6 +58,7 @@ export function SmartLink({
     <Link
       href={href}
       className={className}
+      title={title}
       onClick={handleClick}
       prefetch={prefetch}
     >

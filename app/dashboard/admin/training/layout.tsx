@@ -28,7 +28,7 @@ export default function TrainingLayout({
 }) {
   return (
     <div className="flex">
-      <SubSidebar title="Training" items={trainingNavItems} />
+      <SubSidebar title="Training" items={trainingNavItems} collapsible />
       <main className="flex-1 bg-muted/30 p-6">{children}</main>
     </div>
   )
