@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useLang } from "@/lib/lang-context"
-import { publicLecturesPublicCollection } from "@/lib/pb-lectures"
-import type { Lecture } from "@/types/lecture"
+import { trainingSessionsCollection } from "@/lib/pb-training"
+import type { AwarenessSession } from "@/types/training"
 import {
   ArrowLeft,
   Calendar,
@@ -18,10 +18,24 @@ import {
   Users,
   ExternalLink,
   User,
-  Briefcase,
+  Target,
 } from "lucide-react"
 
-export default function PublicLectureDetailPage({
+const typeLabels = {
+  online: { en: "Online", ar: "عبر الإنترنت" },
+  in_person: { en: "In-Person", ar: "حضوري" },
+  hybrid: { en: "Hybrid", ar: "مختلط" },
+}
+
+const statusLabels = {
+  draft: { en: "Draft", ar: "مسودة" },
+  published: { en: "Published", ar: "منشور" },
+  in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
+  completed: { en: "Completed", ar: "مكتمل" },
+  cancelled: { en: "Cancelled", ar: "ملغي" },
+}
+
+export default function AwarenessSessionDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -29,16 +43,16 @@ export default function PublicLectureDetailPage({
   const { id } = use(params)
   const router = useRouter()
   const { lang } = useLang()
-  const [lecture, setLecture] = useState<Lecture | null>(null)
+  const [session, setSession] = useState<AwarenessSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await publicLecturesPublicCollection.getById(id)
-        setLecture(data)
+        const data = await trainingSessionsCollection.getById(id)
+        setSession(data)
       } catch (err) {
-        console.error("Failed to load lecture:", err)
+        console.error("Failed to load session:", err)
       } finally {
         setIsLoading(false)
       }
@@ -55,14 +69,6 @@ export default function PublicLectureDetailPage({
     })
   }
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString(lang === "ar" ? "ar-AE" : "en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -75,51 +81,51 @@ export default function PublicLectureDetailPage({
     )
   }
 
-  if (!lecture) {
+  if (!session) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="py-12 text-center">
           <h2 className="text-xl font-semibold">
-            {lang === "ar" ? "المحاضرة غير موجودة" : "Lecture not found"}
+            {lang === "ar" ? "الجلسة غير موجودة" : "Session not found"}
           </h2>
           <Button
             variant="link"
-            onClick={() => router.push("/public_lectures")}
+            onClick={() => router.push("/programmes/awareness_sessions")}
           >
-            {lang === "ar" ? "العودة إلى المحاضرات" : "Back to lectures"}
+            {lang === "ar" ? "العودة إلى جلسات التوعية" : "Back to awareness sessions"}
           </Button>
         </div>
       </div>
     )
   }
 
-  const isPast = new Date(lecture.schedule.dateTime) < new Date()
+  const isPast = new Date(session.schedule.date) < new Date()
 
   return (
     <div className="container mx-auto space-y-6 px-4 py-8">
       <Button
         variant="ghost"
         className="mb-4"
-        onClick={() => router.push("/public_lectures")}
+        onClick={() => router.push("/programmes/awareness_sessions")}
       >
         <ArrowLeft className="me-2 h-4 w-4" />
-        {lang === "ar" ? "العودة إلى المحاضرات" : "Back to lectures"}
+        {lang === "ar" ? "العودة إلى جلسات التوعية" : "Back to awareness sessions"}
       </Button>
 
-      {lecture.thumbnail && (
+      {session.thumbnail && (
         <div className="relative h-64 w-full overflow-hidden rounded-lg bg-muted md:h-80">
           <Image
-            src={lecture.thumbnail}
-            alt={lecture.title[lang]}
+            src={session.thumbnail}
+            alt={session.title[lang]}
             fill
             className="object-cover"
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-            <h1 className="mb-2 text-3xl font-bold">{lecture.title[lang]}</h1>
+            <h1 className="mb-2 text-3xl font-bold">{session.title[lang]}</h1>
             <p className="text-lg text-white/90">
-              {lecture.speaker.name[lang]}
+              {session.speaker.name[lang]}
             </p>
           </div>
         </div>
@@ -127,12 +133,12 @@ export default function PublicLectureDetailPage({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          {!lecture.thumbnail && (
+          {!session.thumbnail && (
             <Card>
               <CardHeader>
-                <h1 className="text-3xl font-bold">{lecture.title[lang]}</h1>
+                <h1 className="text-3xl font-bold">{session.title[lang]}</h1>
                 <p className="text-lg text-muted-foreground">
-                  {lecture.speaker.name[lang]}
+                  {session.speaker.name[lang]}
                 </p>
               </CardHeader>
             </Card>
@@ -141,15 +147,41 @@ export default function PublicLectureDetailPage({
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "عن هذه المحاضرة" : "About this lecture"}
+                {lang === "ar" ? "عن هذه الجلسة" : "About this session"}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="leading-relaxed text-muted-foreground">
-                {lecture.description[lang]}
-              </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Target className="h-4 w-4" />
+                  <span>
+                    {lang === "ar" ? "الفئة المستهدفة:" : "Target audience:"}{" "}
+                    {session.targetAudience[lang]}
+                  </span>
+                </div>
+                <p className="leading-relaxed text-muted-foreground">
+                  {lang === "ar"
+                    ? "انضم إلينا في هذه الجلسة التوعوية"
+                    : "Join us for this awareness session"}
+                </p>
+              </div>
             </CardContent>
           </Card>
+
+          {session.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {lang === "ar" ? "ملاحظات" : "Notes"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="leading-relaxed text-muted-foreground">
+                  {session.notes}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
@@ -164,13 +196,12 @@ export default function PublicLectureDetailPage({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">
-                    {lecture.speaker.name[lang]}
+                    {session.speaker.name[lang]}
                   </h3>
-                  {lecture.speaker.role[lang] && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Briefcase className="h-4 w-4" />
-                      <span>{lecture.speaker.role[lang]}</span>
-                    </div>
+                  {session.speaker.role[lang] && (
+                    <p className="text-muted-foreground">
+                      {session.speaker.role[lang]}
+                    </p>
                   )}
                 </div>
               </div>
@@ -182,7 +213,7 @@ export default function PublicLectureDetailPage({
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "تفاصيل المحاضرة" : "Lecture Details"}
+                {lang === "ar" ? "تفاصيل الجلسة" : "Session Details"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -190,10 +221,7 @@ export default function PublicLectureDetailPage({
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    {formatDate(lecture.schedule.dateTime)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatTime(lecture.schedule.dateTime)}
+                    {formatDate(session.schedule.date)}
                   </p>
                 </div>
               </div>
@@ -204,7 +232,18 @@ export default function PublicLectureDetailPage({
                 <Clock className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    {lecture.duration} {lang === "ar" ? "دقيقة" : "minutes"}
+                    {session.schedule.timeFrom} - {session.schedule.timeTo}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium">
+                    {session.duration} {lang === "ar" ? "دقيقة" : "minutes"}
                   </p>
                 </div>
               </div>
@@ -214,32 +253,52 @@ export default function PublicLectureDetailPage({
               <div className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{lecture.schedule.location}</p>
+                  <p className="font-medium">{session.location}</p>
                 </div>
               </div>
 
-              {lecture.maxParticipants && (
+              <Separator />
+
+              <div className="flex items-center gap-3">
+                <Badge variant="outline">
+                  {typeLabels[session.type][lang]}
+                </Badge>
+                <Badge
+                  className={
+                    session.status === "published"
+                      ? "bg-green-100 text-green-800"
+                      : session.status === "in_progress"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-gray-100 text-gray-800"
+                  }
+                >
+                  {statusLabels[session.status][lang]}
+                </Badge>
+              </div>
+
+              {session.maxParticipants && (
                 <>
                   <Separator />
                   <div className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {lang === "ar" ? "الحد الأقصى:" : "Max participants:"}{" "}
-                        {lecture.maxParticipants}
+                        {lang === "ar" ? "المتبقي:" : "Spots left:"}{" "}
+                        {session.maxParticipants - session.currentRegistrations} /{" "}
+                        {session.maxParticipants}
                       </p>
                     </div>
                   </div>
                 </>
               )}
 
-              {lecture.meetingLink && (
+              {session.meetingLink && (
                 <>
                   <Separator />
                   <div className="flex items-center gap-3">
                     <ExternalLink className="h-5 w-5 text-muted-foreground" />
                     <a
-                      href={lecture.meetingLink}
+                      href={session.meetingLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-medium text-primary hover:underline"
@@ -250,13 +309,13 @@ export default function PublicLectureDetailPage({
                 </>
               )}
 
-              {lecture.recordingUrl && (
+              {session.recordingUrl && (
                 <>
                   <Separator />
                   <div className="flex items-center gap-3">
                     <ExternalLink className="h-5 w-5 text-muted-foreground" />
                     <a
-                      href={lecture.recordingUrl}
+                      href={session.recordingUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-medium text-primary hover:underline"
@@ -273,7 +332,7 @@ export default function PublicLectureDetailPage({
             <Card>
               <CardContent className="pt-6">
                 <Badge variant="secondary" className="w-full justify-center py-2">
-                  {lang === "ar" ? "انتهت هذه المحاضرة" : "This lecture has ended"}
+                  {lang === "ar" ? "انتهت هذه الجلسة" : "This session has ended"}
                 </Badge>
               </CardContent>
             </Card>

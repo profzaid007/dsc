@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import { publicLecturesPublicCollection } from "@/lib/pb-lectures"
 import { LectureCard } from "@/components/lectures"
@@ -15,7 +12,6 @@ import { Search, BookOpen } from "lucide-react"
 export default function PublicLecturesPage() {
   const router = useRouter()
   const { lang } = useLang()
-  const { currentUser } = useAuth()
   const [lectures, setLectures] = useState<Lecture[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -43,7 +39,7 @@ export default function PublicLecturesPage() {
     : lectures
 
   const handleView = (id: string) => {
-    router.push(`/public_lectures/${id}`)
+    router.push(`/programmes/public_lectures/${id}`)
   }
 
   if (isLoading) {
