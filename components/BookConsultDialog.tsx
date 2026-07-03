@@ -12,11 +12,22 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Calendar, Loader2 } from "lucide-react"
+import { PORTALS } from "@/lib/portals"
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
+
+import { Resend } from "resend";
+    
 
 export function BookConsultDialog({ open, onOpenChange }: Props) {
 
@@ -25,9 +36,16 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
   const [email, setEmail] = useState("")
   const [consultType, setConsultType] = useState("")
   const [description, setDescription] = useState("")
+  const [selectedPortal, setSelectedPortal] = useState("")
+  const [selectedService, setSelectedService] = useState("")
+  const [portalOtherText, setPortalOtherText] = useState("")
+  const [serviceOtherText, setServiceOtherText] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState("")
+
+  const selectedPortalData = PORTALS.find((p) => p.id === selectedPortal)
+  const allServices = PORTALS.flatMap((p) => p.services)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -35,7 +53,6 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
     setError("")
 
     // Send email here 
-    
   }
 
   function handleClose() {
@@ -47,6 +64,10 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       setEmail("")
       setConsultType("")
       setDescription("")
+      setSelectedPortal("")
+      setSelectedService("")
+      setPortalOtherText("")
+      setServiceOtherText("")
       setDone(false)
       setError("")
     }, 200)
@@ -114,6 +135,80 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                 placeholder="e.g. Individual, Corporate, Career, etc."
               />
             </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium">Portal</label>
+              <Select
+                value={selectedPortal}
+                onValueChange={(val) => {
+                  setSelectedPortal(val)
+                  setSelectedService("")
+                  setServiceOtherText("")
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a portal" />
+                </SelectTrigger>
+                <SelectContent
+                  position="popper"
+                  className="w-[var(--radix-select-trigger-width)] max-h-[200px]"
+                >
+                  {PORTALS.map((portal) => (
+                    <SelectItem key={portal.id} value={portal.id}>
+                      {portal.title}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              {selectedPortal === "other" && (
+                <Input
+                  value={portalOtherText}
+                  onChange={(e) => setPortalOtherText(e.target.value)}
+                  placeholder="Specify portal"
+                  className="mt-2"
+                />
+              )}
+            </div>
+
+            {selectedPortal && (
+              <div>
+                <label className="mb-1 block text-sm font-medium">Service</label>
+                <Select
+                  value={selectedService}
+                  onValueChange={(val) => {
+                    setSelectedService(val)
+                    setServiceOtherText("")
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a service" />
+                  </SelectTrigger>
+                  <SelectContent
+                    position="popper"
+                    className="w-[var(--radix-select-trigger-width)] max-h-[200px] [&_[data-slot=select-scroll-up-button]]:hidden [&_[data-slot=select-scroll-down-button]]:hidden"
+                  >
+                    {(selectedPortal === "other"
+                      ? allServices
+                      : selectedPortalData?.services ?? []
+                    ).map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name.en}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {selectedService === "other" && (
+                  <Input
+                    value={serviceOtherText}
+                    onChange={(e) => setServiceOtherText(e.target.value)}
+                    placeholder="Specify service"
+                    className="mt-2"
+                  />
+                )}
+              </div>
+            )}
 
             <div>
               <label className="mb-1 block text-sm font-medium">
