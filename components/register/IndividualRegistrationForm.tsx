@@ -6,10 +6,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
-import { CaseTypeSelector } from "./CaseTypeSelector"
-import { DynamicCaseForm } from "./DynamicCaseForm"
+import {
+  PortalServiceSelector,
+  type PortalServiceValue,
+} from "./PortalServiceSelector"
+import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+
+const OTHER_VALUE = "other"
 
 export function IndividualRegistrationForm() {
   const { lang } = useLang()
@@ -20,24 +26,78 @@ export function IndividualRegistrationForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [caseTypeId, setCaseTypeId] = useState("")
-  const [caseTypeKey, setCaseTypeKey] = useState("")
-  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [portalService, setPortalService] = useState<PortalServiceValue>({
+    categoryId: "",
+    subCategoryId: "",
+    customCategory: "",
+    customSubCategory: "",
+  })
+  const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
   const validate = (): boolean => {
-    if (!name || !contactNumber || !email || !password || !caseTypeId) {
+    if (!name || !contactNumber || !email || !password) {
       setError(
         t(
-          { en: "Please fill in all required fields", ar: "يرجى ملء جميع الحقول المطلوبة" },
+          {
+            en: "Please fill in all required fields",
+            ar: "يرجى ملء جميع الحقول المطلوبة",
+          },
           lang
         )
       )
       return false
     }
     if (password !== confirmPassword) {
-      setError(t({ en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" }, lang))
+      setError(
+        t(
+          { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
+          lang
+        )
+      )
+      return false
+    }
+    if (!portalService.categoryId || !portalService.subCategoryId) {
+      setError(
+        t(
+          {
+            en: "Please select a portal and service",
+            ar: "يرجى اختيار البوابة والخدمة",
+          },
+          lang
+        )
+      )
+      return false
+    }
+    if (
+      portalService.categoryId === OTHER_VALUE &&
+      !portalService.customCategory.trim()
+    ) {
+      setError(
+        t(
+          {
+            en: "Please enter a custom portal name",
+            ar: "يرجى إدخال اسم بوابة مخصصة",
+          },
+          lang
+        )
+      )
+      return false
+    }
+    if (
+      portalService.subCategoryId === OTHER_VALUE &&
+      !portalService.customSubCategory.trim()
+    ) {
+      setError(
+        t(
+          {
+            en: "Please enter a custom service name",
+            ar: "يرجى إدخال اسم خدمة مخصصة",
+          },
+          lang
+        )
+      )
       return false
     }
     return true
@@ -51,21 +111,41 @@ export function IndividualRegistrationForm() {
 
     setIsSubmitting(true)
 
-    // TODO: Wire up PocketBase registration + case creation
-    console.log("Individual Registration Data:", {
-      name,
-      contactNumber,
-      email,
-      password,
-      caseTypeId,
-      caseTypeKey,
-      formData,
-    })
+    try {
+      const user = await pb.collection("users").create({
+        email,
+        password,
+        passwordConfirm: password,
+        name,
+        contact_number: contactNumber,
+        role: "user",
+      })
 
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+      await pb.collection("cases").create({
+        user: user.id,
+        name,
+        category: portalService.categoryId,
+        sub_category: portalService.subCategoryId,
+        notes,
+        case_details: {
+          custom_category:
+            portalService.categoryId === OTHER_VALUE
+              ? portalService.customCategory
+              : undefined,
+          custom_sub_category:
+            portalService.subCategoryId === OTHER_VALUE
+              ? portalService.customSubCategory
+              : undefined,
+        },
+      })
 
-    setIsSubmitting(false)
-    router.push("/login")
+      await authWithPassword(email, password)
+      router.push("/dashboard")
+    } catch (err) {
+      setError(handlePocketBaseError(err))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -142,7 +222,10 @@ export function IndividualRegistrationForm() {
 
             <div className="space-y-2 md:col-span-2">
               <Label>
-                {t({ en: "Confirm Password", ar: "تأكيد كلمة المرور" }, lang)}
+                {t(
+                  { en: "Confirm Password", ar: "تأكيد كلمة المرور" },
+                  lang
+                )}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
               <Input
@@ -154,30 +237,29 @@ export function IndividualRegistrationForm() {
             </div>
           </div>
 
-          <CaseTypeSelector
-            value={caseTypeId}
-            onChange={(id, key) => {
-              setCaseTypeId(id)
-              setCaseTypeKey(key)
-              setFormData({})
-            }}
+          <PortalServiceSelector
+            value={portalService}
+            onChange={setPortalService}
             required
           />
 
-          {caseTypeKey && (
-            <div className="pt-4 border-t">
-              <p className="text-sm font-medium mb-3">
-                {t({ en: "Case Details", ar: "تفاصيل الحالة" }, lang)}
-              </p>
-              <DynamicCaseForm
-                caseTypeKey={caseTypeKey}
-                values={formData}
-                onChange={(fieldId, value) => {
-                  setFormData((prev) => ({ ...prev, [fieldId]: value }))
-                }}
-              />
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Notes", ar: "ملاحظات" }, lang)}
+            </Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t(
+                {
+                  en: "Add any additional notes about this case...",
+                  ar: "أضف أي ملاحظات إضافية حول هذه الحالة...",
+                },
+                lang
+              )}
+              rows={3}
+            />
+          </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting

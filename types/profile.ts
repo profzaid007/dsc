@@ -7,8 +7,10 @@ export interface Profile {
   date_of_birth: string
   gender: "male" | "female"
   grade: string
-  main_concerns: string[]
   notes: string
+  category: string
+  sub_category: string
+  case_details: Record<string, unknown>
   created: string
   updated: string
 }

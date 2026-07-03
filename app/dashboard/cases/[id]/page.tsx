@@ -120,18 +120,12 @@ export default function ProfileDetailPage({
                     {profile.grade}
                   </span>
                 </div>
-                {profile.main_concerns.length > 0 && (
+                {profile.notes && (
                   <div className="pt-2">
                     <span className="mb-2 block text-muted-foreground">
-                      Main Concerns
+                      Notes
                     </span>
-                    <div className="flex flex-wrap gap-1">
-                      {profile.main_concerns.map((concern) => (
-                        <Badge key={concern} variant="outline">
-                          {concern}
-                        </Badge>
-                      ))}
-                    </div>
+                    <p className="text-sm text-muted-foreground">{profile.notes}</p>
                   </div>
                 )}
               </CardContent>

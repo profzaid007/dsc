@@ -10,9 +10,29 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { ChildFormBlock, type ChildFormData } from "./ChildFormBlock"
 import { Plus } from "lucide-react"
+import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+
+const OTHER_VALUE = "other"
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9)
+}
+
+function makeEmptyChild(): ChildFormData {
+  return {
+    id: generateId(),
+    name: "",
+    date_of_birth: "",
+    gender: "",
+    grade: "",
+    portalService: {
+      categoryId: "",
+      subCategoryId: "",
+      customCategory: "",
+      customSubCategory: "",
+    },
+    notes: "",
+  }
 }
 
 export function ParentRegistrationForm() {
@@ -27,33 +47,10 @@ export function ParentRegistrationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  const [children, setChildren] = useState<ChildFormData[]>([
-    {
-      id: generateId(),
-      name: "",
-      date_of_birth: "",
-      gender: "",
-      grade: "",
-      caseTypeId: "",
-      caseTypeKey: "",
-      formData: {},
-    },
-  ])
+  const [children, setChildren] = useState<ChildFormData[]>([makeEmptyChild()])
 
   const addChild = () => {
-    setChildren((prev) => [
-      ...prev,
-      {
-        id: generateId(),
-        name: "",
-        date_of_birth: "",
-        gender: "",
-        grade: "",
-        caseTypeId: "",
-        caseTypeKey: "",
-        formData: {},
-      },
-    ])
+    setChildren((prev) => [...prev, makeEmptyChild()])
   }
 
   const removeChild = (id: string) => {
@@ -66,18 +63,76 @@ export function ParentRegistrationForm() {
 
   const validate = (): boolean => {
     if (!name || !contactNumber || !email || !password) {
-      setError(t({ en: "Please fill in all required fields", ar: "يرجى ملء جميع الحقول المطلوبة" }, lang))
+      setError(
+        t(
+          {
+            en: "Please fill in all required fields",
+            ar: "يرجى ملء جميع الحقول المطلوبة",
+          },
+          lang
+        )
+      )
       return false
     }
     if (password !== confirmPassword) {
-      setError(t({ en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" }, lang))
+      setError(
+        t(
+          { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
+          lang
+        )
+      )
       return false
     }
     for (const child of children) {
-      if (!child.name || !child.date_of_birth || !child.gender || !child.caseTypeId) {
+      if (!child.name || !child.date_of_birth || !child.gender) {
         setError(
           t(
-            { en: "Please fill in all child information", ar: "يرجى ملء جميع معلومات الطفل" },
+            {
+              en: "Please fill in all child information",
+              ar: "يرجى ملء جميع معلومات الطفل",
+            },
+            lang
+          )
+        )
+        return false
+      }
+      if (!child.portalService.categoryId || !child.portalService.subCategoryId) {
+        setError(
+          t(
+            {
+              en: "Please select a portal and service for each child",
+              ar: "يرجى اختيار البوابة والخدمة لكل طفل",
+            },
+            lang
+          )
+        )
+        return false
+      }
+      if (
+        child.portalService.categoryId === OTHER_VALUE &&
+        !child.portalService.customCategory.trim()
+      ) {
+        setError(
+          t(
+            {
+              en: "Please enter a custom portal name for each child",
+              ar: "يرجى إدخال اسم بوابة مخصصة لكل طفل",
+            },
+            lang
+          )
+        )
+        return false
+      }
+      if (
+        child.portalService.subCategoryId === OTHER_VALUE &&
+        !child.portalService.customSubCategory.trim()
+      ) {
+        setError(
+          t(
+            {
+              en: "Please enter a custom service name for each child",
+              ar: "يرجى إدخال اسم خدمة مخصصة لكل طفل",
+            },
             lang
           )
         )
@@ -95,20 +150,46 @@ export function ParentRegistrationForm() {
 
     setIsSubmitting(true)
 
-    // TODO: Wire up PocketBase registration
-    console.log("Parent Registration Data:", {
-      name,
-      contactNumber,
-      email,
-      password,
-      children,
-    })
+    try {
+      const user = await pb.collection("users").create({
+        email,
+        password,
+        passwordConfirm: password,
+        name,
+        contact_number: contactNumber,
+        role: "user",
+      })
 
-    // Simulate delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+      for (const child of children) {
+        await pb.collection("cases").create({
+          user: user.id,
+          name: child.name,
+          date_of_birth: child.date_of_birth,
+          gender: child.gender,
+          grade: child.grade,
+          category: child.portalService.categoryId,
+          sub_category: child.portalService.subCategoryId,
+          notes: child.notes,
+          case_details: {
+            custom_category:
+              child.portalService.categoryId === OTHER_VALUE
+                ? child.portalService.customCategory
+                : undefined,
+            custom_sub_category:
+              child.portalService.subCategoryId === OTHER_VALUE
+                ? child.portalService.customSubCategory
+                : undefined,
+          },
+        })
+      }
 
-    setIsSubmitting(false)
-    router.push("/login")
+      await authWithPassword(email, password)
+      router.push("/dashboard")
+    } catch (err) {
+      setError(handlePocketBaseError(err))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -185,7 +266,10 @@ export function ParentRegistrationForm() {
 
             <div className="space-y-2 md:col-span-2">
               <Label>
-                {t({ en: "Confirm Password", ar: "تأكيد كلمة المرور" }, lang)}
+                {t(
+                  { en: "Confirm Password", ar: "تأكيد كلمة المرور" },
+                  lang
+                )}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
               <Input

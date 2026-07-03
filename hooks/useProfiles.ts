@@ -14,7 +14,7 @@ export function useProfiles() {
   const fetchProfiles = useCallback(async () => {
     try {
       let data: Profile[]
-      if (currentUser && currentUser.isAdmin === false) {
+      if (currentUser && currentUser.role === "user") {
         data = await casesCollection.getByUser(currentUser.id)
       } else {
         data = await casesCollection.getAll()

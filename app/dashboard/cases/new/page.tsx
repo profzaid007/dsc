@@ -22,6 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  PortalServiceSelector,
+  type PortalServiceValue,
+} from "@/components/register/PortalServiceSelector"
+
+const OTHER_VALUE = "other"
 
 const GRADES = [
   { value: "kg1", label: "KG 1" },
@@ -41,18 +47,6 @@ const GRADES = [
   { value: "university", label: "University" },
 ]
 
-const CONCERNS = [
-  "Academic Performance",
-  "Behavior Issues",
-  "Social Skills",
-  "Emotional Regulation",
-  "Attention/Focus",
-  "Learning Differences",
-  "Communication",
-  "Motor Skills",
-  "Other",
-]
-
 export default function NewProfilePage() {
   const router = useRouter()
   const { currentUser } = useAuth()
@@ -64,8 +58,14 @@ export default function NewProfilePage() {
     date_of_birth: "",
     gender: "",
     grade: "",
-    main_concerns: [] as string[],
     notes: "",
+  })
+
+  const [portalService, setPortalService] = useState<PortalServiceValue>({
+    categoryId: "",
+    subCategoryId: "",
+    customCategory: "",
+    customSubCategory: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,8 +81,19 @@ export default function NewProfilePage() {
         date_of_birth: formData.date_of_birth,
         gender: formData.gender as "male" | "female",
         grade: formData.grade,
-        main_concerns: formData.main_concerns,
         notes: formData.notes,
+        category: portalService.categoryId,
+        sub_category: portalService.subCategoryId,
+        case_details: {
+          custom_category:
+            portalService.categoryId === OTHER_VALUE
+              ? portalService.customCategory
+              : undefined,
+          custom_sub_category:
+            portalService.subCategoryId === OTHER_VALUE
+              ? portalService.customSubCategory
+              : undefined,
+        },
       } as any)
 
       router.push(`/dashboard/cases/${profileId}`)
@@ -91,15 +102,6 @@ export default function NewProfilePage() {
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const toggleConcern = (concern: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      main_concerns: prev.main_concerns.includes(concern)
-        ? prev.main_concerns.filter((c) => c !== concern)
-        : [...prev.main_concerns, concern],
-    }))
   }
 
   return (
@@ -180,35 +182,21 @@ export default function NewProfilePage() {
                 </SelectContent>
               </Select>
             </div>
+
+            <PortalServiceSelector
+              value={portalService}
+              onChange={setPortalService}
+              required
+            />
           </CardContent>
         </Card>
 
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Additional Information</CardTitle>
-            <CardDescription>Main concerns and notes</CardDescription>
+            <CardDescription>Notes</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Main Concerns</Label>
-              <div className="flex flex-wrap gap-2">
-                {CONCERNS.map((concern) => (
-                  <Button
-                    key={concern}
-                    type="button"
-                    variant={
-                      formData.main_concerns.includes(concern)
-                        ? "default"
-                        : "outline"
-                    }
-                    size="sm"
-                    onClick={() => toggleConcern(concern)}
-                  >
-                    {concern}
-                  </Button>
-                ))}
-              </div>
-            </div>
             <div className="space-y-2">
               <Label htmlFor="notes">Notes</Label>
               <Textarea

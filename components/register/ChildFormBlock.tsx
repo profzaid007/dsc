@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -14,8 +14,10 @@ import {
 } from "@/components/ui/select"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
-import { CaseTypeSelector } from "./CaseTypeSelector"
-import { DynamicCaseForm } from "./DynamicCaseForm"
+import {
+  PortalServiceSelector,
+  type PortalServiceValue,
+} from "./PortalServiceSelector"
 import { Trash2 } from "lucide-react"
 
 export interface ChildFormData {
@@ -24,9 +26,8 @@ export interface ChildFormData {
   date_of_birth: string
   gender: string
   grade: string
-  caseTypeId: string
-  caseTypeKey: string
-  formData: Record<string, string>
+  portalService: PortalServiceValue
+  notes: string
 }
 
 interface ChildFormBlockProps {
@@ -46,7 +47,10 @@ export function ChildFormBlock({
 }: ChildFormBlockProps) {
   const { lang } = useLang()
 
-  const updateField = (field: keyof ChildFormData, value: any) => {
+  const updateField = <K extends keyof ChildFormData>(
+    field: K,
+    value: ChildFormData[K]
+  ) => {
     onChange({ ...data, [field]: value })
   }
 
@@ -140,36 +144,29 @@ export function ChildFormBlock({
           </div>
         </div>
 
-        <CaseTypeSelector
-          value={data.caseTypeId}
-          onChange={(id, key) => {
-            updateField("caseTypeId", id)
-            updateField("caseTypeKey", key)
-            updateField("formData", {})
-          }}
+        <PortalServiceSelector
+          value={data.portalService}
+          onChange={(value) => updateField("portalService", value)}
           required
         />
 
-        {data.caseTypeKey && (
-          <div className="pt-2 border-t">
-            <p className="text-sm font-medium mb-3">
-              {t(
-                { en: "Case Details", ar: "تفاصيل الحالة" },
-                lang
-              )}
-            </p>
-            <DynamicCaseForm
-              caseTypeKey={data.caseTypeKey}
-              values={data.formData}
-              onChange={(fieldId, value) => {
-                updateField("formData", {
-                  ...data.formData,
-                  [fieldId]: value,
-                })
-              }}
-            />
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label>
+            {t({ en: "Notes", ar: "ملاحظات" }, lang)}
+          </Label>
+          <Textarea
+            value={data.notes}
+            onChange={(e) => updateField("notes", e.target.value)}
+            placeholder={t(
+              {
+                en: "Add any additional notes about this case...",
+                ar: "أضف أي ملاحظات إضافية حول هذه الحالة...",
+              },
+              lang
+            )}
+            rows={3}
+          />
+        </div>
       </CardContent>
     </Card>
   )
