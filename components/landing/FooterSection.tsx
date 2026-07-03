@@ -26,124 +26,112 @@ export function FooterSection() {
 
   return (
     <footer id="contact" className="scroll-mt-16" style={{ backgroundColor: "#0b1a30" }}>
-      <div className="mx-auto max-w-7xl px-6 py-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="flex flex-col gap-1.5 md:col-span-2">
-            <div className="flex items-center gap-3">
-              <Image src="/logo.svg" alt="DSC Logo" width={40} height={40} className="object-contain" />
+      <div className="mx-auto max-w-7xl px-6 py-4">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-4 md:grid-cols-3">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Image src="/logo.svg" alt="DSC Logo" width={32} height={32} className="object-contain" />
               <div>
-                <span className="text-xl font-bold text-white">DSC</span>
+                <span className="text-lg font-bold text-white">DSC</span>
                 <p className="text-xs" style={{ color: "#00a4e4" }}>
                   Development Secrets Consultancy
                 </p>
               </div>
             </div>
-            <p className="max-w-xs text-sm leading-normal text-white/60">
-              {t(
-                {
-                  en: "Your Partner in Personal & Professional Growth. We help organizations unlock their potential and maximize impact through research-driven solutions.",
-                  ar: "شريكك في النمو الشخصي والمهني. نحن نساعد المؤسسات على إطلاق إمكاناتها وتعظيم الأثر من خلال الحلول القائمة على البحث.",
-                },
-                lang
-              )}
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <a
+                href="https://wa.me/message/XGN76UVRTVL7C1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-[#00a4e4] transition-colors text-base"
+              >
+                <i className="fab fa-whatsapp" />
+              </a>
+              <a
+                href="https://www.facebook.com/share/p/1JMnR99g2Z/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-[#00a4e4] transition-colors text-base"
+              >
+                <i className="fab fa-facebook-f" />
+              </a>
+              <a
+                href="https://www.instagram.com/drgeniusdsc?igsh=MXI2eHl5djJ2N2phbA=="
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-[#00a4e4] transition-colors text-base"
+              >
+                <i className="fab fa-instagram" />
+              </a>
+              <a
+                href="https://x.com/DrGeniusDSC"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-[#00a4e4] transition-colors text-base"
+              >
+                <i className="fab fa-twitter" />
+              </a>
+              <a
+                href="https://www.linkedin.com/in/radwan-abusaif-ab5089323?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-[#00a4e4] transition-colors text-base"
+              >
+                <i className="fab fa-linkedin-in" />
+              </a>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:col-span-2">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-                {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
-              </h3>
-              <nav className="flex flex-col gap-1">
-                {PORTALS.map((portal, i) => (
-                  <Link
-                    key={i}
-                    href={`/portal/${portal.id}`}
-                    className="text-sm text-white/60 transition-colors hover:text-white"
-                  >
-                    {t(portal.portalName, lang)}
-                  </Link>
-                ))}
-              </nav>
+          <div className="flex flex-col gap-0.5">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-center text-white">
+              {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
+            </h3>
+            <nav className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+              {PORTALS.map((portal, i) => (
+                <Link
+                  key={i}
+                  href={`/portal/${portal.id}`}
+                  className="text-sm text-white/60 transition-colors hover:text-white"
+                >
+                  {t(portal.portalName, lang)}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex flex-col gap-0.5">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-center text-white">
+              {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
+            </h3>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-sm text-white/60">
+              <p className="flex items-center gap-2">
+                <span className="w-4" />
+                +962 7988 689123
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-4" />
+                info@dsc.com
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-4" />
+                www.dsc.com
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-4" />
+                {t(
+                  {
+                     en: "Amman / Jordan",
+                      ar: "عمان / الأردن",
+                  },
+                  lang
+                )}
+              </p>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-semibold uppercase tracking-wider pl-6 text-white">
-                {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
-              </h3>
-              <div className="flex flex-col gap-1 text-sm text-white/60">
-                <p className="flex items-center gap-2">
-                  <span className="w-4" />
-                  +962 7988 689123
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="w-4" />
-                  info@dsc.com
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="w-4" />
-                  www.dsc.com
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="w-4" />
-                  {t(
-                    {
-                       en: "Amman / Jordan",
-                        ar: "عمان / الأردن",
-                    },
-                    lang
-                  )}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 mt-2 pl-6">
-                <a
-                  href="https://wa.me/message/XGN76UVRTVL7C1"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
-                >
-                  <i className="fab fa-whatsapp" />
-                </a>
-                <a
-                  href="https://www.facebook.com/share/p/1JMnR99g2Z/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
-                >
-                  <i className="fab fa-facebook-f" />
-                </a>
-                <a
-                  href="https://www.instagram.com/drgeniusdsc?igsh=MXI2eHl5djJ2N2phbA=="
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
-                >
-                  <i className="fab fa-instagram" />
-                </a>
-                <a
-                  href="https://x.com/DrGeniusDSC"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
-                >
-                  <i className="fab fa-twitter" />
-                </a>
-
-                <a
-                  href="https://www.linkedin.com/in/radwan-abusaif-ab5089323?utm_source=share_via&utm_content=profile&utm_medium=member_android"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/60 hover:text-[#00a4e4] transition-colors text-lg"
-                >
-                  <i className="fab fa-linkedin-in" />
-                </a>
-              </div>
-            </div>
           </div>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-3 text-center text-xs text-white/40">
+        <div className="mt-3 border-t border-white/10 pt-2 text-center text-xs text-white/40">
           © 2026 Development Secrets Consultancy.{" "}
           {t({ en: "All rights reserved.", ar: "جميع الحقوق محفوظة." }, lang)}
         </div>
