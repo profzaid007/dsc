@@ -46,11 +46,22 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
 
   const selectedPortalData = PORTALS.find((p) => p.id === selectedPortal)
   const allServices = PORTALS.flatMap((p) => p.services)
+  const resend = new Resend('re_gHYKBGqf_H2LVVJDcaEDVcsFMEa8UF8y8')
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setSubmitting(true)
     setError("")
+
+    const { data } = await resend.emails.send({
+      from: 'admin@dsc.ac',
+      to: 'put_mail_here',
+      subject: `Query from: ${name}`,
+      text: 'it works!',
+    });
+
+    console.log(data)
+    setSubmitting(false);
 
     // Send email here 
   }
