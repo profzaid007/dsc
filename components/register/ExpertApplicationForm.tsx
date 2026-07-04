@@ -55,19 +55,38 @@ export function ExpertApplicationForm() {
 
     setIsSubmitting(true)
 
-    // TODO: Wire up PocketBase submission
-    console.log("Expert Application Data:", {
-      name,
-      contactNumber,
-      email,
-      message,
-      files: files.map((f) => f.name),
-    })
+    try {
+      const html = [
+        "<h2>New Expert Application</h2>",
+        `<p><strong>Name:</strong> ${name}</p>`,
+        `<p><strong>Contact Number:</strong> ${contactNumber}</p>`,
+        `<p><strong>Email:</strong> ${email}</p>`,
+        message ? `<p><strong>Message:</strong><br/>${message}</p>` : "",
+        files.length ? `<p><strong>Attachments:</strong> ${files.map((f) => f.name).join(", ")}</p>` : "",
+      ].join("\n")
 
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "admin@dsc.ac",
+          to: "admin@dsc.ac",
+          subject: `Expert application from: ${name}`,
+          html,
+        }),
+      })
 
-    setIsSubmitting(false)
-    router.push("/login")
+      if (!response.ok) {
+        const { error: errMsg } = await response.json()
+        throw new Error(errMsg || "Failed to send application")
+      }
+
+      router.push("/login")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

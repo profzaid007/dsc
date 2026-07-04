@@ -25,8 +25,30 @@ export default function ContactPage() {
     setError("")
 
     try {
-      // TODO: integrate with backend API
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const html = [
+        "<h2>New Contact Message</h2>",
+        `<p><strong>Name:</strong> ${name}</p>`,
+        `<p><strong>Phone:</strong> ${phoneNumber}</p>`,
+        `<p><strong>Email:</strong> ${email}</p>`,
+        description ? `<p><strong>Description:</strong><br/>${description}</p>` : "",
+      ].join("\n")
+
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "admin@dsc.ac",
+          to: "support@dsc.ac",
+          subject: `Contact message from: ${name}`,
+          html,
+        }),
+      })
+
+      if (!response.ok) {
+        const { error: errMsg } = await response.json()
+        throw new Error(errMsg || "Failed to send message")
+      }
+
       setDone(true)
     } catch {
       setError(
