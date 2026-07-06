@@ -68,7 +68,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "admin@dsc.ac",
-          to: "codezaidprof@gmail.com",
+          to: "consult@dsc.ac",
           subject: `Consultation request from: ${name}`,
           html,
         }),
