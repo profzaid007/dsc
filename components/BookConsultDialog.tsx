@@ -74,7 +74,20 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         }),
       })
 
-      if (!response.ok) {
+      const message_response = await fetch("/api/send-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${name}`,
+          contact: `${contact}`,
+          email: `${email}`,
+          issueType: `${issueType}`,
+          caseType: `${caseType}`,
+          description: `${description}`,
+        }),
+      })
+
+      if (!response.ok || !message_response.ok) {
         const { error: errMsg } = await response.json()
         throw new Error(errMsg || "Failed to send request")
       }
