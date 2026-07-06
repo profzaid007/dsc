@@ -27,8 +27,8 @@ export function FooterSection() {
   return (
     <footer id="contact" className="scroll-mt-16" style={{ backgroundColor: "#0b1a30" }}>
       <div className="mx-auto max-w-7xl px-6 py-4">
-        <div className="grid grid-cols-2 gap-x-8 gap-y-4 md:grid-cols-3">
-          <div className="flex flex-col gap-1">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3 md:gap-x-8">
+          <div className="col-span-full md:col-span-1 flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <Image src="/logo.svg" alt="DSC Logo" width={32} height={32} className="object-contain" />
               <div>
@@ -83,10 +83,10 @@ export function FooterSection() {
           </div>
 
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-center text-white">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-start md:text-center text-white">
               {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
             </h3>
-            <nav className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+            <nav className="grid grid-cols-1 gap-y-0.5 md:grid-cols-2 md:gap-x-4">
               {PORTALS.map((portal, i) => (
                 <Link
                   key={i}
@@ -100,24 +100,14 @@ export function FooterSection() {
           </div>
 
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-center text-white">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-start md:text-center text-white">
               {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
             </h3>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-sm text-white/60">
-              <p className="flex items-center gap-2">
-                <span className="w-4" />
-                +962 7988 689123
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-4" />
-                info@dsc.com
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-4" />
-                www.dsc.com
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-4" />
+            <div className="grid grid-cols-1 gap-y-0.5 md:grid-cols-2 md:gap-x-4 text-sm text-white/60">
+              <p>+962 7988 689123</p>
+              <p>info@dsc.com</p>
+              <p>www.dsc.com</p>
+              <p>
                 {t(
                   {
                      en: "Amman / Jordan",
