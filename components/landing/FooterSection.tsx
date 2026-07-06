@@ -6,29 +6,14 @@ import { useLang } from "@/lib/lang-context"
 import { PORTALS } from "@/lib/portals"
 import Image from "next/image"
 
-interface QuickLink {
-  en: string
-  ar: string
-  href: string
-}
-
-const QUICK_LINKS: QuickLink[] = [
-  { en: "About Us", ar: "من نحن", href: "/" },
-  { en: "Why DSC", ar: "لماذا DSC", href: "/" },
-  { en: "Services", ar: "الخدمات", href: "/" },
-  { en: "Programs & Courses", ar: "البرامج والدورات", href: "/" },
-  { en: "Blog", ar: "المدونة", href: "/" },
-  { en: "Contact Us", ar: "تواصل معنا", href: "/#contact" },
-]
-
 export function FooterSection() {
   const { lang } = useLang()
 
   return (
     <footer id="contact" className="scroll-mt-16" style={{ backgroundColor: "#0b1a30" }}>
-      <div className="mx-auto max-w-7xl px-6 py-4">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-3 md:gap-x-8">
-          <div className="col-span-full md:col-span-1 flex flex-col gap-1">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-x-8 md:gap-y-4">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <Image src="/logo.svg" alt="DSC Logo" width={32} height={32} className="object-contain" />
               <div>
@@ -38,7 +23,7 @@ export function FooterSection() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex flex-wrap items-center gap-3">
               <a
                 href="https://wa.me/message/XGN76UVRTVL7C1"
                 target="_blank"
@@ -82,7 +67,7 @@ export function FooterSection() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-0.5">
+          <div className="hidden md:flex md:flex-col md:gap-0.5">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-start md:text-center text-white">
               {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
             </h3>
@@ -99,11 +84,11 @@ export function FooterSection() {
             </nav>
           </div>
 
-          <div className="flex flex-col gap-0.5">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-start md:text-center text-white">
+          <div className="flex flex-col gap-2">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-start text-white md:text-center">
               {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
             </h3>
-            <div className="grid grid-cols-1 gap-y-0.5 md:grid-cols-2 md:gap-x-4 text-sm text-white/60">
+            <div className="grid grid-cols-1 gap-y-1 text-sm text-white/60 md:grid-cols-2 md:gap-x-4 md:gap-y-0.5">
               <p>+962 7988 689123</p>
               <p>info@dsc.com</p>
               <p>www.dsc.com</p>
@@ -121,7 +106,7 @@ export function FooterSection() {
           </div>
         </div>
 
-        <div className="mt-3 border-t border-white/10 pt-2 text-center text-xs text-white/40">
+        <div className="mt-6 border-t border-white/10 pt-3 text-center text-xs text-white/40 md:mt-3 md:pt-2">
           © 2026 Development Secrets Consultancy.{" "}
           {t({ en: "All rights reserved.", ar: "جميع الحقوق محفوظة." }, lang)}
         </div>
