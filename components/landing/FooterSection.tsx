@@ -89,8 +89,8 @@ export function FooterSection() {
               {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
             </h3>
             <div className="grid grid-cols-1 gap-y-1 text-sm text-white/60 md:grid-cols-2 md:gap-x-4 md:gap-y-0.5">
-              <p>+962 7988 689123</p>
-              <p>info@dsc.com</p>
+              <p>+962 78012 7435</p>
+              <p>support@dsc.com</p>
               <p>www.dsc.com</p>
               <p>
                 {t(

@@ -136,7 +136,13 @@ export default function ContactPage() {
                         {t({ en: "Phone", ar: "الهاتف" }, lang)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        +962 788 689123
+                        {t(
+                          {
+                            en: "+962 78012 7435",
+                            ar: "+962 78012 7435",
+                          },
+                          lang
+                        )}
                       </p>
                     </div>
                   </div>
@@ -148,7 +154,7 @@ export default function ContactPage() {
                         {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        info@dsc.com
+                        support@dsc.ac
                       </p>
                     </div>
                   </div>
@@ -178,7 +184,13 @@ export default function ContactPage() {
                         {t({ en: "WhatsApp", ar: "واتساب" }, lang)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        +962 788 689123
+                        {t(
+                          {
+                            en: "+962 788 689123",
+                            ar: "+962 788 689123",
+                          },
+                          lang
+                        )}
                       </p>
                     </div>
                   </div>
@@ -190,7 +202,13 @@ export default function ContactPage() {
                         {t({ en: "Telephone", ar: "هاتف ثابت" }, lang)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        +962 6 5652527
+                        {t(
+                          {
+                            en: "+962 6 5652527",
+                            ar: "+962 6 5652527",
+                          },
+                          lang
+                        )}
                       </p>
                     </div>
                   </div>
