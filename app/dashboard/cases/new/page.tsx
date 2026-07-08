@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAuth } from "@/hooks/useAuth"
@@ -22,12 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  PortalServiceSelector,
-  type PortalServiceValue,
-} from "@/components/register/PortalServiceSelector"
+import { useLang } from "@/lib/lang-context"
+import { t } from "@/lib/i18n"
+import { PORTALS, getPortalById } from "@/lib/portals"
+import { trainingProgramsCollection } from "@/lib/pb-training"
+import type { TrainingProgram } from "@/types/training"
+import { type PortalServiceValue } from "@/components/register/PortalServiceSelector"
 
 const OTHER_VALUE = "other"
+const TRAINING_SERVICE_ID = "attending-training"
 
 const GRADES = [
   { value: "kg1", label: "KG 1" },
@@ -50,6 +53,7 @@ const GRADES = [
 export default function NewProfilePage() {
   const router = useRouter()
   const { currentUser } = useAuth()
+  const { lang } = useLang()
   const { addProfile } = useProfiles()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -68,6 +72,79 @@ export default function NewProfilePage() {
     customSubCategory: "",
   })
 
+  const [trainingPrograms, setTrainingPrograms] = useState<TrainingProgram[]>(
+    []
+  )
+  const [trainingProgramsLoading, setTrainingProgramsLoading] = useState(false)
+  const [selectedProgramId, setSelectedProgramId] = useState("")
+
+  const isTrainingSelected =
+    portalService.categoryId === TRAINING_SERVICE_ID ||
+    portalService.subCategoryId === TRAINING_SERVICE_ID
+
+  const isIndividual = currentUser?.role === "individual"
+  const showBasicDetails = !isIndividual
+
+  useEffect(() => {
+    if (!isTrainingSelected) {
+      setSelectedProgramId("")
+      setTrainingPrograms([])
+      return
+    }
+    let cancelled = false
+    setTrainingProgramsLoading(true)
+    trainingProgramsCollection
+      .getPublished()
+      .then((data) => {
+        if (cancelled) return
+        const today = new Date().toISOString().slice(0, 10)
+        const running = data
+          .filter((p) => today <= p.schedule.endDate)
+          .sort((a, b) =>
+            a.schedule.endDate < b.schedule.endDate ? -1 : 1
+          )
+        setTrainingPrograms(running)
+      })
+      .catch((err) => {
+        console.error("Failed to load training programs:", err)
+      })
+      .finally(() => {
+        if (!cancelled) setTrainingProgramsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isTrainingSelected])
+
+  const handleServiceTypeChange = (value: string) => {
+    if (value === TRAINING_SERVICE_ID) {
+      setPortalService({
+        categoryId: TRAINING_SERVICE_ID,
+        subCategoryId: "",
+        customCategory: "",
+        customSubCategory: "",
+      })
+    } else {
+      setPortalService({
+        categoryId: value,
+        subCategoryId: "",
+        customCategory: "",
+        customSubCategory: "",
+      })
+    }
+  }
+
+  const handleCaseTypeChange = (value: string) => {
+    if (isTrainingSelected) {
+      setSelectedProgramId(value)
+    } else {
+      setPortalService({
+        ...portalService,
+        subCategoryId: value,
+      })
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!currentUser) return
@@ -75,26 +152,50 @@ export default function NewProfilePage() {
     setIsSubmitting(true)
 
     try {
+      const isTraining = isTrainingSelected && selectedProgramId
+      const selectedProgram = isTraining
+        ? trainingPrograms.find((p) => p.id === selectedProgramId)
+        : null
+
       const profileId = await addProfile({
         user: currentUser.id,
-        name: formData.name,
-        date_of_birth: formData.date_of_birth,
-        gender: formData.gender as "male" | "female",
-        grade: formData.grade,
+        name: isTraining
+          ? selectedProgram?.title[lang] || "Training Enrollment"
+          : formData.name,
+        date_of_birth: isTraining ? "" : formData.date_of_birth,
+        gender: isTraining ? undefined : (formData.gender as "male" | "female"),
+        grade: isTraining ? "" : formData.grade,
         notes: formData.notes,
-        category: portalService.categoryId,
-        sub_category: portalService.subCategoryId,
-        case_details: {
-          custom_category:
-            portalService.categoryId === OTHER_VALUE
-              ? portalService.customCategory
-              : undefined,
-          custom_sub_category:
-            portalService.subCategoryId === OTHER_VALUE
-              ? portalService.customSubCategory
-              : undefined,
-        },
-      } as any)
+        portal_type: isTraining ? "Attending Training" : undefined,
+        service_type: isTraining
+          ? selectedProgram?.title[lang]
+          : undefined,
+        program_id: isTraining ? selectedProgramId : undefined,
+        training_link: isTraining
+          ? selectedProgram?.meetingLink ||
+            `/programmes/training_programmes/${selectedProgramId}`
+          : undefined,
+        program_status: isTraining ? "enrolled" : undefined,
+        user_details: isTraining
+          ? {
+              name: currentUser.name,
+              email: currentUser.email,
+              contact: currentUser.contact_number,
+            }
+          : undefined,
+        case_details: isTraining
+          ? undefined
+          : {
+              custom_category:
+                portalService.categoryId === OTHER_VALUE
+                  ? portalService.customCategory
+                  : undefined,
+              custom_sub_category:
+                portalService.subCategoryId === OTHER_VALUE
+                  ? portalService.customSubCategory
+                  : undefined,
+            },
+      })
 
       router.push(`/dashboard/cases/${profileId}`)
     } catch (error) {
@@ -112,100 +213,320 @@ export default function NewProfilePage() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Child Information</CardTitle>
-            <CardDescription>Basic details about the child</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Child Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
+        {showBasicDetails && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Case Information</CardTitle>
+              <CardDescription>Basic details about the case</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="date_of_birth">Date of Birth</Label>
+                <Label htmlFor="name">Case Name</Label>
                 <Input
-                  id="date_of_birth"
-                  type="date"
-                  value={formData.date_of_birth}
+                  id="name"
+                  value={formData.name}
                   onChange={(e) =>
-                    setFormData({ ...formData, date_of_birth: e.target.value })
+                    setFormData({ ...formData, name: e.target.value })
                   }
                   required
                 />
               </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="date_of_birth">Date of Birth</Label>
+                  <Input
+                    id="date_of_birth"
+                    type="date"
+                    value={formData.date_of_birth}
+                    onChange={(e) =>
+                      setFormData({ ...formData, date_of_birth: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, gender: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
+                <Label htmlFor="grade">Grade</Label>
                 <Select
-                  value={formData.gender}
+                  value={formData.grade}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, gender: value })
+                    setFormData({ ...formData, grade: value })
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue placeholder="Select grade" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
+                    {GRADES.map((grade) => (
+                      <SelectItem key={grade.value} value={grade.value}>
+                        {grade.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        )}
 
+        <Card className={showBasicDetails ? "mt-6" : ""}>
+          <CardHeader>
+            <CardTitle>
+              {t({ en: "Service Type", ar: "نوع الخدمة" }, lang)}
+            </CardTitle>
+            <CardDescription>
+              {t(
+                {
+                  en: "Select the service this case belongs to",
+                  ar: "اختر الخدمة التي تنتمي إليها هذه الحالة",
+                },
+                lang
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="grade">Grade</Label>
+              <Label>
+                {t({ en: "Service Type", ar: "نوع الخدمة" }, lang)}
+                <span className="text-red-500 ms-1">*</span>
+              </Label>
               <Select
-                value={formData.grade}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, grade: value })
-                }
+                value={portalService.categoryId}
+                onValueChange={handleServiceTypeChange}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select grade" />
+                  <SelectValue
+                    placeholder={t(
+                      { en: "Select service type", ar: "اختر نوع الخدمة" },
+                      lang
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {GRADES.map((grade) => (
-                    <SelectItem key={grade.value} value={grade.value}>
-                      {grade.label}
+                  {PORTALS.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {lang === "ar"
+                        ? p.portalName.ar.replace(/^بوابة /, "")
+                        : p.title}
                     </SelectItem>
                   ))}
+                  <SelectItem value={TRAINING_SERVICE_ID}>
+                    {t(
+                      { en: "Attending Training", ar: "حضور تدريب" },
+                      lang
+                    )}
+                  </SelectItem>
+                  <SelectItem value={OTHER_VALUE}>
+                    {t({ en: "Other", ar: "أخرى" }, lang)}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <PortalServiceSelector
-              value={portalService}
-              onChange={setPortalService}
-              required
-            />
+            {isTrainingSelected ? (
+              <div className="space-y-2">
+                <Label>
+                  {t({ en: "Case Type", ar: "نوع الحالة" }, lang)}
+                  <span className="text-red-500 ms-1">*</span>
+                </Label>
+                <Select
+                  value={selectedProgramId}
+                  onValueChange={handleCaseTypeChange}
+                  disabled={trainingProgramsLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        trainingProgramsLoading
+                          ? t(
+                              { en: "Loading...", ar: "جاري التحميل..." },
+                              lang
+                            )
+                          : t(
+                              {
+                                en: "Select a training program",
+                                ar: "اختر برنامج تدريبي",
+                              },
+                              lang
+                            )
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {trainingPrograms.length === 0 ? (
+                      <SelectItem value="__none__" disabled>
+                        {t(
+                          {
+                            en: "No programs with open enrollment",
+                            ar: "لا توجد برامج مفتوحة للتسجيل",
+                          },
+                          lang
+                        )}
+                      </SelectItem>
+                    ) : (
+                      trainingPrograms.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.title[lang]}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <>
+                {portalService.categoryId === OTHER_VALUE && (
+                  <div className="space-y-2">
+                    <Label>
+                      {t(
+                        {
+                          en: "Custom issue type",
+                          ar: "اسم نوع المشكلة المخصص",
+                        },
+                        lang
+                      )}
+                      <span className="text-red-500 ms-1">*</span>
+                    </Label>
+                    <Input
+                      value={portalService.customCategory}
+                      onChange={(e) =>
+                        setPortalService({
+                          ...portalService,
+                          customCategory: e.target.value,
+                        })
+                      }
+                      placeholder={t(
+                        { en: "Enter issue type", ar: "أدخل اسم نوع المشكلة" },
+                        lang
+                      )}
+                    />
+                  </div>
+                )}
+
+                {portalService.categoryId && (
+                  <div className="space-y-2">
+                    <Label>
+                      {t({ en: "Case Type", ar: "نوع الحالة" }, lang)}
+                      <span className="text-red-500 ms-1">*</span>
+                    </Label>
+                    <Select
+                      value={portalService.subCategoryId}
+                      onValueChange={(value) =>
+                        setPortalService({
+                          ...portalService,
+                          subCategoryId: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t(
+                            {
+                              en: "Select case type",
+                              ar: "اختر نوع الحالة",
+                            },
+                            lang
+                          )}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getPortalById(portalService.categoryId)?.services.map(
+                          (s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {t(s.name, lang)}
+                            </SelectItem>
+                          )
+                        )}
+                        <SelectItem value={OTHER_VALUE}>
+                          {t({ en: "Other", ar: "أخرى" }, lang)}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {portalService.subCategoryId === OTHER_VALUE && (
+                  <div className="space-y-2">
+                    <Label>
+                      {t(
+                        {
+                          en: "Custom case type",
+                          ar: "اسم نوع الحالة المخصص",
+                        },
+                        lang
+                      )}
+                      <span className="text-red-500 ms-1">*</span>
+                    </Label>
+                    <Input
+                      value={portalService.customSubCategory}
+                      onChange={(e) =>
+                        setPortalService({
+                          ...portalService,
+                          customSubCategory: e.target.value,
+                        })
+                      }
+                      placeholder={t(
+                        { en: "Enter case type", ar: "أدخل اسم نوع الحالة" },
+                        lang
+                      )}
+                    />
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Additional Information</CardTitle>
-            <CardDescription>Notes</CardDescription>
+            <CardTitle>
+              {t({ en: "Explain more", ar: "اشرح أكثر" }, lang)}
+            </CardTitle>
+            <CardDescription>
+              {t(
+                {
+                  en: "Add any extra context that will help us handle this case",
+                  ar: "أضف أي سياق إضافي يساعدنا في التعامل مع هذه الحالة",
+                },
+                lang
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
+                required
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
                 }
-                placeholder="Any additional notes..."
+                placeholder={t(
+                  {
+                    en: "Provide more details about the case...",
+                    ar: "قدم مزيداً من التفاصيل حول الحالة...",
+                  },
+                  lang
+                )}
                 rows={4}
               />
             </div>
@@ -216,7 +537,13 @@ export default function NewProfilePage() {
           <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            disabled={
+              isSubmitting ||
+              (isTrainingSelected && !selectedProgramId)
+            }
+          >
             {isSubmitting ? "Creating..." : "Create Case"}
           </Button>
         </div>

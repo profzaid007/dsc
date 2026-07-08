@@ -63,7 +63,9 @@ export function programFromDB(record: Record<string, unknown>): TrainingProgram 
     notes: typeof record.notes === "string"
       ? record.notes
       : (record.notes as Record<string, string>)?.en || undefined,
-    schedule: record.schedule as ProgramSchedule,
+    schedule: typeof record.schedule === "string"
+      ? JSON.parse(record.schedule)
+      : record.schedule as ProgramSchedule,
     maxParticipants: (record.max_participants as number) || undefined,
     currentRegistrations: (record.current_registrations as number) || 0,
     thumbnail: getThumbnailUrl(record),

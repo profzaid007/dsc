@@ -127,6 +127,15 @@ export const casesCollection = {
       filter: `program_id = "${programId}" && service_type = "${serviceType}"`,
     })
   },
+
+  async getByProgramAndPortalType(
+    programId: string,
+    portalType: string
+  ): Promise<Profile[]> {
+    return pb.collection("cases").getFullList({
+      filter: `program_id = "${programId}" && portal_type = "${portalType}"`,
+    })
+  },
 }
 
 export const caseToolsCollection = {

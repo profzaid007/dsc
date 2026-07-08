@@ -96,50 +96,100 @@ export default function ProfileDetailPage({
 
         <TabsContent value="overview">
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Child Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date of Birth</span>
-                  <span className="font-medium">{formatDate(profile.date_of_birth, lang)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Gender</span>
-                  <span className="font-medium capitalize">
-                    {profile.gender}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Grade</span>
-                  <span className="font-medium capitalize">
-                    {profile.grade}
-                  </span>
-                </div>
-                {profile.notes && (
-                  <div className="pt-2">
-                    <span className="mb-2 block text-muted-foreground">
-                      Notes
-                    </span>
-                    <p className="text-sm text-muted-foreground">{profile.notes}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {profile.notes && (
-              <Card className="lg:col-span-2">
+            {profile.portal_type === "Attending Training" ? (
+              <Card>
                 <CardHeader>
-                  <CardTitle>Notes</CardTitle>
+                  <CardTitle>Training Enrollment</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{profile.notes}</p>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Portal Type</span>
+                    <span className="font-medium">Attending Training</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Case Type</span>
+                    <span className="font-medium">
+                      {profile.service_type ||
+                        profile.sub_category ||
+                        "Attending Training"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge variant="secondary">
+                      {profile.program_status || "enrolled"}
+                    </Badge>
+                  </div>
+                  {profile.training_link && (
+                    <Link
+                      href={profile.training_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 block"
+                    >
+                      <Button variant="default" className="w-full">
+                        Join Meeting
+                      </Button>
+                    </Link>
+                  )}
+                  {profile.program_id && (
+                    <Link
+                      href={`/programmes/training_programmes/${profile.program_id}`}
+                      className="mt-2 block"
+                    >
+                      <Button variant="outline" className="w-full">
+                        View Training Program
+                      </Button>
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
+            ) : (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Case Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Date of Birth
+                      </span>
+                      <span className="font-medium">
+                        {profile.date_of_birth
+                          ? formatDate(profile.date_of_birth, lang)
+                          : "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Gender</span>
+                      <span className="font-medium capitalize">
+                        {profile.gender || "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Grade</span>
+                      <span className="font-medium capitalize">
+                        {profile.grade || "—"}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {profile.notes && (
+                  <Card className="lg:col-span-2">
+                    <CardHeader>
+                      <CardTitle>Notes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">{profile.notes}</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </div>
         </TabsContent>
