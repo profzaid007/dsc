@@ -208,7 +208,7 @@ export default function AdminTrainingProgramDetailPage({
 
   useEffect(() => {
     if (!isLoading && !program) {
-      router.push("/dashboard/admin/training/programs")
+      router.push("/dashboard/admin/training")
     }
   }, [isLoading, program, router])
 
@@ -255,7 +255,7 @@ export default function AdminTrainingProgramDetailPage({
       )
     ) {
       await deleteProgram(id)
-      router.push("/dashboard/admin/training/programs")
+      router.push("/dashboard/admin/training")
     }
   }
 
@@ -284,7 +284,7 @@ export default function AdminTrainingProgramDetailPage({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push("/dashboard/admin/training/programs")}
+            onClick={() => router.push("/dashboard/admin/training")}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

@@ -1,133 +1,174 @@
 "use client"
 
-import Link from "next/link"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useLang } from "@/lib/lang-context"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useTraining } from "@/hooks/useTraining"
+import { ProgramTable } from "@/components/training"
+import { useLang } from "@/lib/lang-context"
+import { Plus, Search } from "lucide-react"
+import type { ProgramStatus } from "@/types/training"
 
-const links = [
-  { href: "/dashboard/admin/training/programs", label: { en: "Programs", ar: "البرامج" } },
-  { href: "/dashboard/admin/training/registration", label: { en: "Registrations", ar: "التسجيلات" } },
-  { href: "/dashboard/admin/training/reports", label: { en: "Reports", ar: "التقارير" } },
-] 
+const statusOptions = [
+  { value: "all", label: { en: "All Status", ar: "جميع الحالات" } },
+  { value: "draft", label: { en: "Draft", ar: "مسودة" } },
+  { value: "published", label: { en: "Published", ar: "منشور" } },
+  { value: "in_progress", label: { en: "In Progress", ar: "قيد التنفيذ" } },
+  { value: "completed", label: { en: "Completed", ar: "مكتمل" } },
+  { value: "cancelled", label: { en: "Cancelled", ar: "ملغي" } },
+]
 
-export default function TrainingOverviewPage() {
+export default function AdminTrainingProgramsPage() {
+  const router = useRouter()
   const { lang } = useLang()
-  const { programs, registrations, certificates, isLoading } = useTraining()
+  const { programs, isLoading, deleteProgram, registrations } = useTraining()
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<ProgramStatus | "all">("all")
 
-  const activePrograms = programs.filter((p) => p.status !== "cancelled").length
-  const upcomingPrograms = programs.filter(
-    (p) => p.status === "published" && new Date(p.schedule.startDate) > new Date()
-  ).length
-  const activeRegistrations = registrations.filter(
-    (r) => r.status === "registered" || r.status === "attended"
-  ).length
+  const filteredPrograms = programs.filter((program) => {
+    const matchesSearch =
+      program.title[lang].toLowerCase().includes(searchTerm.toLowerCase()) ||
+      program.trainer.name[lang]
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      program.category[lang]
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    const matchesStatus =
+      statusFilter === "all" || program.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
-  if (isLoading) return <div className="p-4">Loading...</div>
+  const handleDelete = async (id: string) => {
+    if (
+      window.confirm(
+        lang === "ar"
+          ? "هل أنت متأكد من حذف هذا البرنامج؟"
+          : "Are you sure you want to delete this program?"
+      )
+    ) {
+      await deleteProgram(id)
+    }
+  }
+
+  const getRegistrationCount = (programId: string) => {
+    return registrations.filter(
+      (r) => r.programId === programId && r.status !== "cancelled"
+    ).length
+  }
+
+  const getAttendanceCount = (programId: string) => {
+    return registrations.filter(
+      (r) =>
+        r.programId === programId &&
+        (r.status === "attended" || r.status === "completed")
+    ).length
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جاري التحميل..." : "Loading..."}
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-primary">
-          {lang === "en" ? "Training Management" : "إدارة التدريب"}
-        </h1>
-        <p className="text-muted-foreground">
-          {lang === "en"
-            ? "Manage programs, certificates, and registrations"
-            : "إدارة البرامج والشهادات والتسجيلات"}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "البرامج التدريبية" : "Training Programs"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar"
+              ? "إدارة البرامج التدريبية والتسجيلات والحضور"
+              : "Manage training programs, registrations, and attendance"}
+          </p>
+        </div>
+        <Button
+          onClick={() =>
+            router.push("/dashboard/admin/training/new")
+          }
+        >
+          <Plus className="me-2 h-4 w-4" />
+          {lang === "ar" ? "برنامج جديد" : "New Program"}
+        </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">{activePrograms}</div>
-              <div className="text-sm text-muted-foreground">
-                {lang === "en" ? "Active Programs" : "البرامج النشطة"}
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {lang === "ar" ? "جميع البرامج" : "All Programs"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={
+                  lang === "ar" ? "البحث في البرامج..." : "Search programs..."
+                }
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">{activeRegistrations}</div>
-              <div className="text-sm text-muted-foreground">
-                {lang === "en" ? "Active Registrations" : "التسجيلات النشطة"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">{certificates.length}</div>
-              <div className="text-sm text-muted-foreground">
-                {lang === "en" ? "Certificates" : "الشهادات"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) =>
+                setStatusFilter(v as ProgramStatus | "all")
+              }
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label[lang]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {lang === "en" ? "Upcoming Programs" : "البرامج القادمة"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {upcomingPrograms === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {lang === "en" ? "No upcoming programs" : "لا توجد برامج قادمة"}
+          {filteredPrograms.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-muted-foreground">
+                {lang === "ar"
+                  ? "لا توجد برامج"
+                  : "No programs found"}
               </p>
-            ) : (
-              <p className="text-2xl font-bold">{upcomingPrograms}</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {lang === "en" ? "Recent Registrations" : "آخر التسجيلات"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {registrations.slice(0, 5).map((r) => (
-              <div key={r.id} className="flex items-center justify-between text-sm">
-                <span>{r.userName}</span>
-                <Badge variant="outline">{r.status}</Badge>
-              </div>
-            ))}
-            {registrations.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                {lang === "en" ? "No registrations yet" : "لا توجد تسجيلات بعد"}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {lang === "en" ? "Quick Links" : "روابط سريعة"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="block rounded-md border p-2 text-sm hover:bg-muted transition-colors"
-              >
-                {link.label[lang]}
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          ) : (
+            <ProgramTable
+              programs={filteredPrograms}
+              onView={(id) =>
+                router.push(`/dashboard/admin/training/${id}`)
+              }
+              onEdit={(id) =>
+                router.push(`/dashboard/admin/training/${id}?edit=true`)
+              }
+              onDelete={handleDelete}
+              getRegistrationCount={getRegistrationCount}
+              getAttendanceCount={getAttendanceCount}
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

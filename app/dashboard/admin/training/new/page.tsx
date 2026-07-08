@@ -18,7 +18,7 @@ export default function NewTrainingProgramPage() {
     setIsSubmitting(true)
     try {
       const newId = await addProgram(data)
-      router.push(`/dashboard/admin/training/programs/${newId}`)
+      router.push(`/dashboard/admin/training/${newId}`)
     } catch (error) {
       console.error("Failed to create program:", error)
       alert(lang === "ar" ? "فشل إنشاء البرنامج" : "Failed to create program")
@@ -47,7 +47,7 @@ export default function NewTrainingProgramPage() {
 
       <ProgramForm
         onSubmit={handleSubmit}
-        onCancel={() => router.push("/dashboard/admin/training/programs")}
+        onCancel={() => router.push("/dashboard/admin/training")}
         isSubmitting={isSubmitting}
         submitLabel={lang === "ar" ? "إنشاء البرنامج" : "Create Program"}
       />
