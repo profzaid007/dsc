@@ -178,7 +178,7 @@ export function DashboardSidebar() {
           {!isCollapsed && "Cases"}
         </SmartLink>
 
-        {/* Training - shown for both admin and user */}
+        {/* Training - shown for both admin and user
         <SmartLink
           href="/dashboard/training"
           className={cn(
@@ -195,22 +195,22 @@ export function DashboardSidebar() {
           {!isCollapsed && "Training"}
         </SmartLink>
 
-        {/* Public Lectures - shown for both admin and user */}
-        <SmartLink
-          href="/dashboard/public-lectures"
-          className={cn(
-            "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
-            isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
-            pathname === "/dashboard/public-lectures" ||
-              pathname.startsWith("/dashboard/public-lectures/")
-              ? "bg-white/20 text-white"
-              : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
-          )}
-          title={isCollapsed ? "Public Lectures" : undefined}
-        >
-          <BookOpen className="h-5 w-5 shrink-0" />
-          {!isCollapsed && "Public Lectures"}
-        </SmartLink>
+        // {/* Public Lectures - shown for both admin and user 
+        // <SmartLink
+        //   href="/dashboard/public-lectures"
+        //   className={cn(
+        //     "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
+        //     isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
+        //     pathname === "/dashboard/public-lectures" ||
+        //       pathname.startsWith("/dashboard/public-lectures/")
+        //       ? "bg-white/20 text-white"
+        //       : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
+        //   )}
+        //   title={isCollapsed ? "Public Lectures" : undefined}
+        // >
+        //   <BookOpen className="h-5 w-5 shrink-0" />
+        //   {!isCollapsed && "Public Lectures"}
+        // </SmartLink> */}
 
         {/* Admin section - only for admins */}
         {isAdmin && (
