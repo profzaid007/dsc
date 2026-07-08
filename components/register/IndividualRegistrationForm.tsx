@@ -26,13 +26,13 @@ export function IndividualRegistrationForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [portalService, setPortalService] = useState<PortalServiceValue>({
-    categoryId: "",
-    subCategoryId: "",
-    customCategory: "",
-    customSubCategory: "",
-  })
-  const [notes, setNotes] = useState("")
+  // const [portalService, setPortalService] = useState<PortalServiceValue>({
+  //   categoryId: "",
+  //   subCategoryId: "",
+  //   customCategory: "",
+  //   customSubCategory: "",
+  // })
+  // const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -58,48 +58,7 @@ export function IndividualRegistrationForm() {
       )
       return false
     }
-    if (!portalService.categoryId || !portalService.subCategoryId) {
-      setError(
-        t(
-          {
-            en: "Please select a portal and service",
-            ar: "يرجى اختيار البوابة والخدمة",
-          },
-          lang
-        )
-      )
-      return false
-    }
-    if (
-      portalService.categoryId === OTHER_VALUE &&
-      !portalService.customCategory.trim()
-    ) {
-      setError(
-        t(
-          {
-            en: "Please enter a custom portal name",
-            ar: "يرجى إدخال اسم بوابة مخصصة",
-          },
-          lang
-        )
-      )
-      return false
-    }
-    if (
-      portalService.subCategoryId === OTHER_VALUE &&
-      !portalService.customSubCategory.trim()
-    ) {
-      setError(
-        t(
-          {
-            en: "Please enter a custom service name",
-            ar: "يرجى إدخال اسم خدمة مخصصة",
-          },
-          lang
-        )
-      )
-      return false
-    }
+
     return true
   }
 
@@ -119,24 +78,6 @@ export function IndividualRegistrationForm() {
         name,
         contact_number: contactNumber,
         role: "user",
-      })
-
-      await pb.collection("cases").create({
-        user: user.id,
-        name,
-        category: portalService.categoryId,
-        sub_category: portalService.subCategoryId,
-        notes,
-        case_details: {
-          custom_category:
-            portalService.categoryId === OTHER_VALUE
-              ? portalService.customCategory
-              : undefined,
-          custom_sub_category:
-            portalService.subCategoryId === OTHER_VALUE
-              ? portalService.customSubCategory
-              : undefined,
-        },
       })
 
       await authWithPassword(email.toLowerCase(), password)
@@ -235,30 +176,6 @@ export function IndividualRegistrationForm() {
                 placeholder="••••••••"
               />
             </div>
-          </div>
-
-          <PortalServiceSelector
-            value={portalService}
-            onChange={setPortalService}
-            required
-          />
-
-          <div className="space-y-2">
-            <Label>
-              {t({ en: "Notes", ar: "ملاحظات" }, lang)}
-            </Label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder={t(
-                {
-                  en: "Add any additional notes about this case...",
-                  ar: "أضف أي ملاحظات إضافية حول هذه الحالة...",
-                },
-                lang
-              )}
-              rows={3}
-            />
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>

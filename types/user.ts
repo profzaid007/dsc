@@ -1,5 +1,12 @@
 export type UserType = "parent" | "individual" | "organization" | "expert"
-export type UserRole = "user" | "super_admin" | "admin"
+export type UserRole =
+  | "user"
+  | "super_admin"
+  | "admin"
+  | "individual"
+  | "parent"
+  | "organization"
+  | "expert"
 
 export interface User {
   id: string

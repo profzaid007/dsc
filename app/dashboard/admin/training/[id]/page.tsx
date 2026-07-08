@@ -37,6 +37,9 @@ import {
 import { useTraining } from "@/hooks/useTraining"
 import { ProgramForm, ProgramReportCard } from "@/components/training"
 import { useLang } from "@/lib/lang-context"
+import { casesCollection } from "@/lib/pb-collections"
+import { handlePocketBaseError } from "@/lib/pb"
+import type { Profile } from "@/types/profile"
 import {
   ArrowLeft,
   Calendar,
@@ -54,11 +57,9 @@ import {
   Plus,
   Download,
 } from "lucide-react"
-import type {
-  ProgramStatus,
-  RegistrationStatus,
-  TrainingRegistration,
-} from "@/types/training"
+import type { ProgramStatus } from "@/types/training"
+
+type EnrollmentStatus = "enrolled" | "attended" | "absent"
 
 const statusLabels: Record<ProgramStatus, { en: string; ar: string }> = {
   draft: { en: "Draft", ar: "مسودة" },
@@ -83,20 +84,29 @@ const typeLabels = {
 }
 
 const registrationLabels: Record<
-  RegistrationStatus,
+  EnrollmentStatus,
   { en: string; ar: string }
 > = {
-  registered: { en: "Registered", ar: "مسجل" },
+  enrolled: { en: "Enrolled", ar: "مسجل" },
   attended: { en: "Attended", ar: "حضر" },
-  completed: { en: "Completed", ar: "مكتمل" },
-  cancelled: { en: "Cancelled", ar: "ملغي" },
+  absent: { en: "Absent", ar: "غائب" },
 }
 
-const registrationVariants: Record<RegistrationStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  registered: "secondary",
+const registrationVariants: Record<EnrollmentStatus, "default" | "secondary" | "destructive" | "outline"> = {
+  enrolled: "secondary",
   attended: "default",
-  completed: "default",
-  cancelled: "destructive",
+  absent: "destructive",
+}
+
+const enrollmentStatusToCaseStatus = (status: EnrollmentStatus) => status
+
+const caseStatusToEnrollmentStatus = (
+  status?: string
+): EnrollmentStatus => {
+  if (status === "enrolled" || status === "attended" || status === "absent") {
+    return status
+  }
+  return "enrolled"
 }
 
 export default function AdminTrainingProgramDetailPage({
@@ -112,14 +122,15 @@ export default function AdminTrainingProgramDetailPage({
     getProgramById,
     updateProgram,
     deleteProgram,
-    getRegistrationsByProgram,
-    updateRegistrationStatus,
     getProgramStats,
     certificates,
     addCertificate,
     deleteCertificate,
     isLoading,
   } = useTraining()
+
+  const [enrollments, setEnrollments] = useState<Profile[]>([])
+  const [enrollmentsLoading, setEnrollmentsLoading] = useState(true)
 
   const [activeTab, setActiveTab] = useState("overview")
   const [isEditing, setIsEditing] = useState(
@@ -137,18 +148,37 @@ export default function AdminTrainingProgramDetailPage({
   const [isCertSubmitting, setIsCertSubmitting] = useState(false)
 
   const program = getProgramById(id)
-  const registrations = program ? getRegistrationsByProgram(program.id) : []
   const stats = program ? getProgramStats(program.id) : null
   const programCertificates = program
     ? certificates.filter((c) => c.programId === program.id)
     : []
 
-  const eligibleRegistrations = registrations.filter(
-    (r) => r.status === "attended" || r.status === "completed"
-  )
+  const fetchEnrollments = async () => {
+    try {
+      const data = await casesCollection.getByProgramAndServiceType(
+        id,
+        "Attending Training"
+      )
+      setEnrollments(data)
+    } catch (err) {
+      console.error("Failed to load enrollments:", err)
+      setEnrollments([])
+    } finally {
+      setEnrollmentsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchEnrollments()
+  }, [id])
+
+  const eligibleRegistrations = enrollments.filter((e) => {
+    const status = caseStatusToEnrollmentStatus(e.program_status)
+    return status === "attended"
+  })
 
   const registrationsWithoutCert = eligibleRegistrations.filter(
-    (r) => !programCertificates.some((c) => c.userId === r.userId)
+    (e) => !programCertificates.some((c) => c.userId === e.user)
   )
 
   const resetCertForm = () => {
@@ -164,17 +194,15 @@ export default function AdminTrainingProgramDetailPage({
   const handleIssueCertificate = async () => {
     if (!program || !certRegistrationId || !certForm.certificateNumber) return
 
-    const reg = registrations.find((r) => r.id === certRegistrationId) as
-      | TrainingRegistration
-      | undefined
-    if (!reg) return
+    const enrollee = enrollments.find((e) => e.id === certRegistrationId)
+    if (!enrollee) return
 
     setIsCertSubmitting(true)
     try {
       await addCertificate(
         {
-          userId: reg.userId,
-          userName: reg.userName,
+          userId: enrollee.user,
+          userName: enrollee.name,
           programId: program.id,
           programName: program.title,
           issueDate: certForm.issueDate,
@@ -183,7 +211,10 @@ export default function AdminTrainingProgramDetailPage({
         },
         certFile
       )
-      await updateRegistrationStatus(certRegistrationId, "completed")
+      await casesCollection.update(enrollee.id, {
+        program_status: "attended",
+      })
+      await fetchEnrollments()
       setCertDialogOpen(false)
       resetCertForm()
     } catch (error) {
@@ -260,22 +291,39 @@ export default function AdminTrainingProgramDetailPage({
   }
 
   const handleStatusChange = async (
-    registrationId: string,
-    newStatus: RegistrationStatus
+    enrollmentId: string,
+    newStatus: EnrollmentStatus
   ) => {
     try {
-      await updateRegistrationStatus(registrationId, newStatus)
+      await casesCollection.update(enrollmentId, {
+        program_status: enrollmentStatusToCaseStatus(newStatus),
+      })
+      await fetchEnrollments()
     } catch (error) {
-      console.error("Failed to update registration status:", error)
+      console.error("Failed to update enrollment status:", error)
+      alert(handlePocketBaseError(error))
     }
   }
 
+  const registrations = enrollments.map((e) => {
+    return {
+      id: e.id,
+      userId: e.user,
+      userName: e.user_details?.name ?? "",
+      email: e.user_details?.email ?? "",
+      contact: e.user_details?.contact ?? "",
+      registeredAt: e.created,
+      status: caseStatusToEnrollmentStatus(e.program_status),
+    }
+  })
+
   const activeRegistrations = registrations.filter(
-    (r) => r.status === "registered" || r.status === "attended" || r.status === "completed"
+    (r) => r.status === "enrolled" || r.status === "attended"
   )
   const attendedCount = registrations.filter(
-    (r) => r.status === "attended" || r.status === "completed"
+    (r) => r.status === "attended"
   ).length
+  const registrationsTotal = registrations.length
 
   return (
     <div className="space-y-6">
@@ -396,13 +444,13 @@ export default function AdminTrainingProgramDetailPage({
                       <span>{program.category[lang]}</span>
                     </div>
                     {program.maxParticipants && (
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span>
-                          {program.currentRegistrations} / {program.maxParticipants}{" "}
-                          {lang === "ar" ? "مسجلين" : "registered"}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>
+                        {registrationsTotal} / {program.maxParticipants}{" "}
+                        {lang === "ar" ? "مسجلين" : "enrolled"}
+                      </span>
+                    </div>
                     )}
                     {program.coordinator && (
                       <div className="flex items-center gap-2">
@@ -561,108 +609,99 @@ export default function AdminTrainingProgramDetailPage({
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "التسجيلات" : "Registrations"} (
-                {registrations.length})
+                {lang === "ar" ? "المسجلون" : "Enrollments"} (
+                {registrationsTotal})
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {lang === "ar"
+                  ? "تستند هذه القائمة إلى سجلات الحالات المرتبطة بهذا البرنامج."
+                  : "This list is based on case records linked to this program."}
+              </p>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{lang === "ar" ? "الاسم" : "Name"}</TableHead>
-                    <TableHead>
-                      {lang === "ar" ? "البريد الإلكتروني" : "Email"}
-                    </TableHead>
-                    <TableHead>{lang === "ar" ? "الهاتف" : "Phone"}</TableHead>
-                    <TableHead>
-                      {lang === "ar" ? "تاريخ التسجيل" : "Registered"}
-                    </TableHead>
-                    <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
-                    <TableHead className="text-right">
-                      {lang === "ar" ? "الإجراءات" : "Actions"}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {registrations.length === 0 ? (
+              {enrollmentsLoading ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  {lang === "ar" ? "جاري التحميل..." : "Loading..."}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={6} className="py-8 text-center">
-                        {lang === "ar"
-                          ? "لا توجد تسجيلات بعد"
-                          : "No registrations yet"}
-                      </TableCell>
+                      <TableHead>{lang === "ar" ? "الاسم" : "Name"}</TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "البريد الإلكتروني" : "Email"}
+                      </TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "الاتصال" : "Contact"}
+                      </TableHead>
+                      <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
+                      <TableHead className="text-right">
+                        {lang === "ar" ? "الإجراءات" : "Actions"}
+                      </TableHead>
                     </TableRow>
-                  ) : (
-                    registrations.map((reg) => (
-                      <TableRow key={reg.id}>
-                        <TableCell>{reg.userName}</TableCell>
-                        <TableCell>{reg.email}</TableCell>
-                        <TableCell>{reg.phone || "-"}</TableCell>
-                        <TableCell>
-                          {new Date(reg.registeredAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={registrationVariants[reg.status]}>
-                            {registrationLabels[reg.status][lang]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            {reg.status !== "completed" && (
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() =>
-                                  handleStatusChange(reg.id, "completed")
-                                }
-                                title={
-                                  lang === "ar"
-                                    ? "تحديد كمكتمل"
-                                    : "Mark completed"
-                                }
-                              >
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                              </Button>
-                            )}
-                            {reg.status !== "attended" && (
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() =>
-                                  handleStatusChange(reg.id, "attended")
-                                }
-                                title={
-                                  lang === "ar"
-                                    ? "تحديد كحاضر"
-                                    : "Mark attended"
-                                }
-                              >
-                                <CheckCircle className="h-4 w-4 text-blue-600" />
-                              </Button>
-                            )}
-                            {reg.status !== "cancelled" && (
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() =>
-                                  handleStatusChange(reg.id, "cancelled")
-                                }
-                                title={
-                                  lang === "ar"
-                                    ? "إلغاء التسجيل"
-                                    : "Cancel registration"
-                                }
-                              >
-                                <XCircle className="h-4 w-4 text-destructive" />
-                              </Button>
-                            )}
-                          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {registrations.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="py-8 text-center">
+                          {lang === "ar"
+                            ? "لا توجد تسجيلات بعد"
+                            : "No enrollments yet"}
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      registrations.map((reg) => (
+                        <TableRow key={reg.id}>
+                          <TableCell>{reg.userName}</TableCell>
+                          <TableCell>{reg.email || "—"}</TableCell>
+                          <TableCell>{reg.contact || "—"}</TableCell>
+                          <TableCell>
+                            <Badge variant={registrationVariants[reg.status]}>
+                              {registrationLabels[reg.status][lang]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              {reg.status !== "attended" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  onClick={() =>
+                                    handleStatusChange(reg.id, "attended")
+                                  }
+                                  title={
+                                    lang === "ar"
+                                      ? "تحديد كحاضر"
+                                      : "Mark attended"
+                                  }
+                                >
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                </Button>
+                              )}
+                              {reg.status !== "absent" && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  onClick={() =>
+                                    handleStatusChange(reg.id, "absent")
+                                  }
+                                  title={
+                                    lang === "ar"
+                                      ? "تحديد كغائب"
+                                      : "Mark absent"
+                                  }
+                                >
+                                  <XCircle className="h-4 w-4 text-destructive" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -678,14 +717,14 @@ export default function AdminTrainingProgramDetailPage({
               <p className="mb-4 text-sm text-muted-foreground">
                 {lang === "ar"
                   ? "استخدم علامة الصح بجانب التسجيل لتحديد الحضور، أو العلامة الحمراء للغياب."
-                  : "Use the checkmark next to a registration to mark attendance, or the cross for absent."}
+                  : "Use the checkmark next to an enrollment to mark attendance, or the cross for absent."}
               </p>
               {activeRegistrations.length === 0 ? (
                 <div className="py-12 text-center">
                   <p className="text-muted-foreground">
                     {lang === "ar"
                       ? "لا توجد تسجيلات نشطة"
-                      : "No active registrations"}
+                      : "No active enrollments"}
                   </p>
                 </div>
               ) : (
@@ -755,22 +794,25 @@ export default function AdminTrainingProgramDetailPage({
                     </TableHeader>
                     <TableBody>
                       {activeRegistrations.map((reg) => {
-                        const isAttended =
-                          reg.status === "attended" || reg.status === "completed"
+                        const isAttended = reg.status === "attended"
                         return (
                           <TableRow key={reg.id}>
                             <TableCell>{reg.userName}</TableCell>
-                            <TableCell>{reg.email}</TableCell>
+                            <TableCell>{reg.email || "—"}</TableCell>
                             <TableCell>
                               {isAttended ? (
                                 <span className="inline-flex items-center gap-1 text-sm text-green-600">
                                   <CheckCircle className="h-4 w-4" />
                                   {lang === "ar" ? "حاضر" : "Present"}
                                 </span>
-                              ) : (
+                              ) : reg.status === "absent" ? (
                                 <span className="inline-flex items-center gap-1 text-sm text-red-600">
                                   <XCircle className="h-4 w-4" />
                                   {lang === "ar" ? "غائب" : "Absent"}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                                  {lang === "ar" ? "مسجل" : "Enrolled"}
                                 </span>
                               )}
                             </TableCell>
@@ -781,7 +823,7 @@ export default function AdminTrainingProgramDetailPage({
                                 onClick={() =>
                                   handleStatusChange(
                                     reg.id,
-                                    isAttended ? "registered" : "completed"
+                                    isAttended ? "enrolled" : "attended"
                                   )
                                 }
                               >
@@ -866,7 +908,7 @@ export default function AdminTrainingProgramDetailPage({
                           ) : (
                             registrationsWithoutCert.map((reg) => (
                               <SelectItem key={reg.id} value={reg.id}>
-                                {reg.userName} ({reg.email})
+                                {reg.name}
                               </SelectItem>
                             ))
                           )}

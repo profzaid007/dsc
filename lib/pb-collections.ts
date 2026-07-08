@@ -112,6 +112,21 @@ export const casesCollection = {
       filter: `user = "${userId}"`,
     })
   },
+
+  async getByProgram(programId: string): Promise<Profile[]> {
+    return pb.collection("cases").getFullList({
+      filter: `program_id = "${programId}"`,
+    })
+  },
+
+  async getByProgramAndServiceType(
+    programId: string,
+    serviceType: string
+  ): Promise<Profile[]> {
+    return pb.collection("cases").getFullList({
+      filter: `program_id = "${programId}" && service_type = "${serviceType}"`,
+    })
+  },
 }
 
 export const caseToolsCollection = {

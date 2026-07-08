@@ -6,9 +6,15 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLang } from "@/lib/lang-context"
 import { trainingProgramsCollection } from "@/lib/pb-training"
+import { casesCollection } from "@/lib/pb-collections"
+import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+import { useAuth } from "@/hooks/useAuth"
 import type { TrainingProgram } from "@/types/training"
 import {
   ArrowLeft,
@@ -19,6 +25,8 @@ import {
   ExternalLink,
   User,
   BookOpen,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react"
 
 const typeLabels = {
@@ -35,6 +43,30 @@ const statusLabels = {
   cancelled: { en: "Cancelled", ar: "ملغي" },
 }
 
+interface EnrollmentFormState {
+  name: string
+  email: string
+  password: string
+  confirmPassword: string
+  contactNumber: string
+  dateOfBirth: string
+  gender: "male" | "female"
+  grade: string
+  notes: string
+}
+
+const initialEnrollmentForm: EnrollmentFormState = {
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  contactNumber: "",
+  dateOfBirth: "",
+  gender: "male",
+  grade: "",
+  notes: "",
+}
+
 export default function TrainingProgrammeDetailPage({
   params,
 }: {
@@ -43,8 +75,18 @@ export default function TrainingProgrammeDetailPage({
   const { id } = use(params)
   const router = useRouter()
   const { lang } = useLang()
+  const { currentUser } = useAuth()
   const [program, setProgram] = useState<TrainingProgram | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const [enrolledCaseId, setEnrolledCaseId] = useState<string | null>(null)
+  const [enrollError, setEnrollError] = useState<string>("")
+  const [enrollSuccess, setEnrollSuccess] = useState<string>("")
+  const [isEnrolleeChecking, setIsEnrolleeChecking] = useState(true)
+  const [isEnrolling, setIsEnrolling] = useState(false)
+  const [enrollForm, setEnrollForm] = useState<EnrollmentFormState>(
+    initialEnrollmentForm
+  )
 
   useEffect(() => {
     const load = async () => {
@@ -60,6 +102,30 @@ export default function TrainingProgrammeDetailPage({
     load()
   }, [id])
 
+  useEffect(() => {
+    if (!currentUser) {
+      setIsEnrolleeChecking(false)
+      return
+    }
+    const checkExisting = async () => {
+      try {
+        const mine = await casesCollection.getByUser(currentUser.id)
+        const existing = mine.find(
+          (c) =>
+            c.program_id === id && c.service_type === "Attending Training"
+        )
+        if (existing) {
+          setEnrolledCaseId(existing.id)
+        }
+      } catch (err) {
+        console.error("Failed to check existing enrollment:", err)
+      } finally {
+        setIsEnrolleeChecking(false)
+      }
+    }
+    checkExisting()
+  }, [currentUser, id])
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
@@ -67,6 +133,116 @@ export default function TrainingProgrammeDetailPage({
       month: "long",
       day: "numeric",
     })
+  }
+
+  const validateEnrollmentForm = (): string | null => {
+    if (!enrollForm.name.trim()) {
+      return lang === "ar" ? "الاسم مطلوب" : "Name is required"
+    }
+    if (!enrollForm.email.trim()) {
+      return lang === "ar" ? "البريد الإلكتروني مطلوب" : "Email is required"
+    }
+    if (!enrollForm.password) {
+      return lang === "ar" ? "كلمة المرور مطلوبة" : "Password is required"
+    }
+    if (enrollForm.password !== enrollForm.confirmPassword) {
+      return lang === "ar"
+        ? "كلمات المرور غير متطابقة"
+        : "Passwords do not match"
+    }
+    if (enrollForm.password.length < 8) {
+      return lang === "ar"
+        ? "كلمة المرور قصيرة جداً (8 أحرف على الأقل)"
+        : "Password is too short (min 8 characters)"
+    }
+    return null
+  }
+
+  const handleEnrollAsGuest = async () => {
+    setEnrollError("")
+    setEnrollSuccess("")
+
+    const validationError = validateEnrollmentForm()
+    if (validationError) {
+      setEnrollError(validationError)
+      return
+    }
+
+    if (!program) return
+
+    setIsEnrolling(true)
+    try {
+      const user = await pb.collection("users").create({
+        email: enrollForm.email.toLowerCase(),
+        password: enrollForm.password,
+        passwordConfirm: enrollForm.password,
+        name: enrollForm.name,
+        contact_number: enrollForm.contactNumber,
+        role: "individual",
+      })
+
+      await casesCollection.create({
+        user: user.id,
+        name: program.title[lang],
+        service_type: "Attending Training",
+        portal_type: "training",
+        training_link: program.meetingLink || "",
+        program_id: id,
+        program_status: "enrolled",
+        user_details: {
+          name: enrollForm.name,
+          email: enrollForm.email,
+          contact: enrollForm.contactNumber,
+        },
+      })
+
+      await authWithPassword(enrollForm.email.toLowerCase(), enrollForm.password)
+
+      setEnrollSuccess(
+        lang === "ar"
+          ? "تم التسجيل بنجاح! مرحباً بك."
+          : "Enrollment successful! Welcome."
+      )
+      setEnrollForm(initialEnrollmentForm)
+    } catch (err) {
+      setEnrollError(handlePocketBaseError(err))
+    } finally {
+      setIsEnrolling(false)
+    }
+  }
+
+  const handleEnrollAsUser = async () => {
+    if (!currentUser) return
+    if (!program) return
+    setEnrollError("")
+    setEnrollSuccess("")
+    setIsEnrolling(true)
+    try {
+      const created = await casesCollection.create({
+        user: currentUser.id,
+        name: program.title[lang],
+        service_type: "Attending Training",
+        portal_type: "training",
+        training_link: program.meetingLink || "",
+        program_id: id,
+        program_status: "enrolled",
+        user_details: {
+          name: currentUser.name,
+          email: currentUser.email,
+          contact: currentUser.contact_number,
+        },
+      })
+      setEnrolledCaseId(created.id)
+      setEnrollSuccess(
+        lang === "ar"
+          ? "تم التسجيل بنجاح!"
+          : "You have been enrolled successfully!"
+      )
+    } catch (err) {
+      setEnrollError(handlePocketBaseError(err))
+    } finally {
+      setIsEnrolling(false)
+    }
   }
 
   if (isLoading) {
@@ -100,6 +276,239 @@ export default function TrainingProgrammeDetailPage({
   }
 
   const isPast = new Date(program.schedule.endDate) < new Date()
+  const isFull = !!(
+    program.maxParticipants &&
+    program.currentRegistrations >= program.maxParticipants
+  )
+
+  const renderEnrollmentCard = () => {
+    if (isPast) {
+      return (
+        <Card>
+          <CardContent className="pt-6">
+            <Badge variant="secondary" className="w-full justify-center py-2">
+              {lang === "ar"
+                ? "انتهى هذا البرنامج"
+                : "This programme has ended"}
+            </Badge>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (isFull) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {lang === "ar" ? "التسجيل" : "Enrollment"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {lang === "ar"
+                  ? "عذراً، هذا البرنامج ممتلئ."
+                  : "Sorry, this programme is full."}
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (isEnrolleeChecking) {
+      return (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">
+              {lang === "ar" ? "جاري التحقق..." : "Checking..."}
+            </p>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (enrolledCaseId || enrollSuccess) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {lang === "ar" ? "حالة التسجيل" : "Enrollment Status"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                {enrollSuccess ||
+                  (lang === "ar"
+                    ? "أنت مسجل في هذا البرنامج."
+                    : "You are enrolled in this programme.")}
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (currentUser) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {lang === "ar" ? "التسجيل في البرنامج" : "Enroll in this programme"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {lang === "ar"
+                ? `مرحباً ${currentUser.name}، انقر أدناه للتسجيل في هذا البرنامج.`
+                : `Hi ${currentUser.name}, click below to enroll in this programme.`}
+            </p>
+            {enrollError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{enrollError}</AlertDescription>
+              </Alert>
+            )}
+            <Button
+              className="w-full"
+              disabled={isEnrolling}
+              onClick={handleEnrollAsUser}
+            >
+              {isEnrolling
+                ? lang === "ar"
+                  ? "جاري التسجيل..."
+                  : "Enrolling..."
+                : lang === "ar"
+                  ? "تأكيد التسجيل"
+                  : "Confirm Enrollment"}
+            </Button>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {lang === "ar"
+              ? "التسجيل في البرنامج"
+              : "Enroll in this programme"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {lang === "ar"
+              ? "سيتم إنشاء حساب لك تلقائياً عند التسجيل."
+              : "An account will be created for you upon enrollment."}
+          </p>
+          {enrollError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{enrollError}</AlertDescription>
+            </Alert>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="enroll-name">
+              {lang === "ar" ? "الاسم الكامل *" : "Full Name *"}
+            </Label>
+            <Input
+              id="enroll-name"
+              value={enrollForm.name}
+              onChange={(e) =>
+                setEnrollForm({ ...enrollForm, name: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="enroll-email">
+              {lang === "ar" ? "البريد الإلكتروني *" : "Email *"}
+            </Label>
+            <Input
+              id="enroll-email"
+              type="email"
+              value={enrollForm.email}
+              onChange={(e) =>
+                setEnrollForm({ ...enrollForm, email: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="enroll-contact">
+              {lang === "ar" ? "رقم الهاتف" : "Phone Number"}
+            </Label>
+            <Input
+              id="enroll-contact"
+              type="tel"
+              value={enrollForm.contactNumber}
+              onChange={(e) =>
+                setEnrollForm({
+                  ...enrollForm,
+                  contactNumber: e.target.value,
+                })
+              }
+              placeholder={
+                lang === "ar" ? "أدخل رقم هاتفك" : "Enter your phone number"
+              }
+            />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="enroll-password">
+                {lang === "ar" ? "كلمة المرور *" : "Password *"}
+              </Label>
+              <Input
+                id="enroll-password"
+                type="password"
+                value={enrollForm.password}
+                onChange={(e) =>
+                  setEnrollForm({ ...enrollForm, password: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="enroll-confirm">
+                {lang === "ar" ? "تأكيد كلمة المرور *" : "Confirm Password *"}
+              </Label>
+              <Input
+                id="enroll-confirm"
+                type="password"
+                value={enrollForm.confirmPassword}
+                onChange={(e) =>
+                  setEnrollForm({
+                    ...enrollForm,
+                    confirmPassword: e.target.value,
+                  })
+                }
+                required
+              />
+            </div>
+          </div>
+
+          <Button
+            className="w-full"
+            disabled={isEnrolling}
+            onClick={handleEnrollAsGuest}
+          >
+            {isEnrolling
+              ? lang === "ar"
+                ? "جاري التسجيل..."
+                : "Enrolling..."
+              : lang === "ar"
+                ? "إنشاء حساب والتسجيل"
+                : "Create Account & Enroll"}
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <div className="container mx-auto space-y-6 px-4 py-8">
@@ -352,15 +761,7 @@ export default function TrainingProgrammeDetailPage({
             </CardContent>
           </Card>
 
-          {isPast && (
-            <Card>
-              <CardContent className="pt-6">
-                <Badge variant="secondary" className="w-full justify-center py-2">
-                  {lang === "ar" ? "انتهى هذا البرنامج" : "This programme has ended"}
-                </Badge>
-              </CardContent>
-            </Card>
-          )}
+          {renderEnrollmentCard()}
         </div>
       </div>
     </div>

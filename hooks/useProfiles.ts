@@ -14,7 +14,11 @@ export function useProfiles() {
   const fetchProfiles = useCallback(async () => {
     try {
       let data: Profile[]
-      if (currentUser && currentUser.role === "user") {
+      if (
+        currentUser &&
+        (currentUser.role === "user" ||
+          currentUser.role === "individual")
+      ) {
         data = await casesCollection.getByUser(currentUser.id)
       } else {
         data = await casesCollection.getAll()
