@@ -155,7 +155,7 @@ export default function AdminTrainingProgramDetailPage({
 
   const fetchEnrollments = async () => {
     try {
-      const data = await casesCollection.getByProgramAndServiceType(
+      const data = await casesCollection.getByProgramAndPortalType(
         id,
         "Attending Training"
       )
