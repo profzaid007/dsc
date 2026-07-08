@@ -114,7 +114,7 @@ export function OrganizationRegistrationForm() {
 
     try {
       const user = await pb.collection("users").create({
-        email,
+        email: email.toLowerCase(),
         password,
         passwordConfirm: password,
         name,
@@ -141,7 +141,7 @@ export function OrganizationRegistrationForm() {
         },
       })
 
-      await authWithPassword(email, password)
+      await authWithPassword(email.toLowerCase(), password)
       router.push("/dashboard")
     } catch (err) {
       setError(handlePocketBaseError(err))

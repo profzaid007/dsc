@@ -1,5 +1,4 @@
 export { ProgramCard } from "./ProgramCard"
-export { SessionCard } from "./SessionCard"
 export { RegistrationForm } from "./RegistrationForm"
 export { CertificateCard } from "./CertificateCard"
 export { TrainingNav } from "./TrainingNav"

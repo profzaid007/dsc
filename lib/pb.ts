@@ -32,7 +32,7 @@ export function isSuperAdmin(): boolean {
 export async function authWithPassword(email: string, password: string) {
   const authData = await pb
     .collection("users")
-    .authWithPassword(email, password)
+    .authWithPassword(email.toLowerCase(), password)
   return authData
 }
 

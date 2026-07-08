@@ -8,7 +8,6 @@ import { useTraining } from "@/hooks/useTraining"
 
 const links = [
   { href: "/dashboard/admin/training/programs", label: { en: "Programs", ar: "البرامج" } },
-  { href: "/dashboard/admin/training/awareness", label: { en: "Awareness Sessions", ar: "جلسات التوعية" } },
   { href: "/dashboard/admin/training/registration", label: { en: "Registrations", ar: "التسجيلات" } },
   { href: "/dashboard/admin/training/certificates", label: { en: "Certificates", ar: "الشهادات" } },
   { href: "/dashboard/admin/training/reports", label: { en: "Reports", ar: "التقارير" } },
@@ -17,7 +16,7 @@ const links = [
 
 export default function TrainingOverviewPage() {
   const { lang } = useLang()
-  const { programs, sessions, registrations, certificates, isLoading } = useTraining()
+  const { programs, registrations, certificates, isLoading } = useTraining()
 
   const activePrograms = programs.filter((p) => p.status !== "cancelled").length
   const upcomingPrograms = programs.filter(
@@ -37,8 +36,8 @@ export default function TrainingOverviewPage() {
         </h1>
         <p className="text-muted-foreground">
           {lang === "en"
-            ? "Manage programs, awareness sessions, certificates, and registrations"
-            : "إدارة البرامج وجلسات التوعية والشهادات والتسجيلات"}
+            ? "Manage programs, certificates, and registrations"
+            : "إدارة البرامج والشهادات والتسجيلات"}
         </p>
       </div>
 
@@ -49,16 +48,6 @@ export default function TrainingOverviewPage() {
               <div className="text-4xl font-bold text-primary">{activePrograms}</div>
               <div className="text-sm text-muted-foreground">
                 {lang === "en" ? "Active Programs" : "البرامج النشطة"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">{sessions.length}</div>
-              <div className="text-sm text-muted-foreground">
-                {lang === "en" ? "Awareness Sessions" : "جلسات التوعية"}
               </div>
             </div>
           </CardContent>

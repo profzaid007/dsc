@@ -128,6 +128,7 @@ export function useLectures() {
     const newRegistration = await lectureRegistrationsCollection.create({
       lectureId,
       ...userData,
+      email: userData.email.toLowerCase(),
       registeredAt: new Date().toISOString(),
       status: "registered",
     })

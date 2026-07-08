@@ -43,7 +43,6 @@ export default function RegistrationPage() {
   const {
     registrations,
     programs,
-    sessions,
     isLoading,
     updateRegistrationStatus,
     deleteRegistration,
@@ -57,16 +56,11 @@ export default function RegistrationPage() {
       const p = programs.find((pr) => pr.id === reg.programId)
       return p ? p.title[lang] : reg.programId
     }
-    if (reg.awarenessId) {
-      const s = sessions.find((se) => se.id === reg.awarenessId)
-      return s ? s.title[lang] : reg.awarenessId
-    }
     return "—"
   }
 
   const getRegType = (reg: TrainingRegistration) => {
     if (reg.programId) return "Program"
-    if (reg.awarenessId) return "Awareness"
     return "—"
   }
 

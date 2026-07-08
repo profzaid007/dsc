@@ -15,7 +15,7 @@ import { useTraining } from "@/hooks/useTraining"
 
 export default function ReportsPage() {
   const { lang } = useLang()
-  const { programs, sessions, registrations, certificates, isLoading } = useTraining()
+  const { programs, registrations, certificates, isLoading } = useTraining()
 
   const totalRegistrations = registrations.length
   const totalCertificates = certificates.length
@@ -23,18 +23,6 @@ export default function ReportsPage() {
   const getProgramStats = (programId: string) => {
     const regs = registrations.filter(
       (r) => r.programId === programId && r.status !== "cancelled"
-    )
-    const total = regs.length
-    const completed = regs.filter(
-      (r) => r.status === "completed" || r.status === "attended"
-    ).length
-    const rate = total > 0 ? Math.round((completed / total) * 100) : 0
-    return { total, completed, rate }
-  }
-
-  const getSessionStats = (sessionId: string) => {
-    const regs = registrations.filter(
-      (r) => r.awarenessId === sessionId && r.status !== "cancelled"
     )
     const total = regs.length
     const completed = regs.filter(
@@ -54,23 +42,13 @@ export default function ReportsPage() {
         </h1>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-4xl font-bold text-primary">{programs.length}</div>
               <div className="text-sm text-muted-foreground">
                 {lang === "en" ? "Programs" : "البرامج"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">{sessions.length}</div>
-              <div className="text-sm text-muted-foreground">
-                {lang === "en" ? "Awareness Sessions" : "جلسات التوعية"}
               </div>
             </div>
           </CardContent>
@@ -126,52 +104,6 @@ export default function ReportsPage() {
                 return (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.title[lang]}</TableCell>
-                    <TableCell>{stats.total}</TableCell>
-                    <TableCell>{stats.completed}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={stats.rate >= 80 ? "default" : stats.rate >= 50 ? "secondary" : "destructive"}
-                      >
-                        {stats.rate}%
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {lang === "en" ? "Awareness Sessions Performance" : "أداء جلسات التوعية"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{lang === "en" ? "Session" : "الجلسة"}</TableHead>
-                <TableHead>{lang === "en" ? "Registrations" : "التسجيلات"}</TableHead>
-                <TableHead>{lang === "en" ? "Completed" : "مكتمل"}</TableHead>
-                <TableHead>{lang === "en" ? "Completion Rate" : "نسبة الإكمال"}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sessions.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    {lang === "en" ? "No sessions" : "لا توجد جلسات"}
-                  </TableCell>
-                </TableRow>
-              )}
-              {sessions.map((s) => {
-                const stats = getSessionStats(s.id)
-                return (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium">{s.title[lang]}</TableCell>
                     <TableCell>{stats.total}</TableCell>
                     <TableCell>{stats.completed}</TableCell>
                     <TableCell>

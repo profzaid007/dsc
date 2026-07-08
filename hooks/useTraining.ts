@@ -3,26 +3,21 @@
 import { useState, useEffect, useCallback } from "react"
 import type {
   TrainingProgram,
-  AwarenessSession,
   TrainingRegistration,
   TrainingCertificate,
   CreateProgramInput,
   UpdateProgramInput,
-  CreateSessionInput,
-  UpdateSessionInput,
   CreateCertificateInput,
   UpdateCertificateInput,
 } from "@/types/training"
 import {
   trainingProgramsCollection,
-  trainingSessionsCollection,
   trainingRegistrationsCollection,
   trainingCertificatesCollection,
 } from "@/lib/pb-training"
 
 export function useTraining() {
   const [programs, setPrograms] = useState<TrainingProgram[]>([])
-  const [sessions, setSessions] = useState<AwarenessSession[]>([])
   const [registrations, setRegistrations] = useState<TrainingRegistration[]>([])
   const [certificates, setCertificates] = useState<TrainingCertificate[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -32,15 +27,13 @@ export function useTraining() {
     setIsLoading(true)
     setError(null)
     try {
-      const [programsData, sessionsData, registrationsData, certificatesData] =
+      const [programsData, registrationsData, certificatesData] =
         await Promise.all([
           trainingProgramsCollection.getAll(),
-          trainingSessionsCollection.getAll(),
           trainingRegistrationsCollection.getAll(),
           trainingCertificatesCollection.getAll(),
         ])
       setPrograms(programsData)
-      setSessions(sessionsData)
       setRegistrations(registrationsData)
       setCertificates(certificatesData)
     } catch (err) {
@@ -75,28 +68,6 @@ export function useTraining() {
 
   const getProgramById = (id: string) => {
     return programs.find((p) => p.id === id)
-  }
-
-  // Session CRUD
-  const addSession = async (data: CreateSessionInput) => {
-    const newSession = await trainingSessionsCollection.create(data)
-    setSessions((prev) => [...prev, newSession])
-    return newSession.id
-  }
-
-  const updateSession = async (id: string, data: UpdateSessionInput) => {
-    const updated = await trainingSessionsCollection.update(id, data)
-    setSessions((prev) => prev.map((s) => (s.id === id ? updated : s)))
-  }
-
-  const deleteSession = async (id: string) => {
-    await trainingSessionsCollection.delete(id)
-    setSessions((prev) => prev.filter((s) => s.id !== id))
-    setRegistrations((prev) => prev.filter((r) => r.awarenessId !== id))
-  }
-
-  const getSessionById = (id: string) => {
-    return sessions.find((s) => s.id === id)
   }
 
   // Filter: Programs
@@ -139,39 +110,6 @@ export function useTraining() {
       )
   }, [programs])
 
-  // Filter: Sessions
-  const getPublishedSessions = useCallback(() => {
-    return sessions
-      .filter((s) => s.status === "published")
-      .sort(
-        (a, b) =>
-          new Date(a.schedule.date).getTime() -
-          new Date(b.schedule.date).getTime()
-      )
-  }, [sessions])
-
-  const getUpcomingSessions = useCallback(() => {
-    const now = new Date().toISOString().split("T")[0]
-    return sessions
-      .filter((s) => s.schedule.date > now && s.status === "published")
-      .sort(
-        (a, b) =>
-          new Date(a.schedule.date).getTime() -
-          new Date(b.schedule.date).getTime()
-      )
-  }, [sessions])
-
-  const getPastSessions = useCallback(() => {
-    const now = new Date().toISOString().split("T")[0]
-    return sessions
-      .filter((s) => s.schedule.date <= now || s.status === "completed")
-      .sort(
-        (a, b) =>
-          new Date(b.schedule.date).getTime() -
-          new Date(a.schedule.date).getTime()
-      )
-  }, [sessions])
-
   // Registration
   const registerForProgram = async (
     programId: string,
@@ -185,6 +123,7 @@ export function useTraining() {
     const newRegistration = await trainingRegistrationsCollection.create({
       programId,
       ...userData,
+      email: userData.email.toLowerCase(),
       registeredAt: new Date().toISOString(),
       status: "registered",
     })
@@ -195,33 +134,6 @@ export function useTraining() {
         p.id === programId
           ? { ...p, currentRegistrations: p.currentRegistrations + 1 }
           : p
-      )
-    )
-    return newRegistration.id
-  }
-
-  const registerForSession = async (
-    awarenessId: string,
-    userData: {
-      userId: string
-      userName: string
-      email: string
-      phone?: string
-    }
-  ) => {
-    const newRegistration = await trainingRegistrationsCollection.create({
-      awarenessId,
-      ...userData,
-      registeredAt: new Date().toISOString(),
-      status: "registered",
-    })
-    setRegistrations((prev) => [...prev, newRegistration])
-    await trainingSessionsCollection.incrementRegistrations(awarenessId, 1)
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === awarenessId
-          ? { ...s, currentRegistrations: s.currentRegistrations + 1 }
-          : s
       )
     )
     return newRegistration.id
@@ -244,18 +156,6 @@ export function useTraining() {
                 currentRegistrations: Math.max(0, p.currentRegistrations - 1),
               }
             : p
-        )
-      )
-    }
-    if (registration.awarenessId) {
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === registration.awarenessId
-            ? {
-                ...s,
-                currentRegistrations: Math.max(0, s.currentRegistrations - 1),
-              }
-            : s
         )
       )
     }
@@ -294,18 +194,6 @@ export function useTraining() {
         )
       )
     }
-    if (registration.awarenessId && registration.status !== "cancelled") {
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === registration.awarenessId
-            ? {
-                ...s,
-                currentRegistrations: Math.max(0, s.currentRegistrations - 1),
-              }
-            : s
-        )
-      )
-    }
 
     setRegistrations((prev) => prev.filter((r) => r.id !== registrationId))
   }
@@ -319,21 +207,8 @@ export function useTraining() {
     )
   }
 
-  const getUserSessionRegistration = (awarenessId: string, userId: string) => {
-    return registrations.find(
-      (r) =>
-        r.awarenessId === awarenessId &&
-        r.userId === userId &&
-        r.status !== "cancelled"
-    )
-  }
-
   const getRegistrationsByProgram = (programId: string) => {
     return registrations.filter((r) => r.programId === programId)
-  }
-
-  const getRegistrationsBySession = (awarenessId: string) => {
-    return registrations.filter((r) => r.awarenessId === awarenessId)
   }
 
   const getUserRegistrations = (userId: string) => {
@@ -396,37 +271,11 @@ export function useTraining() {
     }
   }
 
-  const getSessionStats = (awarenessId: string) => {
-    const sessionRegs = registrations.filter(
-      (r) => r.awarenessId === awarenessId && r.status !== "cancelled"
-    )
-    const totalRegistered = sessionRegs.length
-    const totalCompleted = sessionRegs.filter(
-      (r) => r.status === "completed" || r.status === "attended"
-    ).length
-    const attendanceRate =
-      totalRegistered > 0
-        ? Math.round((totalCompleted / totalRegistered) * 100)
-        : 0
-
-    return {
-      totalRegistered,
-      totalCompleted,
-      attendanceRate,
-    }
-  }
-
   // Helpers
   const isProgramFull = (programId: string) => {
     const program = getProgramById(programId)
     if (!program || !program.maxParticipants) return false
     return program.currentRegistrations >= program.maxParticipants
-  }
-
-  const isSessionFull = (awarenessId: string) => {
-    const session = getSessionById(awarenessId)
-    if (!session || !session.maxParticipants) return false
-    return session.currentRegistrations >= session.maxParticipants
   }
 
   const isProgramPast = (programId: string) => {
@@ -435,15 +284,8 @@ export function useTraining() {
     return new Date(program.schedule.endDate) < new Date()
   }
 
-  const isSessionPast = (awarenessId: string) => {
-    const session = getSessionById(awarenessId)
-    if (!session) return false
-    return new Date(session.schedule.date) < new Date()
-  }
-
   return {
     programs,
-    sessions,
     registrations,
     certificates,
     isLoading,
@@ -455,22 +297,12 @@ export function useTraining() {
     getPublishedPrograms,
     getUpcomingPrograms,
     getPastPrograms,
-    addSession,
-    updateSession,
-    deleteSession,
-    getSessionById,
-    getPublishedSessions,
-    getUpcomingSessions,
-    getPastSessions,
     registerForProgram,
-    registerForSession,
     cancelRegistration,
     updateRegistrationStatus,
     deleteRegistration,
     getUserProgramRegistration,
-    getUserSessionRegistration,
     getRegistrationsByProgram,
-    getRegistrationsBySession,
     getUserRegistrations,
     getUserCertificates,
     getCertificateById,
@@ -478,11 +310,8 @@ export function useTraining() {
     updateCertificate,
     deleteCertificate,
     getProgramStats,
-    getSessionStats,
     isProgramFull,
-    isSessionFull,
     isProgramPast,
-    isSessionPast,
     refresh: loadData,
   }
 }

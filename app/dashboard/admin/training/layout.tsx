@@ -4,7 +4,6 @@ import { SubSidebar } from "@/components/layout/SubSidebar"
 import {
   Home,
   BookOpen,
-  Lightbulb,
   Award,
   ClipboardList,
   FileBarChart,
@@ -14,7 +13,6 @@ import {
 const trainingNavItems = [
   { name: "Overview", href: "/dashboard/admin/training", icon: Home },
   { name: "Programs", href: "/dashboard/admin/training/programs", icon: BookOpen },
-  { name: "Awareness", href: "/dashboard/admin/training/awareness", icon: Lightbulb },
   { name: "Certificates", href: "/dashboard/admin/training/certificates", icon: Award },
   { name: "Registration", href: "/dashboard/admin/training/registration", icon: ClipboardList },
   { name: "Reports", href: "/dashboard/admin/training/reports", icon: FileBarChart },

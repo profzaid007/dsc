@@ -36,13 +36,6 @@ export interface ProgramSchedule {
   sessions: SessionSchedule[]
 }
 
-export interface AwarenessSchedule {
-  date: string
-  timeFrom: string
-  timeTo: string
-  location: string
-}
-
 export interface TrainingProgram {
   id: string
   title: BilingualString
@@ -66,33 +59,9 @@ export interface TrainingProgram {
   updated: string
 }
 
-export interface AwarenessSession {
-  id: string
-  title: BilingualString
-  category: BilingualString
-  targetAudience: BilingualString
-  speaker: TrainerInfo
-  coordinator: string
-  type: ProgramType
-  location: string
-  duration: number
-  schedule: AwarenessSchedule
-  notes?: string
-  maxParticipants?: number
-  currentRegistrations: number
-  thumbnail?: string
-  meetingLink?: string
-  recordingUrl?: string
-  isPublic: boolean
-  status: ProgramStatus
-  created: string
-  updated: string
-}
-
 export interface TrainingRegistration {
   id: string
   programId?: string
-  awarenessId?: string
   lectureId?: string
   userId: string
   userName: string
@@ -107,7 +76,6 @@ export interface TrainingCertificate {
   id: string
   userId: string
   programId?: string
-  awarenessId?: string
   userName: string
   programName: BilingualString
   issueDate: string
@@ -129,13 +97,6 @@ export type CreateProgramInput = Omit<
 > & { thumbnail?: string | File }
 
 export type UpdateProgramInput = Partial<CreateProgramInput>
-
-export type CreateSessionInput = Omit<
-  AwarenessSession,
-  "id" | "created" | "updated" | "currentRegistrations" | "thumbnail"
-> & { thumbnail?: string | File }
-
-export type UpdateSessionInput = Partial<CreateSessionInput>
 
 export type CreateRegistrationInput = Omit<
   TrainingRegistration,

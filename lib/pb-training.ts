@@ -1,23 +1,18 @@
 import pb from "./pb"
 import type {
   TrainingProgram,
-  AwarenessSession,
   TrainingRegistration,
   TrainingCertificate,
   CreateProgramInput,
   UpdateProgramInput,
-  CreateSessionInput,
-  UpdateSessionInput,
   CreateRegistrationInput,
   CreateCertificateInput,
   UpdateCertificateInput,
   TrainerInfo,
   ProgramSchedule,
-  AwarenessSchedule,
 } from "@/types/training"
 
 const PROGRAMS_COLLECTION = "programs"
-const AWARENESS_COLLECTION = "awareness"
 const REGISTRATIONS_COLLECTION = "event_registrations"
 const CERTIFICATES_COLLECTION = "event_certificates"
 
@@ -130,89 +125,6 @@ function buildProgramFormData(
 }
 
 // ---------------------------------------------------------------------------
-// Awareness transformers
-// ---------------------------------------------------------------------------
-
-export function sessionFromDB(record: Record<string, unknown>): AwarenessSession {
-  return {
-    id: record.id as string,
-    title: record.topic as AwarenessSession["title"],
-    category: record.category as AwarenessSession["category"],
-    targetAudience: record.target_audience as AwarenessSession["targetAudience"],
-    speaker: record.speaker as TrainerInfo,
-    coordinator: typeof record.coordinator === "string"
-      ? record.coordinator
-      : (record.coordinator as Record<string, string>)?.en || "",
-    type: record.type as AwarenessSession["type"],
-    location: typeof record.location === "string"
-      ? record.location
-      : (record.location as Record<string, string>)?.en || "",
-    duration: record.duration as number,
-    schedule: record.schedule as AwarenessSchedule,
-    notes: typeof record.notes === "string"
-      ? record.notes
-      : (record.notes as Record<string, string>)?.en || undefined,
-    maxParticipants: (record.max_participants as number) || undefined,
-    currentRegistrations: (record.current_registrations as number) || 0,
-    thumbnail: getThumbnailUrl(record),
-    meetingLink: (record.meeting_link as string) || undefined,
-    recordingUrl: (record.recording_url as string) || undefined,
-    isPublic: record.is_public === true,
-    status: record.status as AwarenessSession["status"],
-    created: record.created as string,
-    updated: record.updated as string,
-  }
-}
-
-function sessionToDB(
-  data: Partial<CreateSessionInput | UpdateSessionInput>
-): Record<string, unknown> {
-  const dbData: Record<string, unknown> = {}
-
-  if (data.title !== undefined) dbData.topic = data.title
-  if (data.category !== undefined) dbData.category = data.category
-  if (data.targetAudience !== undefined) dbData.target_audience = data.targetAudience
-  if (data.speaker !== undefined) dbData.speaker = data.speaker
-  if (data.coordinator !== undefined) dbData.coordinator = data.coordinator
-  if (data.type !== undefined) dbData.type = data.type
-  if (data.location !== undefined) dbData.location = data.location
-  if (data.duration !== undefined) dbData.duration = data.duration
-  if (data.schedule !== undefined) dbData.schedule = data.schedule
-  if (data.notes !== undefined) dbData.notes = data.notes
-  if (data.maxParticipants !== undefined)
-    dbData.max_participants = data.maxParticipants
-  if (data.meetingLink !== undefined) dbData.meeting_link = data.meetingLink
-  if (data.recordingUrl !== undefined) dbData.recording_url = data.recordingUrl
-  if (data.isPublic !== undefined) dbData.is_public = data.isPublic
-  if (data.status !== undefined) dbData.status = data.status
-
-  return dbData
-}
-
-function buildSessionFormData(
-  data: Partial<CreateSessionInput | UpdateSessionInput>,
-  file?: File
-): FormData {
-  const formData = new FormData()
-  const dbData = sessionToDB(data)
-
-  Object.entries(dbData).forEach(([key, value]) => {
-    if (value === undefined) return
-    if (typeof value === "string") {
-      formData.append(key, value)
-    } else {
-      formData.append(key, JSON.stringify(value))
-    }
-  })
-
-  if (file) {
-    formData.append("thumbnail", file)
-  }
-
-  return formData
-}
-
-// ---------------------------------------------------------------------------
 // Registrations transformers
 // ---------------------------------------------------------------------------
 
@@ -222,7 +134,6 @@ export function registrationFromDB(
   return {
     id: record.id as string,
     programId: (record.program_id as string) || undefined,
-    awarenessId: (record.awareness_id as string) || undefined,
     lectureId: (record.lecture_id as string) || undefined,
     userId: (record.user_id as string) || "",
     userName: (record.user_name as string) || "",
@@ -240,7 +151,6 @@ function registrationToDB(
   const dbData: Record<string, unknown> = {}
 
   if (data.programId !== undefined) dbData.program_id = data.programId
-  if (data.awarenessId !== undefined) dbData.awareness_id = data.awarenessId
   if (data.lectureId !== undefined) dbData.lecture_id = data.lectureId
   if (data.userId !== undefined) dbData.user_id = data.userId
   if (data.userName !== undefined) dbData.user_name = data.userName
@@ -264,7 +174,6 @@ export function certificateFromDB(
     id: record.id as string,
     userId: (record.user_id as string) || "",
     programId: (record.program_id as string) || undefined,
-    awarenessId: (record.awareness_id as string) || undefined,
     userName: (record.name as string) || "",
     programName: (record.program_name as TrainingCertificate["programName"]) || { en: "", ar: "" },
     issueDate: (record.issue_date as string) || "",
@@ -281,7 +190,6 @@ function certificateToDB(
 
   if (data.userId !== undefined) dbData.user_id = data.userId
   if (data.programId !== undefined) dbData.program_id = data.programId
-  if (data.awarenessId !== undefined) dbData.awareness_id = data.awarenessId
   if (data.userName !== undefined) dbData.name = data.userName
   if (data.programName !== undefined) dbData.program_name = data.programName
   if (data.issueDate !== undefined) dbData.issue_date = data.issueDate
@@ -369,66 +277,6 @@ export const trainingProgramsCollection = {
 }
 
 // ---------------------------------------------------------------------------
-// Awareness sessions collection
-// ---------------------------------------------------------------------------
-
-export const trainingSessionsCollection = {
-  async getAll(): Promise<AwarenessSession[]> {
-    const data = await pb.collection(AWARENESS_COLLECTION).getFullList({
-      sort: "-created",
-    })
-    return data.map((item) => sessionFromDB(item as unknown as Record<string, unknown>))
-  },
-
-  async getPublished(): Promise<AwarenessSession[]> {
-    const data = await pb.collection(AWARENESS_COLLECTION).getFullList({
-      filter: 'status = "published"',
-      sort: "schedule.date",
-    })
-    return data.map((item) => sessionFromDB(item as unknown as Record<string, unknown>))
-  },
-
-  async getById(id: string): Promise<AwarenessSession> {
-    const data = await pb.collection(AWARENESS_COLLECTION).getOne(id)
-    return sessionFromDB(data as unknown as Record<string, unknown>)
-  },
-
-  async create(data: CreateSessionInput, file?: File): Promise<AwarenessSession> {
-    const result = file
-      ? await pb
-          .collection(AWARENESS_COLLECTION)
-          .create(buildSessionFormData(data, file))
-      : await pb.collection(AWARENESS_COLLECTION).create(sessionToDB(data))
-    return sessionFromDB(result as unknown as Record<string, unknown>)
-  },
-
-  async update(
-    id: string,
-    data: UpdateSessionInput,
-    file?: File
-  ): Promise<AwarenessSession> {
-    const result = file
-      ? await pb
-          .collection(AWARENESS_COLLECTION)
-          .update(id, buildSessionFormData(data, file))
-      : await pb.collection(AWARENESS_COLLECTION).update(id, sessionToDB(data))
-    return sessionFromDB(result as unknown as Record<string, unknown>)
-  },
-
-  async delete(id: string): Promise<void> {
-    await pb.collection(AWARENESS_COLLECTION).delete(id)
-  },
-
-  async incrementRegistrations(id: string, delta: number): Promise<void> {
-    const existing = await pb.collection(AWARENESS_COLLECTION).getOne(id)
-    const current = (existing.current_registrations as number) || 0
-    await pb
-      .collection(AWARENESS_COLLECTION)
-      .update(id, { current_registrations: Math.max(0, current + delta) })
-  },
-}
-
-// ---------------------------------------------------------------------------
 // Registrations collection
 // ---------------------------------------------------------------------------
 
@@ -436,7 +284,7 @@ export const trainingRegistrationsCollection = {
   async getAll(): Promise<TrainingRegistration[]> {
     const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
       sort: "-created",
-      filter: `program_id != "" || awareness_id != ""`,
+      filter: `program_id != ""`,
     })
     return data.map((item) => registrationFromDB(item as unknown as Record<string, unknown>))
   },
@@ -444,14 +292,6 @@ export const trainingRegistrationsCollection = {
   async getByProgram(programId: string): Promise<TrainingRegistration[]> {
     const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
       filter: `program_id = "${programId}"`,
-      sort: "-created",
-    })
-    return data.map((item) => registrationFromDB(item as unknown as Record<string, unknown>))
-  },
-
-  async getByAwareness(sessionId: string): Promise<TrainingRegistration[]> {
-    const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
-      filter: `awareness_id = "${sessionId}"`,
       sort: "-created",
     })
     return data.map((item) => registrationFromDB(item as unknown as Record<string, unknown>))
@@ -471,18 +311,6 @@ export const trainingRegistrationsCollection = {
   ): Promise<TrainingRegistration | undefined> {
     const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
       filter: `program_id = "${programId}" && user_id = "${userId}" && status != "cancelled"`,
-    })
-    return data.length > 0
-      ? registrationFromDB(data[0] as unknown as Record<string, unknown>)
-      : undefined
-  },
-
-  async getUserAwarenessRegistration(
-    sessionId: string,
-    userId: string
-  ): Promise<TrainingRegistration | undefined> {
-    const data = await pb.collection(REGISTRATIONS_COLLECTION).getFullList({
-      filter: `awareness_id = "${sessionId}" && user_id = "${userId}" && status != "cancelled"`,
     })
     return data.length > 0
       ? registrationFromDB(data[0] as unknown as Record<string, unknown>)

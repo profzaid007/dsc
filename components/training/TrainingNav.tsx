@@ -4,18 +4,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useLang } from "@/lib/lang-context"
-import { GraduationCap, Presentation, Award } from "lucide-react"
+import { GraduationCap, Award } from "lucide-react"
 
 const navItems = [
   {
     name: { en: "Programs", ar: "البرامج" },
     href: "/dashboard/training",
     icon: GraduationCap,
-  },
-  {
-    name: { en: "Sessions", ar: "الجلسات" },
-    href: "/dashboard/training/sessions",
-    icon: Presentation,
   },
   {
     name: { en: "My Certificates", ar: "شهاداتي" },

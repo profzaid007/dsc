@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText, UserPlus, User, ChevronDown, LogOut } from "lucide-react"
@@ -25,9 +25,10 @@ const DEFAULT_SIDEBAR_ITEMS = [
 export function Navbar() {
   const pathname = usePathname()
   const { lang, toggleLang } = useLang()
-  const { isAuthenticated, isAdmin, logout } = useAuth()
+  const { isAuthenticated, isAdmin, currentUser, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
+  const accountRef = useRef<HTMLDivElement>(null)
 
   const isHome = pathname === "/"
   const isPortal = pathname.startsWith("/portal/")
@@ -41,6 +42,17 @@ export function Navbar() {
 
   const [consultOpen, setConsultOpen] = useState(false)
   const [accountPopoverOpen, setAccountPopoverOpen] = useState(false)
+
+  useEffect(() => {
+    if (!accountPopoverOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountPopoverOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [accountPopoverOpen])
 
   const headerText = portal ? t(portal.portalName, lang) : "DSC"
   const subheading = portal
@@ -129,31 +141,54 @@ export function Navbar() {
             )}
 
             {isAuthenticated && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="gap-2 flex"
-              >
-                <Link href="/dashboard">
-                  <LayoutDashboard className="h-4 w-4" />
-                  {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
-                </Link>
-              </Button>
-            )}
-
-            {isAdmin && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="gap-2 flex"
-              >
-                <Link href="/cms">
-                  <FileText className="h-4 w-4" />
-                  {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
-                </Link>
-              </Button>
+              <div className="relative hidden md:block" ref={accountRef}>
+                <button
+                  onClick={() => setAccountPopoverOpen(!accountPopoverOpen)}
+                  className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-accent transition-colors"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                  <span className="font-medium truncate max-w-[120px]">
+                    {currentUser?.name || ""}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+                {accountPopoverOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-48 rounded-md border bg-white shadow-lg z-50 py-1">
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setAccountPopoverOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
+                    </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/cms"
+                        onClick={() => setAccountPopoverOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      >
+                        <FileText className="h-4 w-4" />
+                        {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
+                      </Link>
+                    )}
+                    <div className="my-1 border-t" />
+                    <button
+                      onClick={() => {
+                        setAccountPopoverOpen(false)
+                        logout()
+                        router.push("/")
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
             {!isAuthenticated && (
@@ -169,21 +204,6 @@ export function Navbar() {
             )}
 
             <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
-
-            {isAuthenticated && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 flex"
-                onClick={() => { 
-                  logout() 
-                  router.push("/")
-                }}
-              >
-                <LogOut className="h-4 w-4" />
-                  {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
-              </Button>
-            )}
 
           </div>
         </div>
@@ -249,6 +269,16 @@ export function Navbar() {
                     {t({ en: "Register", ar: "التسجيل" }, lang)}
                   </Link>
                 </>
+              )}
+              {isAuthenticated && (
+                <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                  <span className="font-medium truncate">
+                    {currentUser?.name || ""}
+                  </span>
+                </div>
               )}
               {isAuthenticated && (
                 <Button

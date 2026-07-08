@@ -10,7 +10,6 @@ type CalendarEvent = {
   id: string
   title: string
   date: Date
-  type: "program" | "awareness"
   location?: string
   meetingLink?: string
   status: string
@@ -18,7 +17,7 @@ type CalendarEvent = {
 
 export default function SchedulingPage() {
   const { lang } = useLang()
-  const { programs, sessions, isLoading } = useTraining()
+  const { programs, isLoading } = useTraining()
 
   const events = useMemo(() => {
     const result: CalendarEvent[] = []
@@ -29,7 +28,6 @@ export default function SchedulingPage() {
           id: p.id,
           title: p.title[lang],
           date: new Date(p.schedule.startDate),
-          type: "program" as const,
           location: p.location,
           meetingLink: p.meetingLink,
           status: p.status,
@@ -37,23 +35,9 @@ export default function SchedulingPage() {
       }
     }
 
-    for (const s of sessions) {
-      if (s.schedule.date) {
-        result.push({
-          id: s.id,
-          title: s.title[lang],
-          date: new Date(s.schedule.date),
-          type: "awareness" as const,
-          location: s.schedule.location || s.location,
-          meetingLink: s.meetingLink,
-          status: s.status,
-        })
-      }
-    }
-
     result.sort((a, b) => a.date.getTime() - b.date.getTime())
     return result
-  }, [programs, sessions, lang])
+  }, [programs, lang])
 
   const groupedByMonth = useMemo(() => {
     const groups: Record<string, CalendarEvent[]> = {}
@@ -94,8 +78,8 @@ export default function SchedulingPage() {
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             {lang === "en"
-              ? "No scheduled programs or sessions yet"
-              : "لا توجد برامج أو جلسات مجدولة بعد"}
+              ? "No scheduled programs yet"
+              : "لا توجد برامج مجدولة بعد"}
           </CardContent>
         </Card>
       ) : (
@@ -109,7 +93,7 @@ export default function SchedulingPage() {
               </h2>
               <div className="space-y-2">
                 {monthEvents.map((event) => (
-                  <Card key={`${event.type}-${event.id}`}>
+                  <Card key={event.id}>
                     <CardContent className="flex items-center gap-4 p-4">
                       <div className="flex min-w-[60px] flex-col items-center rounded-md border p-2 text-center">
                         <span className="text-lg font-bold">
@@ -123,16 +107,8 @@ export default function SchedulingPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <Badge
-                            variant={event.type === "program" ? "default" : "secondary"}
-                          >
-                            {event.type === "program"
-                              ? lang === "en"
-                                ? "Program"
-                                : "برنامج"
-                              : lang === "en"
-                                ? "Awareness"
-                                : "توعوي"}
+                          <Badge variant="default">
+                            {lang === "en" ? "Program" : "برنامج"}
                           </Badge>
                           <span className="font-medium">{event.title}</span>
                         </div>
