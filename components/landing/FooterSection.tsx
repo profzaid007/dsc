@@ -33,7 +33,7 @@ export function FooterSection() {
                 <i className="fab fa-whatsapp" />
               </a>
               <a
-                href="https://www.facebook.com/share/p/1JMnR99g2Z/"
+                href="https://www.facebook.com/share/17cqyrgK7t/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/60 hover:text-[#00a4e4] transition-colors text-base"
