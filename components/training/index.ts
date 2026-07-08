@@ -1,4 +1,7 @@
 export { ProgramCard } from "./ProgramCard"
+export { ProgramForm } from "./ProgramForm"
+export { ProgramTable } from "./ProgramTable"
+export { ProgramReportCard } from "./ProgramReportCard"
 export { RegistrationForm } from "./RegistrationForm"
 export { CertificateCard } from "./CertificateCard"
 export { TrainingNav } from "./TrainingNav"

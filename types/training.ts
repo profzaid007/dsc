@@ -91,6 +91,12 @@ export interface TrainingStats {
   attendanceRate: number
 }
 
+export interface ProgramStats {
+  totalRegistered: number
+  totalCompleted: number
+  attendanceRate: number
+}
+
 export type CreateProgramInput = Omit<
   TrainingProgram,
   "id" | "created" | "updated" | "currentRegistrations" | "thumbnail"

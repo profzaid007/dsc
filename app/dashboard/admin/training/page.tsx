@@ -9,10 +9,8 @@ import { useTraining } from "@/hooks/useTraining"
 const links = [
   { href: "/dashboard/admin/training/programs", label: { en: "Programs", ar: "البرامج" } },
   { href: "/dashboard/admin/training/registration", label: { en: "Registrations", ar: "التسجيلات" } },
-  { href: "/dashboard/admin/training/certificates", label: { en: "Certificates", ar: "الشهادات" } },
   { href: "/dashboard/admin/training/reports", label: { en: "Reports", ar: "التقارير" } },
-  { href: "/dashboard/admin/training/scheduling", label: { en: "Calendar", ar: "التقويم" } },
-]
+] 
 
 export default function TrainingOverviewPage() {
   const { lang } = useLang()

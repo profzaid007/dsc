@@ -9,6 +9,7 @@ import type {
   UpdateProgramInput,
   CreateCertificateInput,
   UpdateCertificateInput,
+  ProgramStats,
 } from "@/types/training"
 import {
   trainingProgramsCollection,
@@ -251,7 +252,7 @@ export function useTraining() {
   }
 
   // Stats
-  const getProgramStats = (programId: string) => {
+  const getProgramStats = (programId: string): ProgramStats => {
     const programRegs = registrations.filter(
       (r) => r.programId === programId && r.status !== "cancelled"
     )
