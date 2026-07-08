@@ -112,7 +112,7 @@ export default function TrainingProgrammeDetailPage({
         const mine = await casesCollection.getByUser(currentUser.id)
         const existing = mine.find(
           (c) =>
-            c.program_id === id && c.service_type === "Attending Training"
+            c.program_id === id && c.portal_type === "Attending Training"
         )
         if (existing) {
           setEnrolledCaseId(existing.id)
@@ -184,8 +184,8 @@ export default function TrainingProgrammeDetailPage({
       await casesCollection.create({
         user: user.id,
         name: program.title[lang],
-        service_type: "Attending Training",
-        portal_type: "training",
+        service_type: program.title[lang],
+        portal_type: "Attending Training",
         training_link: program.meetingLink || "",
         program_id: id,
         program_status: "enrolled",
@@ -221,8 +221,8 @@ export default function TrainingProgrammeDetailPage({
       const created = await casesCollection.create({
         user: currentUser.id,
         name: program.title[lang],
-        service_type: "Attending Training",
-        portal_type: "training",
+        service_type: program.title[lang],
+        portal_type: "Attending Training",
         training_link: program.meetingLink || "",
         program_id: id,
         program_status: "enrolled",
