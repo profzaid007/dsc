@@ -26,8 +26,17 @@ export default function ProgrammesPage() {
           publicLecturesPublicCollection.getAll(),
           trainingProgramsCollection.getPublished(),
         ])
-        setLectures(lecturesData)
-        setPrograms(programsData)
+
+        const now = new Date()
+        const nowISO = now.toISOString()
+        const upcomingLectures = lecturesData.filter(
+          (l) => l.schedule.dateTime >= nowISO
+        )
+        const upcomingPrograms = programsData.filter(
+          (p) => new Date(p.schedule.startDate) >= now
+        )
+        setLectures(upcomingLectures)
+        setPrograms(upcomingPrograms)
       } catch (err) {
         console.error("Failed to load programmes:", err)
       } finally {
@@ -74,7 +83,7 @@ export default function ProgrammesPage() {
             onClick={() => router.push("/programmes/public_lectures")}
             className="gap-1"
           >
-            {lang === "ar" ? "عرض الكل" : "View all"}
+            {lang === "ar" ? "عرض الكل" : "View Past Lectures"}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -82,7 +91,7 @@ export default function ProgrammesPage() {
           <div className="py-8 text-center">
             <BookOpen className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
             <p className="text-muted-foreground">
-              {lang === "ar" ? "لا توجد محاضرات متاحة" : "No lectures available"}
+              {lang === "ar" ? "توجد محاضرات قادمة" : "No upcoming lectures available"}
             </p>
           </div>
         ) : (
@@ -112,7 +121,7 @@ export default function ProgrammesPage() {
             onClick={() => router.push("/programmes/training_programmes")}
             className="gap-1"
           >
-            {lang === "ar" ? "عرض الكل" : "View all"}
+            {lang === "ar" ? "عرض البرامج السابقة" : "View Past Programmes"}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -120,7 +129,7 @@ export default function ProgrammesPage() {
           <div className="py-8 text-center">
             <GraduationCap className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
             <p className="text-muted-foreground">
-              {lang === "ar" ? "لا توجد برامج تدريبية متاحة" : "No training programmes available"}
+              {lang === "ar" ? "لا توجد برامج تدريبية متاحة" : "No upcoming training programmes available"}
             </p>
           </div>
         ) : (
