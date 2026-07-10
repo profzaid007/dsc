@@ -95,13 +95,14 @@ export default function ProgrammesPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {lectures.slice(0, 3).map((lecture) => (
-              <LectureCard
-                key={lecture.id}
-                lecture={lecture}
-                onView={() => router.push(`/programmes/public_lectures/${lecture.id}`)}
-              />
+          <div className="scrollbar-thin flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory">
+            {lectures.map((lecture) => (
+              <div key={lecture.id} className="shrink-0 snap-start w-80">
+                <LectureCard
+                  lecture={lecture}
+                  onView={() => router.push(`/programmes/public_lectures/${lecture.id}`)}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -133,13 +134,14 @@ export default function ProgrammesPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {programs.slice(0, 3).map((program) => (
-              <ProgramCard
-                key={program.id}
-                program={program}
-                onView={() => router.push(`/programmes/training_programmes/${program.id}`)}
-              />
+          <div className="scrollbar-thin flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory">
+            {programs.map((program) => (
+              <div key={program.id} className="shrink-0 snap-start w-80">
+                <ProgramCard
+                  program={program}
+                  onView={() => router.push(`/programmes/training_programmes/${program.id}`)}
+                />
+              </div>
             ))}
           </div>
         )}
