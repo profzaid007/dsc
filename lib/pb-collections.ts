@@ -88,7 +88,9 @@ export const toolsCollection = {
 
 export const casesCollection = {
   async getAll(): Promise<Profile[]> {
-    return pb.collection("cases").getFullList()
+    return pb.collection("cases").getFullList({
+      expand: "user",
+    })
   },
 
   async getById(id: string): Promise<Profile> {

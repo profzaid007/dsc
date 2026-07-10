@@ -214,6 +214,7 @@ export default function AdminCasesPage() {
                   >
                     Grade <SortIcon field="grade" />
                   </TableHead>
+                  <TableHead>User</TableHead>
                   <TableHead>Assignments</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -241,6 +242,13 @@ export default function AdminCasesPage() {
                       </TableCell>
                       <TableCell className="capitalize">
                         {profile.grade}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {profile.expand?.user
+                            ? `${profile.expand.user.name} (${profile.expand.user.email})`
+                            : "—"}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap items-center gap-1">

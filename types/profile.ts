@@ -26,4 +26,7 @@ export interface Profile {
   user_details?: UserDetails
   created: string
   updated: string
+  expand?: {
+    user?: import("./user").User
+  }
 }
