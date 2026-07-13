@@ -25,10 +25,17 @@ import {
   User,
   Eye,
   Search,
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
 } from "lucide-react"
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 import { formatDate } from "@/lib/i18n"
 import type { Profile } from "@/types/profile"
@@ -52,22 +59,6 @@ export default function AdminCasesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<string>("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(prev => (prev === "asc" ? "desc" : "asc"))
-    } else {
-      setSortField(field)
-      setSortDirection("asc")
-    }
-  }
-
-  const SortIcon = ({ field }: { field: string }) => {
-    if (sortField !== field) return <ArrowUpDown className="ml-1 inline h-3 w-3" />
-    return sortDirection === "asc"
-      ? <ArrowUp className="ml-1 inline h-3 w-3" />
-      : <ArrowDown className="ml-1 inline h-3 w-3" />
-  }
 
   useEffect(() => {
     const counts: Record<string, AssignmentCount> = {}
@@ -146,7 +137,7 @@ export default function AdminCasesPage() {
         </Link>
       </div>
 
-      {/* Search */}
+      {/* Search & Sort */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -156,6 +147,39 @@ export default function AdminCasesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="whitespace-nowrap text-sm text-muted-foreground">
+            Sort by
+          </span>
+          <Select
+            value={sortField}
+            onValueChange={(value) => setSortField(value)}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Case Name</SelectItem>
+              <SelectItem value="date_of_birth">Date of Birth</SelectItem>
+              <SelectItem value="gender">Gender</SelectItem>
+              <SelectItem value="grade">Grade</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() =>
+              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
+            }
+          >
+            {sortDirection === "asc" ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : (
+              <ArrowDown className="h-3 w-3" />
+            )}
+          </Button>
         </div>
       </div>
 
@@ -190,30 +214,12 @@ export default function AdminCasesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead
-                    className="w-[250px] cursor-pointer select-none"
-                    onClick={() => handleSort("name")}
-                  >
-                    Case Name <SortIcon field="name" />
+                  <TableHead className="w-[250px]">
+                    Case Name
                   </TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none"
-                    onClick={() => handleSort("date_of_birth")}
-                  >
-                    Date of Birth <SortIcon field="date_of_birth" />
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none"
-                    onClick={() => handleSort("gender")}
-                  >
-                    Gender <SortIcon field="gender" />
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none"
-                    onClick={() => handleSort("grade")}
-                  >
-                    Grade <SortIcon field="grade" />
-                  </TableHead>
+                  <TableHead>Date of Birth</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Grade</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Assignments</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
