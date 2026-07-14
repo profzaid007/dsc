@@ -499,7 +499,7 @@ export default function NewProfilePage() {
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>
-              {t({ en: "Explain more", ar: "اشرح أكثر" }, lang)}
+              {t({ en: "Explain more", ar: "اشرح أكثر" }, lang)}  <span className="text-red-500 ms-1">*</span>
             </CardTitle>
             <CardDescription>
               {t(

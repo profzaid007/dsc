@@ -22,6 +22,11 @@ import {
 
 const adminNavigation = [
   {
+    name: { en: "Users", ar: "المستخدمون" },
+    href: "/dashboard/admin/users",
+    icon: Users,
+  },
+  {
     name: { en: "Tools", ar: "الأدوات" },
     href: "/dashboard/admin/tools",
     icon: Wrench,
