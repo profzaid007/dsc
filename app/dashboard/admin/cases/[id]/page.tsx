@@ -174,7 +174,9 @@ export default function AdminCaseDetailPage({
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date of Birth</span>
-                  <span className="font-medium">{formatDate(profile.date_of_birth, lang)}</span>
+                  <span className="font-medium">
+                    {profile.date_of_birth ? formatDate(profile.date_of_birth, lang) : "—"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Gender</span>

@@ -21,7 +21,7 @@ export function ProfileCard({ profile, lang = "en" }: ProfileCardProps) {
         <CardContent>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>{formatDate(profile.date_of_birth, lang)}</span>
+            <span>{profile.date_of_birth ? formatDate(profile.date_of_birth, lang) : "—"}</span>
           </div>
           <div className="mt-2 text-sm text-muted-foreground capitalize">
             {profile.gender} | {profile.grade}
