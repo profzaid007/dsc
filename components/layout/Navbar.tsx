@@ -15,8 +15,6 @@ import { BookConsultDialog } from "../BookConsultDialog"
 const DEFAULT_SIDEBAR_ITEMS = [
   { en: "Home", ar: "الرئيسية", href: "/" },
   { en: "About Us", ar: "من نحن", href: "/about-us" },
-  { en: "Services", ar: "خدماتنا", href: "/" },
-  { en: "Resources", ar: "الموارد", href: "/" },
   { en: "Blog", ar: "المدونة", href: "/blog" },
   { en: "Programmes", ar: "البرامج", href: "/programmes" },
   { en: "Contact Us", ar: "اتصل بنا", href: "/contact-us" }
