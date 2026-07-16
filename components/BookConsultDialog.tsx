@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
+import { useRouter } from "next/router"
 import {
   Dialog,
   DialogContent,
@@ -40,9 +41,12 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
   const [error, setError] = useState("")
 
   async function handleSubmit(e: FormEvent) {
+
+    const router = useRouter();
     e.preventDefault()
     setSubmitting(true)
     setError("")
+
 
     try {
       const { categoryId, subCategoryId, customCategory, customSubCategory } = portalService
@@ -93,6 +97,8 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       }
 
       setDone(true)
+      router.push("https://wa.me/message/XGN76UVRTVL7C1")
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
     } finally {
