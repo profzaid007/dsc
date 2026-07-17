@@ -810,5 +810,28 @@ export const caseExpertsCollection = {
   },
 }
 
+export const rolesManagementCollection = {
+  async getAll(): Promise<import("@/types/expert-role").RolesManagement[]> {
+    return pb.collection("roles_management").getFullList({
+      expand: "tools",
+    })
+  },
+
+  async getById(
+    id: string
+  ): Promise<import("@/types/expert-role").RolesManagement> {
+    return pb.collection("roles_management").getOne(id, {
+      expand: "tools",
+    })
+  },
+
+  async update(
+    id: string,
+    data: Partial<import("@/types/expert-role").RolesManagement>
+  ): Promise<import("@/types/expert-role").RolesManagement> {
+    return pb.collection("roles_management").update(id, data)
+  },
+}
+
 export { handlePocketBaseError }
 export type { User, Tool, Profile, CaseTool }

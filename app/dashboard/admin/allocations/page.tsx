@@ -12,7 +12,6 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { SkeletonTable } from "@/components/ui/skeleton"
 import {
   Table,
@@ -58,6 +57,10 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { cn, formatExpertRole } from "@/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useRolesManagement } from "@/hooks/useRolesManagement"
+import { useTools } from "@/hooks/useTools"
+import { ToolMultiSelect } from "@/components/admin/tool-multi-select"
 
 interface AllocationRow {
   id?: string
@@ -145,6 +148,51 @@ export default function AllocationsPage() {
   const [rows, setRows] = useState<AllocationRow[]>([])
   const [originalRows, setOriginalRows] = useState<AllocationRow[]>([])
   const [isSaving, setIsSaving] = useState(false)
+
+  const {
+    roles: roleMgmtRoles,
+    isLoading: isRolesLoading,
+    updateRoleTools,
+  } = useRolesManagement()
+  const { tools: allTools, isLoading: isToolsLoading } = useTools()
+
+  const [roleToolsMap, setRoleToolsMap] = useState<Record<string, string[]>>({})
+  const [isSavingAll, setIsSavingAll] = useState(false)
+
+  useEffect(() => {
+    if (roleMgmtRoles.length > 0 && Object.keys(roleToolsMap).length === 0) {
+      const map: Record<string, string[]> = {}
+      roleMgmtRoles.forEach((r) => {
+        map[r.id] = [...r.tools]
+      })
+      setRoleToolsMap(map)
+    }
+  }, [roleMgmtRoles])
+
+  const handleRoleToolsChange = (roleId: string, toolIds: string[]) => {
+    setRoleToolsMap((prev) => ({ ...prev, [roleId]: toolIds }))
+  }
+
+  const handleSaveAllRoles = async () => {
+    const changed = roleMgmtRoles.filter(
+      (role) =>
+        JSON.stringify(roleToolsMap[role.id]?.sort()) !==
+        JSON.stringify([...role.tools].sort())
+    )
+    if (changed.length === 0) return
+
+    setIsSavingAll(true)
+    try {
+      await Promise.all(
+        changed.map((role) => updateRoleTools(role.id, roleToolsMap[role.id]))
+      )
+    } catch (error) {
+      console.error("Failed to save role tools:", error)
+      alert("Failed to save. Please try again.")
+    } finally {
+      setIsSavingAll(false)
+    }
+  }
 
   // Filter only expert users
   const experts = useMemo(
@@ -316,172 +364,266 @@ export default function AllocationsPage() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={!selectedCase || isSaving || !hasChanges}
-        >
-          <Save className="me-2 h-4 w-4" />
-          {isSaving
-            ? lang === "ar"
-              ? "جاري الحفظ..."
-              : "Saving..."
-            : lang === "ar"
-              ? "حفظ التخصيصات"
-              : "Save Allocations"}
-        </Button>
       </div>
 
-      {/* Case Selector */}
-      <CardHeader>
-        <CardTitle>
-          {lang === "ar" ? "اختيار القضية" : "Select Case"}
-        </CardTitle>
-        <CardDescription>
-          {lang === "ar"
-            ? "اختر القضية التي تريد تخصيص الخبراء لها"
-            : "Choose the case you want to allocate experts to"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="max-w-md">
-          <CaseSearchCombobox
-            value={selectedCase}
-            onChange={setSelectedCase}
-            placeholder={
-              lang === "ar" ? "اختر قضية..." : "Select a case..."
-            }
-          />
-        </div>
-      </CardContent>
+      <Tabs defaultValue="allocations">
+        <TabsList>
+          <TabsTrigger value="allocations">
+            {lang === "ar" ? "التخصيصات" : "Allocations"}
+          </TabsTrigger>
+          <TabsTrigger value="roles">
+            {lang === "ar" ? "الأدوار" : "Roles"}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Allocations Grid */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+        <TabsContent value="allocations" className="space-y-6">
+          <div className="flex justify-end">
+            <Button
+              onClick={handleSave}
+              disabled={!selectedCase || isSaving || !hasChanges}
+            >
+              <Save className="me-2 h-4 w-4" />
+              {isSaving
+                ? lang === "ar"
+                  ? "جاري الحفظ..."
+                  : "Saving..."
+                : lang === "ar"
+                  ? "حفظ التخصيصات"
+                  : "Save Allocations"}
+            </Button>
+          </div>
+
+          {/* Case Selector */}
+          <Card>
+            <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "الخبراء المخصصون" : "Assigned Experts"}
+                {lang === "ar" ? "اختيار القضية" : "Select Case"}
               </CardTitle>
               <CardDescription>
-                {rows.length}{" "}
-                {lang === "ar" ? "خبير(ين) مخصص" : "expert(s) assigned"}
+                {lang === "ar"
+                  ? "اختر القضية التي تريد تخصيص الخبراء لها"
+                  : "Choose the case you want to allocate experts to"}
               </CardDescription>
-            </div>
-            {selectedCase && (
-              <Button
-                variant="outline"
-                onClick={addRow}
-                disabled={isSaving}
-              >
-                <Plus className="me-2 h-4 w-4" />
-                {lang === "ar" ? "إضافة خبير" : "Add Expert"}
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {!selectedCase ? (
-            <div className="py-12 text-center">
-              <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-lg font-medium">
+            </CardHeader>
+            <CardContent>
+              <div className="max-w-md">
+                <CaseSearchCombobox
+                  value={selectedCase}
+                  onChange={setSelectedCase}
+                  placeholder={
+                    lang === "ar" ? "اختر قضية..." : "Select a case..."
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Allocations Grid */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>
+                    {lang === "ar" ? "الخبراء المخصصون" : "Assigned Experts"}
+                  </CardTitle>
+                  <CardDescription>
+                    {rows.length}{" "}
+                    {lang === "ar" ? "خبير(ين) مخصص" : "expert(s) assigned"}
+                  </CardDescription>
+                </div>
+                {selectedCase && (
+                  <Button
+                    variant="outline"
+                    onClick={addRow}
+                    disabled={isSaving}
+                  >
+                    <Plus className="me-2 h-4 w-4" />
+                    {lang === "ar" ? "إضافة خبير" : "Add Expert"}
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {!selectedCase ? (
+                <div className="py-12 text-center">
+                  <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <h3 className="mb-2 text-lg font-medium">
+                    {lang === "ar"
+                      ? "لم يتم اختيار قضية"
+                      : "No case selected"}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {lang === "ar"
+                      ? "يرجى اختيار قضية أولاً لعرض الخبراء المخصصين"
+                      : "Please select a case first to view assigned experts"}
+                  </p>
+                </div>
+              ) : rows.length === 0 ? (
+                <div className="py-12 text-center">
+                  <UserCheck className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <h3 className="mb-2 text-lg font-medium">
+                    {lang === "ar"
+                      ? "لم يتم تخصيص خبراء"
+                      : "No experts assigned"}
+                  </h3>
+                  <p className="mb-4 text-muted-foreground">
+                    {lang === "ar"
+                      ? "لم يتم تخصيص خبراء لهذه القضية بعد"
+                      : "No experts have been assigned to this case yet"}
+                  </p>
+                  <Button onClick={addRow}>
+                    <Plus className="me-2 h-4 w-4" />
+                    {lang === "ar" ? "إضافة خبير" : "Add Expert"}
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[300px]">
+                        {lang === "ar" ? "الخبير" : "Expert"}
+                      </TableHead>
+                      <TableHead className="w-[250px]">
+                        {lang === "ar" ? "الدور" : "Role"}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {lang === "ar" ? "إجراءات" : "Actions"}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((row, index) => (
+                      <TableRow key={`${row.id || "new"}-${index}`}>
+                        <TableCell>
+                          <ExpertCombobox
+                            value={row.expert_id}
+                            onChange={(value) =>
+                              updateRow(index, { expert_id: value })
+                            }
+                            experts={experts}
+                            placeholder={
+                              lang === "ar"
+                                ? "اختر خبير..."
+                                : "Select expert..."
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.role}
+                            onValueChange={(value) =>
+                              updateRow(index, {
+                                role: value as ExpertRole,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {EXPERT_ROLES.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                  {formatExpertRole(role)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeRow(index)}
+                            disabled={isSaving}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="roles">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {lang === "ar" ? "إدارة أدوار الخبراء" : "Expert Role Management"}
+              </CardTitle>
+              <CardDescription>
                 {lang === "ar"
-                  ? "لم يتم اختيار قضية"
-                  : "No case selected"}
-              </h3>
-              <p className="text-muted-foreground">
-                {lang === "ar"
-                  ? "يرجى اختيار قضية أولاً لعرض الخبراء المخصصين"
-                  : "Please select a case first to view assigned experts"}
-              </p>
-            </div>
-          ) : rows.length === 0 ? (
-            <div className="py-12 text-center">
-              <UserCheck className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-lg font-medium">
-                {lang === "ar"
-                  ? "لم يتم تخصيص خبراء"
-                  : "No experts assigned"}
-              </h3>
-              <p className="mb-4 text-muted-foreground">
-                {lang === "ar"
-                  ? "لم يتم تخصيص خبراء لهذه القضية بعد"
-                  : "No experts have been assigned to this case yet"}
-              </p>
-              <Button onClick={addRow}>
-                <Plus className="me-2 h-4 w-4" />
-                {lang === "ar" ? "إضافة خبير" : "Add Expert"}
-              </Button>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px]">
-                    {lang === "ar" ? "الخبير" : "Expert"}
-                  </TableHead>
-                  <TableHead className="w-[250px]">
-                    {lang === "ar" ? "الدور" : "Role"}
-                  </TableHead>
-                  <TableHead className="text-right">
-                    {lang === "ar" ? "إجراءات" : "Actions"}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row, index) => (
-                  <TableRow key={`${row.id || "new"}-${index}`}>
-                    <TableCell>
-                      <ExpertCombobox
-                        value={row.expert_id}
-                        onChange={(value) =>
-                          updateRow(index, { expert_id: value })
-                        }
-                        experts={experts}
-                        placeholder={
-                          lang === "ar"
-                            ? "اختر خبير..."
-                            : "Select expert..."
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={row.role}
-                        onValueChange={(value) =>
-                          updateRow(index, {
-                            role: value as ExpertRole,
-                          })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {EXPERT_ROLES.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {formatExpertRole(role)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeRow(index)}
-                        disabled={isSaving}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                  ? "تحديد الأدوات المتاحة لكل دور"
+                  : "Assign which tools each role can access"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isRolesLoading || isToolsLoading ? (
+                <SkeletonTable rows={4} />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        {lang === "ar" ? "الدور" : "Role"}
+                      </TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "الأدوات المخصصة" : "Assigned Tools"}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {roleMgmtRoles.map((role) => (
+                      <TableRow key={role.id}>
+                        <TableCell className="font-medium capitalize">
+                          {role.name}
+                        </TableCell>
+                        <TableCell>
+                          <ToolMultiSelect
+                            value={roleToolsMap[role.id] || role.tools}
+                            onChange={(toolIds) =>
+                              handleRoleToolsChange(role.id, toolIds)
+                            }
+                            tools={allTools}
+                            lang={lang}
+                            placeholder={
+                              lang === "ar"
+                                ? "اختر أدوات..."
+                                : "Select tools..."
+                            }
+                            emptyMessage={
+                              lang === "ar"
+                                ? "لا توجد أدوات"
+                                : "No tools found"
+                            }
+                          />
+                          </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+              <div className="flex justify-end mt-4">
+                <Button
+                  onClick={handleSaveAllRoles}
+                  disabled={isSavingAll}
+                >
+                  {isSavingAll
+                    ? lang === "ar"
+                      ? "جاري الحفظ..."
+                      : "Saving..."
+                    : lang === "ar"
+                      ? "حفظ الكل"
+                      : "Save"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
