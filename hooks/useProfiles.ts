@@ -17,8 +17,7 @@ export function useProfiles() {
       if (
         currentUser &&
         (currentUser.role === "user" ||
-          currentUser.role === "individual" ||
-          currentUser.role === "admin")
+          currentUser.role === "individual")
       ) {
         data = await casesCollection.getByUser(currentUser.id)
       } else {
