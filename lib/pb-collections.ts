@@ -774,21 +774,21 @@ export const blogCategoriesCollection = {
 export const caseExpertsCollection = {
   async getAll(): Promise<import("@/types/allocation").CaseExpert[]> {
     return pb.collection("case_experts").getFullList({
-      expand: "expert",
+      expand: "expert_id",
     })
   },
 
   async getByCase(caseId: string): Promise<import("@/types/allocation").CaseExpert[]> {
     return pb.collection("case_experts").getFullList({
-      filter: `case = "${caseId}"`,
-      expand: "expert",
+      filter: `case_id = "${caseId}"`,
+      expand: "expert_id",
     })
   },
 
   async getByExpert(expertId: string): Promise<import("@/types/allocation").CaseExpert[]> {
     return pb.collection("case_experts").getFullList({
-      filter: `expert = "${expertId}"`,
-      expand: "case",
+      filter: `expert_id = "${expertId}"`,
+      expand: "case_id",
     })
   },
 

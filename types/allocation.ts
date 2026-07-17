@@ -1,20 +1,20 @@
 export const EXPERT_ROLES = [
-  "Primary Expert",
-  "Secondary Expert",
-  "Reviewer",
-  "Observer",
+  "physician",
+  "social",
+  "teacher",
+  "trainer",
 ] as const
 
 export type ExpertRole = (typeof EXPERT_ROLES)[number]
 
 export interface CaseExpert {
   id: string
-  case: string
-  expert: string
+  case_id: string
+  expert_id: string
   role: ExpertRole
   created: string
   updated: string
   expand?: {
-    expert?: import("./user").User
+    expert_id?: import("./user").User
   }
 }

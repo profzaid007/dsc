@@ -29,8 +29,8 @@ export function useAllocations(caseId?: string) {
   }, [fetchAllocations])
 
   const addAllocation = async (data: {
-    case: string
-    expert: string
+    case_id: string
+    expert_id: string
     role: CaseExpert["role"]
   }) => {
     try {
@@ -70,7 +70,7 @@ export function useAllocations(caseId?: string) {
   }
 
   const getAllocationsByCase = (caseId: string) =>
-    allocations.filter((a) => a.case === caseId)
+    allocations.filter((a) => a.case_id === caseId)
 
   return {
     allocations,

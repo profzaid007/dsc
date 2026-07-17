@@ -61,7 +61,7 @@ import { cn } from "@/lib/utils"
 
 interface AllocationRow {
   id?: string
-  expert: string
+  expert_id: string
   role: ExpertRole
 }
 
@@ -158,10 +158,10 @@ export default function AllocationsPage() {
   // Load existing allocations when case is selected
   const loadAllocationsForCase = useCallback(
     (caseId: string) => {
-      const caseAllocations = allocations.filter((a) => a.case === caseId)
+      const caseAllocations = allocations.filter((a) => a.case_id === caseId)
       const loadedRows: AllocationRow[] = caseAllocations.map((a) => ({
         id: a.id,
-        expert: a.expert,
+        expert_id: a.expert_id,
         role: a.role as ExpertRole,
       }))
       setRows(loadedRows)
@@ -182,7 +182,7 @@ export default function AllocationsPage() {
   const addRow = () => {
     setRows((prev) => [
       ...prev,
-      { expert: "", role: EXPERT_ROLES[0] },
+      { expert_id: "", role: EXPERT_ROLES[0] },
     ])
   }
 
@@ -204,7 +204,7 @@ export default function AllocationsPage() {
 
     // Validate rows
     const invalidRows = rows.filter(
-      (r) => !r.expert || !r.role
+      (r) => !r.expert_id || !r.role
     )
     if (invalidRows.length > 0) {
       alert("Please select an expert and role for each row.")
@@ -226,7 +226,7 @@ export default function AllocationsPage() {
         const original = originalRows.find((o) => o.id === row.id)
         if (!original) return false
         return (
-          original.expert !== row.expert || original.role !== row.role
+          original.expert_id !== row.expert_id || original.role !== row.role
         )
       })
 
@@ -241,8 +241,8 @@ export default function AllocationsPage() {
         ...updatedRows.map((row) =>
           removeAllocation(row.id!).then(() =>
             addAllocation({
-              case: selectedCase,
-              expert: row.expert,
+              case_id: selectedCase,
+              expert_id: row.expert_id,
               role: row.role,
             })
           )
@@ -250,8 +250,8 @@ export default function AllocationsPage() {
         // Create new
         ...newRows.map((row) =>
           addAllocation({
-            case: selectedCase,
-            expert: row.expert,
+            case_id: selectedCase,
+            expert_id: row.expert_id,
             role: row.role,
           })
         ),
@@ -434,9 +434,9 @@ export default function AllocationsPage() {
                   <TableRow key={`${row.id || "new"}-${index}`}>
                     <TableCell>
                       <ExpertCombobox
-                        value={row.expert}
+                        value={row.expert_id}
                         onChange={(value) =>
-                          updateRow(index, { expert: value })
+                          updateRow(index, { expert_id: value })
                         }
                         experts={experts}
                         placeholder={
