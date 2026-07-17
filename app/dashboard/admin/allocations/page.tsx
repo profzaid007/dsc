@@ -57,7 +57,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { cn } from "@/lib/utils"
+import { cn, formatExpertRole } from "@/lib/utils"
 
 interface AllocationRow {
   id?: string
@@ -332,29 +332,27 @@ export default function AllocationsPage() {
       </div>
 
       {/* Case Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {lang === "ar" ? "اختيار القضية" : "Select Case"}
-          </CardTitle>
-          <CardDescription>
-            {lang === "ar"
-              ? "اختر القضية التي تريد تخصيص الخبراء لها"
-              : "Choose the case you want to allocate experts to"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="max-w-md">
-            <CaseSearchCombobox
-              value={selectedCase}
-              onChange={setSelectedCase}
-              placeholder={
-                lang === "ar" ? "اختر قضية..." : "Select a case..."
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <CardHeader>
+        <CardTitle>
+          {lang === "ar" ? "اختيار القضية" : "Select Case"}
+        </CardTitle>
+        <CardDescription>
+          {lang === "ar"
+            ? "اختر القضية التي تريد تخصيص الخبراء لها"
+            : "Choose the case you want to allocate experts to"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="max-w-md">
+          <CaseSearchCombobox
+            value={selectedCase}
+            onChange={setSelectedCase}
+            placeholder={
+              lang === "ar" ? "اختر قضية..." : "Select a case..."
+            }
+          />
+        </div>
+      </CardContent>
 
       {/* Allocations Grid */}
       <Card>
@@ -461,7 +459,7 @@ export default function AllocationsPage() {
                         <SelectContent>
                           {EXPERT_ROLES.map((role) => (
                             <SelectItem key={role} value={role}>
-                              {role}
+                              {formatExpertRole(role)}
                             </SelectItem>
                           ))}
                         </SelectContent>
