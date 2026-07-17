@@ -771,5 +771,44 @@ export const blogCategoriesCollection = {
   },
 }
 
+export const caseExpertsCollection = {
+  async getAll(): Promise<import("@/types/allocation").CaseExpert[]> {
+    return pb.collection("case_experts").getFullList({
+      expand: "expert",
+    })
+  },
+
+  async getByCase(caseId: string): Promise<import("@/types/allocation").CaseExpert[]> {
+    return pb.collection("case_experts").getFullList({
+      filter: `case = "${caseId}"`,
+      expand: "expert",
+    })
+  },
+
+  async getByExpert(expertId: string): Promise<import("@/types/allocation").CaseExpert[]> {
+    return pb.collection("case_experts").getFullList({
+      filter: `expert = "${expertId}"`,
+      expand: "case",
+    })
+  },
+
+  async create(
+    data: Partial<import("@/types/allocation").CaseExpert>
+  ): Promise<import("@/types/allocation").CaseExpert> {
+    return pb.collection("case_experts").create(data)
+  },
+
+  async update(
+    id: string,
+    data: Partial<import("@/types/allocation").CaseExpert>
+  ): Promise<import("@/types/allocation").CaseExpert> {
+    return pb.collection("case_experts").update(id, data)
+  },
+
+  async delete(id: string): Promise<void> {
+    await pb.collection("case_experts").delete(id)
+  },
+}
+
 export { handlePocketBaseError }
 export type { User, Tool, Profile, CaseTool }

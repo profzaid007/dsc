@@ -18,6 +18,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
+  UserCheck,
 } from "lucide-react"
 
 const adminNavigation = [
@@ -35,6 +36,11 @@ const adminNavigation = [
     name: { en: "Assignments", ar: "التعيينات" },
     href: "/dashboard/admin/assignments",
     icon: ClipboardList,
+  },
+  {
+    name: { en: "Allocations", ar: "التخصيصات" },
+    href: "/dashboard/admin/allocations",
+    icon: UserCheck,
   },
   {
     name: { en: "Training", ar: "التدريب" },
