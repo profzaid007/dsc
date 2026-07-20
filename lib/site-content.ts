@@ -48,6 +48,11 @@ interface SiteContent {
   };
 }
 
+export const PAGE_TITLES: Record<string, BilingualString> = {
+  "about-us": { en: "About Us", ar: "من نحن" },
+  "contact-us": { en: "Contact Us", ar: "تواصل معنا" },
+}
+
 export const SITE_CONTENT: SiteContent = {
   nav: {
     home: { en: "Home", ar: "الرئيسية" },

@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { cookies } from "next/headers"
 import pb from "@/lib/pb"
-import { localizedField } from "@/lib/i18n"
+import { localizedField, t } from "@/lib/i18n"
+import { PAGE_TITLES } from "@/lib/site-content"
 import type { HomePage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
@@ -16,6 +17,8 @@ export default async function SlugPage({ params }: SlugPageProps) {
   const { slug } = await params
   const cookieStore = await cookies()
   const lang = (cookieStore.get("lang")?.value as Lang) || "en"
+
+  const pageTitle = PAGE_TITLES[slug]
 
   let page: HomePage | null = null
 
@@ -35,13 +38,17 @@ export default async function SlugPage({ params }: SlugPageProps) {
           href="/"
           className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
         >
-          &larr; Home
+          &larr; {lang === "ar" ? "الرئيسية" : "Home"}
         </Link>
-        <h1 className="mb-4 text-3xl font-bold capitalize">{slug.replace(/-/g, " ")}</h1>
+        <h1 className="mb-4 text-3xl font-bold capitalize">
+          {pageTitle ? t(pageTitle, lang) : slug.replace(/-/g, " ")}
+        </h1>
         <div className="rounded-lg border border-dashed p-12 text-center">
-          <p className="text-lg text-muted-foreground">Page not found.</p>
+          <p className="text-lg text-muted-foreground">
+            {lang === "ar" ? "الصفحة غير موجودة" : "Page not found."}
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            This page does not exist or is not published yet.
+            {lang === "ar" ? "هذه الصفحة غير موجودة أو لم يتم نشرها بعد." : "This page does not exist or is not published yet."}
           </p>
         </div>
       </div>
@@ -54,11 +61,13 @@ export default async function SlugPage({ params }: SlugPageProps) {
         href="/"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
       >
-        &larr; Home
+        &larr; {lang === "ar" ? "الرئيسية" : "Home"}
       </Link>
 
       <h1 className="mb-8 text-3xl font-bold capitalize">
-        {localizedField(page, lang, "title")}
+        {lang === "ar" && !page.title_ar && pageTitle
+          ? t(pageTitle, lang)
+          : localizedField(page, lang, "title")}
       </h1>
 
       <div
