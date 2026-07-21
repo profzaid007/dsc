@@ -19,7 +19,13 @@ export function FooterSection() {
               <div>
                 <span className="text-lg font-bold text-white">DSC</span>
                 <p className="text-xs" style={{ color: "#00a4e4" }}>
-                  Development Secrets Consultancy
+                  {t(
+                          {
+                            en: "Development Secrets Consultancy",
+                            ar: "استشارية أسرار التطور",
+                          },
+                          lang
+                        )}
                 </p>
               </div>
             </div>
