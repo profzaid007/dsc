@@ -4,6 +4,7 @@ import { LangProvider, useLang } from "@/lib/lang-context"
 import { DirectionProvider } from "@/components/form/DirectionProvider"
 import { Navbar } from "@/components/layout/Navbar"
 import { FooterSection } from "@/components/landing/FooterSection"
+import type { Lang } from "@/types/form"
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { lang } = useLang()
@@ -19,9 +20,15 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  initialLang,
+}: {
+  children: React.ReactNode
+  initialLang?: Lang
+}) {
   return (
-    <LangProvider>
+    <LangProvider initialLang={initialLang}>
       <Shell>{children}</Shell>
     </LangProvider>
   )

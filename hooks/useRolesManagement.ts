@@ -23,10 +23,10 @@ export function useRolesManagement() {
     fetchRoles()
   }, [fetchRoles])
 
-  const updateRoleTools = useCallback(
-    async (id: string, toolIds: string[]) => {
+  const updateRoleToolTypes = useCallback(
+    async (id: string, toolTypeIds: string[]) => {
       const updated = await rolesManagementCollection.update(id, {
-        tools: toolIds,
+        tool_types: toolTypeIds,
       })
       setRoles((prev) =>
         prev.map((r) => (r.id === id ? { ...r, ...updated } : r))
@@ -38,7 +38,7 @@ export function useRolesManagement() {
   return {
     roles,
     isLoading,
-    updateRoleTools,
+    updateRoleToolTypes,
     refresh: fetchRoles,
   }
 }

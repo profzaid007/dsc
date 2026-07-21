@@ -25,14 +25,25 @@ function setCookie(name: string, value: string) {
 
 const LangContext = createContext<LangContextValue | null>(null);
 
-export function LangProvider({ children }: { children: React.ReactNode }) {
+export function LangProvider({
+  children,
+  initialLang,
+}: {
+  children: React.ReactNode
+  initialLang?: Lang
+}) {
   const router = useRouter();
-  const [lang, setLang] = useState<Lang>(() => {
-    const stored = getCookie(LANG_COOKIE);
-    if (stored === "en" || stored === "ar") return stored;
-    return "en";
-  });
+  const [lang, setLang] = useState<Lang>(initialLang || "en");
   const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!initialLang) {
+      const stored = getCookie(LANG_COOKIE);
+      if (stored === "ar" || stored === "en") {
+        setLang(stored);
+      }
+    }
+  }, [initialLang]);
 
   useEffect(() => {
     setCookie(LANG_COOKIE, lang);

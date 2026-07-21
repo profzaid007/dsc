@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { casesCollection } from "@/lib/pb-collections"
+import { casesCollection, caseExpertsCollection } from "@/lib/pb-collections"
 import type { Profile } from "@/types/profile"
 import { getCurrentUser } from "@/lib/pb"
-
 
 export function useProfiles() {
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -14,7 +13,20 @@ export function useProfiles() {
   const fetchProfiles = useCallback(async () => {
     try {
       let data: Profile[]
-      if (
+      if (currentUser?.role === "expert") {
+        const expertCases = await caseExpertsCollection.getByExpert(
+          currentUser.id
+        )
+        const caseIds = [
+          ...new Set(
+            expertCases.map((ce) => ce.case_id).filter(Boolean)
+          ),
+        ]
+        data =
+          caseIds.length > 0
+            ? await casesCollection.getByIds(caseIds)
+            : []
+      } else if (
         currentUser &&
         (currentUser.role === "user" ||
           currentUser.role === "individual")
