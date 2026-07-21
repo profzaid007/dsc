@@ -1,10 +1,10 @@
-import type { Tool } from "./tool"
+import type { ToolTypeRecord } from "@/lib/tool-types"
 
 export interface RolesManagement {
   id: string
   name: string
-  tools: string[]
+  tool_types: string[]
   expand?: {
-    tools?: Tool[]
+    tool_types?: ToolTypeRecord[]
   }
 }

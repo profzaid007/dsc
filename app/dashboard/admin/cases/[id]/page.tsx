@@ -7,6 +7,7 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
+import { useAuth } from "@/hooks/useAuth"
 import {
   Card,
   CardContent,
@@ -54,6 +55,11 @@ import {
   getToolTypeMeta,
   toolTypeOrder,
 } from "@/lib/tool-types"
+import {
+  getAllowedToolTypesForCase,
+  getAllowedToolTypesForRole,
+  caseExpertsCollection,
+} from "@/lib/pb-collections"
 
 import { formatDate } from "@/lib/i18n"
 
@@ -79,6 +85,7 @@ export default function AdminCaseDetailPage({
   const { id: caseId } = use(params)
   const router = useRouter()
   const { lang } = useLang()
+  const { currentUser } = useAuth()
   const { getProfileById } = useProfiles()
   const { assignments, assignTool, deleteAssignment } = useAssignments()
   const { tools } = useTools()
@@ -92,13 +99,40 @@ export default function AdminCaseDetailPage({
   )
   const [toolTypeFilter, setToolTypeFilter] = useState<string>("all")
   const [confirmToolType, setConfirmToolType] = useState<string | null>(null)
+  const [allowedToolTypeIds, setAllowedToolTypeIds] = useState<string[]>([])
 
   const profile = getProfileById(caseId)
   const caseAssignments = assignments.filter((a) => a.case === caseId)
+  const isExpert = currentUser?.role === "expert"
 
   useEffect(() => {
     fetchToolTypes()
   }, [fetchToolTypes])
+
+  useEffect(() => {
+    async function fetchAllowedToolTypes() {
+      if (!caseId || !currentUser) return
+      try {
+        if (isExpert) {
+          const caseExpert =
+            await caseExpertsCollection.getByCaseAndExpert(
+              caseId,
+              currentUser.id
+            )
+          const allowed = caseExpert?.role
+            ? await getAllowedToolTypesForRole(caseExpert.role)
+            : []
+          setAllowedToolTypeIds(allowed)
+        } else {
+          const allowed = await getAllowedToolTypesForCase(caseId)
+          setAllowedToolTypeIds(allowed)
+        }
+      } catch (error) {
+        console.error("Failed to fetch allowed tool types for case:", error)
+      }
+    }
+    fetchAllowedToolTypes()
+  }, [caseId, currentUser, isExpert])
 
   const handleAssignTool = async () => {
     if (!selectedToolId) return
@@ -387,6 +421,15 @@ export default function AdminCaseDetailPage({
                   .filter((key) =>
                     ["plan", "report", "attachment_request"].includes(key)
                   )
+                  .filter((key) => {
+                    const toolType = toolTypes.find((item) => item.key === key)
+                    if (!toolType) return false
+                    if (isExpert) return allowedToolTypeIds.includes(toolType.id)
+                    return (
+                      allowedToolTypeIds.length === 0 ||
+                      allowedToolTypeIds.includes(toolType.id)
+                    )
+                  })
                   .map((key) => {
                     const toolType = toolTypes.find((item) => item.key === key)
                     const meta = getToolTypeMeta(key)
@@ -423,6 +466,15 @@ export default function AdminCaseDetailPage({
                       key
                     )
                   )
+                  .filter((key) => {
+                    const toolType = toolTypes.find((item) => item.key === key)
+                    if (!toolType) return false
+                    if (isExpert) return allowedToolTypeIds.includes(toolType.id)
+                    return (
+                      allowedToolTypeIds.length === 0 ||
+                      allowedToolTypeIds.includes(toolType.id)
+                    )
+                  })
                   .map((key) => {
                     const toolType = toolTypes.find((item) => item.key === key)
                     const meta = getToolTypeMeta(key)
@@ -483,8 +535,15 @@ export default function AdminCaseDetailPage({
                         </div>
                       </div>
                     )
-                  })}
-              </div>
+                  })}</div>
+
+              {allowedToolTypeIds.length > 0 && (
+                <p className="text-sm text-muted-foreground mt-4">
+                  {lang === "ar"
+                    ? "يتم عرض أنواع الأدوات بناءً على أدوار الخبراء المخصصين لهذه القضية."
+                    : "Tool types shown are based on the assigned experts' roles for this case."}
+                </p>
+              )}
             </CardContent>
             <CardContent className="flex justify-end pt-0">
               <Button

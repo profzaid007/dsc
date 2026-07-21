@@ -2,7 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { cookies } from "next/headers"
 import pb from "@/lib/pb"
-import { localizedField } from "@/lib/i18n"
+import { localizedField, t } from "@/lib/i18n"
 import type { BlogPage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { Card } from "@/components/ui/card"
@@ -54,7 +54,7 @@ export default async function BlogPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="mb-8 text-3xl font-bold">Blog</h1>
+      <h1 className="mb-8 text-3xl font-bold">{t({ en: "Blog", ar: "المدونة" }, lang)}</h1>
 
       {posts.length === 0 ? (
         <div className="rounded-lg border border-dashed p-12 text-center">

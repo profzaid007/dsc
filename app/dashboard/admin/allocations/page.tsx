@@ -59,9 +59,9 @@ import {
 import { cn, formatExpertRole } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRolesManagement } from "@/hooks/useRolesManagement"
-import { useTools } from "@/hooks/useTools"
-import { ToolMultiSelect } from "@/components/admin/tool-multi-select"
-
+import { useToolTypes } from "@/hooks/useToolTypes"
+import { ToolTypeMultiSelect } from "@/components/admin/tool-type-multi-select"
+  
 interface AllocationRow {
   id?: string
   expert_id: string
@@ -152,42 +152,46 @@ export default function AllocationsPage() {
   const {
     roles: roleMgmtRoles,
     isLoading: isRolesLoading,
-    updateRoleTools,
+    updateRoleToolTypes,
   } = useRolesManagement()
-  const { tools: allTools, isLoading: isToolsLoading } = useTools()
+  const { toolTypes: allToolTypes, isLoading: isToolTypesLoading, fetchToolTypes } = useToolTypes()
 
-  const [roleToolsMap, setRoleToolsMap] = useState<Record<string, string[]>>({})
+  const [roleToolTypesMap, setRoleToolTypesMap] = useState<Record<string, string[]>>({})
   const [isSavingAll, setIsSavingAll] = useState(false)
 
   useEffect(() => {
-    if (roleMgmtRoles.length > 0 && Object.keys(roleToolsMap).length === 0) {
+    fetchToolTypes()
+  }, [fetchToolTypes])
+
+  useEffect(() => {
+    if (roleMgmtRoles.length > 0 && Object.keys(roleToolTypesMap).length === 0) {
       const map: Record<string, string[]> = {}
       roleMgmtRoles.forEach((r) => {
-        map[r.id] = [...r.tools]
+        map[r.id] = [...(r.tool_types || [])]
       })
-      setRoleToolsMap(map)
+      setRoleToolTypesMap(map)
     }
   }, [roleMgmtRoles])
 
-  const handleRoleToolsChange = (roleId: string, toolIds: string[]) => {
-    setRoleToolsMap((prev) => ({ ...prev, [roleId]: toolIds }))
+  const handleRoleToolTypesChange = (roleId: string, toolTypeIds: string[]) => {
+    setRoleToolTypesMap((prev) => ({ ...prev, [roleId]: toolTypeIds }))
   }
 
   const handleSaveAllRoles = async () => {
     const changed = roleMgmtRoles.filter(
       (role) =>
-        JSON.stringify(roleToolsMap[role.id]?.sort()) !==
-        JSON.stringify([...role.tools].sort())
+        JSON.stringify(roleToolTypesMap[role.id]?.sort()) !==
+        JSON.stringify([...(role.tool_types || [])].sort())
     )
     if (changed.length === 0) return
 
     setIsSavingAll(true)
     try {
       await Promise.all(
-        changed.map((role) => updateRoleTools(role.id, roleToolsMap[role.id]))
+        changed.map((role) => updateRoleToolTypes(role.id, roleToolTypesMap[role.id]))
       )
     } catch (error) {
-      console.error("Failed to save role tools:", error)
+      console.error("Failed to save role tool types:", error)
       alert("Failed to save. Please try again.")
     } finally {
       setIsSavingAll(false)
@@ -556,12 +560,12 @@ export default function AllocationsPage() {
               </CardTitle>
               <CardDescription>
                 {lang === "ar"
-                  ? "تحديد الأدوات المتاحة لكل دور"
-                  : "Assign which tools each role can access"}
+                  ? "تحديد أنواع الأدوات المتاحة لكل دور"
+                  : "Assign which tool types each role can access"}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isRolesLoading || isToolsLoading ? (
+              {isRolesLoading || isToolTypesLoading ? (
                 <SkeletonTable rows={4} />
               ) : (
                 <Table>
@@ -571,7 +575,7 @@ export default function AllocationsPage() {
                         {lang === "ar" ? "الدور" : "Role"}
                       </TableHead>
                       <TableHead>
-                        {lang === "ar" ? "الأدوات المخصصة" : "Assigned Tools"}
+                        {lang === "ar" ? "أنواع الأدوات المخصصة" : "Assigned Tool Types"}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -582,22 +586,22 @@ export default function AllocationsPage() {
                           {role.name}
                         </TableCell>
                         <TableCell>
-                          <ToolMultiSelect
-                            value={roleToolsMap[role.id] || role.tools}
-                            onChange={(toolIds) =>
-                              handleRoleToolsChange(role.id, toolIds)
+                          <ToolTypeMultiSelect
+                            value={roleToolTypesMap[role.id] || role.tool_types || []}
+                            onChange={(toolTypeIds) =>
+                              handleRoleToolTypesChange(role.id, toolTypeIds)
                             }
-                            tools={allTools}
+                            toolTypes={allToolTypes}
                             lang={lang}
                             placeholder={
                               lang === "ar"
-                                ? "اختر أدوات..."
-                                : "Select tools..."
+                                ? "اختر أنواع الأدوات..."
+                                : "Select tool types..."
                             }
                             emptyMessage={
                               lang === "ar"
-                                ? "لا توجد أدوات"
-                                : "No tools found"
+                                ? "لا توجد أنواع أدوات"
+                                : "No tool types found"
                             }
                           />
                           </TableCell>

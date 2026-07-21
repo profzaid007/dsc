@@ -115,6 +115,12 @@ export const casesCollection = {
     })
   },
 
+  async getByIds(ids: string[]): Promise<Profile[]> {
+    if (ids.length === 0) return []
+    const filter = ids.map((id) => `id = "${id}"`).join(" || ")
+    return pb.collection("cases").getFullList({ filter, expand: "user" })
+  },
+
   async getByProgram(programId: string): Promise<Profile[]> {
     return pb.collection("cases").getFullList({
       filter: `program_id = "${programId}"`,
@@ -792,6 +798,23 @@ export const caseExpertsCollection = {
     })
   },
 
+  async getByCaseAndExpert(
+    caseId: string,
+    expertId: string
+  ): Promise<import("@/types/allocation").CaseExpert | null> {
+    try {
+      const record = await pb
+        .collection("case_experts")
+        .getFirstListItem(
+          `case_id = "${caseId}" && expert_id = "${expertId}"`,
+          { expand: "expert_id" }
+        )
+      return record as unknown as import("@/types/allocation").CaseExpert
+    } catch {
+      return null
+    }
+  },
+
   async create(
     data: Partial<import("@/types/allocation").CaseExpert>
   ): Promise<import("@/types/allocation").CaseExpert> {
@@ -813,7 +836,7 @@ export const caseExpertsCollection = {
 export const rolesManagementCollection = {
   async getAll(): Promise<import("@/types/expert-role").RolesManagement[]> {
     return pb.collection("roles_management").getFullList({
-      expand: "tools",
+      expand: "tool_types",
     })
   },
 
@@ -821,7 +844,7 @@ export const rolesManagementCollection = {
     id: string
   ): Promise<import("@/types/expert-role").RolesManagement> {
     return pb.collection("roles_management").getOne(id, {
-      expand: "tools",
+      expand: "tool_types",
     })
   },
 
@@ -831,6 +854,55 @@ export const rolesManagementCollection = {
   ): Promise<import("@/types/expert-role").RolesManagement> {
     return pb.collection("roles_management").update(id, data)
   },
+
+  async getByName(
+    name: string
+  ): Promise<import("@/types/expert-role").RolesManagement | null> {
+    try {
+      const record = await pb
+        .collection("roles_management")
+        .getFirstListItem(`name = "${name}"`, { expand: "tool_types" })
+      return record as unknown as import("@/types/expert-role").RolesManagement
+    } catch {
+      return null
+    }
+  },
+}
+
+// Get allowed tool type IDs for a given expert role name
+export async function getAllowedToolTypesForRole(
+  roleName: string
+): Promise<string[]> {
+  const role = await rolesManagementCollection.getByName(roleName)
+  return role?.tool_types || []
+}
+
+// Get union of allowed tool type IDs for an expert across all their assigned cases/roles
+export async function getAllowedToolTypesForExpert(
+  expertId: string
+): Promise<string[]> {
+  const caseExperts = await caseExpertsCollection.getByExpert(expertId)
+  const roleNames = [
+    ...new Set(caseExperts.map((ce) => ce.role).filter(Boolean)),
+  ]
+  const allowedSets = await Promise.all(
+    roleNames.map((roleName) => getAllowedToolTypesForRole(roleName as string))
+  )
+  return [...new Set(allowedSets.flat())]
+}
+
+// Get union of allowed tool type IDs for all experts assigned to a case
+export async function getAllowedToolTypesForCase(
+  caseId: string
+): Promise<string[]> {
+  const caseExperts = await caseExpertsCollection.getByCase(caseId)
+  const roleNames = [...new Set(caseExperts.map((ce) => ce.role).filter(Boolean))]
+
+  const allowedSets = await Promise.all(
+    roleNames.map((roleName) => getAllowedToolTypesForRole(roleName as string))
+  )
+
+  return [...new Set(allowedSets.flat())]
 }
 
 export { handlePocketBaseError }

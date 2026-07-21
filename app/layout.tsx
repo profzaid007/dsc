@@ -1,8 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google"
+import { cookies } from "next/headers"
 
 import "./globals.css"
 import { AppShell } from "@/components/AppShell"
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -11,14 +12,18 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const initialLang =
+    cookieStore.get("lang")?.value === "ar" ? "ar" : "en"
+
   return (
     <html
-      lang="en"
+      lang={initialLang}
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
@@ -30,7 +35,7 @@ export default function RootLayout({
       </head>
 
       <body>
-        <AppShell>{children}</AppShell>
+        <AppShell initialLang={initialLang}>{children}</AppShell>
       </body>
     </html>
   )

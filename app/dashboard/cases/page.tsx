@@ -1,7 +1,10 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
+import { useAuth } from "@/hooks/useAuth"
 import { ProfileCard } from "@/components/profiles/ProfileCard"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,7 +12,15 @@ import { PageLoader } from "@/components/ui/page-loader"
 import { FolderKanban, Plus } from "lucide-react"
 
 export default function ProfilesPage() {
+  const router = useRouter()
+  const { currentUser } = useAuth()
   const { profiles, isLoading } = useProfiles()
+
+  useEffect(() => {
+    if (currentUser?.role === "expert") {
+      router.replace("/dashboard/admin/cases")
+    }
+  }, [currentUser, router])
 
   if (isLoading) {
     return <PageLoader text="Loading cases..." />

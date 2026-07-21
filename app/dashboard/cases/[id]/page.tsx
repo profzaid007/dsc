@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect } from "react"
+import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
@@ -8,6 +8,8 @@ import { useToolTypes } from "@/hooks/useToolTypes"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import { getToolTypeLabel } from "@/lib/tool-types"
+import { caseExpertsCollection } from "@/lib/pb-collections"
+import { getAllowedToolTypesForRole } from "@/lib/pb-collections"
 import {
   Card,
   CardContent,
@@ -45,15 +47,44 @@ export default function ProfileDetailPage({
   const { getProfileById } = useProfiles()
   const { getAssignmentsByCase, getVisibleAssignments } = useAssignments(id)
   const { toolTypes, fetchToolTypes } = useToolTypes()
-  const { isAdmin } = useAuth()
+  const { currentUser } = useAuth()
+
+  const [expertRole, setExpertRole] = useState<string | null>(null)
+  const [allowedToolTypeIds, setAllowedToolTypeIds] = useState<string[]>([])
 
   const profile = getProfileById(id)
   const assignments = getAssignmentsByCase(id)
   const visibleAssignments = getVisibleAssignments(id)
 
+  // Filter visible assignments by role-based tool type permissions
+  const roleFilteredAssignments =
+    expertRole && allowedToolTypeIds.length > 0
+      ? visibleAssignments.filter((a) => allowedToolTypeIds.includes(a.type))
+      : visibleAssignments
+
   useEffect(() => {
     fetchToolTypes()
   }, [fetchToolTypes])
+
+  useEffect(() => {
+    async function fetchExpertRole() {
+      if (!currentUser || !id) return
+      try {
+        const caseExpert = await caseExpertsCollection.getByCaseAndExpert(
+          id,
+          currentUser.id
+        )
+        if (caseExpert?.role) {
+          setExpertRole(caseExpert.role)
+          const allowed = await getAllowedToolTypesForRole(caseExpert.role)
+          setAllowedToolTypeIds(allowed)
+        }
+      } catch (error) {
+        console.error("Failed to fetch expert role:", error)
+      }
+    }
+    fetchExpertRole()
+  }, [currentUser, id])
 
   if (!profile) {
     return (
@@ -85,9 +116,9 @@ export default function ProfileDetailPage({
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="tasks">
             Tasks
-            {visibleAssignments.length > 0 && (
+            {roleFilteredAssignments.length > 0 && (
               <Badge variant="secondary" className="ms-2">
-                {visibleAssignments.length}
+                {roleFilteredAssignments.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -204,7 +235,7 @@ export default function ProfileDetailPage({
               <CardDescription>Tasks assigned to this profile</CardDescription>
             </CardHeader>
             <CardContent>
-              {visibleAssignments.length === 0 ? (
+              {roleFilteredAssignments.length === 0 ? (
                 <div className="py-8 text-center">
                   <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <h3 className="mb-2 text-lg font-medium">
@@ -216,7 +247,7 @@ export default function ProfileDetailPage({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {visibleAssignments.map((assignment) => {
+                  {roleFilteredAssignments.map((assignment) => {
                     const toolType = toolTypes.find(
                       (t) => t.id === assignment.type
                     )

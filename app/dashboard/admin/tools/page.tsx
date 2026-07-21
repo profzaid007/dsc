@@ -6,6 +6,8 @@ import Link from "next/link"
 import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
+import { useAuth } from "@/hooks/useAuth"
+import { getAllowedToolTypesForExpert } from "@/lib/pb-collections"
 import type { Tool, ToolType } from "@/types/tool"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -48,6 +50,8 @@ const statusLabels: Record<Tool["status"], string> = {
 export default function AdminToolsPage() {
   const router = useRouter()
   const { lang } = useLang()
+  const { currentUser } = useAuth()
+  const isExpert = currentUser?.role === "expert"
   const { tools, deleteTool, isLoading: isToolsLoading } = useTools()
   const {
     toolTypes,
@@ -59,6 +63,9 @@ export default function AdminToolsPage() {
   const [filterStatus, setFilterStatus] = useState<Tool["status"] | "all">(
     "all"
   )
+  const [expertAllowedToolTypeIds, setExpertAllowedToolTypeIds] = useState<
+    string[]
+  >([])
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -67,12 +74,31 @@ export default function AdminToolsPage() {
     fetchToolTypes()
   }, [fetchToolTypes])
 
+  useEffect(() => {
+    async function fetchExpertToolTypes() {
+      if (!isExpert || !currentUser) return
+      try {
+        const allowed = await getAllowedToolTypesForExpert(currentUser.id)
+        setExpertAllowedToolTypeIds(allowed)
+      } catch (error) {
+        console.error("Failed to fetch expert allowed tool types:", error)
+      }
+    }
+    fetchExpertToolTypes()
+  }, [isExpert, currentUser])
+
   const getTypeName = (typeId: string): ToolType | undefined => {
     const toolType = getToolTypeById(typeId)
     return toolType?.key as ToolType | undefined
   }
 
   const filteredTools = tools.filter((tool) => {
+    if (
+      isExpert &&
+      expertAllowedToolTypeIds.length > 0 &&
+      !expertAllowedToolTypeIds.includes(tool.type)
+    )
+      return false
     const typeName = getTypeName(tool.type)
     if (filterType !== "all" && typeName !== filterType) return false
     if (filterStatus !== "all" && tool.status !== filterStatus) return false
