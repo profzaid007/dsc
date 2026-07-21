@@ -6,6 +6,7 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
+import { useAuth } from "@/hooks/useAuth"
 import {
   Card,
   CardContent,
@@ -79,6 +80,9 @@ export default function AssignmentsPage() {
   } = useToolTypes()
   const hasFetched = useRef(false)
 
+  const { currentUser } = useAuth()
+  const isExpert = currentUser?.role === "expert"
+
   const [searchQuery, setSearchQuery] = useState("")
   const [filterCase, setFilterCase] = useState("")
   const [filterType, setFilterType] = useState<string>("all")
@@ -102,7 +106,12 @@ export default function AssignmentsPage() {
     return toolType?.key || "Unknown"
   }
 
+  const expertCaseIds = isExpert ? profiles.map((p) => p.id) : []
+
   const filteredAssignments = assignments.filter((assignment) => {
+    // Filter by expert's assigned cases
+    if (isExpert && !expertCaseIds.includes(assignment.case)) return false
+
     // Filter by search query
     if (searchQuery) {
       const caseName = getCaseName(assignment.case).toLowerCase()

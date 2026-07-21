@@ -7,6 +7,7 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
+import { useAuth } from "@/hooks/useAuth"
 import {
   Card,
   CardContent,
@@ -54,7 +55,11 @@ import {
   getToolTypeMeta,
   toolTypeOrder,
 } from "@/lib/tool-types"
-import { getAllowedToolTypesForCase } from "@/lib/pb-collections"
+import {
+  getAllowedToolTypesForCase,
+  getAllowedToolTypesForRole,
+  caseExpertsCollection,
+} from "@/lib/pb-collections"
 
 import { formatDate } from "@/lib/i18n"
 
@@ -80,6 +85,7 @@ export default function AdminCaseDetailPage({
   const { id: caseId } = use(params)
   const router = useRouter()
   const { lang } = useLang()
+  const { currentUser } = useAuth()
   const { getProfileById } = useProfiles()
   const { assignments, assignTool, deleteAssignment } = useAssignments()
   const { tools } = useTools()
@@ -97,6 +103,7 @@ export default function AdminCaseDetailPage({
 
   const profile = getProfileById(caseId)
   const caseAssignments = assignments.filter((a) => a.case === caseId)
+  const isExpert = currentUser?.role === "expert"
 
   useEffect(() => {
     fetchToolTypes()
@@ -104,16 +111,28 @@ export default function AdminCaseDetailPage({
 
   useEffect(() => {
     async function fetchAllowedToolTypes() {
-      if (!caseId) return
+      if (!caseId || !currentUser) return
       try {
-        const allowed = await getAllowedToolTypesForCase(caseId)
-        setAllowedToolTypeIds(allowed)
+        if (isExpert) {
+          const caseExpert =
+            await caseExpertsCollection.getByCaseAndExpert(
+              caseId,
+              currentUser.id
+            )
+          const allowed = caseExpert?.role
+            ? await getAllowedToolTypesForRole(caseExpert.role)
+            : []
+          setAllowedToolTypeIds(allowed)
+        } else {
+          const allowed = await getAllowedToolTypesForCase(caseId)
+          setAllowedToolTypeIds(allowed)
+        }
       } catch (error) {
         console.error("Failed to fetch allowed tool types for case:", error)
       }
     }
     fetchAllowedToolTypes()
-  }, [caseId])
+  }, [caseId, currentUser, isExpert])
 
   const handleAssignTool = async () => {
     if (!selectedToolId) return
@@ -404,9 +423,11 @@ export default function AdminCaseDetailPage({
                   )
                   .filter((key) => {
                     const toolType = toolTypes.find((item) => item.key === key)
+                    if (!toolType) return false
+                    if (isExpert) return allowedToolTypeIds.includes(toolType.id)
                     return (
                       allowedToolTypeIds.length === 0 ||
-                      (toolType && allowedToolTypeIds.includes(toolType.id))
+                      allowedToolTypeIds.includes(toolType.id)
                     )
                   })
                   .map((key) => {
@@ -447,9 +468,11 @@ export default function AdminCaseDetailPage({
                   )
                   .filter((key) => {
                     const toolType = toolTypes.find((item) => item.key === key)
+                    if (!toolType) return false
+                    if (isExpert) return allowedToolTypeIds.includes(toolType.id)
                     return (
                       allowedToolTypeIds.length === 0 ||
-                      (toolType && allowedToolTypeIds.includes(toolType.id))
+                      allowedToolTypeIds.includes(toolType.id)
                     )
                   })
                   .map((key) => {

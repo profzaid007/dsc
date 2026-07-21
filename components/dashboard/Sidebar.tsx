@@ -107,6 +107,8 @@ export function DashboardSidebar() {
     isLoading: isAuthLoading,
   } = useAuth()
 
+  const isExpert = currentUser?.role === "expert"
+
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("sidebar-dashboard-collapsed")
@@ -173,7 +175,7 @@ export function DashboardSidebar() {
 
         {/* Cases - shown for both admin and user */}
         <SmartLink
-          href={isAdmin ? "/dashboard/admin/cases" : "/dashboard/cases"}
+          href={isAdmin || isExpert ? "/dashboard/admin/cases" : "/dashboard/cases"}
           className={cn(
             "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
             isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
@@ -189,39 +191,38 @@ export function DashboardSidebar() {
           {!isCollapsed && "Cases"}
         </SmartLink>
 
-        {/* Training - shown for both admin and user
-        <SmartLink
-          href="/dashboard/training"
-          className={cn(
-            "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
-            isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
-            pathname === "/dashboard/training" ||
-              pathname.startsWith("/dashboard/training/")
-              ? "bg-white/20 text-white"
-              : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
-          )}
-          title={isCollapsed ? "Training" : undefined}
-        >
-          <GraduationCap className="h-5 w-5 shrink-0" />
-          {!isCollapsed && "Training"}
-        </SmartLink>
-
-        // {/* Public Lectures - shown for both admin and user 
-        // <SmartLink
-        //   href="/dashboard/public-lectures"
-        //   className={cn(
-        //     "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
-        //     isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
-        //     pathname === "/dashboard/public-lectures" ||
-        //       pathname.startsWith("/dashboard/public-lectures/")
-        //       ? "bg-white/20 text-white"
-        //       : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
-        //   )}
-        //   title={isCollapsed ? "Public Lectures" : undefined}
-        // >
-        //   <BookOpen className="h-5 w-5 shrink-0" />
-        //   {!isCollapsed && "Public Lectures"}
-        // </SmartLink> */}
+        {/* Expert section - only for experts */}
+        {isExpert && (
+          <>
+            {!isCollapsed && (
+              <div className="pt-4 pb-2">
+                <span className="px-3 text-xs font-medium tracking-wider text-primary-foreground/50 uppercase">
+                  Expert
+                </span>
+              </div>
+            )}
+            {renderNavItem(
+              {
+                name: { en: "Tools", ar: "الأدوات" },
+                href: "/dashboard/admin/tools",
+                icon: Wrench,
+              },
+              pathname,
+              true,
+              isCollapsed
+            )}
+            {renderNavItem(
+              {
+                name: { en: "Assignments", ar: "التعيينات" },
+                href: "/dashboard/admin/assignments",
+                icon: ClipboardList,
+              },
+              pathname,
+              true,
+              isCollapsed
+            )}
+          </>
+        )}
 
         {/* Admin section - only for admins */}
         {isAdmin && (

@@ -877,6 +877,20 @@ export async function getAllowedToolTypesForRole(
   return role?.tool_types || []
 }
 
+// Get union of allowed tool type IDs for an expert across all their assigned cases/roles
+export async function getAllowedToolTypesForExpert(
+  expertId: string
+): Promise<string[]> {
+  const caseExperts = await caseExpertsCollection.getByExpert(expertId)
+  const roleNames = [
+    ...new Set(caseExperts.map((ce) => ce.role).filter(Boolean)),
+  ]
+  const allowedSets = await Promise.all(
+    roleNames.map((roleName) => getAllowedToolTypesForRole(roleName as string))
+  )
+  return [...new Set(allowedSets.flat())]
+}
+
 // Get union of allowed tool type IDs for all experts assigned to a case
 export async function getAllowedToolTypesForCase(
   caseId: string
