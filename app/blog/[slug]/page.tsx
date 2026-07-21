@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { cookies } from "next/headers"
 import pb from "@/lib/pb"
-import { localizedField } from "@/lib/i18n"
+import { localizedField, t } from "@/lib/i18n"
 import type { BlogPage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
@@ -69,7 +69,7 @@ export default async function BlogPostPage({
         href="/blog"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
       >
-        &larr; Blog
+        &larr; {t({ en: "Blog", ar: "المدونة" }, lang)}
       </Link>
 
       <div className="mb-8 space-y-2">
