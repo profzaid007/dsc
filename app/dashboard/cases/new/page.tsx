@@ -326,7 +326,7 @@ export default function NewProfilePage() {
                     <SelectItem key={p.id} value={p.id}>
                       {lang === "ar"
                         ? p.portalName.ar.replace(/^بوابة /, "")
-                        : p.title}
+                        : p.title.en}
                     </SelectItem>
                   ))}
                   <SelectItem value={TRAINING_SERVICE_ID}>

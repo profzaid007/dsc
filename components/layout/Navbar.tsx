@@ -9,6 +9,7 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
 import { getPortalById } from "@/lib/portals"
+import { SITE_CONTENT } from "@/lib/site-content"
 import Image from "next/image"
 import { BookConsultDialog } from "../BookConsultDialog"
 
@@ -133,7 +134,7 @@ export function Navbar() {
                     className="hidden md:flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
                   >
                     <UserPlus className="h-4 w-4 text-muted-foreground" />
-                    {t({ en: "Register", ar: "التسجيل" }, lang)}
+                    {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
                   </Link>
                 </div>
             )}
@@ -197,7 +198,7 @@ export function Navbar() {
                 onClick={() => setConsultOpen(true)}
               >
                 <Calendar className="h-4 w-4" />
-                Book Consult
+                {t(SITE_CONTENT.nav.bookConsultation, lang)}
               </Button>
             )}
 
@@ -264,7 +265,7 @@ export function Navbar() {
                     className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
                   >
                     <UserPlus className="h-4 w-4" />
-                    {t({ en: "Register", ar: "التسجيل" }, lang)}
+                    {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
                   </Link>
                 </>
               )}
@@ -332,7 +333,7 @@ export function Navbar() {
                 }}
               >
                 <Calendar className="h-4 w-4" />
-                Book Consult
+                {t(SITE_CONTENT.nav.bookConsultation, lang)}
               </Button>
             </div>
           </div>

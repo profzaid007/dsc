@@ -8,7 +8,7 @@ export interface PortalService {
 
 export interface Portal {
   id: string;
-  title: string; 
+  title: BilingualString; 
   portalName: BilingualString;
   tagline: BilingualString;
   heroTitle: BilingualString;
@@ -26,7 +26,7 @@ export interface Portal {
 export const PORTALS: Portal[] = [
   {
     id: "1",
-    title: "Special Needs",
+    title: { en: "Special Needs", ar: "الاحتياجات الخاصة" },
     portalName: { en: "Special Needs Portal", ar: "بوابة الاحتياجات الخاصة" },
     image: "/portals/portal-1.jpg",
     banner: "/banners/banner-1.png",
@@ -68,7 +68,7 @@ export const PORTALS: Portal[] = [
   },
   {
     id: "2",
-    title: "Mental Health",
+    title: { en: "Mental Health", ar: "الصحة النفسية" },
     portalName: { en: "Mental Health Portal", ar: "بوابة الصحة النفسية" },
     tagline: { en: "Better Balance, Better Living", ar: "توازن أفضل، حياة أفضل" },
     image: "/portals/portal-2.jpg",
@@ -110,7 +110,7 @@ export const PORTALS: Portal[] = [
   },
   {
     id: "3",
-    title: "Innovation",
+    title: { en: "Innovation", ar: "الابتكار" },
     portalName: { en: "Innovation Portal", ar: "بوابة الابتكار" },
     tagline: { en: "From Ideas to Impact", ar: "من الأفكار إلى الأثر" },
     image: "/portals/portal-3.jpg",
@@ -152,7 +152,7 @@ export const PORTALS: Portal[] = [
   },
   {
     id: "4",
-    title: "Education",
+    title: { en: "Education", ar: "التعليم" },
     portalName: { en: "Education Portal", ar: "بوابة التعليم" },
     image: "/portals/portal-4.jpg",
     banner: "/banners/banner-4.png",
@@ -194,7 +194,7 @@ export const PORTALS: Portal[] = [
   },
   {
     id: "5",
-    title: "Institution",
+    title: { en: "Institution", ar: "المؤسسات" },
     portalName: { en: "Institutional Portal", ar: "بوابة المؤسسات" },
     image: "/portals/portal-5.jpg",
     banner: "/banners/banner-5.png",

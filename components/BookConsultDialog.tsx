@@ -54,7 +54,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       const portal = getPortalById(categoryId)
       const service = portal?.services.find((s) => s.id === subCategoryId)
 
-      const issueType = customCategory || portal?.title || ""
+      const issueType = customCategory || portal?.title?.en || ""
       const caseType = customSubCategory || service?.name.en || ""
 
       const html = [

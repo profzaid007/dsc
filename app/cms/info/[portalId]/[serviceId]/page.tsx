@@ -152,7 +152,7 @@ export default function CmsServiceEditorPage() {
         <div>
           <h1 className="text-2xl font-bold">{service.name.en}</h1>
           <p className="text-muted-foreground">
-            {portal.title} &rarr; {service.name.en}
+            {portal.title.en} &rarr; {service.name.en}
           </p>
         </div>
 

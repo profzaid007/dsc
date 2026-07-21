@@ -77,7 +77,7 @@ export default function CmsPortalServicesPage() {
       </div>
 
       <div>
-        <h1 className="text-2xl font-bold">{portal.title}</h1>
+        <h1 className="text-2xl font-bold">{portal.title.en}</h1>
         <p className="text-muted-foreground">
           Manage service pages for this portal
         </p>

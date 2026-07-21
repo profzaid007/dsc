@@ -23,7 +23,7 @@ export default function CmsInfoPage() {
                 style={{ backgroundColor: portal.accent }}
               />
               <div className="p-4">
-                <h3 className="font-semibold">{portal.title}</h3>
+                <h3 className="font-semibold">{portal.title.en}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {portal.services.length} services
                 </p>

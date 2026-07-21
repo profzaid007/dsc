@@ -19,7 +19,7 @@ function getPortalLabel(portal: Portal, lang: "en" | "ar"): string {
   if (lang === "ar") {
     return portal.portalName.ar.replace(/^بوابة /, "")
   }
-  return portal.title
+  return portal.title.en
 }
 
 export interface PortalServiceValue {

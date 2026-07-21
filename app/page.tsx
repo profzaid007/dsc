@@ -25,7 +25,7 @@ function PortalCard({ portal }: { portal: (typeof PORTALS)[number] }) {
           <div className="mb-5">
             <div className="rounded-lg py-4 px-4 text-center text-sm font-bold text-white"
                style={{color: colors.accent}}>
-              {portal.title}
+              {t(portal.title, lang)}
             </div>
           </div>
         </div>
