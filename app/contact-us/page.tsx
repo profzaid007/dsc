@@ -83,7 +83,7 @@ export default function ContactPage() {
             />
           </div>
           <h1 className="text-3xl font-bold text-white md:text-5xl">
-            {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
+            {t({ en: "Contact Us", ar: "اتصل بنا" }, lang)}
           </h1>
           <p
             className="mx-auto mt-4 max-w-2xl text-base leading-relaxed md:text-lg"
@@ -146,37 +146,6 @@ export default function ContactPage() {
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex items-start gap-4">
-                    <Mail className="h-5 w-5 shrink-0 mt-0.5" style={{ color: goldColor }} />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        support@dsc.ac
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <MapPin className="h-5 w-5 shrink-0 mt-0.5" style={{ color: goldColor }} />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {t({ en: "Address", ar: "العنوان" }, lang)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {t(
-                          {
-                            en: "Amman / Jordan",
-                            ar: "عمان / الأردن",
-                          },
-                          lang
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
                   <div className="flex items-start gap-4">
                     <i className="fab fa-whatsapp mt-0.5" style={{ color: goldColor, fontSize: 20 }} />
                     <div>
@@ -206,6 +175,36 @@ export default function ContactPage() {
                           {
                             en: "+962 6 5652527",
                             ar: "+962 6 5652527",
+                          },
+                          lang
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <Mail className="h-5 w-5 shrink-0 mt-0.5" style={{ color: goldColor }} />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        support@dsc.ac
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <MapPin className="h-5 w-5 shrink-0 mt-0.5" style={{ color: goldColor }} />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {t({ en: "Address", ar: "العنوان" }, lang)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {t(
+                          {
+                            en: "Amman / Jordan",
+                            ar: "عمان / الأردن",
                           },
                           lang
                         )}
