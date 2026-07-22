@@ -4,7 +4,7 @@ import Link from "next/link"
 import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import pb from "@/lib/pb"
-import { localizedField } from "@/lib/i18n"
+import { localizedField, t } from "@/lib/i18n"
 import { getPortalById } from "@/lib/portals"
 import type { InfoPage } from "@/types/cms"
 import type { Lang } from "@/types/form"
@@ -38,7 +38,7 @@ export default async function InfoPage({ params }: InfoPageProps) {
     const foundService = foundPortal?.services.find((s) => s.id === id)
     if (foundService) {
       portal = foundPortal
-      serviceName = foundService.name.en
+      serviceName = t(foundService.name, lang)
       break
     }
   }
@@ -51,7 +51,7 @@ export default async function InfoPage({ params }: InfoPageProps) {
           href="/"
           className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
         >
-          &larr; Back
+          {t({ en: "\u2190 Back", ar: "\u0631\u062C\u0648\u0639 \u2192" }, lang)}
         </Link>
         <h1 className="mb-8 text-3xl font-bold capitalize">
           {page.title || serviceName}
@@ -71,13 +71,15 @@ export default async function InfoPage({ params }: InfoPageProps) {
         href="/"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
       >
-        &larr; Back
+        {t({ en: "\u2190 Back", ar: "\u0631\u062C\u0648\u0639 \u2192" }, lang)}
       </Link>
       <h1 className="mb-4 text-3xl font-bold capitalize">{serviceName}</h1>
       <div className="rounded-lg border border-dashed p-12 text-center">
-        <p className="text-lg text-muted-foreground">Coming soon</p>
+        <p className="text-lg text-muted-foreground">
+          {t({ en: "Coming soon", ar: "قريباً" }, lang)}
+        </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          This page is being prepared. Check back later.
+          {t({ en: "This page is being prepared. Check back later.", ar: "هذه الصفحة قيد الإعداد. تحقق لاحقاً." }, lang)}
         </p>
       </div>
     </div>
