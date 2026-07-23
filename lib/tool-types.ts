@@ -4,6 +4,7 @@ import {
   FileBarChart,
   Layers,
   Paperclip,
+  Calendar,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import type { BilingualString, ToolType } from "@/types/tool"
@@ -24,6 +25,7 @@ export const toolTypeRegistry: Record<
   report: { icon: FileBarChart, route: "report" },
   plan: { icon: Layers, route: "plan" },
   attachment_request: { icon: Paperclip, route: "attachment-request" },
+  one_to_one_meeting: { icon: Calendar, route: "one-to-one-meeting" },
 }
 
 export const toolTypeOrder: ToolType[] = [
@@ -32,6 +34,7 @@ export const toolTypeOrder: ToolType[] = [
   "report",
   "plan",
   "attachment_request",
+  "one_to_one_meeting",
 ]
 
 export function getToolTypeRecordById(

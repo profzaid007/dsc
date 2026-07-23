@@ -4,6 +4,7 @@ export type ToolType =
   | "report"
   | "plan"
   | "attachment_request"
+  | "one_to_one_meeting"
 export type ServiceType = "individual" | "institution" | "both"
 export type ToolStatus = "active" | "inactive" | "archived"
 
@@ -165,6 +166,18 @@ export interface AttachmentRequestConfig {
   required: boolean
 }
 
+// ============ ONE TO ONE MEETING ============
+
+export interface OneToOneMeetingConfig {
+  childName: string
+  contact: string
+  email: string
+  issueType: string
+  caseType: string
+  description?: string
+  media: string[]
+}
+
 // ============ TOOL ============
 
 export type ToolConfig =
@@ -174,6 +187,7 @@ export type ToolConfig =
   | ReportConfig
   | PlanConfig
   | AttachmentRequestConfig
+  | OneToOneMeetingConfig
 
 export interface Tool {
   id: string
