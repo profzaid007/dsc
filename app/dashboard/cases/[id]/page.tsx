@@ -273,7 +273,7 @@ export default function ProfileDetailPage({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          {!assignment.is_not_template && (
+                          {!assignment.is_not_template ? (
                             <Link
                               href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
                             >
@@ -285,8 +285,7 @@ export default function ProfileDetailPage({
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             </Link>
-                          )}
-                          {toolType?.key === "one_to_one_meeting" && (
+                          ) : (
                             <Link
                               href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
                             >
@@ -299,7 +298,7 @@ export default function ProfileDetailPage({
                               </Button>
                             </Link>
                           )}
-                          {assignment.status === "completed" && toolType?.key !== "one_to_one_meeting" && (
+                          {assignment.status === "completed" && !assignment.is_not_template && (
                             <Button
                               variant="outline"
                               size="sm"

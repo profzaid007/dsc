@@ -43,6 +43,8 @@ import type {
   AttachmentRequestConfig,
   AttachmentFileType,
   OneToOneMeetingConfig,
+  ReportConfig,
+  PlanConfig,
 } from "@/types/tool"
 import { cn } from "@/lib/utils"
 import pb from "@/lib/pb"
@@ -84,6 +86,8 @@ export default function TakeSurveyToolPage({
   const isMediaTool = toolTypeName === "media_question"
   const isAttachmentTool = toolTypeName === "attachment_request"
   const isMeetingTool = toolTypeName === "one_to_one_meeting"
+  const isReportTool = toolTypeName === "report"
+  const isPlanTool = toolTypeName === "plan"
 
   const surveyConfig = isSurveyTool
     ? (assignment?.config as SurveyConfig | undefined)
@@ -100,8 +104,14 @@ export default function TakeSurveyToolPage({
   const meetingConfig = isMeetingTool
     ? (assignment?.config as OneToOneMeetingConfig | undefined)
     : undefined
+  const reportConfig = isReportTool
+    ? (assignment?.config as ReportConfig | undefined)
+    : undefined
+  const planConfig = isPlanTool
+    ? (assignment?.config as PlanConfig | undefined)
+    : undefined
 
-  const config = surveyConfig || mcConfig || mediaConfig || attachmentConfig || meetingConfig
+  const config = surveyConfig || mcConfig || mediaConfig || attachmentConfig || meetingConfig || reportConfig || planConfig
 
   const existingResponses = assignment?.responses as
     | Record<string, unknown>
@@ -1504,7 +1514,94 @@ export default function TakeSurveyToolPage({
               </div>
             )}
 
-            {isMeetingTool && (
+            {isReportTool && reportConfig && (
+              <div className="space-y-3">
+                {reportConfig.date && (
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "التاريخ" : "Date"}
+                    </Label>
+                    <p className="font-medium">{reportConfig.date}</p>
+                  </div>
+                )}
+                {reportConfig.assessment && (
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "التقييم" : "Assessment"}
+                    </Label>
+                    <p className="mt-1 whitespace-pre-wrap font-medium">{reportConfig.assessment}</p>
+                  </div>
+                )}
+                {reportConfig.suggestions && (
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "الاقتراحات" : "Suggestions"}
+                    </Label>
+                    <p className="mt-1 whitespace-pre-wrap font-medium">{reportConfig.suggestions}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isPlanTool && planConfig && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "تاريخ البداية" : "Start Date"}
+                    </Label>
+                    <p className="font-medium">{planConfig.startDate || "—"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "تاريخ النهاية" : "End Date"}
+                    </Label>
+                    <p className="font-medium">{planConfig.endDate || "—"}</p>
+                  </div>
+                </div>
+                {planConfig.goals?.length > 0 && (
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "الأهداف" : "Goals"}
+                    </Label>
+                    <div className="mt-1 space-y-2">
+                      {planConfig.goals.map((goal) => (
+                        <div key={goal.id} className="rounded-lg bg-muted/30 p-3">
+                          <p className="font-medium">{goal.title}</p>
+                          {goal.description && (
+                            <p className="mt-1 text-sm text-muted-foreground">{goal.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {planConfig.steps?.length > 0 && (
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "الخطوات" : "Steps"}
+                    </Label>
+                    <div className="mt-1 space-y-2">
+                      {planConfig.steps.map((step) => (
+                        <div key={step.id} className="rounded-lg border p-3">
+                          <div className="flex items-start gap-2">
+                            <div className={`mt-1 h-3 w-3 shrink-0 rounded-full ${step.completed ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+                            <div className="flex-1">
+                              <p className="font-medium">{step.title}</p>
+                              {step.description && (
+                                <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {(isMeetingTool || isReportTool || isPlanTool) && (
               <div className="flex gap-2 pt-4">
                 <Button
                   onClick={() => router.push(`/dashboard/cases/${profile.id}`)}
@@ -1514,7 +1611,7 @@ export default function TakeSurveyToolPage({
               </div>
             )}
 
-            {!isMeetingTool && (
+            {!isMeetingTool && !isReportTool && !isPlanTool && (
             <div className="flex gap-2 pt-4">
               <Button
                 variant="outline"
@@ -1723,7 +1820,94 @@ export default function TakeSurveyToolPage({
             </div>
           )}
 
-          {isMeetingTool ? (
+          {isReportTool && reportConfig && (
+            <div className="space-y-4">
+              {reportConfig.date && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "التاريخ" : "Date"}
+                  </Label>
+                  <p className="font-medium">{reportConfig.date}</p>
+                </div>
+              )}
+              {reportConfig.assessment && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "التقييم" : "Assessment"}
+                  </Label>
+                  <p className="whitespace-pre-wrap font-medium">{reportConfig.assessment}</p>
+                </div>
+              )}
+              {reportConfig.suggestions && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "الاقتراحات" : "Suggestions"}
+                  </Label>
+                  <p className="whitespace-pre-wrap font-medium">{reportConfig.suggestions}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isPlanTool && planConfig && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "تاريخ البداية" : "Start Date"}
+                  </Label>
+                  <p className="font-medium">{planConfig.startDate || "—"}</p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "تاريخ النهاية" : "End Date"}
+                  </Label>
+                  <p className="font-medium">{planConfig.endDate || "—"}</p>
+                </div>
+              </div>
+              {planConfig.goals?.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "الأهداف" : "Goals"}
+                  </Label>
+                  <div className="space-y-2">
+                    {planConfig.goals.map((goal) => (
+                      <div key={goal.id} className="rounded-lg bg-muted/30 p-3">
+                        <p className="font-medium">{goal.title}</p>
+                        {goal.description && (
+                          <p className="mt-1 text-sm text-muted-foreground">{goal.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {planConfig.steps?.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "الخطوات" : "Steps"}
+                  </Label>
+                  <div className="space-y-2">
+                    {planConfig.steps.map((step) => (
+                      <div key={step.id} className="rounded-lg border p-3">
+                        <div className="flex items-start gap-2">
+                          <div className={`mt-1 h-3 w-3 shrink-0 rounded-full ${step.completed ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+                          <div className="flex-1">
+                            <p className="font-medium">{step.title}</p>
+                            {step.description && (
+                              <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(isMeetingTool || isReportTool || isPlanTool) ? (
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
