@@ -13,6 +13,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Calendar, Loader2 } from "lucide-react"
 import {
   PortalServiceSelector,
@@ -30,6 +38,9 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
   const [contact, setContact] = useState("")
   const [email, setEmail] = useState("")
   const [description, setDescription] = useState("")
+  const [consultationType, setConsultationType] = useState<"online" | "face-to-face" | "">("")
+  const [preferredDate, setPreferredDate] = useState("")
+  const [preferredTime, setPreferredTime] = useState("")
   const [portalService, setPortalService] = useState<PortalServiceValue>({
     categoryId: "",
     subCategoryId: "",
@@ -64,6 +75,9 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         `<p><strong>Email:</strong> ${email}</p>`,
         issueType ? `<p><strong>Issue Type:</strong> ${issueType}</p>` : "",
         caseType ? `<p><strong>Case Type:</strong> ${caseType}</p>` : "",
+        consultationType ? `<p><strong>Consultation Type:</strong> ${consultationType === "online" ? "Online" : "Face to Face"}</p>` : "",
+        preferredDate ? `<p><strong>Preferred Date:</strong> ${preferredDate}</p>` : "",
+        preferredTime ? `<p><strong>Preferred Time:</strong> ${preferredTime}</p>` : "",
         description ? `<p><strong>Description:</strong><br/>${description}</p>` : "",
       ].join("\n")
 
@@ -87,6 +101,9 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
           email: `${email}`,
           issueType: `${issueType}`,
           caseType: `${caseType}`,
+          consultationType: `${consultationType}`,
+          preferredDate: `${preferredDate}`,
+          preferredTime: `${preferredTime}`,
           description: `${description}`,
         }),
       })
@@ -114,6 +131,9 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       setContact("")
       setEmail("")
       setDescription("")
+      setConsultationType("")
+      setPreferredDate("")
+      setPreferredTime("")
       setPortalService({
         categoryId: "",
         subCategoryId: "",
@@ -181,6 +201,49 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
               onChange={setPortalService}
               required
             />
+
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Consultation Preferences</p>
+              <div>
+                <Label className="mb-1 block text-sm font-medium">
+                  Type
+                </Label>
+                <Select
+                  value={consultationType}
+                  onValueChange={(v: "online" | "face-to-face") => setConsultationType(v)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="online">Online</SelectItem>
+                    <SelectItem value="face-to-face">Face to Face</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1 block text-sm font-medium">
+                  Preferred Date
+                </Label>
+                <Input
+                  type="date"
+                  value={preferredDate}
+                  onChange={(e) => setPreferredDate(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <Label className="mb-1 block text-sm font-medium">
+                  Preferred Time
+                </Label>
+                <Input
+                  type="time"
+                  value={preferredTime}
+                  onChange={(e) => setPreferredTime(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+            </div>
 
             <div>
               <label className="mb-1 block text-sm font-medium">

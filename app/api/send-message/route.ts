@@ -4,7 +4,7 @@ const botToken = process.env.BOT_TOKEN
 
 export async function POST(request: Request) {
   try {
-    const { name, contact, email, issueType, caseType, description } = await request.json()
+    const { name, contact, email, issueType, caseType, consultationType, preferredDate, preferredTime, description } = await request.json()
 
     const message = [
       "*New Consultation Request*",
@@ -14,8 +14,11 @@ export async function POST(request: Request) {
       `*Email:* ${email}`,
       issueType ? `*Issue Type:* ${issueType}` : "*Issue Type:*",
       caseType ? `*Case Type:* ${caseType}` : "*Case Type:*",
+      consultationType ? `*Consultation Type:* ${consultationType === "online" ? "Online" : "Face to Face"}` : null,
+      preferredDate ? `*Preferred Date:* ${preferredDate}` : null,
+      preferredTime ? `*Preferred Time:* ${preferredTime}` : null,
       description ? `*Description:* ${description}` : "*Description:*",
-    ].join("\n")
+    ].filter(Boolean).join("\n")
 
 
     const response = await fetch(
