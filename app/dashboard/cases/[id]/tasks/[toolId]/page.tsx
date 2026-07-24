@@ -42,6 +42,7 @@ import type {
   MediaItem,
   AttachmentRequestConfig,
   AttachmentFileType,
+  OneToOneMeetingConfig,
 } from "@/types/tool"
 import { cn } from "@/lib/utils"
 import pb from "@/lib/pb"
@@ -82,6 +83,7 @@ export default function TakeSurveyToolPage({
   const isMultipleChoiceTool = toolTypeName === "multiple_answer"
   const isMediaTool = toolTypeName === "media_question"
   const isAttachmentTool = toolTypeName === "attachment_request"
+  const isMeetingTool = toolTypeName === "one_to_one_meeting"
 
   const surveyConfig = isSurveyTool
     ? (assignment?.config as SurveyConfig | undefined)
@@ -95,8 +97,11 @@ export default function TakeSurveyToolPage({
   const attachmentConfig = isAttachmentTool
     ? (assignment?.config as AttachmentRequestConfig | undefined)
     : undefined
+  const meetingConfig = isMeetingTool
+    ? (assignment?.config as OneToOneMeetingConfig | undefined)
+    : undefined
 
-  const config = surveyConfig || mcConfig || mediaConfig || attachmentConfig
+  const config = surveyConfig || mcConfig || mediaConfig || attachmentConfig || meetingConfig
 
   const existingResponses = assignment?.responses as
     | Record<string, unknown>
@@ -1444,6 +1449,72 @@ export default function TakeSurveyToolPage({
               </div>
             )}
 
+            {isMeetingTool && meetingConfig && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "التاريخ" : "Date"}
+                    </Label>
+                    <p className="font-medium">{meetingConfig.date || "—"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "الوقت" : "Time"}
+                    </Label>
+                    <p className="font-medium">{meetingConfig.time || "—"}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">
+                    {lang === "ar" ? "نوع الاجتماع" : "Meeting Type"}
+                  </Label>
+                  <p className="font-medium">
+                    {meetingConfig.meetingType === "online"
+                      ? lang === "ar" ? "عن بُعد" : "Online"
+                      : lang === "ar" ? "وجهاً لوجه" : "Face to Face"}
+                  </p>
+                </div>
+                {meetingConfig.meetingType === "online" && meetingConfig.meetingLink && (
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "الرابط" : "Meeting Link"}
+                    </Label>
+                    <div className="mt-1">
+                      <a
+                        href={meetingConfig.meetingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="default" size="sm">
+                          {lang === "ar" ? "انضمام للاجتماع" : "Join Meeting"}
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                )}
+                {meetingConfig.meetingType === "face_to_face" && meetingConfig.location && (
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "الموقع" : "Location"}
+                    </Label>
+                    <p className="font-medium">{meetingConfig.location}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isMeetingTool && (
+              <div className="flex gap-2 pt-4">
+                <Button
+                  onClick={() => router.push(`/dashboard/cases/${profile.id}`)}
+                >
+                  {lang === "ar" ? "العودة" : "Back"}
+                </Button>
+              </div>
+            )}
+
+            {!isMeetingTool && (
             <div className="flex gap-2 pt-4">
               <Button
                 variant="outline"
@@ -1453,15 +1524,13 @@ export default function TakeSurveyToolPage({
               >
                 {lang === "ar" ? "تعديل الإجابات" : "Edit Answers"}
               </Button>
-              {/* <Button
-                onClick={() => router.push(`/dashboard/cases/${profile.id}`)}
-              > */}
               <Button
                 onClick={() => router.push(`/dashboard/cases/${profile.id}`)}
               >
                 {lang === "ar" ? "العودة" : "Back"}
               </Button>
             </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -1600,19 +1669,89 @@ export default function TakeSurveyToolPage({
 
           {isAttachmentTool && renderAttachment()}
 
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting
-              ? lang === "ar"
-                ? "جاري الإرسال..."
-                : "Submitting..."
-              : lang === "ar"
-                ? "إرسال"
-                : "Submit"}
-          </Button>
+          {isMeetingTool && meetingConfig && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "التاريخ" : "Date"}
+                  </Label>
+                  <p className="font-medium">{meetingConfig.date || "—"}</p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "الوقت" : "Time"}
+                  </Label>
+                  <p className="font-medium">{meetingConfig.time || "—"}</p>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-muted-foreground">
+                  {lang === "ar" ? "نوع الاجتماع" : "Meeting Type"}
+                </Label>
+                <p className="font-medium">
+                  {meetingConfig.meetingType === "online"
+                    ? lang === "ar" ? "عن بُعد" : "Online"
+                    : lang === "ar" ? "وجهاً لوجه" : "Face to Face"}
+                </p>
+              </div>
+              {meetingConfig.meetingType === "online" && meetingConfig.meetingLink && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "الرابط" : "Meeting Link"}
+                  </Label>
+                  <a
+                    href={meetingConfig.meetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <Button variant="default" className="w-full">
+                      {lang === "ar" ? "انضمام للاجتماع" : "Join Meeting"}
+                    </Button>
+                  </a>
+                </div>
+              )}
+              {meetingConfig.meetingType === "face_to_face" && meetingConfig.location && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "الموقع" : "Location"}
+                  </Label>
+                  <p className="font-medium">{meetingConfig.location}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isMeetingTool ? (
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="w-full"
+            >
+              {isSubmitting
+                ? lang === "ar"
+                  ? "جاري الحفظ..."
+                  : "Saving..."
+                : lang === "ar"
+                  ? "تأكيد الإتمام"
+                  : "Mark as Completed"}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="w-full"
+            >
+              {isSubmitting
+                ? lang === "ar"
+                  ? "جاري الإرسال..."
+                  : "Submitting..."
+                : lang === "ar"
+                  ? "إرسال"
+                  : "Submit"}
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>

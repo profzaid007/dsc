@@ -286,7 +286,20 @@ export default function ProfileDetailPage({
                               </Button>
                             </Link>
                           )}
-                          {assignment.status === "completed" && (
+                          {toolType?.key === "one_to_one_meeting" && (
+                            <Link
+                              href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
+                            >
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                title={lang === "ar" ? "عرض" : "View"}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          )}
+                          {assignment.status === "completed" && toolType?.key !== "one_to_one_meeting" && (
                             <Button
                               variant="outline"
                               size="sm"

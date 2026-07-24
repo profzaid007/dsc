@@ -169,12 +169,11 @@ export interface AttachmentRequestConfig {
 // ============ ONE TO ONE MEETING ============
 
 export interface OneToOneMeetingConfig {
-  childName: string
-  contact: string
-  email: string
-  issueType: string
-  caseType: string
-  description?: string
+  date: string
+  time: string
+  meetingType: "online" | "face_to_face"
+  meetingLink?: string
+  location?: string
   media: string[]
 }
 

@@ -1,21 +1,16 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
-import { useAuth } from "@/hooks/useAuth"
 import { toolTypesCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
-import {
-  PortalServiceSelector,
-  type PortalServiceValue,
-} from "@/components/register/PortalServiceSelector"
 import { Calendar, Eye, EyeOff, Loader2 } from "lucide-react"
 import type { OneToOneMeetingConfig } from "@/types/tool"
 
@@ -27,7 +22,6 @@ export default function OneToOneMeetingNewPage({
   const router = useRouter()
   const { assignTool, updateAssignment, assignments, isLoading: isAssignmentsLoading } = useAssignments()
   const { getProfileById } = useProfiles()
-  const { currentUser } = useAuth()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [meetingTypeId, setMeetingTypeId] = useState<string>("")
@@ -40,16 +34,11 @@ export default function OneToOneMeetingNewPage({
 
   const [toolName, setToolName] = useState({ en: "", ar: "" })
 
-  const [childName, setChildName] = useState("")
-  const [contact, setContact] = useState("")
-  const [email, setEmail] = useState("")
-  const [description, setDescription] = useState("")
-  const [portalService, setPortalService] = useState<PortalServiceValue>({
-    categoryId: "",
-    subCategoryId: "",
-    customCategory: "",
-    customSubCategory: "",
-  })
+  const [meetingDate, setMeetingDate] = useState("")
+  const [meetingTime, setMeetingTime] = useState("")
+  const [meetingType, setMeetingType] = useState<"online" | "face_to_face">("online")
+  const [meetingLink, setMeetingLink] = useState("")
+  const [meetingLocation, setMeetingLocation] = useState("")
 
   useEffect(() => {
     const fetchType = async () => {
@@ -65,25 +54,17 @@ export default function OneToOneMeetingNewPage({
     fetchType()
   }, [])
 
-  useEffect(() => {
-    if (currentUser?.name) {
-      setChildName(currentUser.name)
-    }
-  }, [currentUser])
-
   const handleCaseSelect = useCallback((caseId: string) => {
     setSelectedCaseId(caseId)
     if (caseId) {
       const caseProfile = getProfileById(caseId)
       if (caseProfile) {
-        setChildName(caseProfile.name)
         setToolName({
           en: `${caseProfile.name} - One to One Meeting`,
           ar: `${caseProfile.name} - اجتماع فردي`,
         })
       }
     } else {
-      setChildName("")
       setToolName({ en: "", ar: "" })
     }
   }, [getProfileById])
@@ -108,16 +89,11 @@ export default function OneToOneMeetingNewPage({
               en: existingAssignment.name_en || "",
               ar: existingAssignment.name_ar || "",
             })
-            setChildName(config?.childName || "")
-            setContact(config?.contact || "")
-            setEmail(config?.email || "")
-            setDescription(config?.description || "")
-            setPortalService({
-              categoryId: "",
-              subCategoryId: "",
-              customCategory: config?.issueType || "",
-              customSubCategory: config?.caseType || "",
-            })
+            setMeetingDate(config?.date || "")
+            setMeetingTime(config?.time || "")
+            setMeetingType(config?.meetingType || "online")
+            setMeetingLink(config?.meetingLink || "")
+            setMeetingLocation(config?.location || "")
           }
         } else if (caseIdFromUrl) {
           handleCaseSelect(caseIdFromUrl)
@@ -133,19 +109,16 @@ export default function OneToOneMeetingNewPage({
   }, [isAssignmentsLoading, assignments, searchParams, handleCaseSelect])
 
   const handleSubmit = async () => {
-    if (!selectedCaseId || !toolName.en || !contact || !email || !meetingTypeId) return
+    if (!selectedCaseId || !toolName.en || !meetingDate || !meetingTime || !meetingTypeId) return
     setIsSubmitting(true)
 
     try {
-      const { categoryId, subCategoryId, customCategory, customSubCategory } = portalService
-
       const config: OneToOneMeetingConfig = {
-        childName,
-        contact,
-        email,
-        issueType: customCategory || categoryId,
-        caseType: customSubCategory || subCategoryId,
-        description: description || undefined,
+        date: meetingDate,
+        time: meetingTime,
+        meetingType,
+        meetingLink: meetingType === "online" ? meetingLink : undefined,
+        location: meetingType === "face_to_face" ? meetingLocation || undefined : undefined,
         media: [],
       }
 
@@ -182,16 +155,16 @@ export default function OneToOneMeetingNewPage({
     } else {
       setSelectedCaseId("")
       setToolName({ en: "", ar: "" })
-      setChildName(currentUser?.name || "")
-      setContact("")
-      setEmail("")
-      setDescription("")
-      setPortalService({ categoryId: "", subCategoryId: "", customCategory: "", customSubCategory: "" })
+      setMeetingDate("")
+      setMeetingTime("")
+      setMeetingType("online")
+      setMeetingLink("")
+      setMeetingLocation("")
       setShowPreview(false)
     }
   }
 
-  const isFormValid = selectedCaseId && toolName.en && contact && email && meetingTypeId
+  const isFormValid = selectedCaseId && toolName.en && meetingDate && meetingTime && meetingTypeId
 
   if (typeError) {
     return (
@@ -288,49 +261,67 @@ export default function OneToOneMeetingNewPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Meeting Details</CardTitle>
+              <CardTitle>Meeting Schedule *</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Child Name</Label>
-                <Input
-                  value={childName}
-                  onChange={(e) => setChildName(e.target.value)}
-                  placeholder="Child name"
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Date *</Label>
+                  <Input
+                    type="date"
+                    required
+                    value={meetingDate}
+                    onChange={(e) => setMeetingDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Time *</Label>
+                  <Input
+                    type="time"
+                    required
+                    value={meetingTime}
+                    onChange={(e) => setMeetingTime(e.target.value)}
+                  />
+                </div>
               </div>
+
               <div className="space-y-2">
-                <Label>Contact *</Label>
-                <Input
-                  required
-                  value={contact}
-                  onChange={(e) => setContact(e.target.value)}
-                  placeholder="Phone number"
-                />
+                <Label>Meeting Type *</Label>
+                <RadioGroup
+                  value={meetingType}
+                  onValueChange={(val) => setMeetingType(val as "online" | "face_to_face")}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="online" id="online" />
+                    <Label htmlFor="online">Online</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="face_to_face" id="face_to_face" />
+                    <Label htmlFor="face_to_face">Face to Face</Label>
+                  </div>
+                </RadioGroup>
               </div>
-              <div className="space-y-2">
-                <Label>Email *</Label>
-                <Input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                />
-              </div>
-              <PortalServiceSelector
-                value={portalService}
-                onChange={setPortalService}
-              />
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Briefly describe the purpose of the meeting"
-                  rows={4}
-                />
-              </div>
+
+              {meetingType === "online" ? (
+                <div className="space-y-2">
+                  <Label>Meeting Link *</Label>
+                  <Input
+                    value={meetingLink}
+                    onChange={(e) => setMeetingLink(e.target.value)}
+                    placeholder="https://meet.google.com/..."
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Location</Label>
+                  <Input
+                    value={meetingLocation}
+                    onChange={(e) => setMeetingLocation(e.target.value)}
+                    placeholder="e.g., Room 201, Main Building"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -368,31 +359,25 @@ export default function OneToOneMeetingNewPage({
               </div>
               <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="text-muted-foreground">Child:</span>
-                  <span>{childName || "—"}</span>
-                  <span className="text-muted-foreground">Contact:</span>
-                  <span>{contact || "—"}</span>
-                  <span className="text-muted-foreground">Email:</span>
-                  <span>{email || "—"}</span>
+                  <span className="text-muted-foreground">Date:</span>
+                  <span>{meetingDate || "—"}</span>
+                  <span className="text-muted-foreground">Time:</span>
+                  <span>{meetingTime || "—"}</span>
+                  <span className="text-muted-foreground">Type:</span>
+                  <span>{meetingType === "online" ? "Online" : "Face to Face"}</span>
+                  {meetingType === "online" && (
+                    <>
+                      <span className="text-muted-foreground">Link:</span>
+                      <span className="truncate">{meetingLink || "—"}</span>
+                    </>
+                  )}
+                  {meetingType === "face_to_face" && (
+                    <>
+                      <span className="text-muted-foreground">Location:</span>
+                      <span>{meetingLocation || "—"}</span>
+                    </>
+                  )}
                 </div>
-                {(portalService.customCategory || portalService.categoryId) && (
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <span className="text-muted-foreground">Issue Type:</span>
-                    <span>{portalService.customCategory || portalService.categoryId}</span>
-                  </div>
-                )}
-                {(portalService.customSubCategory || portalService.subCategoryId) && (
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <span className="text-muted-foreground">Case Type:</span>
-                    <span>{portalService.customSubCategory || portalService.subCategoryId}</span>
-                  </div>
-                )}
-                {description && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Description:</span>
-                    <p className="mt-1 whitespace-pre-wrap">{description}</p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
