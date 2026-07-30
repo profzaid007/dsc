@@ -2,7 +2,7 @@ import Link from "next/link"
 import { cookies } from "next/headers"
 import pb from "@/lib/pb"
 import { localizedField, t } from "@/lib/i18n"
-import type { BlogPage } from "@/types/cms"
+import type { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
 
@@ -20,17 +20,33 @@ export default async function BlogPostPage({
   const lang = (cookieStore.get("lang")?.value as Lang) || "en"
 
   let page: BlogPage | null = null
+  let categoryLabel = ""
 
   try {
-    const record = await pb
-      .collection("blog_pages")
-      .getFirstListItem(`slug = "${slug}" && is_published = true`)
+    const [catRecords, record] = await Promise.all([
+      pb.collection("blog_categories").getFullList(),
+      pb.collection("blog_pages").getFirstListItem(`slug = "${slug}" && is_published = true`),
+    ])
+    const catMap = new Map<string, BlogCategory>()
+    for (const c of catRecords) {
+      catMap.set(c.key as string, {
+        id: c.id as string,
+        key: c.key as string,
+        label_en: c.label_en as string,
+        label_ar: c.label_ar as string | undefined,
+      })
+    }
+    const rawCategory = record.category as string
+    const matched = catMap.get(rawCategory)
+    categoryLabel = matched
+      ? (lang === "ar" && matched.label_ar ? matched.label_ar : matched.label_en)
+      : rawCategory
     page = {
       id: record.id as string,
       slug: record.slug as string,
       title_en: record.title_en as string,
       title_ar: record.title_ar as string | undefined,
-      category: record.category as string,
+      category: rawCategory,
       content_en: record.content_en as string,
       content_ar: record.content_ar as string | undefined,
       is_published: record.is_published as boolean,
@@ -75,7 +91,7 @@ export default async function BlogPostPage({
       <div className="mb-8 space-y-2">
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span className="rounded-md bg-gray-100 px-2 py-0.5 capitalize">
-            {page.category}
+            {categoryLabel}
           </span>
           <span>&middot;</span>
           <span>{new Date(page.created).toLocaleDateString()}</span>

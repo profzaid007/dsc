@@ -28,7 +28,9 @@ export interface BlogPage {
 
 export interface BlogCategory {
   id: string
-  name: string
+  key: string
+  label_en: string
+  label_ar?: string
 }
 
 export interface HomePage {

@@ -3,7 +3,7 @@ import type { User } from "@/types/user"
 import type { Profile } from "@/types/profile"
 import type { Tool, BilingualString } from "@/types/tool"
 import type { CaseTool } from "@/types/assignment"
-import type { BlogPage, InfoPage, HomePage } from "@/types/cms"
+import type { BlogPage, BlogCategory, InfoPage, HomePage } from "@/types/cms"
 import type { ToolTypeRecord } from "./tool-types"
 import { handlePocketBaseError } from "./pb"
 
@@ -757,19 +757,43 @@ export const blogPagesCollection = {
 }
 
 export const blogCategoriesCollection = {
-  async getAll(): Promise<{ id: string; name: string }[]> {
+  async getAll(): Promise<BlogCategory[]> {
     const data = await pb.collection("blog_categories").getFullList({
-      sort: "name",
+      sort: "key",
     })
     return data.map((item) => ({
       id: item.id as string,
-      name: item.name as string,
+      key: item.key as string,
+      label_en: item.label_en as string,
+      label_ar: item.label_ar as string | undefined,
     }))
   },
 
-  async create(name: string): Promise<{ id: string; name: string }> {
-    const result = await pb.collection("blog_categories").create({ name })
-    return { id: result.id as string, name: result.name as string }
+  async create(data: {
+    key: string
+    label_en: string
+    label_ar?: string
+  }): Promise<BlogCategory> {
+    const result = await pb.collection("blog_categories").create(data)
+    return {
+      id: result.id as string,
+      key: result.key as string,
+      label_en: result.label_en as string,
+      label_ar: result.label_ar as string | undefined,
+    }
+  },
+
+  async update(
+    id: string,
+    data: { key?: string; label_en?: string; label_ar?: string }
+  ): Promise<BlogCategory> {
+    const result = await pb.collection("blog_categories").update(id, data)
+    return {
+      id: result.id as string,
+      key: result.key as string,
+      label_en: result.label_en as string,
+      label_ar: result.label_ar as string | undefined,
+    }
   },
 
   async delete(id: string): Promise<void> {

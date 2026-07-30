@@ -3,7 +3,7 @@ import Image from "next/image"
 import { cookies } from "next/headers"
 import pb from "@/lib/pb"
 import { localizedField, t } from "@/lib/i18n"
-import type { BlogPage } from "@/types/cms"
+import type { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -20,15 +20,25 @@ export default async function BlogPage() {
   const lang = (cookieStore.get("lang")?.value as Lang) || "en"
 
   let posts: BlogPage[] = []
-  let thumbnailUrls: (string | null)[] = []
+  const thumbnailUrls: (string | null)[] = []
+  const catMap = new Map<string, BlogCategory>()
 
   try {
-    const records = await pb
-      .collection("blog_pages")
-      .getFullList({
+    const [catRecords, records] = await Promise.all([
+      pb.collection("blog_categories").getFullList(),
+      pb.collection("blog_pages").getFullList({
         filter: "is_published = true",
         sort: "-created",
+      }),
+    ])
+    for (const c of catRecords) {
+      catMap.set(c.key as string, {
+        id: c.id as string,
+        key: c.key as string,
+        label_en: c.label_en as string,
+        label_ar: c.label_ar as string | undefined,
       })
+    }
     posts = records.map((record) => {
       const thumbFilename = extractThumbnail(record)
       thumbnailUrls.push(thumbFilename ? pb.files.getUrl(record, thumbFilename) : null)
@@ -81,7 +91,10 @@ export default async function BlogPage() {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <Badge variant="secondary" className="capitalize">
-                      {post.category}
+                      {(() => {
+                        const c = catMap.get(post.category)
+                        return c ? (lang === "ar" && c.label_ar ? c.label_ar : c.label_en) : post.category
+                      })()}
                     </Badge>
                     <span>
                       {new Date(post.created).toLocaleDateString()}

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { blogCategoriesCollection } from "@/lib/pb-collections"
+import type { BlogCategory } from "@/types/cms"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -13,16 +14,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Loader2, ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { Loader2, ArrowLeft, Plus, Trash2, Pencil, X, Check } from "lucide-react"
 
 export default function BlogCategoriesPage() {
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
-  )
+  const [categories, setCategories] = useState<BlogCategory[]>([])
   const [loading, setLoading] = useState(true)
-  const [newName, setNewName] = useState("")
+  const [newKey, setNewKey] = useState("")
+  const [newLabelEn, setNewLabelEn] = useState("")
+  const [newLabelAr, setNewLabelAr] = useState("")
   const [adding, setAdding] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editKey, setEditKey] = useState("")
+  const [editLabelEn, setEditLabelEn] = useState("")
+  const [editLabelAr, setEditLabelAr] = useState("")
+  const [savingEdit, setSavingEdit] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -39,22 +45,29 @@ export default function BlogCategoriesPage() {
   }, [load])
 
   const handleAdd = async () => {
-    const trimmed = newName.trim()
-    if (!trimmed) return
+    const trimmedKey = newKey.trim()
+    const trimmedLabelEn = newLabelEn.trim()
+    if (!trimmedKey || !trimmedLabelEn) return
     setAdding(true)
     try {
-      await blogCategoriesCollection.create(trimmed)
-      setNewName("")
+      await blogCategoriesCollection.create({
+        key: trimmedKey,
+        label_en: trimmedLabelEn,
+        label_ar: newLabelAr.trim() || undefined,
+      })
+      setNewKey("")
+      setNewLabelEn("")
+      setNewLabelAr("")
       load()
     } catch {
-      alert("Category already exists or failed to add.")
+      alert("Failed to add category. The key may already exist.")
     } finally {
       setAdding(false)
     }
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"?`)) return
+  const handleDelete = async (id: string, label: string) => {
+    if (!confirm(`Delete "${label}"?`)) return
     setDeletingId(id)
     try {
       await blogCategoriesCollection.delete(id)
@@ -63,6 +76,40 @@ export default function BlogCategoriesPage() {
       alert("Failed to delete category. It may be in use.")
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  const startEdit = (cat: BlogCategory) => {
+    setEditingId(cat.id)
+    setEditKey(cat.key)
+    setEditLabelEn(cat.label_en)
+    setEditLabelAr(cat.label_ar || "")
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditKey("")
+    setEditLabelEn("")
+    setEditLabelAr("")
+  }
+
+  const saveEdit = async (id: string) => {
+    const trimmedKey = editKey.trim()
+    const trimmedLabelEn = editLabelEn.trim()
+    if (!trimmedKey || !trimmedLabelEn) return
+    setSavingEdit(true)
+    try {
+      const updated = await blogCategoriesCollection.update(id, {
+        key: trimmedKey,
+        label_en: trimmedLabelEn,
+        label_ar: editLabelAr.trim() || undefined,
+      })
+      setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)))
+      cancelEdit()
+    } catch {
+      alert("Failed to update category.")
+    } finally {
+      setSavingEdit(false)
     }
   }
 
@@ -83,17 +130,34 @@ export default function BlogCategoriesPage() {
         <p className="text-muted-foreground">Manage blog categories</p>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="New category name"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleAdd()
-          }}
-          disabled={adding}
-        />
-        <Button onClick={handleAdd} disabled={adding || !newName.trim()}>
+      <div className="flex items-start gap-2">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          <Input
+            placeholder="Key"
+            value={newKey}
+            onChange={(e) => setNewKey(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
+            disabled={adding}
+            className="w-36"
+          />
+          <Input
+            placeholder="Label (EN)"
+            value={newLabelEn}
+            onChange={(e) => setNewLabelEn(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
+            disabled={adding}
+            className="w-48"
+          />
+          <Input
+            placeholder="Label (AR)"
+            value={newLabelAr}
+            onChange={(e) => setNewLabelAr(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
+            disabled={adding}
+            className="w-48"
+          />
+        </div>
+        <Button onClick={handleAdd} disabled={adding || !newKey.trim() || !newLabelEn.trim()}>
           {adding ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -116,30 +180,88 @@ export default function BlogCategoriesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
+                <TableHead>Key</TableHead>
+                <TableHead>Label (EN)</TableHead>
+                <TableHead>Label (AR)</TableHead>
+                <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {categories.map((cat) => (
                 <TableRow key={cat.id}>
-                  <TableCell className="font-medium capitalize">
-                    {cat.name}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(cat.id, cat.name)}
-                      disabled={deletingId === cat.id}
-                    >
-                      {deletingId === cat.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      )}
-                    </Button>
-                  </TableCell>
+                  {editingId === cat.id ? (
+                    <>
+                      <TableCell>
+                        <Input
+                          value={editKey}
+                          onChange={(e) => setEditKey(e.target.value)}
+                          className="h-8 w-28"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={editLabelEn}
+                          onChange={(e) => setEditLabelEn(e.target.value)}
+                          className="h-8 w-40"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={editLabelAr}
+                          onChange={(e) => setEditLabelAr(e.target.value)}
+                          className="h-8 w-40"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => saveEdit(cat.id)}
+                            disabled={savingEdit || !editKey.trim() || !editLabelEn.trim()}
+                          >
+                            {savingEdit ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4 text-green-500" />
+                            )}
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={cancelEdit}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell className="font-medium">{cat.key}</TableCell>
+                      <TableCell>{cat.label_en}</TableCell>
+                      <TableCell dir="rtl">{cat.label_ar || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => startEdit(cat)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(cat.id, cat.label_en)}
+                            disabled={deletingId === cat.id}
+                          >
+                            {deletingId === cat.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

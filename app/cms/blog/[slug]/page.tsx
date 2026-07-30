@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { blogPagesCollection, blogCategoriesCollection } from "@/lib/pb-collections"
-import { BlogPage } from "@/types/cms"
+import { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
 import { Button } from "@/components/ui/button"
@@ -64,9 +64,7 @@ export default function CmsBlogEditorPage() {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
 
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
-  )
+  const [categories, setCategories] = useState<BlogCategory[]>([])
 
   const [resetKey, setResetKey] = useState(0)
 
@@ -348,8 +346,8 @@ export default function CmsBlogEditorPage() {
             </SelectTrigger>
             <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)] min-w-[160px]">
               {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.name} className="capitalize">
-                  {cat.name}
+                <SelectItem key={cat.id} value={cat.key}>
+                  {activeLang === "ar" && cat.label_ar ? cat.label_ar : cat.label_en}
                 </SelectItem>
               ))}
             </SelectContent>
