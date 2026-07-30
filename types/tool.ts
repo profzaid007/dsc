@@ -174,6 +174,8 @@ export interface OneToOneMeetingConfig {
   meetingType: "online" | "face_to_face"
   meetingLink?: string
   location?: string
+  notes?: string
+  notesVisibleToUser?: boolean
   media: string[]
 }
 

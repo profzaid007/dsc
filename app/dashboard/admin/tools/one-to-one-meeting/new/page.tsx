@@ -8,8 +8,10 @@ import { toolTypesCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Switch } from "@/components/ui/switch"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { Calendar, Eye, EyeOff, Loader2 } from "lucide-react"
 import type { OneToOneMeetingConfig } from "@/types/tool"
@@ -39,6 +41,8 @@ export default function OneToOneMeetingNewPage({
   const [meetingType, setMeetingType] = useState<"online" | "face_to_face">("online")
   const [meetingLink, setMeetingLink] = useState("")
   const [meetingLocation, setMeetingLocation] = useState("")
+  const [adminNotes, setAdminNotes] = useState("")
+  const [notesVisible, setNotesVisible] = useState(false)
 
   useEffect(() => {
     const fetchType = async () => {
@@ -94,6 +98,8 @@ export default function OneToOneMeetingNewPage({
             setMeetingType(config?.meetingType || "online")
             setMeetingLink(config?.meetingLink || "")
             setMeetingLocation(config?.location || "")
+            setAdminNotes(config?.notes || "")
+            setNotesVisible(config?.notesVisibleToUser || false)
           }
         } else if (caseIdFromUrl) {
           handleCaseSelect(caseIdFromUrl)
@@ -119,6 +125,8 @@ export default function OneToOneMeetingNewPage({
         meetingType,
         meetingLink: meetingType === "online" ? meetingLink : undefined,
         location: meetingType === "face_to_face" ? meetingLocation || undefined : undefined,
+        notes: adminNotes || undefined,
+        notesVisibleToUser: notesVisible,
         media: [],
       }
 
@@ -160,6 +168,8 @@ export default function OneToOneMeetingNewPage({
       setMeetingType("online")
       setMeetingLink("")
       setMeetingLocation("")
+      setAdminNotes("")
+      setNotesVisible(false)
       setShowPreview(false)
     }
   }
@@ -325,6 +335,30 @@ export default function OneToOneMeetingNewPage({
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle>Admin Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder="Add internal notes about this meeting..."
+                rows={3}
+              />
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="notes-visible"
+                  checked={notesVisible}
+                  onCheckedChange={setNotesVisible}
+                />
+                <Label htmlFor="notes-visible" className="text-sm text-muted-foreground">
+                  Show notes to user
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={handleCancel}>
               Cancel
@@ -378,6 +412,15 @@ export default function OneToOneMeetingNewPage({
                     </>
                   )}
                 </div>
+                {adminNotes && (
+                  <div className="pt-2 border-t text-sm">
+                    <span className="text-muted-foreground">Notes:</span>
+                    <p className="mt-1 whitespace-pre-wrap">{adminNotes}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {notesVisible ? "Visible to user" : "Admin only"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useToolTypes } from "@/hooks/useToolTypes"
+import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import {
   Card,
@@ -75,11 +76,14 @@ export default function TakeSurveyToolPage({
     isLoading: isAssignmentsLoading,
   } = useAssignments(caseId)
   const { getToolTypeById, fetchToolTypes } = useToolTypes()
+  const { currentUser } = useAuth()
 
   const assignment = assignments.find((a) => a.id === assignmentId) // Find by toolId
   const profile = getProfileById(caseId) // Get profile by case ID
   const toolType = assignment ? getToolTypeById(assignment.type) : undefined
   const toolTypeName = toolType?.key || "unknown"
+
+  const isAdminOrExpert = currentUser?.role === "admin" || currentUser?.role === "super_admin" || currentUser?.role === "expert"
 
   const isSurveyTool = toolTypeName === "survey"
   const isMultipleChoiceTool = toolTypeName === "multiple_answer"
@@ -123,6 +127,17 @@ export default function TakeSurveyToolPage({
   const [errors, setErrors] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const isCompleted = assignment?.status === "completed"
+
+  const [localNotes, setLocalNotes] = useState("")
+  const [localNotesVisible, setLocalNotesVisible] = useState(false)
+  const [isSavingNotes, setIsSavingNotes] = useState(false)
+
+  useEffect(() => {
+    if (meetingConfig) {
+      setLocalNotes(meetingConfig.notes || "")
+      setLocalNotesVisible(meetingConfig.notesVisibleToUser || false)
+    }
+  }, [meetingConfig])
 
   // File upload state for media and attachment tools
   const [uploadedFiles, setUploadedFiles] = useState<
@@ -300,6 +315,25 @@ export default function TakeSurveyToolPage({
 
     setErrors(missing)
     return missing.length === 0
+  }
+
+  const saveNotes = async () => {
+    if (!assignment || !meetingConfig) return
+    setIsSavingNotes(true)
+    try {
+      const updatedConfig = {
+        ...meetingConfig,
+        notes: localNotes || undefined,
+        notesVisibleToUser: localNotesVisible,
+      }
+      await updateAssignment(assignmentId, {
+        config: updatedConfig as OneToOneMeetingConfig,
+      })
+    } catch (error) {
+      console.error("Failed to save notes:", error)
+    } finally {
+      setIsSavingNotes(false)
+    }
   }
 
   const handleSubmit = async () => {
@@ -1511,6 +1545,52 @@ export default function TakeSurveyToolPage({
                     <p className="font-medium">{meetingConfig.location}</p>
                   </div>
                 )}
+
+                {isAdminOrExpert ? (
+                  <div className="space-y-2 rounded-lg border p-3">
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "ملاحظات المشرف" : "Admin Notes"}
+                    </Label>
+                    <textarea
+                      value={localNotes}
+                      onChange={(e) => setLocalNotes(e.target.value)}
+                      placeholder={lang === "ar" ? "أضف ملاحظات..." : "Add notes..."}
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      rows={3}
+                    />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="notes-visible-completed"
+                          checked={localNotesVisible}
+                          onChange={(e) => setLocalNotesVisible(e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor="notes-visible-completed" className="text-sm text-muted-foreground">
+                          {lang === "ar" ? "إظهار للمستخدم" : "Show to user"}
+                        </Label>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={saveNotes}
+                        disabled={isSavingNotes}
+                      >
+                        {isSavingNotes
+                          ? lang === "ar" ? "جاري الحفظ..." : "Saving..."
+                          : lang === "ar" ? "حفظ" : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : meetingConfig.notes && meetingConfig.notesVisibleToUser ? (
+                  <div>
+                    <Label className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "ملاحظات" : "Notes"}
+                    </Label>
+                    <p className="mt-1 whitespace-pre-wrap font-medium">{meetingConfig.notes}</p>
+                  </div>
+                ) : null}
               </div>
             )}
 
@@ -1817,6 +1897,52 @@ export default function TakeSurveyToolPage({
                   <p className="font-medium">{meetingConfig.location}</p>
                 </div>
               )}
+
+              {isAdminOrExpert ? (
+                <div className="space-y-3 rounded-lg border p-4">
+                  <Label className="text-sm font-medium">
+                    {lang === "ar" ? "ملاحظات المشرف" : "Admin Notes"}
+                  </Label>
+                  <textarea
+                    value={localNotes}
+                    onChange={(e) => setLocalNotes(e.target.value)}
+                    placeholder={lang === "ar" ? "أضف ملاحظات..." : "Add notes..."}
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    rows={3}
+                  />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="notes-visible-task"
+                        checked={localNotesVisible}
+                        onChange={(e) => setLocalNotesVisible(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <Label htmlFor="notes-visible-task" className="text-sm text-muted-foreground">
+                        {lang === "ar" ? "إظهار للمستخدم" : "Show to user"}
+                      </Label>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={saveNotes}
+                      disabled={isSavingNotes}
+                    >
+                      {isSavingNotes
+                        ? lang === "ar" ? "جاري الحفظ..." : "Saving..."
+                        : lang === "ar" ? "حفظ" : "Save"}
+                    </Button>
+                  </div>
+                </div>
+              ) : meetingConfig.notes && meetingConfig.notesVisibleToUser ? (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">
+                    {lang === "ar" ? "ملاحظات" : "Notes"}
+                  </Label>
+                  <p className="whitespace-pre-wrap font-medium">{meetingConfig.notes}</p>
+                </div>
+              ) : null}
             </div>
           )}
 
