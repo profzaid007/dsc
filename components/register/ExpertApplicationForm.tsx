@@ -70,7 +70,8 @@ export function ExpertApplicationForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "admin@dsc.ac",
-          to: "admin@dsc.ac",
+          to: email,
+          cc: "admin@dsc.ac",
           subject: `Expert application from: ${name}`,
           html,
         }),

@@ -38,7 +38,8 @@ export default function ContactPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "admin@dsc.ac",
-          to: "contact@dsc.ac",
+          to: email,
+          cc: "contact@dsc.ac",
           subject: `Contact message from: ${name}`,
           html,
         }),

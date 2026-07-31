@@ -4,7 +4,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: Request) {
   try {
-    const { from, to, subject, html } = await request.json()
+    const { from, to, cc, subject, html } = await request.json()
 
     if (!from || !to || !subject || !html) {
       return Response.json(
@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     const { data, error } = await resend.emails.send({
       from,
       to,
+      ...(cc ? { cc } : {}),
       subject,
       html,
     })

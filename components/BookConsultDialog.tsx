@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 
 import { Button } from "@/components/ui/button"
+import { DateInput } from "@/components/ui/date-input"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -27,6 +28,7 @@ import {
   type PortalServiceValue,
 } from "@/components/register/PortalServiceSelector"
 import { getPortalById } from "@/lib/portals"
+import { formatDate } from "@/lib/format-date"
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -51,9 +53,9 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
   const [done, setDone] = useState(false)
   const [error, setError] = useState("")
 
-  async function handleSubmit(e: FormEvent) {
+  const router = useRouter()
 
-    const router = useRouter();
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setSubmitting(true)
     setError("")
@@ -65,7 +67,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       const portal = getPortalById(categoryId)
       const service = portal?.services.find((s) => s.id === subCategoryId)
 
-      const issueType = customCategory || portal?.title?.en || ""
+      const issueType = customCategory || portal?.title || ""
       const caseType = customSubCategory || service?.name.en || ""
 
       const html = [
@@ -76,7 +78,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         issueType ? `<p><strong>Issue Type:</strong> ${issueType}</p>` : "",
         caseType ? `<p><strong>Case Type:</strong> ${caseType}</p>` : "",
         consultationType ? `<p><strong>Consultation Type:</strong> ${consultationType === "online" ? "Online" : "Face to Face"}</p>` : "",
-        preferredDate ? `<p><strong>Preferred Date:</strong> ${preferredDate}</p>` : "",
+        preferredDate ? `<p><strong>Preferred Date:</strong> ${formatDate(preferredDate)}</p>` : "",
         preferredTime ? `<p><strong>Preferred Time:</strong> ${preferredTime}</p>` : "",
         description ? `<p><strong>Description:</strong><br/>${description}</p>` : "",
       ].join("\n")
@@ -86,7 +88,8 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "admin@dsc.ac",
-          to: "consult@dsc.ac",
+          to: email,
+          cc: "consult@dsc.ac",
           subject: `Consultation request from: ${name}`,
           html,
         }),
@@ -102,7 +105,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
           issueType: `${issueType}`,
           caseType: `${caseType}`,
           consultationType: `${consultationType}`,
-          preferredDate: `${preferredDate}`,
+          preferredDate: `${formatDate(preferredDate)}`,
           preferredTime: `${preferredTime}`,
           description: `${description}`,
         }),
@@ -225,10 +228,9 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                 <Label className="mb-1 block text-sm font-medium">
                   Preferred Date
                 </Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={preferredDate}
-                  onChange={(e) => setPreferredDate(e.target.value)}
+                  onChange={setPreferredDate}
                   className="w-full"
                 />
               </div>
