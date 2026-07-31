@@ -38,3 +38,6 @@ next-env.d.ts
 
 # bun 
 bun.lock
+
+# script 
+scripts/*
