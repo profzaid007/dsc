@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { DateInput } from "@/components/ui/date-input"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -235,12 +236,11 @@ export default function NewProfilePage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="date_of_birth">Date of Birth</Label>
-                  <Input
+                  <DateInput
                     id="date_of_birth"
-                    type="date"
                     value={formData.date_of_birth}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date_of_birth: e.target.value })
+                    onChange={(v) =>
+                      setFormData({ ...formData, date_of_birth: v })
                     }
                     required
                   />

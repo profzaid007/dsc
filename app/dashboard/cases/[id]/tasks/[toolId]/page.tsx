@@ -7,6 +7,7 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 import {
   Card,
   CardContent,
@@ -1500,7 +1501,7 @@ export default function TakeSurveyToolPage({
                     <Label className="text-sm text-muted-foreground">
                       {lang === "ar" ? "التاريخ" : "Date"}
                     </Label>
-                    <p className="font-medium">{meetingConfig.date || "—"}</p>
+                    <p className="font-medium">{meetingConfig.date ? formatDate(meetingConfig.date) : "—"}</p>
                   </div>
                   <div>
                     <Label className="text-sm text-muted-foreground">
@@ -1601,7 +1602,7 @@ export default function TakeSurveyToolPage({
                     <Label className="text-sm text-muted-foreground">
                       {lang === "ar" ? "التاريخ" : "Date"}
                     </Label>
-                    <p className="font-medium">{reportConfig.date}</p>
+                    <p className="font-medium">{formatDate(reportConfig.date)}</p>
                   </div>
                 )}
                 {reportConfig.assessment && (
@@ -1630,13 +1631,13 @@ export default function TakeSurveyToolPage({
                     <Label className="text-sm text-muted-foreground">
                       {lang === "ar" ? "تاريخ البداية" : "Start Date"}
                     </Label>
-                    <p className="font-medium">{planConfig.startDate || "—"}</p>
+                    <p className="font-medium">{planConfig.startDate ? formatDate(planConfig.startDate) : "—"}</p>
                   </div>
                   <div>
                     <Label className="text-sm text-muted-foreground">
                       {lang === "ar" ? "تاريخ النهاية" : "End Date"}
                     </Label>
-                    <p className="font-medium">{planConfig.endDate || "—"}</p>
+                    <p className="font-medium">{planConfig.endDate ? formatDate(planConfig.endDate) : "—"}</p>
                   </div>
                 </div>
                 {planConfig.goals?.length > 0 && (
@@ -1853,7 +1854,7 @@ export default function TakeSurveyToolPage({
                   <Label className="text-muted-foreground">
                     {lang === "ar" ? "التاريخ" : "Date"}
                   </Label>
-                  <p className="font-medium">{meetingConfig.date || "—"}</p>
+                  <p className="font-medium">{meetingConfig.date ? formatDate(meetingConfig.date) : "—"}</p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">
@@ -1953,7 +1954,7 @@ export default function TakeSurveyToolPage({
                   <Label className="text-muted-foreground">
                     {lang === "ar" ? "التاريخ" : "Date"}
                   </Label>
-                  <p className="font-medium">{reportConfig.date}</p>
+                  <p className="font-medium">{formatDate(reportConfig.date)}</p>
                 </div>
               )}
               {reportConfig.assessment && (
@@ -1982,13 +1983,13 @@ export default function TakeSurveyToolPage({
                   <Label className="text-muted-foreground">
                     {lang === "ar" ? "تاريخ البداية" : "Start Date"}
                   </Label>
-                  <p className="font-medium">{planConfig.startDate || "—"}</p>
+                  <p className="font-medium">{planConfig.startDate ? formatDate(planConfig.startDate) : "—"}</p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">
                     {lang === "ar" ? "تاريخ النهاية" : "End Date"}
                   </Label>
-                  <p className="font-medium">{planConfig.endDate || "—"}</p>
+                  <p className="font-medium">{planConfig.endDate ? formatDate(planConfig.endDate) : "—"}</p>
                 </div>
               </div>
               {planConfig.goals?.length > 0 && (

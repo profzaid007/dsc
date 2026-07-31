@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { homePagesCollection } from "@/lib/pb-collections"
+import { formatDate } from "@/lib/format-date"
 import { HomePage } from "@/types/cms"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -169,7 +170,7 @@ export default function CmsHomePagesListPage() {
               {pages.map((page) => (
                 <TableRow key={page.id}>
                   <TableCell className="font-medium">{page.title_en}</TableCell>
-                  <TableCell>{new Date(page.updated).toLocaleDateString()}</TableCell>
+                  <TableCell>{formatDate(page.updated)}</TableCell>
                   <TableCell>
                     <button
                       onClick={() => togglePublish(page)}

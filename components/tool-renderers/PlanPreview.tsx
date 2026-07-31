@@ -1,6 +1,8 @@
 "use client"
 
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
+import { DateInput } from "@/components/ui/date-input"
 import type { BilingualString, PlanConfig } from "@/types/tool"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -31,8 +33,8 @@ export function PlanPreview({ config }: { config: PlanConfig }) {
               {getBilingualValue(config.expertName)}
             </div>
             <div>
-              <span className="font-medium">Period:</span> {config.startDate} to{" "}
-              {config.endDate}
+              <span className="font-medium">Period:</span> {formatDate(config.startDate)} to{" "}
+              {formatDate(config.endDate)}
             </div>
           </div>
         </CardContent>
@@ -92,8 +94,7 @@ export function PlanPreview({ config }: { config: PlanConfig }) {
                     value={getBilingualValue(step.comments)}
                     readOnly
                   />
-                  <Input
-                    type="date"
+                  <DateInput
                     value={step.dateOfAchievement || ""}
                     readOnly
                   />

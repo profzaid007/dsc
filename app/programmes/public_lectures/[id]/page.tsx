@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 import { publicLecturesPublicCollection } from "@/lib/pb-lectures"
 import type { Lecture } from "@/types/lecture"
 import {
@@ -45,15 +46,6 @@ export default function PublicLectureDetailPage({
     }
     load()
   }, [id])
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin, Users, BookOpen } from "lucide-react"
 import type { TrainingProgram } from "@/types/training"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 
 interface ProgramCardProps {
   program: TrainingProgram
@@ -48,15 +49,6 @@ export function ProgramCard({
   showStatus = false,
 }: ProgramCardProps) {
   const { lang } = useLang()
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   const isPast = new Date(program.schedule.endDate) < new Date()
 

@@ -220,6 +220,52 @@ img[data-align] {
   height: auto !important;
 }
 
+/* react-datepicker theme integration */
+.react-datepicker-wrapper {
+  display: block;
+  width: 100%;
+}
+.react-datepicker-popper {
+  z-index: 60;
+}
+.react-datepicker {
+  font-family: var(--font-sans);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  border-color: var(--border);
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+}
+.react-datepicker__header {
+  background-color: var(--popover);
+  border-bottom-color: var(--border);
+}
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: var(--popover-foreground);
+}
+.react-datepicker__day {
+  color: var(--popover-foreground);
+}
+.react-datepicker__day:hover:not(.react-datepicker__day--disabled) {
+  background-color: var(--muted);
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected,
+.react-datepicker__day--selected:hover {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+.react-datepicker__day--today {
+  font-weight: 600;
+}
+.react-datepicker__navigation-icon::before {
+  border-color: var(--muted-foreground);
+}
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: var(--popover-foreground);
+}
+
 /* Thin custom scrollbar for horizontal scroll containers */
 .scrollbar-thin::-webkit-scrollbar {
   height: 6px;

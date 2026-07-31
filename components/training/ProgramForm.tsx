@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
@@ -375,28 +376,26 @@ export function ProgramForm({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
-              <Input
+              <DateInput
                 id="startDate"
-                type="date"
                 value={formData.schedule.startDate}
-                onChange={(e) =>
+                onChange={(v) =>
                   setFormData({
                     ...formData,
-                    schedule: { ...formData.schedule, startDate: e.target.value },
+                    schedule: { ...formData.schedule, startDate: v },
                   })
                 }
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="endDate">End Date</Label>
-              <Input
+              <DateInput
                 id="endDate"
-                type="date"
                 value={formData.schedule.endDate}
-                onChange={(e) =>
+                onChange={(v) =>
                   setFormData({
                     ...formData,
-                    schedule: { ...formData.schedule, endDate: e.target.value },
+                    schedule: { ...formData.schedule, endDate: v },
                   })
                 }
               />
@@ -408,10 +407,9 @@ export function ProgramForm({
             {formData.schedule.sessions.map((session, idx) => (
               <div key={idx} className="flex items-end gap-2 rounded-md border p-3">
                 <div className="grid gap-2 flex-1 grid-cols-4">
-                  <Input
-                    type="date"
+                  <DateInput
                     value={session.date}
-                    onChange={(e) => updateSession(idx, "date", e.target.value)}
+                    onChange={(v) => updateSession(idx, "date", v)}
                     placeholder="Date"
                   />
                   <Input

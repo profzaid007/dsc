@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { blogPagesCollection } from "@/lib/pb-collections"
+import { formatDate } from "@/lib/format-date"
 import { BlogPage } from "@/types/cms"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -125,7 +126,7 @@ export default function CmsBlogListPage() {
                   </TableCell>
                   <TableCell>{post.author_name || "—"}</TableCell>
                   <TableCell>
-                    {new Date(post.updated).toLocaleDateString()}
+                    {formatDate(post.updated)}
                   </TableCell>
                   <TableCell>
                     {post.is_published ? (

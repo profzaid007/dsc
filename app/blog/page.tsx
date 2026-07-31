@@ -3,6 +3,7 @@ import Image from "next/image"
 import { cookies } from "next/headers"
 import pb from "@/lib/pb"
 import { localizedField, t } from "@/lib/i18n"
+import { formatDate } from "@/lib/format-date"
 import type { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { Card } from "@/components/ui/card"
@@ -97,7 +98,7 @@ export default async function BlogPage() {
                       })()}
                     </Badge>
                     <span>
-                      {new Date(post.created).toLocaleDateString()}
+                      {formatDate(post.created)}
                     </span>
                     {post.author_name && (
                       <>

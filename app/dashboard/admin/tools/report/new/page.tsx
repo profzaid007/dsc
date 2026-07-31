@@ -9,6 +9,7 @@ import { toolTypesCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
@@ -342,11 +343,10 @@ export default function ReportBuilderPage({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Date</Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={fixedFields.date}
-                  onChange={(e) =>
-                    setFixedFields({ ...fixedFields, date: e.target.value })
+                  onChange={(v) =>
+                    setFixedFields({ ...fixedFields, date: v })
                   }
                 />
               </div>

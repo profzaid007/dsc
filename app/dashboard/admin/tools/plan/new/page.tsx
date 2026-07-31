@@ -9,6 +9,7 @@ import { toolTypesCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DragList } from "@/components/ui/drag-list"
@@ -406,12 +407,11 @@ export default function PlanBuilderPage({
           />
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          <Input
-            type="date"
+          <DateInput
             placeholder="Date of Achievement"
             value={step.dateOfAchievement}
-            onChange={(e) =>
-              updateStep(step.id, { dateOfAchievement: e.target.value })
+            onChange={(v) =>
+              updateStep(step.id, { dateOfAchievement: v })
             }
           />
           <Input
@@ -551,21 +551,19 @@ export default function PlanBuilderPage({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Start Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     value={formData.startDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startDate: e.target.value })
+                    onChange={(v) =>
+                      setFormData({ ...formData, startDate: v })
                     }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>End Date</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     value={formData.endDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endDate: e.target.value })
+                    onChange={(v) =>
+                      setFormData({ ...formData, endDate: v })
                     }
                   />
                 </div>

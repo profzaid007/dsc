@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { formatDate } from "@/lib/i18n"
+import { formatDate } from "@/lib/format-date"
 import type { Profile } from "@/types/profile"
 
 interface AssignmentCount {

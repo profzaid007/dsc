@@ -1,6 +1,7 @@
 "use client"
 
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 import type { BilingualString, ReportConfig } from "@/types/tool"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -36,7 +37,7 @@ export function ReportPreview({ config }: { config: ReportConfig }) {
             </div>
             {config.date && (
               <div>
-                <span className="font-medium">Date:</span> {config.date}
+                <span className="font-medium">Date:</span> {formatDate(config.date)}
               </div>
             )}
           </div>

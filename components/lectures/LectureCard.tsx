@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin, Users } from "lucide-react"
 import type { Lecture } from "@/types/lecture"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 
 interface LectureCardProps {
   lecture: Lecture
@@ -40,15 +41,6 @@ export function LectureCard({
   showStatus = false,
 }: LectureCardProps) {
   const { lang } = useLang()
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)

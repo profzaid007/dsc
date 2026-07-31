@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, Eye, Users } from "lucide-react"
 import type { TrainingProgram } from "@/types/training"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 
 interface ProgramTableProps {
   programs: TrainingProgram[]
@@ -48,15 +49,6 @@ export function ProgramTable({
   getAttendanceCount,
 }: ProgramTableProps) {
   const { lang } = useLang()
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  }
 
   return (
     <Table>

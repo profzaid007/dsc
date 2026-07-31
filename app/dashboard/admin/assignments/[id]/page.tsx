@@ -6,6 +6,7 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 import {
   Card,
   CardContent,
@@ -529,9 +530,7 @@ export default function AssignmentDetailPage({
                   Assigned Date
                 </span>
                 <p>
-                  {new Date(
-                    assignment.assigned_at || assignment.created
-                  ).toLocaleDateString()}
+                  {formatDate(assignment.assigned_at || assignment.created)}
                 </p>
               </div>
               <div>

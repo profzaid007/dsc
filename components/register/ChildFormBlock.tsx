@@ -1,6 +1,7 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -94,10 +95,9 @@ export function ChildFormBlock({
               {t({ en: "Date of Birth", ar: "تاريخ الميلاد" }, lang)}
               <span className="text-red-500 ml-1">*</span>
             </Label>
-            <Input
-              type="date"
+            <DateInput
               value={data.date_of_birth}
-              onChange={(e) => updateField("date_of_birth", e.target.value)}
+              onChange={(v) => updateField("date_of_birth", v)}
             />
           </div>
 

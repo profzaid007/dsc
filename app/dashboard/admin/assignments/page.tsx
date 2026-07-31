@@ -7,6 +7,7 @@ import { useProfiles } from "@/hooks/useProfiles"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
+import { formatDate } from "@/lib/format-date"
 import {
   Card,
   CardContent,
@@ -323,9 +324,7 @@ export default function AssignmentsPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        {new Date(
-                          assignment.assigned_at || assignment.created
-                        ).toLocaleDateString()}
+                        {formatDate(assignment.assigned_at || assignment.created)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

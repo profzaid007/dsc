@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, Eye, Users } from "lucide-react"
 import type { Lecture } from "@/types/lecture"
 import { useLang } from "@/lib/lang-context"
+import { formatDateTime } from "@/lib/format-date"
 
 interface LectureTableProps {
   lectures: Lecture[]
@@ -47,17 +48,6 @@ export function LectureTable({
 }: LectureTableProps) {
   const { lang } = useLang()
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
   return (
     <Table>
       <TableHeader>
@@ -83,7 +73,7 @@ export function LectureTable({
                 {lecture.title[lang]}
               </TableCell>
               <TableCell>{lecture.speaker.name[lang]}</TableCell>
-              <TableCell>{formatDate(lecture.schedule.dateTime)}</TableCell>
+              <TableCell>{formatDateTime(lecture.schedule.dateTime)}</TableCell>
               <TableCell>
                 <Badge variant={statusVariants[lecture.status]}>
                   {statusLabels[lecture.status][lang]}

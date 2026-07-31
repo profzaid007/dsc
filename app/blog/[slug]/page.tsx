@@ -2,6 +2,7 @@ import Link from "next/link"
 import { cookies } from "next/headers"
 import pb from "@/lib/pb"
 import { localizedField, t } from "@/lib/i18n"
+import { formatDate } from "@/lib/format-date"
 import type { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
@@ -94,7 +95,7 @@ export default async function BlogPostPage({
             {categoryLabel}
           </span>
           <span>&middot;</span>
-          <span>{new Date(page.created).toLocaleDateString()}</span>
+          <span>{formatDate(page.created)}</span>
           {page.author_name && (
             <>
               <span>&middot;</span>

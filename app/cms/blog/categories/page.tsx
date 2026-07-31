@@ -47,7 +47,10 @@ export default function BlogCategoriesPage() {
   const handleAdd = async () => {
     const trimmedKey = newKey.trim()
     const trimmedLabelEn = newLabelEn.trim()
-    if (!trimmedKey || !trimmedLabelEn) return
+    if (!trimmedKey || !trimmedLabelEn) {
+      alert("Key and Label (EN) are required.")
+      return
+    }
     setAdding(true)
     try {
       await blogCategoriesCollection.create({
@@ -157,7 +160,7 @@ export default function BlogCategoriesPage() {
             className="w-48"
           />
         </div>
-        <Button onClick={handleAdd} disabled={adding || !newKey.trim() || !newLabelEn.trim()}>
+        <Button onClick={handleAdd} disabled={adding}>
           {adding ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

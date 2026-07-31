@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 import { trainingProgramsCollection } from "@/lib/pb-training"
 import { casesCollection } from "@/lib/pb-collections"
 import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
@@ -125,15 +126,6 @@ export default function TrainingProgrammeDetailPage({
     }
     checkExisting()
   }, [currentUser, id])
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   const validateEnrollmentForm = (): string | null => {
     if (!enrollForm.name.trim()) {

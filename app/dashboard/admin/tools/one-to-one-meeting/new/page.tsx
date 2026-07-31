@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { toolTypesCollection } from "@/lib/pb-collections"
+import { formatDate } from "@/lib/format-date"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -277,11 +279,10 @@ export default function OneToOneMeetingNewPage({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Date *</Label>
-                  <Input
-                    type="date"
+                  <DateInput
                     required
                     value={meetingDate}
-                    onChange={(e) => setMeetingDate(e.target.value)}
+                    onChange={setMeetingDate}
                   />
                 </div>
                 <div className="space-y-2">
@@ -394,7 +395,7 @@ export default function OneToOneMeetingNewPage({
               <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <span className="text-muted-foreground">Date:</span>
-                  <span>{meetingDate || "—"}</span>
+                  <span>{meetingDate ? formatDate(meetingDate) : "—"}</span>
                   <span className="text-muted-foreground">Time:</span>
                   <span>{meetingTime || "—"}</span>
                   <span className="text-muted-foreground">Type:</span>

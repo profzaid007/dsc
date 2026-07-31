@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -43,7 +44,7 @@ import {
   Eye,
 } from "lucide-react"
 import Link from "next/link"
-import { formatDate } from "@/lib/i18n"
+import { formatDate } from "@/lib/format-date"
 import type { Profile } from "@/types/profile"
 
 const GRADES = [
@@ -391,14 +392,13 @@ export default function AdminUserDetailPage({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="date_of_birth">Date of Birth</Label>
-                    <Input
+                    <DateInput
                       id="date_of_birth"
-                      type="date"
                       value={caseFormData.date_of_birth}
-                      onChange={(e) =>
+                      onChange={(v) =>
                         setCaseFormData({
                           ...caseFormData,
-                          date_of_birth: e.target.value,
+                          date_of_birth: v,
                         })
                       }
                     />

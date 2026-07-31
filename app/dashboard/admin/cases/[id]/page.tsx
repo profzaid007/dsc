@@ -8,6 +8,7 @@ import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
+import { formatDate } from "@/lib/format-date"
 import {
   Card,
   CardContent,
@@ -60,8 +61,6 @@ import {
   getAllowedToolTypesForRole,
   caseExpertsCollection,
 } from "@/lib/pb-collections"
-
-import { formatDate } from "@/lib/i18n"
 
 const statusColors: Record<AssignmentStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -179,7 +178,7 @@ export default function AdminCaseDetailPage({
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-primary">{profile.name}</h1>
           <p className="text-muted-foreground">
-            Created {new Date(profile.created).toLocaleDateString()}
+            Created {formatDate(profile.created)}
           </p>
         </div>
       </div>
@@ -209,7 +208,7 @@ export default function AdminCaseDetailPage({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date of Birth</span>
                   <span className="font-medium">
-                    {profile.date_of_birth ? formatDate(profile.date_of_birth, lang) : "—"}
+                    {profile.date_of_birth ? formatDate(profile.date_of_birth) : "—"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -319,9 +318,9 @@ export default function AdminCaseDetailPage({
                             {assignment.is_visible_to_user ? "Yes" : "No"}
                           </TableCell>
                           <TableCell>
-                            {new Date(
+                            {formatDate(
                               assignment.assigned_at || assignment.created
-                            ).toLocaleDateString()}
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
@@ -390,7 +389,7 @@ export default function AdminCaseDetailPage({
                           <p className="text-sm text-muted-foreground">
                             Completed{" "}
                             {assignment.updated &&
-                              new Date(assignment.updated).toLocaleDateString()}
+                              formatDate(assignment.updated)}
                           </p>
                         </div>
                         <Badge variant="default">Completed</Badge>

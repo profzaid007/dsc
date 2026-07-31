@@ -25,6 +25,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -37,6 +38,7 @@ import {
 import { useTraining } from "@/hooks/useTraining"
 import { ProgramForm, ProgramReportCard } from "@/components/training"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 import { casesCollection } from "@/lib/pb-collections"
 import { handlePocketBaseError } from "@/lib/pb"
 import type { Profile } from "@/types/profile"
@@ -251,15 +253,6 @@ export default function AdminTrainingProgramDetailPage({
         </p>
       </div>
     )
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
   }
 
   const handleUpdate = async (
@@ -949,14 +942,13 @@ export default function AdminTrainingProgramDetailPage({
                         <Label htmlFor="cert-issue-date">
                           {lang === "ar" ? "تاريخ الإصدار" : "Issue Date"}
                         </Label>
-                        <Input
+                        <DateInput
                           id="cert-issue-date"
-                          type="date"
                           value={certForm.issueDate}
-                          onChange={(e) =>
+                          onChange={(v) =>
                             setCertForm({
                               ...certForm,
-                              issueDate: e.target.value,
+                              issueDate: v,
                             })
                           }
                         />
@@ -1067,9 +1059,7 @@ export default function AdminTrainingProgramDetailPage({
                         </TableCell>
                         <TableCell>
                           {cert.issueDate
-                            ? new Date(cert.issueDate).toLocaleDateString(
-                                lang === "ar" ? "ar-AE" : "en-US"
-                              )
+                            ? formatDate(cert.issueDate)
                             : "—"}
                         </TableCell>
                         <TableCell className="text-right">

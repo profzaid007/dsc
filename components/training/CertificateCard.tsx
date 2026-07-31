@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Award, Calendar, Download, ExternalLink } from "lucide-react"
 import type { TrainingCertificate } from "@/types/training"
 import { useLang } from "@/lib/lang-context"
+import { formatDate } from "@/lib/format-date"
 
 interface CertificateCardProps {
   certificate: TrainingCertificate
@@ -17,15 +18,6 @@ export function CertificateCard({
   onDownload,
 }: CertificateCardProps) {
   const { lang } = useLang()
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">

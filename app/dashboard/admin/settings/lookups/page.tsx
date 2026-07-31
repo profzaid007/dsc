@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { useLookups, type LookupType } from "@/hooks/useLookups"
+import { formatDate } from "@/lib/format-date"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -239,7 +240,7 @@ export default function LookupsPage() {
                     <TableCell>{lookup.label_en}</TableCell>
                     <TableCell dir="rtl">{lookup.label_ar}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(lookup.created).toLocaleDateString()}
+                      {formatDate(lookup.created)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">

@@ -8,6 +8,7 @@ import { useToolTypes } from "@/hooks/useToolTypes"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import { getToolTypeLabel } from "@/lib/tool-types"
+import { formatDate } from "@/lib/format-date"
 import { caseExpertsCollection } from "@/lib/pb-collections"
 import { getAllowedToolTypesForRole } from "@/lib/pb-collections"
 import {
@@ -33,8 +34,6 @@ import {
   Send,
 } from "lucide-react"
 import Link from "next/link"
-
-import { formatDate } from "@/lib/i18n"
 
 export default function ProfileDetailPage({
   params,
@@ -106,7 +105,7 @@ export default function ProfileDetailPage({
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-primary">{profile.name}</h1>
           <p className="text-muted-foreground">
-            Created {new Date(profile.created).toLocaleDateString()}
+            Created {formatDate(profile.created)}
           </p>
         </div>
       </div>
@@ -191,7 +190,7 @@ export default function ProfileDetailPage({
                       </span>
                       <span className="font-medium">
                         {profile.date_of_birth
-                          ? formatDate(profile.date_of_birth, lang)
+                          ? formatDate(profile.date_of_birth)
                           : "—"}
                       </span>
                     </div>
@@ -329,7 +328,7 @@ export default function ProfileDetailPage({
                                       </head>
                                       <body>
                                         <h1>${assignment.name_en || "Responses"}</h1>
-                                        <p class="meta">Profile: ${profile.name} | Date: ${new Date(assignment.updated).toLocaleDateString()}</p>
+                                        <p class="meta">Profile: ${profile.name} | Date: ${formatDate(assignment.updated)}</p>
                                         <pre style="white-space: pre-wrap; background: #f5f5f5; padding: 15px; border-radius: 4px;">${JSON.stringify(responses, null, 2)}</pre>
                                         <button class="no-print" onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Print / Save as PDF</button>
                                       </body>
@@ -399,7 +398,7 @@ export default function ProfileDetailPage({
                           <p className="text-sm text-muted-foreground">
                             Completed{" "}
                             {assignment.updated &&
-                              new Date(assignment.updated).toLocaleDateString()}
+                              formatDate(assignment.updated)}
                           </p>
                         </div>
                         <Badge variant="default">Completed</Badge>

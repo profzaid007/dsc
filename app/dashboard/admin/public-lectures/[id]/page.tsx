@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { useLectures } from "@/hooks/useLectures"
 import { LectureForm } from "@/components/lectures"
 import { useLang } from "@/lib/lang-context"
+import { formatDateTime } from "@/lib/format-date"
 import {
   ArrowLeft,
   Calendar,
@@ -70,17 +71,6 @@ export default function AdminLectureDetailPage({
         </p>
       </div>
     )
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(lang === "ar" ? "ar-AE" : "en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
   }
 
   const handleUpdate = async (
@@ -172,7 +162,7 @@ export default function AdminLectureDetailPage({
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{formatDate(lecture.schedule.dateTime)}</span>
+                  <span>{formatDateTime(lecture.schedule.dateTime)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
