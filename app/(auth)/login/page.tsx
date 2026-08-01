@@ -14,6 +14,17 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  handlePocketBaseError,
+  requestPasswordReset,
+} from "@/lib/pb"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -22,6 +33,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  const [forgotOpen, setForgotOpen] = useState(false)
+  const [resetEmail, setResetEmail] = useState("")
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetError, setResetError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,6 +57,31 @@ export default function LoginPage() {
     } else {
       setError(result.error || "Invalid credentials")
       setIsLoading(false)
+    }
+  }
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetEmail) {
+      setResetError("Please enter your email")
+      return
+    }
+
+    setResetLoading(true)
+    setResetError("")
+
+    try {
+      await requestPasswordReset(resetEmail)
+      setResetSent(true)
+    } catch (err: unknown) {
+      const status = (err as { status?: number } | null)?.status
+      if (status === 429) {
+        setResetError("Too many attempts. Please try again later.")
+      } else {
+        setResetError(handlePocketBaseError(err))
+      }
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -69,7 +111,20 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotOpen(true)
+                    setResetSent(false)
+                    setResetError("")
+                  }}
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -97,6 +152,59 @@ export default function LoginPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              {resetSent
+                ? "If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder)."
+                : "Enter your account email and we will send you a link to reset your password."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {resetSent ? (
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setForgotOpen(false)}>
+                Close
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgotSubmit} className="space-y-4">
+              {resetError && (
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                  {resetError}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  autoFocus
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => setForgotOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={resetLoading}>
+                  {resetLoading ? "Sending..." : "Send Reset Link"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

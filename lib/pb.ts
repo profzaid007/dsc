@@ -52,6 +52,14 @@ export async function logout() {
   pb.authStore.clear()
 }
 
+export async function requestPasswordReset(email: string) {
+  await pb.collection("users").requestPasswordReset(email.toLowerCase())
+}
+
+export async function confirmPasswordReset(token: string, password: string) {
+  await pb.collection("users").confirmPasswordReset(token, password, password)
+}
+
 export function handlePocketBaseError(error: any): string {
   if (error?.message?.includes("fetch")) {
     return "PocketBase server is not accessible. Please check if the server is running."
