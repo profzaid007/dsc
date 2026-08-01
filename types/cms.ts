@@ -1,11 +1,14 @@
 export interface InfoPage {
   id: string
   slug: string
-  title: string
+  portal_name?: string
+  title_en: string
+  title_ar?: string
   content_en: string
   content_ar?: string
   is_published: boolean
   media: string[]
+  icon?: string
   created: string
   updated: string
 }

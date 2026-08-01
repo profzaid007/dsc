@@ -1,16 +1,36 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { PORTALS } from "@/lib/portals"
+import { infoPagesCollection } from "@/lib/pb-collections"
+import type { InfoPage } from "@/types/cms"
 import { Card } from "@/components/ui/card"
 
 export default function CmsInfoPage() {
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    infoPagesCollection
+      .getAll()
+      .then((pages: InfoPage[]) => {
+        const byPortal: Record<string, number> = {}
+        pages.forEach((page) => {
+          const key = page.portal_name || ""
+          byPortal[key] = (byPortal[key] || 0) + 1
+        })
+        setCounts(byPortal)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Info Pages</h1>
         <p className="text-muted-foreground">
-          Select a portal to manage its service pages
+          Select a portal to manage its info pages
         </p>
       </div>
 
@@ -25,7 +45,9 @@ export default function CmsInfoPage() {
               <div className="p-4">
                 <h3 className="font-semibold">{portal.title.en}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {portal.services.length} services
+                  {loading
+                    ? "..."
+                    : `${counts[portal.id] || 0} page${counts[portal.id] === 1 ? "" : "s"}`}
                 </p>
               </div>
             </Card>

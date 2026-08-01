@@ -397,16 +397,35 @@ export const infoPagesCollection = {
     }
   },
 
+  async getAll(): Promise<InfoPage[]> {
+    const data = await pb.collection("info_pages").getFullList({
+      sort: "-created",
+    })
+    return data as unknown as InfoPage[]
+  },
+
+  async getByPortal(portalId: string): Promise<InfoPage[]> {
+    const data = await pb.collection("info_pages").getFullList({
+      filter: `portal_name = "${portalId}"`,
+      sort: "-created",
+    })
+    return data as unknown as InfoPage[]
+  },
+
   async create(data: {
     slug: string
-    title: string
+    title_en: string
+    title_ar?: string
+    portal_name?: string
     content_en?: string
   }): Promise<InfoPage> {
     const lorem =
       "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>"
     const result = await pb.collection("info_pages").create({
       slug: data.slug,
-      title: data.title,
+      portal_name: data.portal_name || "",
+      title_en: data.title_en,
+      title_ar: data.title_ar || "",
       content_en: data.content_en || lorem,
       is_published: false,
     })
@@ -436,7 +455,13 @@ export const infoPagesCollection = {
       }
     }
 
-    if (data.title !== undefined) formData.append("title", data.title)
+    if (data.portal_name !== undefined)
+      formData.append("portal_name", data.portal_name)
+    if (data.slug !== undefined) formData.append("slug", data.slug)
+    if (data.title_en !== undefined)
+      formData.append("title_en", data.title_en)
+    if (data.title_ar !== undefined)
+      formData.append("title_ar", data.title_ar)
     if (data.content_en !== undefined)
       formData.append("content_en", data.content_en)
     if (data.content_ar !== undefined)
@@ -452,6 +477,20 @@ export const infoPagesCollection = {
       formData.append("media-", filesToRemove.join(","))
     }
 
+    const result = await pb.collection("info_pages").update(id, formData)
+    return result as unknown as InfoPage
+  },
+
+  async updateIcon(id: string, file: File): Promise<InfoPage> {
+    const formData = new FormData()
+    formData.append("icon", file)
+    const result = await pb.collection("info_pages").update(id, formData)
+    return result as unknown as InfoPage
+  },
+
+  async removeIcon(id: string): Promise<InfoPage> {
+    const formData = new FormData()
+    formData.append("icon", "")
     const result = await pb.collection("info_pages").update(id, formData)
     return result as unknown as InfoPage
   },

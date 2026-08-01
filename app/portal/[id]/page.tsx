@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation"
-import { t } from "@/lib/i18n"
+import { t, localizedField } from "@/lib/i18n"
 import { getPortalById, PORTALS } from "@/lib/portals"
 import { Button } from "@/components/ui/button"
-import { icons } from "lucide-react"
+import { FileText } from "lucide-react"
+import pb from "@/lib/pb"
 import Image from "next/image"
 import Link from "next/link"
 import { cookies } from "next/headers"
@@ -21,6 +22,12 @@ export default async function PortalPage({ params }: PortalPageProps) {
   if (!portal) {
     notFound()
   }
+
+  const publishedPages = await pb
+    .collection("info_pages")
+    .getFullList({
+      filter: `portal_name = "${id}" && is_published = true`,
+    })
 
   return (
     <div className="min-h-screen">
@@ -60,19 +67,24 @@ export default async function PortalPage({ params }: PortalPageProps) {
           {t({ en: "Our Services", ar: "خدماتنا" }, lang)}
         </h3>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-        {portal.services.map((service, i) => {
-          const iconKey = service.icon.charAt(0).toUpperCase() + service.icon.slice(1)
-          const Icon = icons[iconKey as keyof typeof icons]
+        {publishedPages.map((record) => {
+          const iconFile = record.icon as string
+          const iconUrl = iconFile ? pb.files.getUrl(record, iconFile) : null
           return (
-            <Link key={service.id} href={`/info/${service.id}`} className="block rounded-lg border p-4 transition-shadow hover:shadow-md" style={{ borderColor: `${portal.accent}30` }}>
+            <Link key={record.id} href={`/info/${record.slug}`} className="block rounded-lg border p-4 transition-shadow hover:shadow-md" style={{ borderColor: `${portal.accent}30` }}>
               <div className="flex flex-col items-center gap-4">
                 <div
                   className="flex h-16 w-16 items-center justify-center rounded-2xl"
                 >
-                  {Icon && <Icon className="h-8 w-8" style={{ color: portal.accent }} />}
+                  {iconUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={iconUrl} alt="" className="h-10 w-10 object-contain" />
+                  ) : (
+                    <FileText className="h-8 w-8" style={{ color: portal.accent }} />
+                  )}
                 </div>
                 <span className="text-center text-sm font-medium leading-snug">
-                  {t(service.name, lang)}
+                  {localizedField(record, lang, "title")}
                 </span>
               </div>
             </Link>
