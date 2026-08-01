@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { PORTALS } from "@/lib/portals"
+import { getPortalById } from "@/lib/portals"
 import { infoPagesCollection } from "@/lib/pb-collections"
 import pb from "@/lib/pb"
 import type { InfoPage } from "@/types/cms"
@@ -14,13 +14,6 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Loader2, Copy, Trash2 } from "lucide-react"
 
@@ -40,6 +33,44 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, "")
 }
 
+async function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      resolve(img)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error("Invalid image"))
+    }
+    img.src = url
+  })
+}
+
+async function resizeIconToSquare(file: File, size = 256): Promise<File> {
+  const img = await loadImage(file)
+  const canvas = document.createElement("canvas")
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext("2d")
+  if (!ctx) throw new Error("Canvas not supported")
+
+  const side = Math.min(img.naturalWidth, img.naturalHeight)
+  const sx = (img.naturalWidth - side) / 2
+  const sy = (img.naturalHeight - side) / 2
+  ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size)
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Failed to process image"))),
+      "image/png"
+    )
+  })
+  return new File([blob], "icon.png", { type: "image/png" })
+}
+
 export default function CmsServiceEditorPage() {
   const params = useParams()
   const router = useRouter()
@@ -54,7 +85,6 @@ export default function CmsServiceEditorPage() {
   const [deleting, setDeleting] = useState(false)
   const [uploadingIcon, setUploadingIcon] = useState(false)
 
-  const [portalName, setPortalName] = useState(portalId)
   const [pageSlug, setPageSlug] = useState(slug)
   const [enTitle, setEnTitle] = useState("")
   const [arTitle, setArTitle] = useState("")
@@ -83,7 +113,6 @@ export default function CmsServiceEditorPage() {
           : null
       )
       setPage(data)
-      setPortalName(data.portal_name || portalId)
       setPageSlug(data.slug)
       setEnTitle(data.title_en)
       setArTitle(data.title_ar || "")
@@ -116,7 +145,7 @@ export default function CmsServiceEditorPage() {
               ? enContent
               : arContent
         const updated = await infoPagesCollection.update(page.id, {
-          portal_name: portalName,
+          portal_name: page.portal_name || portalId,
           slug: pageSlug,
           title_en: enTitle,
           title_ar: arTitle,
@@ -139,7 +168,6 @@ export default function CmsServiceEditorPage() {
     },
     [
       page,
-      portalName,
       pageSlug,
       enTitle,
       arTitle,
@@ -186,7 +214,6 @@ export default function CmsServiceEditorPage() {
     if (!data) return
     pageRecordRef.current = data as unknown as Record<string, unknown>
     setPage(data)
-    setPortalName(data.portal_name || portalId)
     setPageSlug(data.slug)
     setEnTitle(data.title_en)
     setArTitle(data.title_ar || "")
@@ -196,7 +223,7 @@ export default function CmsServiceEditorPage() {
     const iconFile = extractIcon(pageRecordRef.current)
     setIconUrl(iconFile ? pb.files.getUrl(pageRecordRef.current, iconFile) : null)
     setResetKey(t => t + 1)
-  }, [slug, portalId])
+  }, [slug])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -230,7 +257,8 @@ export default function CmsServiceEditorPage() {
       if (!file || !page) return
       setUploadingIcon(true)
       try {
-        const updated = await infoPagesCollection.updateIcon(page.id, file)
+        const resized = await resizeIconToSquare(file)
+        const updated = await infoPagesCollection.updateIcon(page.id, resized)
         setPage(updated)
         pageRecordRef.current = updated as unknown as Record<string, unknown>
         const iconFile = extractIcon(pageRecordRef.current)
@@ -238,8 +266,9 @@ export default function CmsServiceEditorPage() {
           iconFile ? pb.files.getUrl(pageRecordRef.current, iconFile) : null
         )
       } catch {
-        alert("Failed to upload icon.")
+        alert("Please upload a valid image.")
       } finally {
+        e.target.value = ""
         setUploadingIcon(false)
       }
     },
@@ -337,21 +366,9 @@ export default function CmsServiceEditorPage() {
       <Card className="space-y-4 p-4">
         <div className="space-y-2">
           <Label>Portal</Label>
-          <Select value={portalName} onValueChange={setPortalName}>
-            <SelectTrigger id="portal" className="w-72">
-              <SelectValue placeholder="Select portal" />
-            </SelectTrigger>
-            <SelectContent
-              position="popper"
-              className="w-[var(--radix-select-trigger-width)] min-w-[160px]"
-            >
-              {PORTALS.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.title.en}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <p className="text-sm text-muted-foreground">
+            {getPortalById(portalId)?.title.en || portalId}
+          </p>
         </div>
 
         {/* <div className="space-y-2">
