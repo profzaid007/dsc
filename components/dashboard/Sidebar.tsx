@@ -3,6 +3,8 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
+import { useLang } from "@/lib/lang-context"
+import type { Lang } from "@/types/form"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { SmartLink } from "@/components/smart-link"
@@ -70,6 +72,7 @@ type NavItem = {
 function renderNavItem(
   item: NavItem,
   pathname: string,
+  lang: Lang,
   isMain: boolean = false,
   isCollapsed: boolean = false
 ) {
@@ -88,10 +91,10 @@ function renderNavItem(
           : "text-primary-foreground/70 hover:bg-white/10 hover:text-white",
         isMain && !isCollapsed && "ps-8"
       )}
-      title={isCollapsed ? item.name.en : undefined}
+      title={isCollapsed ? item.name[lang] : undefined}
     >
       <item.icon className="h-5 w-5 shrink-0" />
-      {!isCollapsed && item.name.en}
+      {!isCollapsed && item.name[lang]}
     </SmartLink>
   )
 }
@@ -99,6 +102,7 @@ function renderNavItem(
 export function DashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { lang } = useLang()
   const {
     currentUser,
     isAdmin,
@@ -149,7 +153,15 @@ export function DashboardSidebar() {
             size="icon"
             onClick={toggleCollapsed}
             className="text-primary-foreground/70 hover:bg-white/10 hover:text-white"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={
+              isCollapsed
+                ? lang === "ar"
+                  ? "توسيع الشريط الجانبي"
+                  : "Expand sidebar"
+                : lang === "ar"
+                  ? "طي الشريط الجانبي"
+                  : "Collapse sidebar"
+            }
           >
             {isCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </Button>
@@ -167,10 +179,10 @@ export function DashboardSidebar() {
               ? "bg-white/20 text-white"
               : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
           )}
-          title={isCollapsed ? "Dashboard" : undefined}
+          title={isCollapsed ? (lang === "ar" ? "لوحة التحكم" : "Dashboard") : undefined}
         >
           <LayoutDashboard className="h-5 w-5 shrink-0" />
-          {!isCollapsed && "Dashboard"}
+          {!isCollapsed && (lang === "ar" ? "لوحة التحكم" : "Dashboard")}
         </SmartLink>
 
         {/* Cases - shown for both admin and user */}
@@ -185,10 +197,10 @@ export function DashboardSidebar() {
               ? "bg-white/20 text-white"
               : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
           )}
-          title={isCollapsed ? "Cases" : undefined}
+          title={isCollapsed ? (lang === "ar" ? "الحالات" : "Cases") : undefined}
         >
           <Users className="h-5 w-5 shrink-0" />
-          {!isCollapsed && "Cases"}
+          {!isCollapsed && (lang === "ar" ? "الحالات" : "Cases")}
         </SmartLink>
 
         {/* Expert section - only for experts */}
@@ -197,7 +209,7 @@ export function DashboardSidebar() {
             {!isCollapsed && (
               <div className="pt-4 pb-2">
                 <span className="px-3 text-xs font-medium tracking-wider text-primary-foreground/50 uppercase">
-                  Expert
+                  {lang === "ar" ? "خبير" : "Expert"}
                 </span>
               </div>
             )}
@@ -208,6 +220,7 @@ export function DashboardSidebar() {
                 icon: Wrench,
               },
               pathname,
+              lang,
               true,
               isCollapsed
             )}
@@ -218,6 +231,7 @@ export function DashboardSidebar() {
                 icon: ClipboardList,
               },
               pathname,
+              lang,
               true,
               isCollapsed
             )}
@@ -230,13 +244,13 @@ export function DashboardSidebar() {
             {!isCollapsed && (
               <div className="pt-4 pb-2">
                 <span className="px-3 text-xs font-medium tracking-wider text-primary-foreground/50 uppercase">
-                  Admin
+                  {lang === "ar" ? "مشرف" : "Admin"}
                 </span>
               </div>
             )}
             {adminNavigation.map((item) => {
               if (item.superAdminOnly && !isSuperAdmin) return null
-              return renderNavItem(item, pathname, true, isCollapsed)
+              return renderNavItem(item, pathname, lang, true, isCollapsed)
             })}
           </>
         )}
@@ -282,7 +296,7 @@ export function DashboardSidebar() {
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          {!isCollapsed && "Logout"}
+          {!isCollapsed && (lang === "ar" ? "تسجيل الخروج" : "Logout")}
         </Button>
       </div>
     </aside>
