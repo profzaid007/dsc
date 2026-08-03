@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
+import { useLang } from "@/lib/lang-context"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -46,17 +47,18 @@ const ALL_ROLES: UserRole[] = [
   "super_admin",
 ]
 
-const roleLabels: Record<string, string> = {
-  user: "User",
-  admin: "Admin",
-  individual: "Individual",
-  parent: "Parent",
-  organization: "Organization",
-  expert: "Expert",
-  super_admin: "Super Admin",
+const roleLabels: Record<string, { en: string; ar: string }> = {
+  user: { en: "User", ar: "مستخدم" },
+  admin: { en: "Admin", ar: "مشرف" },
+  individual: { en: "Individual", ar: "فرد" },
+  parent: { en: "Parent", ar: "ولي أمر" },
+  organization: { en: "Organization", ar: "منظمة" },
+  expert: { en: "Expert", ar: "خبير" },
+  super_admin: { en: "Super Admin", ar: "مشرف عام" },
 }
 
 export default function AdminUsersPage() {
+  const { lang } = useLang()
   const { users, isLoading: isUsersLoading, addUser, updateUser } = useUsers()
   const { profiles, isLoading: isProfilesLoading } = useProfiles()
 
@@ -127,11 +129,15 @@ export default function AdminUsersPage() {
     setFormError(null)
 
     if (!formData.name || !formData.email || !formData.password) {
-      setFormError("Please fill in all required fields.")
+      setFormError(
+        lang === "ar" ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields."
+      )
       return
     }
     if (formData.password !== formData.passwordConfirm) {
-      setFormError("Passwords do not match.")
+      setFormError(
+        lang === "ar" ? "كلمتا المرور غير متطابقتين." : "Passwords do not match."
+      )
       return
     }
 
@@ -157,7 +163,12 @@ export default function AdminUsersPage() {
         is_active: true,
       })
     } catch (error: any) {
-      setFormError(error?.message || "Failed to create user. Please try again.")
+      setFormError(
+        error?.message ||
+          (lang === "ar"
+            ? "فشل إنشاء المستخدم. حاول مرة أخرى."
+            : "Failed to create user. Please try again.")
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -168,12 +179,16 @@ export default function AdminUsersPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-primary">Users</h1>
-            <p className="text-muted-foreground">Manage all users</p>
+            <h1 className="text-2xl font-bold text-primary">
+              {lang === "ar" ? "المستخدمون" : "Users"}
+            </h1>
+            <p className="text-muted-foreground">
+              {lang === "ar" ? "إدارة جميع المستخدمين" : "Manage all users"}
+            </p>
           </div>
           <Button disabled>
             <Plus className="me-2 h-4 w-4" />
-            Add User
+            {lang === "ar" ? "إضافة مستخدم" : "Add User"}
           </Button>
         </div>
         <SkeletonTable rows={6} />
@@ -185,12 +200,16 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Users</h1>
-          <p className="text-muted-foreground">Manage all users</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "المستخدمون" : "Users"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar" ? "إدارة جميع المستخدمين" : "Manage all users"}
+          </p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
           <Plus className="me-2 h-4 w-4" />
-          Add User
+          {lang === "ar" ? "إضافة مستخدم" : "Add User"}
         </Button>
       </div>
 
@@ -199,7 +218,11 @@ export default function AdminUsersPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name, email, or role..."
+            placeholder={
+              lang === "ar"
+                ? "ابحث بالاسم أو البريد الإلكتروني أو الدور..."
+                : "Search by name, email, or role..."
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -207,17 +230,25 @@ export default function AdminUsersPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="whitespace-nowrap text-sm text-muted-foreground">
-            Sort by
+            {lang === "ar" ? "ترتيب حسب" : "Sort by"}
           </span>
           <Select value={sortField} onValueChange={(value) => setSortField(value)}>
             <SelectTrigger className="w-[160px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="email">Email</SelectItem>
-              <SelectItem value="role">Role</SelectItem>
-              <SelectItem value="created">Created</SelectItem>
+              <SelectItem value="name">
+                {lang === "ar" ? "الاسم" : "Name"}
+              </SelectItem>
+              <SelectItem value="email">
+                {lang === "ar" ? "البريد الإلكتروني" : "Email"}
+              </SelectItem>
+              <SelectItem value="role">
+                {lang === "ar" ? "الدور" : "Role"}
+              </SelectItem>
+              <SelectItem value="created">
+                {lang === "ar" ? "تاريخ الإنشاء" : "Created"}
+              </SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -240,34 +271,56 @@ export default function AdminUsersPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-medium">
-              {users.length === 0 ? "No users yet" : "No users match your search"}
+              {users.length === 0
+                ? lang === "ar"
+                  ? "لا يوجد مستخدمون بعد"
+                  : "No users yet"
+                : lang === "ar"
+                  ? "لا يوجد مستخدمون مطابقون لبحثك"
+                  : "No users match your search"}
             </h3>
             <p className="mb-4 text-center text-muted-foreground">
               {users.length === 0
-                ? "Add your first user to get started"
-                : "Try adjusting your search query"}
+                ? lang === "ar"
+                  ? "أضف مستخدمك الأول للبدء"
+                  : "Add your first user to get started"
+                : lang === "ar"
+                  ? "حاول تعديل استعلام البحث"
+                  : "Try adjusting your search query"}
             </p>
             {users.length === 0 && (
-              <Button onClick={() => setShowAddModal(true)}>Add User</Button>
+              <Button onClick={() => setShowAddModal(true)}>
+                {lang === "ar" ? "إضافة مستخدم" : "Add User"}
+              </Button>
             )}
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>All Users</CardTitle>
-            <CardDescription>{sortedUsers.length} user(s) found</CardDescription>
+            <CardTitle>{lang === "ar" ? "جميع المستخدمين" : "All Users"}</CardTitle>
+            <CardDescription>
+              {lang === "ar"
+                ? `تم العثور على ${sortedUsers.length} مستخدم`
+                : `${sortedUsers.length} user(s) found`}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Cases</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[200px]">
+                    {lang === "ar" ? "الاسم" : "Name"}
+                  </TableHead>
+                  <TableHead>
+                    {lang === "ar" ? "البريد الإلكتروني" : "Email"}
+                  </TableHead>
+                  <TableHead>{lang === "ar" ? "الدور" : "Role"}</TableHead>
+                  <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
+                  <TableHead>{lang === "ar" ? "الحالات" : "Cases"}</TableHead>
+                  <TableHead className="text-right">
+                    {lang === "ar" ? "الإجراءات" : "Actions"}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -283,7 +336,7 @@ export default function AdminUsersPage() {
                     <TableCell>
                       {user.role === "super_admin" ? (
                         <Badge variant="outline" className="bg-purple-50 text-purple-700">
-                          {roleLabels[user.role] || user.role}
+                          {roleLabels[user.role]?.[lang] || user.role}
                         </Badge>
                       ) : (
                         <Select
@@ -296,7 +349,7 @@ export default function AdminUsersPage() {
                           <SelectContent>
                             {ALL_ROLES.filter((r) => r !== "super_admin").map((role) => (
                               <SelectItem key={role} value={role}>
-                                {roleLabels[role] || role}
+                                {roleLabels[role]?.[lang] || role}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -318,7 +371,13 @@ export default function AdminUsersPage() {
                               : "bg-red-50 text-red-700"
                           }
                         >
-                          {user.is_active ? "Active" : "Inactive"}
+                          {user.is_active
+                            ? lang === "ar"
+                              ? "نشط"
+                              : "Active"
+                            : lang === "ar"
+                              ? "غير نشط"
+                              : "Inactive"}
                         </Badge>
                       </div>
                     </TableCell>
@@ -331,7 +390,7 @@ export default function AdminUsersPage() {
                       <SmartLink href={`/dashboard/admin/users/${user.id}`}>
                         <Button variant="ghost" size="sm">
                           <Eye className="me-1 h-4 w-4" />
-                          View
+                          {lang === "ar" ? "عرض" : "View"}
                         </Button>
                       </SmartLink>
                     </TableCell>
@@ -348,9 +407,11 @@ export default function AdminUsersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="mx-4 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Add New User</CardTitle>
+              <CardTitle>{lang === "ar" ? "إضافة مستخدم جديد" : "Add New User"}</CardTitle>
               <CardDescription>
-                Create a new user account. The user will be able to log in with their email and password.
+                {lang === "ar"
+                  ? "أنشئ حساب مستخدم جديد. سيتمكن المستخدم من تسجيل الدخول باستخدام بريده الإلكتروني وكلمة المرور."
+                  : "Create a new user account. The user will be able to log in with their email and password."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -362,46 +423,46 @@ export default function AdminUsersPage() {
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="name">
-                    Full Name <span className="text-red-500">*</span>
+                    {lang === "ar" ? "الاسم الكامل" : "Full Name"} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Enter full name"
+                    placeholder={lang === "ar" ? "أدخل الاسم الكامل" : "Enter full name"}
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">
-                    Email <span className="text-red-500">*</span>
+                    {lang === "ar" ? "البريد الإلكتروني" : "Email"} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="Enter email address"
+                    placeholder={lang === "ar" ? "أدخل عنوان البريد الإلكتروني" : "Enter email address"}
                     required
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="password">
-                      Password <span className="text-red-500">*</span>
+                      {lang === "ar" ? "كلمة المرور" : "Password"} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="password"
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder="Min 8 characters"
+                      placeholder={lang === "ar" ? "8 أحرف على الأقل" : "Min 8 characters"}
                       required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="passwordConfirm">
-                      Confirm Password <span className="text-red-500">*</span>
+                      {lang === "ar" ? "تأكيد كلمة المرور" : "Confirm Password"} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="passwordConfirm"
@@ -410,14 +471,16 @@ export default function AdminUsersPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, passwordConfirm: e.target.value })
                       }
-                      placeholder="Confirm password"
+                      placeholder={lang === "ar" ? "أكد كلمة المرور" : "Confirm password"}
                       required
                     />
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
+                    <Label htmlFor="role">
+                      {lang === "ar" ? "الدور" : "Role"}
+                    </Label>
                     <Select
                       value={formData.role}
                       onValueChange={(value) =>
@@ -430,21 +493,23 @@ export default function AdminUsersPage() {
                       <SelectContent>
                         {ALL_ROLES.filter((r) => r !== "super_admin").map((role) => (
                           <SelectItem key={role} value={role}>
-                            {roleLabels[role] || role}
+                            {roleLabels[role]?.[lang] || role}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="contact_number">Contact Number</Label>
+                    <Label htmlFor="contact_number">
+                      {lang === "ar" ? "رقم الاتصال" : "Contact Number"}
+                    </Label>
                     <Input
                       id="contact_number"
                       value={formData.contact_number}
                       onChange={(e) =>
                         setFormData({ ...formData, contact_number: e.target.value })
                       }
-                      placeholder="Phone number"
+                      placeholder={lang === "ar" ? "رقم الهاتف" : "Phone number"}
                     />
                   </div>
                 </div>
@@ -457,7 +522,7 @@ export default function AdminUsersPage() {
                     }
                   />
                   <Label htmlFor="is_active" className="cursor-pointer">
-                    Active account
+                    {lang === "ar" ? "حساب نشط" : "Active account"}
                   </Label>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
@@ -469,10 +534,16 @@ export default function AdminUsersPage() {
                       setFormError(null)
                     }}
                   >
-                    Cancel
+                    {lang === "ar" ? "إلغاء" : "Cancel"}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create User"}
+                    {isSubmitting
+                      ? lang === "ar"
+                        ? "جارٍ الإنشاء..."
+                        : "Creating..."
+                      : lang === "ar"
+                        ? "إنشاء مستخدم"
+                        : "Create User"}
                   </Button>
                 </div>
               </form>

@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
+import { useLang } from "@/lib/lang-context"
 import { ArrowLeft, List, Plus } from "lucide-react"
 import {
   Card,
@@ -16,8 +17,11 @@ import { Button } from "@/components/ui/button"
 
 const settingsCards = [
   {
-    title: "Lookups",
-    description: "Manage tool types, case types, and user types",
+    title: { en: "Lookups", ar: "القوائم المرجعية" },
+    description: {
+      en: "Manage tool types, case types, and user types",
+      ar: "إدارة أنواع الأدوات وأنواع الحالات وأنواع المستخدمين",
+    },
     href: "/dashboard/admin/settings/lookups",
     icon: List,
   },
@@ -26,6 +30,7 @@ const settingsCards = [
 export default function SettingsPage() {
   const router = useRouter()
   const { isSuperAdmin, isLoading } = useAuth()
+  const { lang } = useLang()
 
   useEffect(() => {
     if (!isLoading && !isSuperAdmin) {
@@ -36,7 +41,9 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جاري التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -52,8 +59,14 @@ export default function SettingsPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-primary">Settings</h1>
-          <p className="text-muted-foreground">Manage application settings</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "الإعدادات" : "Settings"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar"
+              ? "إدارة إعدادات التطبيق"
+              : "Manage application settings"}
+          </p>
         </div>
       </div>
 
@@ -65,8 +78,8 @@ export default function SettingsPage() {
                 <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                   <card.icon className="h-5 w-5 text-primary" />
                 </div>
-                <CardTitle>{card.title}</CardTitle>
-                <CardDescription>{card.description}</CardDescription>
+                <CardTitle>{card.title[lang]}</CardTitle>
+                <CardDescription>{card.description[lang]}</CardDescription>
               </CardHeader>
             </Card>
           </Link>

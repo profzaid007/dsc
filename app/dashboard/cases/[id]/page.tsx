@@ -35,6 +35,16 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
+const assignmentStatusLabels: Record<
+  string,
+  { en: string; ar: string }
+> = {
+  pending: { en: "Pending", ar: "قيد الانتظار" },
+  assigned: { en: "Assigned", ar: "تم التعيين" },
+  in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
+  completed: { en: "Completed", ar: "مكتمل" },
+}
+
 export default function ProfileDetailPage({
   params,
 }: {
@@ -88,9 +98,11 @@ export default function ProfileDetailPage({
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="mb-4 text-xl font-medium">Case not found</h2>
+        <h2 className="mb-4 text-xl font-medium">
+          {lang === "ar" ? "الحالة غير موجودة" : "Case not found"}
+        </h2>
         <Link href="/dashboard/cases">
-          <Button>Back to Cases</Button>
+          <Button>{lang === "ar" ? "العودة إلى الحالات" : "Back to Cases"}</Button>
         </Link>
       </div>
     )
@@ -105,23 +117,27 @@ export default function ProfileDetailPage({
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-primary">{profile.name}</h1>
           <p className="text-muted-foreground">
-            Created {formatDate(profile.created)}
+            {lang === "ar" ? `أنشئت في ${formatDate(profile.created)}` : `Created ${formatDate(profile.created)}`}
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">
+            {lang === "ar" ? "نظرة عامة" : "Overview"}
+          </TabsTrigger>
           <TabsTrigger value="tasks">
-            Tasks
+            {lang === "ar" ? "المهام" : "Tasks"}
             {roleFilteredAssignments.length > 0 && (
               <Badge variant="secondary" className="ms-2">
                 {roleFilteredAssignments.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="case-file">History</TabsTrigger>
+          <TabsTrigger value="case-file">
+            {lang === "ar" ? "السجل" : "History"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -129,25 +145,39 @@ export default function ProfileDetailPage({
             {profile.portal_type === "Attending Training" ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Training Enrollment</CardTitle>
+                  <CardTitle>
+                    {lang === "ar" ? "التسجيل في التدريب" : "Training Enrollment"}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Portal Type</span>
-                    <span className="font-medium">Attending Training</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Case Type</span>
+                    <span className="text-muted-foreground">
+                      {lang === "ar" ? "نوع البوابة" : "Portal Type"}
+                    </span>
                     <span className="font-medium">
-                      {profile.service_type ||
-                        profile.sub_category ||
-                        "Attending Training"}
+                      {lang === "ar" ? "حضور تدريب" : "Attending Training"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Status</span>
+                    <span className="text-muted-foreground">
+                      {lang === "ar" ? "نوع الحالة" : "Case Type"}
+                    </span>
+                    <span className="font-medium">
+                      {profile.service_type ||
+                        profile.sub_category ||
+                        (lang === "ar" ? "حضور تدريب" : "Attending Training")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {lang === "ar" ? "الحالة" : "Status"}
+                    </span>
                     <Badge variant="secondary">
-                      {profile.program_status || "enrolled"}
+                      {profile.program_status === "enrolled"
+                        ? lang === "ar"
+                          ? "مسجل"
+                          : "enrolled"
+                        : profile.program_status}
                     </Badge>
                   </div>
                   {profile.training_link && (
@@ -158,7 +188,7 @@ export default function ProfileDetailPage({
                       className="mt-2 block"
                     >
                       <Button variant="default" className="w-full">
-                        Join Meeting
+                        {lang === "ar" ? "الانضمام للاجتماع" : "Join Meeting"}
                       </Button>
                     </Link>
                   )}
@@ -168,7 +198,9 @@ export default function ProfileDetailPage({
                       className="mt-2 block"
                     >
                       <Button variant="outline" className="w-full">
-                        View Training Program
+                        {lang === "ar"
+                          ? "عرض البرنامج التدريبي"
+                          : "View Training Program"}
                       </Button>
                     </Link>
                   )}
@@ -180,13 +212,13 @@ export default function ProfileDetailPage({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <User className="h-5 w-5" />
-                      Case Information
+                      {lang === "ar" ? "معلومات الحالة" : "Case Information"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        Date of Birth
+                        {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
                       </span>
                       <span className="font-medium">
                         {profile.date_of_birth
@@ -195,13 +227,25 @@ export default function ProfileDetailPage({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Gender</span>
+                      <span className="text-muted-foreground">
+                        {lang === "ar" ? "الجنس" : "Gender"}
+                      </span>
                       <span className="font-medium capitalize">
-                        {profile.gender || "—"}
+                        {profile.gender === "male"
+                          ? lang === "ar"
+                            ? "ذكر"
+                            : "male"
+                          : profile.gender === "female"
+                            ? lang === "ar"
+                              ? "أنثى"
+                              : "female"
+                            : "—"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Grade</span>
+                      <span className="text-muted-foreground">
+                        {lang === "ar" ? "الصف الدراسي" : "Grade"}
+                      </span>
                       <span className="font-medium capitalize">
                         {profile.grade || "—"}
                       </span>
@@ -212,7 +256,7 @@ export default function ProfileDetailPage({
                 {profile.notes && (
                   <Card className="lg:col-span-2">
                     <CardHeader>
-                      <CardTitle>Notes</CardTitle>
+                      <CardTitle>{lang === "ar" ? "ملاحظات" : "Notes"}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground">{profile.notes}</p>
@@ -229,19 +273,25 @@ export default function ProfileDetailPage({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5" />
-                Assigned Tasks
+                {lang === "ar" ? "المهام المكلف بها" : "Assigned Tasks"}
               </CardTitle>
-              <CardDescription>Tasks assigned to this profile</CardDescription>
+              <CardDescription>
+                {lang === "ar"
+                  ? "المهام المكلف بها لهذه الحالة"
+                  : "Tasks assigned to this profile"}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {roleFilteredAssignments.length === 0 ? (
                 <div className="py-8 text-center">
                   <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <h3 className="mb-2 text-lg font-medium">
-                    No tasks assigned
+                    {lang === "ar" ? "لا توجد مهام مكلف بها" : "No tasks assigned"}
                   </h3>
                   <p className="text-muted-foreground">
-                    Tasks will appear here once assigned by an admin
+                    {lang === "ar"
+                      ? "ستظهر المهام هنا بمجرد تكليفها من قبل المشرف"
+                      : "Tasks will appear here once assigned by an admin"}
                   </p>
                 </div>
               ) : (
@@ -316,7 +366,7 @@ export default function ProfileDetailPage({
                                     printWindow.document.write(`
                                     <html>
                                       <head>
-                                        <title>${assignment.name_en || "Responses"}</title>
+                                        <title>${assignment.name_en || (lang === "ar" ? "الردود" : "Responses")}</title>
                                         <style>
                                           body { font-family: system-ui, sans-serif; padding: 20px; }
                                           h1 { margin-bottom: 10px; }
@@ -327,10 +377,10 @@ export default function ProfileDetailPage({
                                         </style>
                                       </head>
                                       <body>
-                                        <h1>${assignment.name_en || "Responses"}</h1>
-                                        <p class="meta">Profile: ${profile.name} | Date: ${formatDate(assignment.updated)}</p>
+                                        <h1>${assignment.name_en || (lang === "ar" ? "الردود" : "Responses")}</h1>
+                                        <p class="meta">${lang === "ar" ? "الحالة" : "Profile"}: ${profile.name} | ${lang === "ar" ? "التاريخ" : "Date"}: ${formatDate(assignment.updated)}</p>
                                         <pre style="white-space: pre-wrap; background: #f5f5f5; padding: 15px; border-radius: 4px;">${JSON.stringify(responses, null, 2)}</pre>
-                                        <button class="no-print" onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">Print / Save as PDF</button>
+                                        <button class="no-print" onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">${lang === "ar" ? "طباعة / حفظ كـ PDF" : "Print / Save as PDF"}</button>
                                       </body>
                                     </html>
                                   `)
@@ -349,7 +399,7 @@ export default function ProfileDetailPage({
                                 : "secondary"
                             }
                           >
-                            {assignment.status}
+                            {assignmentStatusLabels[assignment.status]?.[lang] || assignment.status}
                           </Badge>
                         </div>
                       </div>
@@ -366,18 +416,26 @@ export default function ProfileDetailPage({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
-                History
+                {lang === "ar" ? "السجل" : "History"}
               </CardTitle>
-              <CardDescription>Completed Tasks will be here</CardDescription>
+              <CardDescription>
+                {lang === "ar"
+                  ? "ستكون المهام المكتملة هنا"
+                  : "Completed Tasks will be here"}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {assignments.filter((a) => a.status === "completed").length ===
               0 ? (
                 <div className="py-8 text-center">
                   <History className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="mb-2 text-lg font-medium">No history yet</h3>
+                  <h3 className="mb-2 text-lg font-medium">
+                    {lang === "ar" ? "لا يوجد سجل بعد" : "No history yet"}
+                  </h3>
                   <p className="text-muted-foreground">
-                    Completed tasks will appear here
+                    {lang === "ar"
+                      ? "ستظهر المهام المكتملة هنا"
+                      : "Completed tasks will appear here"}
                   </p>
                 </div>
               ) : (
@@ -396,12 +454,14 @@ export default function ProfileDetailPage({
                               : assignment.name_en}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            Completed{" "}
+                            {lang === "ar" ? "أكملت في" : "Completed"}{" "}
                             {assignment.updated &&
                               formatDate(assignment.updated)}
                           </p>
                         </div>
-                        <Badge variant="default">Completed</Badge>
+                        <Badge variant="default">
+                          {lang === "ar" ? "مكتمل" : "Completed"}
+                        </Badge>
                       </div>
                     ))}
                 </div>

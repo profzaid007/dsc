@@ -52,8 +52,14 @@ export default function NewToolPage() {
           ←
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-primary">Create Tool</h1>
-          <p className="text-muted-foreground">Select a tool type to create</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "إنشاء أداة" : "Create Tool"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar"
+              ? "اختر نوع الأداة لإنشائها"
+              : "Select a tool type to create"}
+          </p>
         </div>
       </div>
 

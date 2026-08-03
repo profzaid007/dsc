@@ -201,7 +201,9 @@ export default function TakeSurveyToolPage({
   if (isAssignmentsLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جاري التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -209,9 +211,13 @@ export default function TakeSurveyToolPage({
   if (!assignment || !profile || !config) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="mb-4 text-xl font-medium">Tool not found</h2>
+        <h2 className="mb-4 text-xl font-medium">
+          {lang === "ar" ? "الأداة غير موجودة" : "Tool not found"}
+        </h2>
         <Link href="/dashboard/cases">
-          <Button>Back to Cases</Button>
+          <Button>
+            {lang === "ar" ? "العودة إلى الحالات" : "Back to Cases"}
+          </Button>
         </Link>
       </div>
     )
@@ -604,7 +610,7 @@ export default function TakeSurveyToolPage({
             {question.mediaType === "image" && (
               <img
                 src={question.mediaUrl}
-                alt="Media"
+                alt={lang === "ar" ? "الوسائط" : "Media"}
                 className="h-full w-full object-contain"
               />
             )}
@@ -875,7 +881,7 @@ export default function TakeSurveyToolPage({
             {item.mediaType === "image" && (
               <img
                 src={item.mediaUrl}
-                alt="Media"
+                alt={lang === "ar" ? "الوسائط" : "Media"}
                 className="h-full w-full object-contain"
               />
             )}
@@ -1258,7 +1264,7 @@ export default function TakeSurveyToolPage({
                       <thead>
                         <tr className="border-b text-start text-xs tracking-wider text-muted-foreground uppercase">
                           <th className="min-w-[150px] pe-4 pb-2 text-start font-medium">
-                            Questions
+                            {lang === "ar" ? "الأسئلة" : "Questions"}
                           </th>
                           {sortedOptions.map((opt) => (
                             <th
@@ -1744,7 +1750,7 @@ export default function TakeSurveyToolPage({
                     <thead>
                       <tr className="border-b text-start text-xs tracking-wider text-muted-foreground uppercase">
                         <th className="min-w-[150px] pe-4 pb-2 text-start font-medium">
-                          Questions
+                          {lang === "ar" ? "الأسئلة" : "Questions"}
                         </th>
                         {sortedOptions.map((opt) => (
                           <th

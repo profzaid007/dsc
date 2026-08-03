@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
+import { useLang } from "@/lib/lang-context"
 import { useLookups, type LookupType } from "@/hooks/useLookups"
 import { formatDate } from "@/lib/format-date"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,15 +34,16 @@ import {
 } from "@/components/ui/dialog"
 import { ArrowLeft, Pencil, Plus, Trash2, List } from "lucide-react"
 
-const LOOKUP_TYPES: { value: LookupType; label: string }[] = [
-  { value: "tool_types", label: "Tool Types" },
-  { value: "case_types", label: "Case Types" },
-  { value: "user_types", label: "User Types" },
+const LOOKUP_TYPES: { value: LookupType; label: { en: string; ar: string } }[] = [
+  { value: "tool_types", label: { en: "Tool Types", ar: "أنواع الأدوات" } },
+  { value: "case_types", label: { en: "Case Types", ar: "أنواع الحالات" } },
+  { value: "user_types", label: { en: "User Types", ar: "أنواع المستخدمين" } },
 ]
 
 export default function LookupsPage() {
   const router = useRouter()
   const { isSuperAdmin, isLoading: isAuthLoading } = useAuth()
+  const { lang } = useLang()
   const {
     lookups,
     isLoading,
@@ -137,7 +139,9 @@ export default function LookupsPage() {
   if (isAuthLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جاري التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -157,8 +161,14 @@ export default function LookupsPage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-primary">Lookups</h1>
-          <p className="text-muted-foreground">Manage lookup tables</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "القوائم المرجعية" : "Lookups"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar"
+              ? "إدارة جداول القوائم المرجعية"
+              : "Manage lookup tables"}
+          </p>
         </div>
       </div>
 
@@ -167,7 +177,7 @@ export default function LookupsPage() {
           <div className="flex items-center gap-4">
             <div>
               <Label className="text-xs tracking-wider text-muted-foreground uppercase">
-                Filter by Type
+                {lang === "ar" ? "تصفية حسب النوع" : "Filter by Type"}
               </Label>
               <Select
                 value={filterType}
@@ -179,7 +189,7 @@ export default function LookupsPage() {
                 <SelectContent>
                   {LOOKUP_TYPES.map((t) => (
                     <SelectItem key={t.value} value={t.value}>
-                      {t.label}
+                      {t.label[lang]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -188,7 +198,7 @@ export default function LookupsPage() {
           </div>
           <Button onClick={openCreateDialog}>
             <Plus className="me-2 h-4 w-4" />
-            Add Lookup
+            {lang === "ar" ? "إضافة قيمة" : "Add Lookup"}
           </Button>
         </CardHeader>
         <CardContent>
@@ -201,18 +211,20 @@ export default function LookupsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Key</TableHead>
-                <TableHead>Label (EN)</TableHead>
-                <TableHead>Label (AR)</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{lang === "ar" ? "المفتاح" : "Key"}</TableHead>
+                <TableHead>{lang === "ar" ? "التسمية (إنجليزي)" : "Label (EN)"}</TableHead>
+                <TableHead>{lang === "ar" ? "التسمية (عربي)" : "Label (AR)"}</TableHead>
+                <TableHead>{lang === "ar" ? "تاريخ الإنشاء" : "Created"}</TableHead>
+                <TableHead className="text-right">
+                  {lang === "ar" ? "إجراءات" : "Actions"}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-8 text-center">
-                    Loading...
+                    {lang === "ar" ? "جاري التحميل..." : "Loading..."}
                   </TableCell>
                 </TableRow>
               ) : lookups.length === 0 ? (
@@ -220,13 +232,17 @@ export default function LookupsPage() {
                   <TableCell colSpan={5} className="py-8 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <List className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No lookups found</p>
+                      <p className="text-muted-foreground">
+                        {lang === "ar" ? "لا توجد قيم" : "No lookups found"}
+                      </p>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={openCreateDialog}
                       >
-                        Add your first lookup
+                        {lang === "ar"
+                          ? "أضف أول قيمة"
+                          : "Add your first lookup"}
                       </Button>
                     </div>
                   </TableCell>
@@ -282,13 +298,19 @@ export default function LookupsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingLookup ? "Edit Lookup" : "Add Lookup"}
+              {editingLookup
+                ? lang === "ar"
+                  ? "تعديل القيمة"
+                  : "Edit Lookup"
+                : lang === "ar"
+                  ? "إضافة قيمة"
+                  : "Add Lookup"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {!editingLookup && (
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>{lang === "ar" ? "النوع" : "Type"}</Label>
                 <Select
                   value={formType}
                   onValueChange={(v) => setFormType(v as LookupType)}
@@ -299,7 +321,7 @@ export default function LookupsPage() {
                   <SelectContent>
                     {LOOKUP_TYPES.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
-                        {t.label}
+                        {t.label[lang]}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -307,7 +329,7 @@ export default function LookupsPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label>Key</Label>
+              <Label>{lang === "ar" ? "المفتاح" : "Key"}</Label>
               <Input
                 placeholder="e.g. survey"
                 value={formData.key}
@@ -318,7 +340,9 @@ export default function LookupsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Label (English)</Label>
+              <Label>
+                {lang === "ar" ? "التسمية (إنجليزي)" : "Label (English)"}
+              </Label>
               <Input
                 placeholder="e.g. Survey"
                 value={formData.label_en}
@@ -328,7 +352,9 @@ export default function LookupsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Label (Arabic)</Label>
+              <Label>
+                {lang === "ar" ? "التسمية (عربي)" : "Label (Arabic)"}
+              </Label>
               <Input
                 placeholder="e.g. استبيان"
                 value={formData.label_ar}
@@ -347,7 +373,7 @@ export default function LookupsPage() {
                 resetForm()
               }}
             >
-              Cancel
+              {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={handleSave}
@@ -355,7 +381,13 @@ export default function LookupsPage() {
                 !formData.key || !formData.label_en || !formData.label_ar
               }
             >
-              {editingLookup ? "Save Changes" : "Create"}
+              {editingLookup
+                ? lang === "ar"
+                  ? "حفظ التغييرات"
+                  : "Save Changes"
+                : lang === "ar"
+                  ? "إنشاء"
+                  : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -371,11 +403,14 @@ export default function LookupsPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Lookup</DialogTitle>
+            <DialogTitle>
+              {lang === "ar" ? "حذف القيمة" : "Delete Lookup"}
+            </DialogTitle>
           </DialogHeader>
           <p className="py-2">
-            Are you sure you want to delete this lookup? This action cannot be
-            undone.
+            {lang === "ar"
+              ? "هل أنت متأكد من حذف هذه القيمة؟ لا يمكن التراجع عن هذا الإجراء."
+              : "Are you sure you want to delete this lookup? This action cannot be undone."}
           </p>
           <DialogFooter>
             <Button
@@ -385,10 +420,10 @@ export default function LookupsPage() {
                 setDeletingLookupId(null)
               }}
             >
-              Cancel
+              {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Delete
+              {lang === "ar" ? "حذف" : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

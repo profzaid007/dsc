@@ -12,22 +12,23 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
+import { useLang } from "@/lib/lang-context"
 import type { AttachmentRequestConfig, AttachmentFileType } from "@/types/tool"
 
 const FILE_TYPES: {
   value: AttachmentFileType
-  label: string
+  label: { en: string; ar: string }
   extensions: string
 }[] = [
-  { value: "image", label: "Image", extensions: "(jpg, png, gif, webp)" },
+  { value: "image", label: { en: "Image", ar: "صورة" }, extensions: "(jpg, png, gif, webp)" },
   {
     value: "document",
-    label: "Document",
+    label: { en: "Document", ar: "مستند" },
     extensions: "(pdf, doc, docx, txt, xls, xlsx)",
   },
-  { value: "video", label: "Video", extensions: "(mp4, mov, avi, mpeg)" },
-  { value: "audio", label: "Audio", extensions: "(mp3, wav, m4a)" },
-  { value: "any", label: "Any File", extensions: "(all types)" },
+  { value: "video", label: { en: "Video", ar: "فيديو" }, extensions: "(mp4, mov, avi, mpeg)" },
+  { value: "audio", label: { en: "Audio", ar: "صوت" }, extensions: "(mp3, wav, m4a)" },
+  { value: "any", label: { en: "Any File", ar: "أي ملف" }, extensions: "(all types)" },
 ]
 
 export default function AttachmentRequestBuilderPage({
@@ -36,6 +37,7 @@ export default function AttachmentRequestBuilderPage({
   searchParams: Promise<{ caseId?: string }>
 }) {
   const router = useRouter()
+  const { lang } = useLang()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -67,7 +69,9 @@ export default function AttachmentRequestBuilderPage({
         setTypeError("")
       } catch (error) {
         setTypeError(
-          'Tool type "attachment_request" not found. Please contact admin.'
+          lang === "ar"
+            ? 'نوع الأداة "attachment_request" غير موجود. يرجى الاتصال بالمسؤول.'
+            : 'Tool type "attachment_request" not found. Please contact admin.'
         )
         console.error("Failed to fetch attachment_request type:", error)
       }
@@ -200,10 +204,14 @@ export default function AttachmentRequestBuilderPage({
       <div className="flex items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            Create Request for Attachment
+            {lang === "ar"
+              ? "إنشاء طلب إرفاق ملف"
+              : "Create Request for Attachment"}
           </h1>
           <p className="text-muted-foreground">
-            Create an attachment request for a specific case
+            {lang === "ar"
+              ? "إنشاء طلب مرفق لقضية محددة"
+              : "Create an attachment request for a specific case"}
           </p>
         </div>
       </div>
@@ -218,17 +226,21 @@ export default function AttachmentRequestBuilderPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Select Case *</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "اختر قضية *" : "Select Case *"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
-                placeholder="Select a case..."
+                placeholder={lang === "ar" ? "اختر قضية..." : "Select a case..."}
               />
               {!selectedCaseId && (
                 <p className="mt-2 text-sm text-destructive">
-                  Please select a case to continue
+                  {lang === "ar"
+                    ? "يرجى اختيار قضية للمتابعة"
+                    : "Please select a case to continue"}
                 </p>
               )}
             </CardContent>
@@ -236,22 +248,28 @@ export default function AttachmentRequestBuilderPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Request Name *</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "اسم الطلب *" : "Request Name *"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Name (EN)</Label>
+                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
                     value={formData.nameEn}
                     onChange={(e) =>
                       setFormData({ ...formData, nameEn: e.target.value })
                     }
-                    placeholder="e.g., Upload Medical Report"
+                    placeholder={
+                      lang === "ar"
+                        ? "مثال: تحميل التقرير الطبي"
+                        : "e.g., Upload Medical Report"
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Name (AR)</Label>
+                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
                   <Input
                     value={formData.nameAr}
                     onChange={(e) =>
@@ -266,11 +284,15 @@ export default function AttachmentRequestBuilderPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>File Requirements</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "متطلبات الملف" : "File Requirements"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
-                <Label>Allowed File Types</Label>
+                <Label>
+                  {lang === "ar" ? "أنواع الملفات المسموحة" : "Allowed File Types"}
+                </Label>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {FILE_TYPES.map((type) => (
                     <div
@@ -283,7 +305,7 @@ export default function AttachmentRequestBuilderPage({
                         onCheckedChange={() => toggleFileType(type.value)}
                       />
                       <div className="flex-1">
-                        <div className="font-medium">{type.label}</div>
+                        <div className="font-medium">{type.label[lang]}</div>
                         <div className="text-xs text-muted-foreground">
                           {type.extensions}
                         </div>
@@ -295,7 +317,9 @@ export default function AttachmentRequestBuilderPage({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Maximum Files</Label>
+                  <Label>
+                    {lang === "ar" ? "الحد الأقصى للملفات" : "Maximum Files"}
+                  </Label>
                   <Input
                     type="number"
                     min={1}
@@ -309,12 +333,18 @@ export default function AttachmentRequestBuilderPage({
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Number of files allowed (1-20)
+                    {lang === "ar"
+                      ? "عدد الملفات المسموح بها (1-20)"
+                      : "Number of files allowed (1-20)"}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Maximum File Size (MB)</Label>
+                  <Label>
+                    {lang === "ar"
+                      ? "الحد الأقصى لحجم الملف (ميجابايت)"
+                      : "Maximum File Size (MB)"}
+                  </Label>
                   <Input
                     type="number"
                     min={1}
@@ -328,7 +358,9 @@ export default function AttachmentRequestBuilderPage({
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Size limit per file
+                    {lang === "ar"
+                      ? "الحد الأقصى لحجم الملف"
+                      : "Size limit per file"}
                   </p>
                 </div>
               </div>
@@ -342,7 +374,9 @@ export default function AttachmentRequestBuilderPage({
                   }
                 />
                 <Label htmlFor="required" className="cursor-pointer">
-                  Required - User must upload files to complete
+                  {lang === "ar"
+                    ? "إجباري - يجب على المستخدم رفع الملفات للإكمال"
+                    : "Required - User must upload files to complete"}
                 </Label>
               </div>
             </CardContent>
@@ -350,13 +384,19 @@ export default function AttachmentRequestBuilderPage({
 
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={handleCancel}>
-              Cancel
+              {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={!isFormValid || isSubmitting}
             >
-              {isSubmitting ? "Creating..." : "Create Request"}
+              {isSubmitting
+                ? lang === "ar"
+                  ? "جارٍ الإنشاء..."
+                  : "Creating..."
+                : lang === "ar"
+                  ? "إنشاء الطلب"
+                  : "Create Request"}
             </Button>
           </div>
         </div>
@@ -364,18 +404,19 @@ export default function AttachmentRequestBuilderPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Preview</CardTitle>
+              <CardTitle>{lang === "ar" ? "معاينة" : "Preview"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-lg border bg-muted/30 p-4">
                 <h3 className="font-semibold">
-                  {formData.nameEn || "Request Title"}
+                  {formData.nameEn ||
+                    (lang === "ar" ? "عنوان الطلب" : "Request Title")}
                 </h3>
               </div>
 
               <div className="space-y-2">
                 <Label className="text-sm text-muted-foreground">
-                  Allowed Types
+                  {lang === "ar" ? "الأنواع المسموحة" : "Allowed Types"}
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {selectedTypes.map((type) => {
@@ -385,7 +426,7 @@ export default function AttachmentRequestBuilderPage({
                         key={type}
                         className="rounded-full bg-primary/10 px-3 py-1 text-sm"
                       >
-                        {typeInfo?.label}
+                        {typeInfo?.label[lang]}
                       </span>
                     )
                   })}
@@ -394,22 +435,38 @@ export default function AttachmentRequestBuilderPage({
 
               <div className="grid gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Max Files:</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "الحد الأقصى للملفات:" : "Max Files:"}
+                  </span>
                   <span>{formData.maxFiles}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Max Size:</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "الحد الأقصى للحجم:" : "Max Size:"}
+                  </span>
                   <span>{formData.maxFileSize} MB</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Required:</span>
-                  <span>{formData.required ? "Yes" : "No"}</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "إجباري:" : "Required:"}
+                  </span>
+                  <span>
+                    {formData.required
+                      ? lang === "ar"
+                        ? "نعم"
+                        : "Yes"
+                      : lang === "ar"
+                        ? "لا"
+                        : "No"}
+                  </span>
                 </div>
               </div>
 
               <div className="rounded-lg border-2 border-dashed border-muted p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  File upload area will appear here
+                  {lang === "ar"
+                    ? "ستظهر منطقة رفع الملفات هنا"
+                    : "File upload area will appear here"}
                 </p>
               </div>
             </CardContent>

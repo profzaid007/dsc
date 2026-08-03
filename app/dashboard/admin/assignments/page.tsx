@@ -56,11 +56,11 @@ const statusColors: Record<AssignmentStatus, string> = {
   completed: "bg-green-100 text-green-800",
 }
 
-const statusLabels: Record<AssignmentStatus, string> = {
-  pending: "Pending",
-  assigned: "Assigned",
-  in_progress: "In Progress",
-  completed: "Completed",
+const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
+  pending: { en: "Pending", ar: "قيد الانتظار" },
+  assigned: { en: "Assigned", ar: "تم التعيين" },
+  in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
+  completed: { en: "Completed", ar: "مكتمل" },
 }
 
 export default function AssignmentsPage() {
@@ -99,7 +99,7 @@ export default function AssignmentsPage() {
 
   const getCaseName = (caseId: string) => {
     const profile = profiles.find((p) => p.id === caseId)
-    return profile?.name || "Unknown Case"
+    return profile?.name || (lang === "ar" ? "حالة غير معروفة" : "Unknown Case")
   }
 
   const getToolTypeName = (typeId: string) => {
@@ -160,9 +160,13 @@ export default function AssignmentsPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-primary">Assignments</h1>
+              <h1 className="text-2xl font-bold text-primary">
+                {lang === "ar" ? "التعيينات" : "Assignments"}
+              </h1>
               <p className="text-muted-foreground">
-                Manage tool assignments to cases
+                {lang === "ar"
+                  ? "إدارة تعيينات الأدوات للحالات"
+                  : "Manage tool assignments to cases"}
               </p>
             </div>
           </div>
@@ -181,9 +185,13 @@ export default function AssignmentsPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-primary">Assignments</h1>
+            <h1 className="text-2xl font-bold text-primary">
+              {lang === "ar" ? "التعيينات" : "Assignments"}
+            </h1>
             <p className="text-muted-foreground">
-              Manage tool assignments to cases
+              {lang === "ar"
+                ? "إدارة تعيينات الأدوات للحالات"
+                : "Manage tool assignments to cases"}
             </p>
           </div>
         </div>
@@ -196,7 +204,11 @@ export default function AssignmentsPage() {
             <div className="relative flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by assignment name..."
+                placeholder={
+                  lang === "ar"
+                    ? "ابحث باسم التعيين..."
+                    : "Search by assignment name..."
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -205,15 +217,19 @@ export default function AssignmentsPage() {
             <CaseSearchCombobox
               value={filterCase}
               onChange={setFilterCase}
-              placeholder="Filter by case..."
+              placeholder={lang === "ar" ? "تصفية حسب الحالة..." : "Filter by case..."}
               className="w-[250px]"
             />
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by Type" />
+                <SelectValue
+                  placeholder={lang === "ar" ? "تصفية حسب النوع" : "Filter by Type"}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="all">
+                  {lang === "ar" ? "جميع الأنواع" : "All Types"}
+                </SelectItem>
                 {uniqueToolTypes.map((typeId) => {
                   const toolType = getToolTypeById(typeId)
                   return (
@@ -231,14 +247,26 @@ export default function AssignmentsPage() {
               }
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by Status" />
+                <SelectValue
+                  placeholder={lang === "ar" ? "تصفية حسب الحالة" : "Filter by Status"}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="assigned">Assigned</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="all">
+                  {lang === "ar" ? "جميع الحالات" : "All Status"}
+                </SelectItem>
+                <SelectItem value="pending">
+                  {lang === "ar" ? "قيد الانتظار" : "Pending"}
+                </SelectItem>
+                <SelectItem value="assigned">
+                  {lang === "ar" ? "تم التعيين" : "Assigned"}
+                </SelectItem>
+                <SelectItem value="in_progress">
+                  {lang === "ar" ? "قيد التنفيذ" : "In Progress"}
+                </SelectItem>
+                <SelectItem value="completed">
+                  {lang === "ar" ? "مكتمل" : "Completed"}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -248,33 +276,51 @@ export default function AssignmentsPage() {
       {/* Assignments Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Assignments</CardTitle>
+          <CardTitle>
+            {lang === "ar" ? "جميع التعيينات" : "All Assignments"}
+          </CardTitle>
           <CardDescription>
-            {filteredAssignments.length} assignment(s) found
+            {lang === "ar"
+              ? `تم العثور على ${filteredAssignments.length} تعيين`
+              : `${filteredAssignments.length} assignment(s) found`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {filteredAssignments.length === 0 ? (
             <div className="py-12 text-center">
               <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-lg font-medium">No assignments found</h3>
+              <h3 className="mb-2 text-lg font-medium">
+                {lang === "ar" ? "لا توجد تعيينات" : "No assignments found"}
+              </h3>
               <p className="text-muted-foreground">
                 {assignments.length === 0
-                  ? "No tools have been assigned to cases yet. Go to a tool and use Quick Assign."
-                  : "No assignments match your filters."}
+                  ? lang === "ar"
+                    ? "لم يتم تعيين أي أدوات للحالات بعد. انتقل إلى إحدى الأدوات واستخدم التعيين السريع."
+                    : "No tools have been assigned to cases yet. Go to a tool and use Quick Assign."
+                  : lang === "ar"
+                    ? "لا توجد تعيينات تطابق عوامل التصفية."
+                    : "No assignments match your filters."}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Case</TableHead>
-                  <TableHead>Assignment</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Visible to User</TableHead>
-                  <TableHead>Assigned Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{lang === "ar" ? "الحالة" : "Case"}</TableHead>
+                  <TableHead>
+                    {lang === "ar" ? "التعيين" : "Assignment"}
+                  </TableHead>
+                  <TableHead>{lang === "ar" ? "النوع" : "Type"}</TableHead>
+                  <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
+                  <TableHead>
+                    {lang === "ar" ? "مرئي للمستخدم" : "Visible to User"}
+                  </TableHead>
+                  <TableHead>
+                    {lang === "ar" ? "تاريخ التعيين" : "Assigned Date"}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {lang === "ar" ? "الإجراءات" : "Actions"}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -297,7 +343,10 @@ export default function AssignmentsPage() {
                           href={`/dashboard/admin/assignments/${assignment.id}`}
                           className="hover:text-primary hover:underline"
                         >
-                          {assignment.name_en || "Unnamed Assignment"}
+                          {assignment.name_en ||
+                            (lang === "ar"
+                              ? "تعيين بدون اسم"
+                              : "Unnamed Assignment")}
                         </SmartLink>
                       </TableCell>
                       <TableCell>
@@ -310,7 +359,7 @@ export default function AssignmentsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[assignment.status]}>
-                          {statusLabels[assignment.status]}
+                          {statusLabels[assignment.status][lang]}
                         </Badge>
                       </TableCell>
                       <TableCell>

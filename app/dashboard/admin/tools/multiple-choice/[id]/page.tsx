@@ -37,11 +37,11 @@ const statusColors: Record<string, string> = {
   attachment_request: "bg-indigo-100 text-indigo-800",
 }
 
-const statusLabels: Record<AssignmentStatus, string> = {
-  pending: "Pending",
-  assigned: "Assigned",
-  in_progress: "In Progress",
-  completed: "Completed",
+const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
+  pending: { en: "Pending", ar: "قيد الانتظار" },
+  assigned: { en: "Assigned", ar: "تم التعيين" },
+  in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
+  completed: { en: "Completed", ar: "مكتمل" },
 }
 
 interface ToolViewPageProps {
@@ -71,9 +71,11 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
   if (!tool || !config) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="mb-4 text-xl font-medium">Tool not found</h2>
+        <h2 className="mb-4 text-xl font-medium">
+          {lang === "ar" ? "الأداة غير موجودة" : "Tool not found"}
+        </h2>
         <Button onClick={() => router.push("/dashboard/admin/tools")}>
-          Back to Tools
+          {lang === "ar" ? "العودة إلى الأدوات" : "Back to Tools"}
         </Button>
       </div>
     )
@@ -109,7 +111,7 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
   }
 
   const handleDelete = async () => {
-    if (confirm("Are you sure you want to delete this tool?")) {
+    if (confirm(lang === "ar" ? "هل أنت متأكد من حذف هذه الأداة؟" : "Are you sure you want to delete this tool?")) {
       await deleteTool(toolId)
       router.push("/dashboard/admin/tools")
     }
@@ -136,12 +138,12 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
           <Link href={`/dashboard/admin/tools/multiple-choice/edit/${toolId}`}>
             <Button variant="outline">
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              {lang === "ar" ? "تعديل" : "Edit"}
             </Button>
           </Link>
           <Button variant="destructive" onClick={handleDelete}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {lang === "ar" ? "حذف" : "Delete"}
           </Button>
         </div>
       </div>
@@ -151,20 +153,22 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Icon className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Tool Details</CardTitle>
+            <CardTitle className="text-lg">
+              {lang === "ar" ? "تفاصيل الأداة" : "Tool Details"}
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Name (EN)
+                {lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}
               </span>
               <p>{tool.name.en}</p>
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Name (AR)
+                {lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}
               </span>
               <p>{tool.name.ar}</p>
             </div>
@@ -172,7 +176,7 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
           <div className="flex items-center gap-4">
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Type
+                {lang === "ar" ? "النوع" : "Type"}
               </span>
               <div>
                 <Badge className={statusColors["multiple_answer"]}>
@@ -182,19 +186,29 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Status
+                {lang === "ar" ? "الحالة" : "Status"}
               </span>
               <div>
                 <Badge
                   variant={tool.status === "active" ? "default" : "secondary"}
                 >
-                  {tool.status}
+                  {tool.status === "active"
+                    ? lang === "ar"
+                      ? "نشط"
+                      : "Active"
+                    : tool.status === "inactive"
+                      ? lang === "ar"
+                        ? "غير نشط"
+                        : "Inactive"
+                      : lang === "ar"
+                        ? "مؤرشف"
+                        : "Archived"}
                 </Badge>
               </div>
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Service Type
+                {lang === "ar" ? "نوع الخدمة" : "Service Type"}
               </span>
               <p className="capitalize">{tool.serviceType}</p>
             </div>
@@ -202,7 +216,7 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
           {tool.description && (
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Description
+                {lang === "ar" ? "الوصف" : "Description"}
               </span>
               <p className="text-sm">{tool.description}</p>
             </div>
@@ -213,9 +227,13 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
       {/* Configuration Preview */}
       <Card>
         <CardHeader>
-          <CardTitle>Configuration Preview</CardTitle>
+          <CardTitle>
+            {lang === "ar" ? "معاينة الإعدادات" : "Configuration Preview"}
+          </CardTitle>
           <CardDescription>
-            Preview of how this tool will appear to users
+            {lang === "ar"
+              ? "معاينة كيف ستظهر هذه الأداة للمستخدمين"
+              : "Preview of how this tool will appear to users"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -228,27 +246,41 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            Quick Assign
+            {lang === "ar" ? "إسناد سريع" : "Quick Assign"}
           </CardTitle>
-          <CardDescription>Assign this tool to a case</CardDescription>
+          <CardDescription>
+            {lang === "ar"
+              ? "إسناد هذه الأداة إلى قضية"
+              : "Assign this tool to a case"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-end gap-4">
             <div className="flex-1">
               <label className="mb-2 block text-sm font-medium">
-                Select Case
+                {lang === "ar" ? "اختر قضية" : "Select Case"}
               </label>
               <CaseSearchCombobox
                 value={selectedCaseId}
                 onChange={setSelectedCaseId}
-                placeholder="Search and select a case..."
+                placeholder={
+                  lang === "ar"
+                    ? "ابحث واختر قضية..."
+                    : "Search and select a case..."
+                }
               />
             </div>
             <Button
               onClick={handleAssign}
               disabled={!selectedCaseId || isAssigning}
             >
-              {isAssigning ? "Assigning..." : "Assign to Case"}
+              {isAssigning
+                ? lang === "ar"
+                  ? "جارٍ الإسناد..."
+                  : "Assigning..."
+                : lang === "ar"
+                  ? "إسناد إلى قضية"
+                  : "Assign to Case"}
             </Button>
           </div>
         </CardContent>
@@ -257,14 +289,18 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
       {/* Note: Assignments are tracked in the global Assignments page */}
       <Card>
         <CardHeader>
-          <CardTitle>Assignments</CardTitle>
+          <CardTitle>
+            {lang === "ar" ? "المهام" : "Assignments"}
+          </CardTitle>
           <CardDescription>
-            View all assignments in the{" "}
+            {lang === "ar"
+              ? "عرض جميع المهام في صفحة "
+              : "View all assignments in the "}
             <Link
               href="/dashboard/admin/assignments"
               className="text-primary hover:underline"
             >
-              Assignments page
+              {lang === "ar" ? "المهام" : "Assignments page"}
             </Link>
           </CardDescription>
         </CardHeader>

@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { Calendar, Eye, EyeOff, Loader2 } from "lucide-react"
+import { useLang } from "@/lib/lang-context"
 import type { OneToOneMeetingConfig } from "@/types/tool"
 
 export default function OneToOneMeetingNewPage({
@@ -24,6 +25,7 @@ export default function OneToOneMeetingNewPage({
   searchParams: Promise<{ caseId?: string; edit?: string }>
 }) {
   const router = useRouter()
+  const { lang } = useLang()
   const { assignTool, updateAssignment, assignments, isLoading: isAssignmentsLoading } = useAssignments()
   const { getProfileById } = useProfiles()
   const [showPreview, setShowPreview] = useState(false)
@@ -53,7 +55,11 @@ export default function OneToOneMeetingNewPage({
         setMeetingTypeId(meetingType.id)
         setTypeError("")
       } catch (error) {
-        setTypeError('Tool type "one_to_one_meeting" not found. Please contact admin.')
+        setTypeError(
+          lang === "ar"
+            ? 'نوع الأداة "one_to_one_meeting" غير موجود. يرجى الاتصال بالمسؤول.'
+            : 'Tool type "one_to_one_meeting" not found. Please contact admin.'
+        )
         console.error("Failed to fetch meeting type:", error)
       }
     }
@@ -189,7 +195,9 @@ export default function OneToOneMeetingNewPage({
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جارٍ التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -199,10 +207,22 @@ export default function OneToOneMeetingNewPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            {editAssignmentId ? "Edit One to One Meeting" : "Create One to One Meeting"}
+            {editAssignmentId
+              ? lang === "ar"
+                ? "تعديل اجتماع فردي"
+                : "Edit One to One Meeting"
+              : lang === "ar"
+                ? "إنشاء اجتماع فردي"
+                : "Create One to One Meeting"}
           </h1>
           <p className="text-muted-foreground">
-            {editAssignmentId ? "Update the meeting for a specific case" : "Create a meeting for a specific case"}
+            {editAssignmentId
+              ? lang === "ar"
+                ? "تحديث الاجتماع لقضية محددة"
+                : "Update the meeting for a specific case"
+              : lang === "ar"
+                ? "إنشاء اجتماع لقضية محددة"
+                : "Create a meeting for a specific case"}
           </p>
         </div>
         <Button
@@ -214,7 +234,13 @@ export default function OneToOneMeetingNewPage({
           ) : (
             <Eye className="me-2 h-4 w-4" />
           )}
-          {showPreview ? "Hide Preview" : "Preview"}
+          {showPreview
+            ? lang === "ar"
+              ? "إخفاء المعاينة"
+              : "Hide Preview"
+            : lang === "ar"
+              ? "معاينة"
+              : "Preview"}
         </Button>
       </div>
 
@@ -228,18 +254,22 @@ export default function OneToOneMeetingNewPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Select Case *</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "اختر قضية *" : "Select Case *"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
-                placeholder="Select a case..."
+                placeholder={lang === "ar" ? "اختر قضية..." : "Select a case..."}
                 disabled={!!editAssignmentId}
               />
               {!selectedCaseId && (
                 <p className="mt-2 text-sm text-destructive">
-                  Please select a case to continue
+                  {lang === "ar"
+                    ? "يرجى اختيار قضية للمتابعة"
+                    : "Please select a case to continue"}
                 </p>
               )}
             </CardContent>
@@ -247,20 +277,26 @@ export default function OneToOneMeetingNewPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Meeting Name *</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "اسم الاجتماع *" : "Meeting Name *"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Name (EN)</Label>
+                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
                     value={toolName.en}
                     onChange={(e) => setToolName({ ...toolName, en: e.target.value })}
-                    placeholder="e.g., Initial Assessment Meeting"
+                    placeholder={
+                      lang === "ar"
+                        ? "مثال: اجتماع التقييم الأولي"
+                        : "e.g., Initial Assessment Meeting"
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Name (AR)</Label>
+                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
                   <Input
                     value={toolName.ar}
                     onChange={(e) => setToolName({ ...toolName, ar: e.target.value })}
@@ -273,12 +309,14 @@ export default function OneToOneMeetingNewPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Meeting Schedule *</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "جدول الاجتماع *" : "Meeting Schedule *"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Date *</Label>
+                  <Label>{lang === "ar" ? "التاريخ *" : "Date *"}</Label>
                   <DateInput
                     required
                     value={meetingDate}
@@ -286,7 +324,7 @@ export default function OneToOneMeetingNewPage({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Time *</Label>
+                  <Label>{lang === "ar" ? "الوقت *" : "Time *"}</Label>
                   <Input
                     type="time"
                     required
@@ -297,7 +335,7 @@ export default function OneToOneMeetingNewPage({
               </div>
 
               <div className="space-y-2">
-                <Label>Meeting Type *</Label>
+                <Label>{lang === "ar" ? "نوع الاجتماع *" : "Meeting Type *"}</Label>
                 <RadioGroup
                   value={meetingType}
                   onValueChange={(val) => setMeetingType(val as "online" | "face_to_face")}
@@ -305,18 +343,24 @@ export default function OneToOneMeetingNewPage({
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="online" id="online" />
-                    <Label htmlFor="online">Online</Label>
+                    <Label htmlFor="online">
+                      {lang === "ar" ? "عن بعد" : "Online"}
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="face_to_face" id="face_to_face" />
-                    <Label htmlFor="face_to_face">Face to Face</Label>
+                    <Label htmlFor="face_to_face">
+                      {lang === "ar" ? "حضوري" : "Face to Face"}
+                    </Label>
                   </div>
                 </RadioGroup>
               </div>
 
               {meetingType === "online" ? (
                 <div className="space-y-2">
-                  <Label>Meeting Link *</Label>
+                  <Label>
+                    {lang === "ar" ? "رابط الاجتماع *" : "Meeting Link *"}
+                  </Label>
                   <Input
                     value={meetingLink}
                     onChange={(e) => setMeetingLink(e.target.value)}
@@ -325,11 +369,15 @@ export default function OneToOneMeetingNewPage({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label>Location</Label>
+                  <Label>{lang === "ar" ? "الموقع" : "Location"}</Label>
                   <Input
                     value={meetingLocation}
                     onChange={(e) => setMeetingLocation(e.target.value)}
-                    placeholder="e.g., Room 201, Main Building"
+                    placeholder={
+                      lang === "ar"
+                        ? "مثال: غرفة 201، المبنى الرئيسي"
+                        : "e.g., Room 201, Main Building"
+                    }
                   />
                 </div>
               )}
@@ -338,13 +386,19 @@ export default function OneToOneMeetingNewPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Admin Notes</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "ملاحظات إدارية" : "Admin Notes"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Textarea
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="Add internal notes about this meeting..."
+                placeholder={
+                  lang === "ar"
+                    ? "أضف ملاحظات داخلية حول هذا الاجتماع..."
+                    : "Add internal notes about this meeting..."
+                }
                 rows={3}
               />
               <div className="flex items-center gap-2">
@@ -354,7 +408,7 @@ export default function OneToOneMeetingNewPage({
                   onCheckedChange={setNotesVisible}
                 />
                 <Label htmlFor="notes-visible" className="text-sm text-muted-foreground">
-                  Show notes to user
+                  {lang === "ar" ? "إظهار الملاحظات للمستخدم" : "Show notes to user"}
                 </Label>
               </div>
             </CardContent>
@@ -362,7 +416,7 @@ export default function OneToOneMeetingNewPage({
 
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={handleCancel}>
-              Cancel
+              {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -371,10 +425,18 @@ export default function OneToOneMeetingNewPage({
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editAssignmentId ? "Saving..." : "Creating..."}
+                  {editAssignmentId
+                    ? lang === "ar"
+                      ? "جارٍ الحفظ..."
+                      : "Saving..."
+                    : lang === "ar"
+                      ? "جارٍ الإنشاء..."
+                      : "Creating..."}
                 </>
               ) : editAssignmentId ? (
-                "Save Changes"
+                lang === "ar" ? "حفظ التغييرات" : "Save Changes"
+              ) : lang === "ar" ? (
+                "إنشاء اجتماع"
               ) : (
                 "Create Meeting"
               )}
@@ -385,40 +447,67 @@ export default function OneToOneMeetingNewPage({
         {showPreview && (
           <div className="sticky top-6 max-h-[calc(100vh-12rem)] overflow-auto rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
-              Live Preview
+              {lang === "ar" ? "معاينة مباشرة" : "Live Preview"}
             </p>
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-lg font-semibold">
                 <Calendar className="h-5 w-5 text-primary" />
-                {toolName.en || "One to One Meeting"}
+                {toolName.en ||
+                  (lang === "ar" ? "اجتماع فردي" : "One to One Meeting")}
               </div>
               <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="text-muted-foreground">Date:</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "التاريخ:" : "Date:"}
+                  </span>
                   <span>{meetingDate ? formatDate(meetingDate) : "—"}</span>
-                  <span className="text-muted-foreground">Time:</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "الوقت:" : "Time:"}
+                  </span>
                   <span>{meetingTime || "—"}</span>
-                  <span className="text-muted-foreground">Type:</span>
-                  <span>{meetingType === "online" ? "Online" : "Face to Face"}</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "النوع:" : "Type:"}
+                  </span>
+                  <span>
+                    {meetingType === "online"
+                      ? lang === "ar"
+                        ? "عن بعد"
+                        : "Online"
+                      : lang === "ar"
+                        ? "حضوري"
+                        : "Face to Face"}
+                  </span>
                   {meetingType === "online" && (
                     <>
-                      <span className="text-muted-foreground">Link:</span>
+                      <span className="text-muted-foreground">
+                        {lang === "ar" ? "الرابط:" : "Link:"}
+                      </span>
                       <span className="truncate">{meetingLink || "—"}</span>
                     </>
                   )}
                   {meetingType === "face_to_face" && (
                     <>
-                      <span className="text-muted-foreground">Location:</span>
+                      <span className="text-muted-foreground">
+                        {lang === "ar" ? "الموقع:" : "Location:"}
+                      </span>
                       <span>{meetingLocation || "—"}</span>
                     </>
                   )}
                 </div>
                 {adminNotes && (
                   <div className="pt-2 border-t text-sm">
-                    <span className="text-muted-foreground">Notes:</span>
+                    <span className="text-muted-foreground">
+                      {lang === "ar" ? "الملاحظات:" : "Notes:"}
+                    </span>
                     <p className="mt-1 whitespace-pre-wrap">{adminNotes}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {notesVisible ? "Visible to user" : "Admin only"}
+                      {notesVisible
+                        ? lang === "ar"
+                          ? "مرئية للمستخدم"
+                          : "Visible to user"
+                        : lang === "ar"
+                          ? "للمسؤول فقط"
+                          : "Admin only"}
                     </p>
                   </div>
                 )}

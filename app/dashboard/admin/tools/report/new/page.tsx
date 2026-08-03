@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { ReportPreview } from "@/components/tool-renderers/ReportPreview"
 import { Eye, EyeOff } from "lucide-react"
+import { useLang } from "@/lib/lang-context"
 import type { ReportConfig } from "@/types/tool"
 
 export default function ReportBuilderPage({
@@ -23,6 +24,7 @@ export default function ReportBuilderPage({
   searchParams: Promise<{ caseId?: string; edit?: string }>
 }) {
   const router = useRouter()
+  const { lang } = useLang()
   const { assignTool, updateAssignment, assignments, isLoading: isAssignmentsLoading } = useAssignments()
   const { getProfileById } = useProfiles()
   const { currentUser } = useAuth()
@@ -63,7 +65,11 @@ export default function ReportBuilderPage({
         setReportTypeId(reportType.id)
         setTypeError("")
       } catch (error) {
-        setTypeError('Tool type "report" not found. Please contact admin.')
+        setTypeError(
+          lang === "ar"
+            ? 'نوع الأداة "report" غير موجود. يرجى الاتصال بالمسؤول.'
+            : 'Tool type "report" not found. Please contact admin.'
+        )
         console.error("Failed to fetch report type:", error)
       }
     }
@@ -220,7 +226,9 @@ export default function ReportBuilderPage({
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جارٍ التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -229,9 +237,19 @@ export default function ReportBuilderPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Create Report</h1>
+          <h1 className="text-2xl font-bold text-primary">
+            {editAssignmentId
+              ? lang === "ar"
+                ? "تعديل التقرير"
+                : "Edit Report"
+              : lang === "ar"
+                ? "إنشاء تقرير"
+                : "Create Report"}
+          </h1>
           <p className="text-muted-foreground">
-            Create a report for a specific case
+            {lang === "ar"
+              ? "إنشاء تقرير لقضية محددة"
+              : "Create a report for a specific case"}
           </p>
         </div>
         <Button
@@ -243,7 +261,13 @@ export default function ReportBuilderPage({
           ) : (
             <Eye className="me-2 h-4 w-4" />
           )}
-          {showPreview ? "Hide Preview" : "Preview"}
+          {showPreview
+            ? lang === "ar"
+              ? "إخفاء المعاينة"
+              : "Hide Preview"
+            : lang === "ar"
+              ? "معاينة"
+              : "Preview"}
         </Button>
       </div>
 
@@ -260,18 +284,22 @@ export default function ReportBuilderPage({
           {/* Case Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Select Case *</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "اختر قضية *" : "Select Case *"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
-                placeholder="Select a case..."
+                placeholder={lang === "ar" ? "اختر قضية..." : "Select a case..."}
                 disabled={!!editAssignmentId}
               />
               {!selectedCaseId && (
                 <p className="mt-2 text-sm text-destructive">
-                  Please select a case to continue
+                  {lang === "ar"
+                    ? "يرجى اختيار قضية للمتابعة"
+                    : "Please select a case to continue"}
                 </p>
               )}
             </CardContent>
@@ -280,22 +308,26 @@ export default function ReportBuilderPage({
           {/* Report Name - Bilingual (goes to name_en/name_ar) */}
           <Card>
             <CardHeader>
-              <CardTitle>Report Name *</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "اسم التقرير *" : "Report Name *"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Name (EN)</Label>
+                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
                     value={reportName.en}
                     onChange={(e) =>
                       setReportName({ ...reportName, en: e.target.value })
                     }
-                    placeholder="Report title"
+                    placeholder={
+                      lang === "ar" ? "عنوان التقرير" : "Report title"
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Name (AR)</Label>
+                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
                   <Input
                     value={reportName.ar}
                     onChange={(e) =>
@@ -311,24 +343,26 @@ export default function ReportBuilderPage({
           {/* Basic Info - Child Name from Case + Expert Name */}
           <Card>
             <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "معلومات أساسية" : "Basic Information"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Child Name</Label>
+                  <Label>{lang === "ar" ? "اسم الطفل" : "Child Name"}</Label>
                   <Input
                     value={childName}
                     onChange={(e) => setChildName(e.target.value)}
-                    placeholder="Child name"
+                    placeholder={lang === "ar" ? "اسم الطفل" : "Child name"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Expert Name</Label>
+                  <Label>{lang === "ar" ? "اسم الخبير" : "Expert Name"}</Label>
                   <Input
                     value={expertName}
                     onChange={(e) => setExpertName(e.target.value)}
-                    placeholder="Expert name"
+                    placeholder={lang === "ar" ? "اسم الخبير" : "Expert name"}
                   />
                 </div>
               </div>
@@ -338,11 +372,13 @@ export default function ReportBuilderPage({
           {/* Fixed Fields - Date, Assessment, Suggestions */}
           <Card>
             <CardHeader>
-              <CardTitle>Report Details</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "تفاصيل التقرير" : "Report Details"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Date</Label>
+                <Label>{lang === "ar" ? "التاريخ" : "Date"}</Label>
                 <DateInput
                   value={fixedFields.date}
                   onChange={(v) =>
@@ -351,7 +387,7 @@ export default function ReportBuilderPage({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Assessment</Label>
+                <Label>{lang === "ar" ? "التقييم" : "Assessment"}</Label>
                 <Textarea
                   value={fixedFields.assessment}
                   onChange={(e) =>
@@ -360,12 +396,14 @@ export default function ReportBuilderPage({
                       assessment: e.target.value,
                     })
                   }
-                  placeholder="Enter assessment..."
+                  placeholder={
+                    lang === "ar" ? "أدخل التقييم..." : "Enter assessment..."
+                  }
                   rows={4}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Suggestions</Label>
+                <Label>{lang === "ar" ? "الاقتراحات" : "Suggestions"}</Label>
                 <Textarea
                   value={fixedFields.suggestions}
                   onChange={(e) =>
@@ -374,7 +412,11 @@ export default function ReportBuilderPage({
                       suggestions: e.target.value,
                     })
                   }
-                  placeholder="Enter suggestions..."
+                  placeholder={
+                    lang === "ar"
+                      ? "أدخل الاقتراحات..."
+                      : "Enter suggestions..."
+                  }
                   rows={4}
                 />
               </div>
@@ -383,7 +425,7 @@ export default function ReportBuilderPage({
 
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={handleCancel}>
-              Cancel
+              {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -391,11 +433,19 @@ export default function ReportBuilderPage({
             >
               {isSubmitting
                 ? editAssignmentId
-                  ? "Saving..."
-                  : "Creating..."
+                  ? lang === "ar"
+                    ? "جارٍ الحفظ..."
+                    : "Saving..."
+                  : lang === "ar"
+                    ? "جارٍ الإنشاء..."
+                    : "Creating..."
                 : editAssignmentId
-                  ? "Save Changes"
-                  : "Create Report"}
+                  ? lang === "ar"
+                    ? "حفظ التغييرات"
+                    : "Save Changes"
+                  : lang === "ar"
+                    ? "إنشاء تقرير"
+                    : "Create Report"}
             </Button>
           </div>
         </div>
@@ -403,7 +453,7 @@ export default function ReportBuilderPage({
         {showPreview && (
           <div className="sticky top-6 max-h-[calc(100vh-12rem)] overflow-auto rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
-              Live Preview
+              {lang === "ar" ? "معاينة مباشرة" : "Live Preview"}
             </p>
             <ReportPreview
               config={{

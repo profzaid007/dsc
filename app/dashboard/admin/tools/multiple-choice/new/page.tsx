@@ -48,12 +48,24 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-const ANSWER_TYPES: { value: MCAnswerType; label: string }[] = [
-  { value: "text", label: "Text" },
-  { value: "number", label: "Number" },
-  { value: "single_choice", label: "Single Choice (mark correct)" },
-  { value: "multiple_choice", label: "Multiple Choice (mark correct)" },
-  { value: "media", label: "Media (image/video/audio)" },
+const ANSWER_TYPES: {
+  value: MCAnswerType
+  label: { en: string; ar: string }
+}[] = [
+  { value: "text", label: { en: "Text", ar: "نص" } },
+  { value: "number", label: { en: "Number", ar: "رقم" } },
+  {
+    value: "single_choice",
+    label: { en: "Single Choice (mark correct)", ar: "اختيار واحد (حدد الصحيح)" },
+  },
+  {
+    value: "multiple_choice",
+    label: { en: "Multiple Choice (mark correct)", ar: "اختيار من متعدد (حدد الصحيح)" },
+  },
+  {
+    value: "media",
+    label: { en: "Media (image/video/audio)", ar: "وسائط (صورة/فيديو/صوت)" },
+  },
 ]
 
 const DEFAULT_OPTIONS = [
@@ -340,7 +352,9 @@ export default function MultipleChoiceBuilderPage({
     return (
       <div className="flex-1 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Question {index + 1}</span>
+          <span className="text-sm font-medium">
+            {lang === "ar" ? "سؤال" : "Question"} {index + 1}
+          </span>
           <div className="flex items-center gap-2">
             <Checkbox
               id={`req-${question.id}`}
@@ -350,7 +364,7 @@ export default function MultipleChoiceBuilderPage({
               }
             />
             <Label htmlFor={`req-${question.id}`} className="text-xs">
-              Required
+              {lang === "ar" ? "إجباري" : "Required"}
             </Label>
             <Button
               variant="ghost"
@@ -370,7 +384,7 @@ export default function MultipleChoiceBuilderPage({
         </div>
 
         <Input
-          placeholder="Question"
+          placeholder={lang === "ar" ? "سؤال" : "Question"}
           value={question.text}
           onChange={(e) =>
             updateQuestion(question.id, { text: e.target.value })
@@ -389,7 +403,7 @@ export default function MultipleChoiceBuilderPage({
           <SelectContent>
             {ANSWER_TYPES.map((type) => (
               <SelectItem key={type.value} value={type.value}>
-                {type.label}
+                {type.label[lang]}
               </SelectItem>
             ))}
           </SelectContent>
@@ -397,7 +411,9 @@ export default function MultipleChoiceBuilderPage({
 
         {isMedia && (
           <div className="space-y-3 rounded-md border p-3">
-            <Label className="text-xs">Media Prompt</Label>
+            <Label className="text-xs">
+              {lang === "ar" ? "وسائط السؤال" : "Media Prompt"}
+            </Label>
             {!question.mediaType ? (
               <Button
                 type="button"
@@ -409,7 +425,7 @@ export default function MultipleChoiceBuilderPage({
                 }}
               >
                 <Plus className="me-1 h-3 w-3" />
-                Select Media
+                {lang === "ar" ? "اختر الوسائط" : "Select Media"}
               </Button>
             ) : (
               <div className="space-y-3">
@@ -417,7 +433,7 @@ export default function MultipleChoiceBuilderPage({
                   {question.mediaType === "image" && mediaPreviewSrc && (
                     <img
                       src={mediaPreviewSrc}
-                      alt="Preview"
+                      alt={lang === "ar" ? "معاينة" : "Preview"}
                       className="h-32 w-full rounded object-cover"
                     />
                   )}
@@ -441,7 +457,7 @@ export default function MultipleChoiceBuilderPage({
                   )}
                   {!mediaPreviewSrc && (
                     <div className="flex h-32 items-center justify-center text-muted-foreground">
-                      No preview
+                      {lang === "ar" ? "لا توجد معاينة" : "No preview"}
                     </div>
                   )}
                 </div>
@@ -454,7 +470,8 @@ export default function MultipleChoiceBuilderPage({
                     <span className="capitalize">{question.mediaType}</span>
                     <span className="text-muted-foreground">•</span>
                     <span className="capitalize">
-                      {question.responseType} response
+                      {question.responseType}{" "}
+                      {lang === "ar" ? "استجابة" : "response"}
                     </span>
                   </div>
                   <Button
@@ -464,7 +481,7 @@ export default function MultipleChoiceBuilderPage({
                     onClick={() => handleRemoveMedia(question.id)}
                   >
                     <X className="me-1 h-3 w-3" />
-                    Remove
+                    {lang === "ar" ? "إزالة" : "Remove"}
                   </Button>
                 </div>
               </div>
@@ -474,7 +491,11 @@ export default function MultipleChoiceBuilderPage({
 
         {showOptions && (
           <div className="space-y-2 rounded-md border p-3">
-            <Label className="text-xs">Options - check correct answer(s)</Label>
+            <Label className="text-xs">
+              {lang === "ar"
+                ? "الخيارات - حدد الإجابة الصحيحة"
+                : "Options - check correct answer(s)"}
+            </Label>
             {question.options.map((opt, optIdx) => (
               <div key={opt.value} className="flex items-center gap-2">
                 <Checkbox
@@ -488,7 +509,7 @@ export default function MultipleChoiceBuilderPage({
                   }}
                 />
                 <Input
-                  placeholder="Option"
+                  placeholder={lang === "ar" ? "خيار" : "Option"}
                   value={opt.label}
                   onChange={(e) => {
                     const newOptions = question.options.map((o, i) =>
@@ -520,7 +541,7 @@ export default function MultipleChoiceBuilderPage({
               }}
             >
               <Plus className="me-1 h-3 w-3" />
-              Add Option
+              {lang === "ar" ? "إضافة خيار" : "Add Option"}
             </Button>
           </div>
         )}
@@ -531,7 +552,9 @@ export default function MultipleChoiceBuilderPage({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جارٍ التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -545,12 +568,25 @@ export default function MultipleChoiceBuilderPage({
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              {isEditMode ? "Edit" : "Create"} Multiple Answer Builder
+              {isEditMode
+                ? lang === "ar"
+                  ? "تعديل"
+                  : "Edit"
+                : lang === "ar"
+                  ? "إنشاء"
+                  : "Create"}{" "}
+              {lang === "ar"
+                ? "منشئ الإجابة المتعددة"
+                : "Multiple Answer Builder"}
             </h1>
             <p className="text-muted-foreground">
               {isEditMode
-                ? "Update quiz questions and answers"
-                : "Build quiz with correct answer(s)"}
+                ? lang === "ar"
+                  ? "تحديث أسئلة وإجابات الاختبار"
+                  : "Update quiz questions and answers"
+                : lang === "ar"
+                  ? "أنشئ اختباراً بالإجابات الصحيحة"
+                  : "Build quiz with correct answer(s)"}
             </p>
           </div>
         </div>
@@ -563,7 +599,13 @@ export default function MultipleChoiceBuilderPage({
           ) : (
             <Eye className="me-2 h-4 w-4" />
           )}
-          {showPreview ? "Hide Preview" : "Preview"}
+          {showPreview
+            ? lang === "ar"
+              ? "إخفاء المعاينة"
+              : "Hide Preview"
+            : lang === "ar"
+              ? "معاينة"
+              : "Preview"}
         </Button>
       </div>
 
@@ -573,22 +615,22 @@ export default function MultipleChoiceBuilderPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Basic Info</CardTitle>
+              <CardTitle>{lang === "ar" ? "معلومات أساسية" : "Basic Info"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Name (EN)</Label>
+                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
                     value={formData.nameEn}
                     onChange={(e) =>
                       setFormData({ ...formData, nameEn: e.target.value })
                     }
-                    placeholder="Quiz title"
+                    placeholder={lang === "ar" ? "عنوان الاختبار" : "Quiz title"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Name (AR)</Label>
+                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
                   <Input
                     value={formData.nameAr}
                     onChange={(e) =>
@@ -645,16 +687,18 @@ export default function MultipleChoiceBuilderPage({
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Questions</CardTitle>
+              <CardTitle>{lang === "ar" ? "الأسئلة" : "Questions"}</CardTitle>
               <Button size="sm" onClick={addQuestion}>
                 <Plus className="me-2 h-4 w-4" />
-                Add Question
+                {lang === "ar" ? "إضافة سؤال" : "Add Question"}
               </Button>
             </CardHeader>
             <CardContent>
               {questions.length === 0 ? (
                 <p className="py-4 text-center text-muted-foreground">
-                  No questions yet.
+                  {lang === "ar"
+                    ? "لا توجد أسئلة بعد."
+                    : "No questions yet."}
                 </p>
               ) : (
                 <DragList
@@ -669,7 +713,7 @@ export default function MultipleChoiceBuilderPage({
 
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={() => router.back()}>
-              Cancel
+              {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -679,11 +723,19 @@ export default function MultipleChoiceBuilderPage({
             >
               {isSubmitting
                 ? isEditMode
-                  ? "Saving..."
-                  : "Creating..."
+                  ? lang === "ar"
+                    ? "جارٍ الحفظ..."
+                    : "Saving..."
+                  : lang === "ar"
+                    ? "جارٍ الإنشاء..."
+                    : "Creating..."
                 : isEditMode
-                  ? "Save Changes"
-                  : "Create"}
+                  ? lang === "ar"
+                    ? "حفظ التغييرات"
+                    : "Save Changes"
+                  : lang === "ar"
+                    ? "إنشاء"
+                    : "Create"}
             </Button>
           </div>
         </div>
@@ -691,7 +743,7 @@ export default function MultipleChoiceBuilderPage({
         {showPreview && (
           <div className="sticky top-6 max-h-[calc(100vh-12rem)] overflow-auto rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
-              Live Preview
+              {lang === "ar" ? "معاينة مباشرة" : "Live Preview"}
             </p>
             <MultipleChoicePreview
               config={{

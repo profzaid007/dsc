@@ -69,11 +69,11 @@ const statusColors: Record<AssignmentStatus, string> = {
   completed: "bg-green-100 text-green-800",
 }
 
-const statusLabels: Record<AssignmentStatus, string> = {
-  pending: "Pending",
-  assigned: "Assigned",
-  in_progress: "In Progress",
-  completed: "Completed",
+const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
+  pending: { en: "Pending", ar: "قيد الانتظار" },
+  assigned: { en: "Assigned", ar: "تم التعيين" },
+  in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
+  completed: { en: "Completed", ar: "مكتمل" },
 }
 
 export default function AdminCaseDetailPage({
@@ -161,9 +161,13 @@ export default function AdminCaseDetailPage({
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="mb-4 text-xl font-medium">Case not found</h2>
+        <h2 className="mb-4 text-xl font-medium">
+          {lang === "ar" ? "الحالة غير موجودة" : "Case not found"}
+        </h2>
         <Link href="/dashboard/admin/cases">
-          <Button>Back to Cases</Button>
+          <Button>
+            {lang === "ar" ? "العودة إلى الحالات" : "Back to Cases"}
+          </Button>
         </Link>
       </div>
     )
@@ -178,21 +182,27 @@ export default function AdminCaseDetailPage({
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-primary">{profile.name}</h1>
           <p className="text-muted-foreground">
-            Created {formatDate(profile.created)}
+            {lang === "ar"
+              ? `أنشئت في ${formatDate(profile.created)}`
+              : `Created ${formatDate(profile.created)}`}
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">
+            {lang === "ar" ? "نظرة عامة" : "Overview"}
+          </TabsTrigger>
           <TabsTrigger value="assigned">
-            Assigned
+            {lang === "ar" ? "المكلف بها" : "Assigned"}
             <Badge variant="secondary" className="ms-2">
               {caseAssignments.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="case-file">Case File</TabsTrigger>
+          <TabsTrigger value="case-file">
+            {lang === "ar" ? "ملف الحالة" : "Case File"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -201,24 +211,38 @@ export default function AdminCaseDetailPage({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Child Information
+                  {lang === "ar" ? "معلومات الطفل" : "Child Information"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date of Birth</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+                  </span>
                   <span className="font-medium">
                     {profile.date_of_birth ? formatDate(profile.date_of_birth) : "—"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Gender</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "الجنس" : "Gender"}
+                  </span>
                   <span className="font-medium capitalize">
-                    {profile.gender}
+                    {profile.gender === "male"
+                      ? lang === "ar"
+                        ? "ذكر"
+                        : "male"
+                      : profile.gender === "female"
+                        ? lang === "ar"
+                          ? "أنثى"
+                          : "female"
+                        : profile.gender}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Grade</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "الصف الدراسي" : "Grade"}
+                  </span>
                   <span className="font-medium capitalize">
                     {profile.grade}
                   </span>
@@ -226,7 +250,7 @@ export default function AdminCaseDetailPage({
                 {profile.notes && (
                   <div className="pt-2">
                     <span className="mb-2 block text-muted-foreground">
-                      Notes
+                      {lang === "ar" ? "ملاحظات" : "Notes"}
                     </span>
                     <p className="text-sm text-muted-foreground">{profile.notes}</p>
                   </div>
@@ -237,7 +261,7 @@ export default function AdminCaseDetailPage({
             {profile.notes && (
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle>Notes</CardTitle>
+                  <CardTitle>{lang === "ar" ? "ملاحظات" : "Notes"}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">{profile.notes}</p>
@@ -253,15 +277,17 @@ export default function AdminCaseDetailPage({
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <ClipboardList className="h-5 w-5" />
-                  Assigned Tasks
+                  {lang === "ar" ? "المهام المكلف بها" : "Assigned Tasks"}
                 </CardTitle>
                 <CardDescription>
-                  Manage assignments for this case
+                  {lang === "ar"
+                    ? "إدارة التعيينات لهذه الحالة"
+                    : "Manage assignments for this case"}
                 </CardDescription>
               </div>
               <Button onClick={() => setShowAssignModal(true)}>
                 <Plus className="me-2 h-4 w-4" />
-                Assign Tool
+                {lang === "ar" ? "تعيين أداة" : "Assign Tool"}
               </Button>
             </CardHeader>
             <CardContent>
@@ -269,22 +295,32 @@ export default function AdminCaseDetailPage({
                 <div className="py-8 text-center">
                   <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <h3 className="mb-2 text-lg font-medium">
-                    No tasks assigned
+                    {lang === "ar" ? "لا توجد مهام مكلف بها" : "No tasks assigned"}
                   </h3>
                   <p className="text-muted-foreground">
-                    Click "Assign Tool" to add a task for this case
+                    {lang === "ar"
+                      ? 'انقر على "تعيين أداة" لإضافة مهمة لهذه الحالة'
+                      : 'Click "Assign Tool" to add a task for this case'}
                   </p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Assignment</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Visible to User</TableHead>
-                      <TableHead>Assigned Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "التعيين" : "Assignment"}
+                      </TableHead>
+                      <TableHead>{lang === "ar" ? "النوع" : "Type"}</TableHead>
+                      <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "مرئي للمستخدم" : "Visible to User"}
+                      </TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "تاريخ التعيين" : "Assigned Date"}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {lang === "ar" ? "الإجراءات" : "Actions"}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -299,7 +335,8 @@ export default function AdminCaseDetailPage({
                       return (
                         <TableRow key={assignment.id}>
                           <TableCell className="font-medium">
-                            {assignment.name_en || "Unnamed Assignment"}
+                            {assignment.name_en ||
+                              (lang === "ar" ? "تعيين بدون اسم" : "Unnamed Assignment")}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
@@ -311,11 +348,17 @@ export default function AdminCaseDetailPage({
                           </TableCell>
                           <TableCell>
                             <Badge className={statusColors[assignment.status]}>
-                              {statusLabels[assignment.status]}
+                              {statusLabels[assignment.status][lang]}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {assignment.is_visible_to_user ? "Yes" : "No"}
+                            {assignment.is_visible_to_user
+                              ? lang === "ar"
+                                ? "نعم"
+                                : "Yes"
+                              : lang === "ar"
+                                ? "لا"
+                                : "No"}
                           </TableCell>
                           <TableCell>
                             {formatDate(
@@ -355,10 +398,12 @@ export default function AdminCaseDetailPage({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
-                Case File
+                {lang === "ar" ? "ملف الحالة" : "Case File"}
               </CardTitle>
               <CardDescription>
-                History of all interactions between the case and the expert
+                {lang === "ar"
+                  ? "سجل جميع التفاعلات بين الحالة والخبير"
+                  : "History of all interactions between the case and the expert"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -366,9 +411,13 @@ export default function AdminCaseDetailPage({
                 .length === 0 ? (
                 <div className="py-8 text-center">
                   <History className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="mb-2 text-lg font-medium">No history yet</h3>
+                  <h3 className="mb-2 text-lg font-medium">
+                    {lang === "ar" ? "لا يوجد سجل بعد" : "No history yet"}
+                  </h3>
                   <p className="text-muted-foreground">
-                    Completed tasks will appear here
+                    {lang === "ar"
+                      ? "ستظهر المهام المكتملة هنا"
+                      : "Completed tasks will appear here"}
                   </p>
                 </div>
               ) : (
@@ -387,12 +436,14 @@ export default function AdminCaseDetailPage({
                               : assignment.name_en}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            Completed{" "}
+                            {lang === "ar" ? "أكملت في" : "Completed"}{" "}
                             {assignment.updated &&
                               formatDate(assignment.updated)}
                           </p>
                         </div>
-                        <Badge variant="default">Completed</Badge>
+                        <Badge variant="default">
+                          {lang === "ar" ? "مكتمل" : "Completed"}
+                        </Badge>
                       </div>
                     ))}
                 </div>
@@ -406,7 +457,7 @@ export default function AdminCaseDetailPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="mx-4 w-full max-w-2xl">
             <CardHeader>
-              <CardTitle>Assign Tool</CardTitle>
+              <CardTitle>{lang === "ar" ? "تعيين أداة" : "Assign Tool"}</CardTitle>
               <CardDescription>
                 {lang === "ar"
                   ? "اختر أداة أو أنشئ أداة جديدة لهذه الحالة"

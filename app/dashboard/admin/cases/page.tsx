@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
+import { useLang } from "@/lib/lang-context"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +50,7 @@ interface AssignmentCount {
 }
 
 export default function AdminCasesPage() {
+  const { lang } = useLang()
   const { profiles, isLoading: isProfilesLoading } = useProfiles()
   const { assignments, isLoading: isAssignmentsLoading } = useAssignments()
 
@@ -107,13 +109,17 @@ export default function AdminCasesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-primary">Cases</h1>
-            <p className="text-muted-foreground">Manage all cases</p>
+            <h1 className="text-2xl font-bold text-primary">
+              {lang === "ar" ? "الحالات" : "Cases"}
+            </h1>
+            <p className="text-muted-foreground">
+              {lang === "ar" ? "إدارة جميع الحالات" : "Manage all cases"}
+            </p>
           </div>
           <Link href="/dashboard/cases/new">
             <Button>
               <Plus className="me-2 h-4 w-4" />
-              New Case
+              {lang === "ar" ? "حالة جديدة" : "New Case"}
             </Button>
           </Link>
         </div>
@@ -126,13 +132,17 @@ export default function AdminCasesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Cases</h1>
-          <p className="text-muted-foreground">Manage all cases</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "الحالات" : "Cases"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar" ? "إدارة جميع الحالات" : "Manage all cases"}
+          </p>
         </div>
         <Link href="/dashboard/cases/new">
           <Button>
             <Plus className="me-2 h-4 w-4" />
-            New Case
+            {lang === "ar" ? "حالة جديدة" : "New Case"}
           </Button>
         </Link>
       </div>
@@ -142,7 +152,11 @@ export default function AdminCasesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name, gender, or grade..."
+            placeholder={
+              lang === "ar"
+                ? "ابحث بالاسم أو الجنس أو الصف..."
+                : "Search by name, gender, or grade..."
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -150,7 +164,7 @@ export default function AdminCasesPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="whitespace-nowrap text-sm text-muted-foreground">
-            Sort by
+            {lang === "ar" ? "ترتيب حسب" : "Sort by"}
           </span>
           <Select
             value={sortField}
@@ -160,10 +174,18 @@ export default function AdminCasesPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name">Case Name</SelectItem>
-              <SelectItem value="date_of_birth">Date of Birth</SelectItem>
-              <SelectItem value="gender">Gender</SelectItem>
-              <SelectItem value="grade">Grade</SelectItem>
+              <SelectItem value="name">
+                {lang === "ar" ? "اسم الحالة" : "Case Name"}
+              </SelectItem>
+              <SelectItem value="date_of_birth">
+                {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+              </SelectItem>
+              <SelectItem value="gender">
+                {lang === "ar" ? "الجنس" : "Gender"}
+              </SelectItem>
+              <SelectItem value="grade">
+                {lang === "ar" ? "الصف الدراسي" : "Grade"}
+              </SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -188,16 +210,28 @@ export default function AdminCasesPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderKanban className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-medium">
-              {profiles.length === 0 ? "No cases yet" : "No cases match your search"}
+              {profiles.length === 0
+                ? lang === "ar"
+                  ? "لا توجد حالات بعد"
+                  : "No cases yet"
+                : lang === "ar"
+                  ? "لا توجد حالات مطابقة لبحثك"
+                  : "No cases match your search"}
             </h3>
             <p className="mb-4 text-center text-muted-foreground">
               {profiles.length === 0
-                ? "Create your first case to get started"
-                : "Try adjusting your search query"}
+                ? lang === "ar"
+                  ? "أنشئ حالتك الأولى للبدء"
+                  : "Create your first case to get started"
+                : lang === "ar"
+                  ? "حاول تعديل استعلام البحث"
+                  : "Try adjusting your search query"}
             </p>
             {profiles.length === 0 && (
               <Link href="/dashboard/cases/new">
-                <Button>Create Case</Button>
+                <Button>
+                  {lang === "ar" ? "إنشاء الحالة" : "Create Case"}
+                </Button>
               </Link>
             )}
           </CardContent>
@@ -205,9 +239,11 @@ export default function AdminCasesPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>All Cases</CardTitle>
+            <CardTitle>{lang === "ar" ? "جميع الحالات" : "All Cases"}</CardTitle>
             <CardDescription>
-              {sortedProfiles.length} case(s) found
+              {lang === "ar"
+                ? `تم العثور على ${sortedProfiles.length} حالة`
+                : `${sortedProfiles.length} case(s) found`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -215,14 +251,20 @@ export default function AdminCasesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[250px]">
-                    Case Name
+                    {lang === "ar" ? "اسم الحالة" : "Case Name"}
                   </TableHead>
-                  <TableHead>Date of Birth</TableHead>
-                  <TableHead>Gender</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Assignments</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>
+                    {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+                  </TableHead>
+                  <TableHead>{lang === "ar" ? "الجنس" : "Gender"}</TableHead>
+                  <TableHead>{lang === "ar" ? "الصف الدراسي" : "Grade"}</TableHead>
+                  <TableHead>{lang === "ar" ? "المستخدم" : "User"}</TableHead>
+                  <TableHead>
+                    {lang === "ar" ? "التعيينات" : "Assignments"}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {lang === "ar" ? "الإجراءات" : "Actions"}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -244,7 +286,15 @@ export default function AdminCasesPage() {
                       </TableCell>
                       <TableCell>{formatDate(profile.date_of_birth || "")}</TableCell>
                       <TableCell className="capitalize">
-                        {profile.gender}
+                        {profile.gender === "male"
+                          ? lang === "ar"
+                            ? "ذكر"
+                            : "male"
+                          : profile.gender === "female"
+                            ? lang === "ar"
+                              ? "أنثى"
+                              : "female"
+                            : profile.gender}
                       </TableCell>
                       <TableCell className="capitalize">
                         {profile.grade}
@@ -260,7 +310,7 @@ export default function AdminCasesPage() {
                         <div className="flex flex-wrap items-center gap-1">
                           {counts.total === 0 ? (
                             <span className="text-sm text-muted-foreground">
-                              No assignments
+                              {lang === "ar" ? "لا توجد تعيينات" : "No assignments"}
                             </span>
                           ) : (
                             <>
@@ -270,7 +320,8 @@ export default function AdminCasesPage() {
                                   variant="outline"
                                   className="bg-yellow-50 text-yellow-700"
                                 >
-                                  {counts.pending} pending
+                                  {counts.pending}{" "}
+                                  {lang === "ar" ? "قيد الانتظار" : "pending"}
                                 </Badge>
                               )}
                               {counts.assigned > 0 && (
@@ -279,7 +330,8 @@ export default function AdminCasesPage() {
                                   variant="outline"
                                   className="bg-blue-50 text-blue-700"
                                 >
-                                  {counts.assigned} assigned
+                                  {counts.assigned}{" "}
+                                  {lang === "ar" ? "تم التعيين" : "assigned"}
                                 </Badge>
                               )}
                               {counts.in_progress > 0 && (
@@ -288,7 +340,8 @@ export default function AdminCasesPage() {
                                   variant="outline"
                                   className="bg-purple-50 text-purple-700"
                                 >
-                                  {counts.in_progress} in progress
+                                  {counts.in_progress}{" "}
+                                  {lang === "ar" ? "قيد التنفيذ" : "in progress"}
                                 </Badge>
                               )}
                               {counts.completed > 0 && (
@@ -297,7 +350,8 @@ export default function AdminCasesPage() {
                                   variant="outline"
                                   className="bg-green-50 text-green-700"
                                 >
-                                  {counts.completed} completed
+                                  {counts.completed}{" "}
+                                  {lang === "ar" ? "مكتمل" : "completed"}
                                 </Badge>
                               )}
                             </>
@@ -308,7 +362,7 @@ export default function AdminCasesPage() {
                         <SmartLink href={`/dashboard/admin/cases/${profile.id}`}>
                           <Button variant="ghost" size="sm">
                             <Eye className="me-1 h-4 w-4" />
-                            View
+                            {lang === "ar" ? "عرض" : "View"}
                           </Button>
                         </SmartLink>
                       </TableCell>

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
+import { useLang } from "@/lib/lang-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { PageLoader } from "@/components/ui/page-loader"
@@ -12,6 +13,7 @@ import { Users, FolderKanban, ClipboardCheck, Activity } from "lucide-react"
 
 export default function DashboardPage() {
   const { currentUser } = useAuth()
+  const { lang } = useLang()
   const { profiles, isLoading: isProfilesLoading } = useProfiles()
   const { assignments, isLoading: isAssignmentsLoading } = useAssignments()
 
@@ -19,19 +21,19 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      title: "Cases",
+      title: lang === "ar" ? "الحالات" : "Cases",
       value: profiles.length,
       icon: Users,
       href: "/dashboard/cases",
     },
     {
-      title: "Total Assignments",
+      title: lang === "ar" ? "إجمالي التعيينات" : "Total Assignments",
       value: assignments.length,
       icon: ClipboardCheck,
       href: "/dashboard/cases",
     },
     {
-      title: "Completed",
+      title: lang === "ar" ? "المكتملة" : "Completed",
       value: assignments.filter((a) => a.status === "completed").length,
       icon: Activity,
       href: "/dashboard/cases",
@@ -43,15 +45,24 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {currentUser?.name}</p>
+            <h1 className="text-2xl font-bold text-primary">
+              {lang === "ar" ? "لوحة التحكم" : "Dashboard"}
+            </h1>
+            <p className="text-muted-foreground">
+              {lang === "ar"
+                ? `مرحباً بعودتك، ${currentUser?.name}`
+                : `Welcome back, ${currentUser?.name}`}
+            </p>
           </div>
           <Link href="/dashboard/cases/new">
-            <Button>New Case</Button>
+            <Button>{lang === "ar" ? "حالة جديدة" : "New Case"}</Button>
           </Link>
         </div>
         <SkeletonStats count={3} />
-        <PageLoader text="Loading dashboard data..." className="mt-8" />
+        <PageLoader
+          text={lang === "ar" ? "جارٍ تحميل بيانات لوحة التحكم..." : "Loading dashboard data..."}
+          className="mt-8"
+        />
       </div>
     )
   }
@@ -60,13 +71,17 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "لوحة التحكم" : "Dashboard"}
+          </h1>
           <p className="text-muted-foreground">
-            Welcome back, {currentUser?.name}
+            {lang === "ar"
+              ? `مرحباً بعودتك، ${currentUser?.name}`
+              : `Welcome back, ${currentUser?.name}`}
           </p>
         </div>
         <Link href="/dashboard/cases/new">
-          <Button>New Case</Button>
+          <Button>{lang === "ar" ? "حالة جديدة" : "New Case"}</Button>
         </Link>
       </div>
 
@@ -92,12 +107,16 @@ export default function DashboardPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderKanban className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-medium">No cases yet</h3>
+            <h3 className="mb-2 text-lg font-medium">
+              {lang === "ar" ? "لا توجد حالات بعد" : "No cases yet"}
+            </h3>
             <p className="mb-4 text-center text-muted-foreground">
-              Create your first case to get started
+              {lang === "ar"
+                ? "أنشئ حالتك الأولى للبدء"
+                : "Create your first case to get started"}
             </p>
             <Link href="/dashboard/cases/new">
-              <Button>Create Case</Button>
+              <Button>{lang === "ar" ? "إنشاء الحالة" : "Create Case"}</Button>
             </Link>
           </CardContent>
         </Card>

@@ -4,6 +4,7 @@ import { use, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
+import { useLang } from "@/lib/lang-context"
 import pb from "@/lib/pb"
 import {
   Card,
@@ -48,31 +49,31 @@ import { formatDate } from "@/lib/format-date"
 import type { Profile } from "@/types/profile"
 
 const GRADES = [
-  { value: "kg1", label: "KG 1" },
-  { value: "kg2", label: "KG 2" },
-  { value: "grade1", label: "Grade 1" },
-  { value: "grade2", label: "Grade 2" },
-  { value: "grade3", label: "Grade 3" },
-  { value: "grade4", label: "Grade 4" },
-  { value: "grade5", label: "Grade 5" },
-  { value: "grade6", label: "Grade 6" },
-  { value: "grade7", label: "Grade 7" },
-  { value: "grade8", label: "Grade 8" },
-  { value: "grade9", label: "Grade 9" },
-  { value: "grade10", label: "Grade 10" },
-  { value: "grade11", label: "Grade 11" },
-  { value: "grade12", label: "Grade 12" },
-  { value: "university", label: "University" },
+  { value: "kg1", label: { en: "KG 1", ar: "روضة 1" } },
+  { value: "kg2", label: { en: "KG 2", ar: "روضة 2" } },
+  { value: "grade1", label: { en: "Grade 1", ar: "الصف الأول" } },
+  { value: "grade2", label: { en: "Grade 2", ar: "الصف الثاني" } },
+  { value: "grade3", label: { en: "Grade 3", ar: "الصف الثالث" } },
+  { value: "grade4", label: { en: "Grade 4", ar: "الصف الرابع" } },
+  { value: "grade5", label: { en: "Grade 5", ar: "الصف الخامس" } },
+  { value: "grade6", label: { en: "Grade 6", ar: "الصف السادس" } },
+  { value: "grade7", label: { en: "Grade 7", ar: "الصف السابع" } },
+  { value: "grade8", label: { en: "Grade 8", ar: "الصف الثامن" } },
+  { value: "grade9", label: { en: "Grade 9", ar: "الصف التاسع" } },
+  { value: "grade10", label: { en: "Grade 10", ar: "الصف العاشر" } },
+  { value: "grade11", label: { en: "Grade 11", ar: "الصف الحادي عشر" } },
+  { value: "grade12", label: { en: "Grade 12", ar: "الصف الثاني عشر" } },
+  { value: "university", label: { en: "University", ar: "الجامعة" } },
 ]
 
-const roleLabels: Record<string, string> = {
-  user: "User",
-  admin: "Admin",
-  individual: "Individual",
-  parent: "Parent",
-  organization: "Organization",
-  expert: "Expert",
-  super_admin: "Super Admin",
+const roleLabels: Record<string, { en: string; ar: string }> = {
+  user: { en: "User", ar: "مستخدم" },
+  admin: { en: "Admin", ar: "مشرف" },
+  individual: { en: "Individual", ar: "فرد" },
+  parent: { en: "Parent", ar: "ولي أمر" },
+  organization: { en: "Organization", ar: "منظمة" },
+  expert: { en: "Expert", ar: "خبير" },
+  super_admin: { en: "Super Admin", ar: "مشرف عام" },
 }
 
 export default function AdminUserDetailPage({
@@ -82,6 +83,7 @@ export default function AdminUserDetailPage({
 }) {
   const { id: userId } = use(params)
   const router = useRouter()
+  const { lang } = useLang()
   const { users } = useUsers()
   const { profiles, isLoading: isProfilesLoading, refresh: refreshProfiles } = useProfiles()
 
@@ -106,7 +108,9 @@ export default function AdminUserDetailPage({
     setCaseFormError(null)
 
     if (!caseFormData.name) {
-      setCaseFormError("Case name is required.")
+      setCaseFormError(
+        lang === "ar" ? "اسم الحالة مطلوب." : "Case name is required."
+      )
       return
     }
 
@@ -131,7 +135,12 @@ export default function AdminUserDetailPage({
       // Refresh profiles to show new case
       refreshProfiles()
     } catch (error: any) {
-      setCaseFormError(error?.message || "Failed to create case. Please try again.")
+      setCaseFormError(
+        error?.message ||
+          (lang === "ar"
+            ? "فشل إنشاء الحالة. حاول مرة أخرى."
+            : "Failed to create case. Please try again.")
+      )
     } finally {
       setIsSubmittingCase(false)
     }
@@ -140,9 +149,13 @@ export default function AdminUserDetailPage({
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="mb-4 text-xl font-medium">User not found</h2>
+        <h2 className="mb-4 text-xl font-medium">
+          {lang === "ar" ? "المستخدم غير موجود" : "User not found"}
+        </h2>
         <Link href="/dashboard/admin/users">
-          <Button>Back to Users</Button>
+          <Button>
+            {lang === "ar" ? "العودة إلى المستخدمين" : "Back to Users"}
+          </Button>
         </Link>
       </div>
     )
@@ -166,15 +179,23 @@ export default function AdminUserDetailPage({
               : "bg-red-50 text-red-700"
           }
         >
-          {user.is_active ? "Active" : "Inactive"}
+          {user.is_active
+            ? lang === "ar"
+              ? "نشط"
+              : "Active"
+            : lang === "ar"
+              ? "غير نشط"
+              : "Inactive"}
         </Badge>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">
+            {lang === "ar" ? "نظرة عامة" : "Overview"}
+          </TabsTrigger>
           <TabsTrigger value="cases">
-            Cases
+            {lang === "ar" ? "الحالات" : "Cases"}
             <Badge variant="secondary" className="ms-2">
               {userCases.length}
             </Badge>
@@ -187,25 +208,31 @@ export default function AdminUserDetailPage({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  User Information
+                  {lang === "ar" ? "معلومات المستخدم" : "User Information"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Email</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "البريد الإلكتروني" : "Email"}
+                  </span>
                   <span className="font-medium flex items-center gap-1">
                     <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                     {user.email}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Role</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "الدور" : "Role"}
+                  </span>
                   <span className="font-medium capitalize">
-                    {roleLabels[user.role] || user.role}
+                    {roleLabels[user.role]?.[lang] || user.role}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Status</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "الحالة" : "Status"}
+                  </span>
                   <Badge
                     variant="outline"
                     className={
@@ -214,12 +241,20 @@ export default function AdminUserDetailPage({
                         : "bg-red-50 text-red-700"
                     }
                   >
-                    {user.is_active ? "Active" : "Inactive"}
+                    {user.is_active
+                      ? lang === "ar"
+                        ? "نشط"
+                        : "Active"
+                      : lang === "ar"
+                        ? "غير نشط"
+                        : "Inactive"}
                   </Badge>
                 </div>
                 {user.contact_number && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Contact</span>
+                    <span className="text-muted-foreground">
+                      {lang === "ar" ? "الاتصال" : "Contact"}
+                    </span>
                     <span className="font-medium flex items-center gap-1">
                       <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                       {user.contact_number}
@@ -228,12 +263,16 @@ export default function AdminUserDetailPage({
                 )}
                 {user.organization_name && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Organization</span>
+                    <span className="text-muted-foreground">
+                      {lang === "ar" ? "المنظمة" : "Organization"}
+                    </span>
                     <span className="font-medium">{user.organization_name}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Created</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "تاريخ الإنشاء" : "Created"}
+                  </span>
                   <span className="font-medium flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                     {formatDate(user.created)}
@@ -246,16 +285,20 @@ export default function AdminUserDetailPage({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FolderKanban className="h-5 w-5" />
-                  Cases Summary
+                  {lang === "ar" ? "ملخص الحالات" : "Cases Summary"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Cases</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "إجمالي الحالات" : "Total Cases"}
+                  </span>
                   <span className="font-medium">{userCases.length}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Latest Case</span>
+                  <span className="text-muted-foreground">
+                    {lang === "ar" ? "أحدث حالة" : "Latest Case"}
+                  </span>
                   <span className="font-medium">
                     {userCases.length > 0
                       ? userCases[userCases.length - 1].name
@@ -268,7 +311,7 @@ export default function AdminUserDetailPage({
                     className="w-full"
                     onClick={() => setActiveTab("cases")}
                   >
-                    View All Cases
+                    {lang === "ar" ? "عرض جميع الحالات" : "View All Cases"}
                   </Button>
                 </div>
               </CardContent>
@@ -282,44 +325,58 @@ export default function AdminUserDetailPage({
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <FolderKanban className="h-5 w-5" />
-                  Cases
+                  {lang === "ar" ? "الحالات" : "Cases"}
                 </CardTitle>
                 <CardDescription>
-                  Manage cases for {user.name}
+                  {lang === "ar"
+                    ? `إدارة الحالات لـ ${user.name}`
+                    : `Manage cases for ${user.name}`}
                 </CardDescription>
               </div>
               <Button onClick={() => setShowAddCaseModal(true)}>
                 <Plus className="me-2 h-4 w-4" />
-                Add Case
+                {lang === "ar" ? "إضافة حالة" : "Add Case"}
               </Button>
             </CardHeader>
             <CardContent>
               {isProfilesLoading ? (
                 <div className="py-8 text-center text-muted-foreground">
-                  Loading cases...
+                  {lang === "ar" ? "جارٍ تحميل الحالات..." : "Loading cases..."}
                 </div>
               ) : userCases.length === 0 ? (
                 <div className="py-8 text-center">
                   <FolderKanban className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="mb-2 text-lg font-medium">No cases yet</h3>
+                  <h3 className="mb-2 text-lg font-medium">
+                    {lang === "ar" ? "لا توجد حالات بعد" : "No cases yet"}
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    This user has no cases. Click "Add Case" to create one.
+                    {lang === "ar"
+                      ? 'لا توجد حالات لهذا المستخدم. انقر على "إضافة حالة" لإنشاء حالة.'
+                      : 'This user has no cases. Click "Add Case" to create one.'}
                   </p>
                   <Button onClick={() => setShowAddCaseModal(true)}>
                     <Plus className="me-2 h-4 w-4" />
-                    Add Case
+                    {lang === "ar" ? "إضافة حالة" : "Add Case"}
                   </Button>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Case Name</TableHead>
-                      <TableHead>Date of Birth</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Grade</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "اسم الحالة" : "Case Name"}
+                      </TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+                      </TableHead>
+                      <TableHead>{lang === "ar" ? "الجنس" : "Gender"}</TableHead>
+                      <TableHead>{lang === "ar" ? "الصف الدراسي" : "Grade"}</TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "تاريخ الإنشاء" : "Created"}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {lang === "ar" ? "الإجراءات" : "Actions"}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -334,7 +391,15 @@ export default function AdminUserDetailPage({
                             : "—"}
                         </TableCell>
                         <TableCell className="capitalize">
-                          {profile.gender || "—"}
+                          {profile.gender === "male"
+                            ? lang === "ar"
+                              ? "ذكر"
+                              : "male"
+                            : profile.gender === "female"
+                              ? lang === "ar"
+                                ? "أنثى"
+                                : "female"
+                              : profile.gender || "—"}
                         </TableCell>
                         <TableCell className="capitalize">
                           {profile.grade || "—"}
@@ -344,7 +409,7 @@ export default function AdminUserDetailPage({
                           <Link href={`/dashboard/admin/cases/${profile.id}`}>
                             <Button variant="ghost" size="sm">
                               <Eye className="me-1 h-4 w-4" />
-                              View
+                              {lang === "ar" ? "عرض" : "View"}
                             </Button>
                           </Link>
                         </TableCell>
@@ -363,9 +428,15 @@ export default function AdminUserDetailPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="mx-4 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Add New Case for {user.name}</CardTitle>
+              <CardTitle>
+                {lang === "ar"
+                  ? `إضافة حالة جديدة لـ ${user.name}`
+                  : `Add New Case for ${user.name}`}
+              </CardTitle>
               <CardDescription>
-                Create a new case and assign it to this user.
+                {lang === "ar"
+                  ? "أنشئ حالة جديدة وخصصها لهذا المستخدم."
+                  : "Create a new case and assign it to this user."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -377,7 +448,7 @@ export default function AdminUserDetailPage({
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="case_name">
-                    Case Name <span className="text-red-500">*</span>
+                    {lang === "ar" ? "اسم الحالة" : "Case Name"} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="case_name"
@@ -385,13 +456,15 @@ export default function AdminUserDetailPage({
                     onChange={(e) =>
                       setCaseFormData({ ...caseFormData, name: e.target.value })
                     }
-                    placeholder="Enter case name"
+                    placeholder={lang === "ar" ? "أدخل اسم الحالة" : "Enter case name"}
                     required
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="date_of_birth">Date of Birth</Label>
+                    <Label htmlFor="date_of_birth">
+                      {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+                    </Label>
                     <DateInput
                       id="date_of_birth"
                       value={caseFormData.date_of_birth}
@@ -404,7 +477,9 @@ export default function AdminUserDetailPage({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="gender">Gender</Label>
+                    <Label htmlFor="gender">
+                      {lang === "ar" ? "الجنس" : "Gender"}
+                    </Label>
                     <Select
                       value={caseFormData.gender}
                       onValueChange={(value) =>
@@ -415,17 +490,27 @@ export default function AdminUserDetailPage({
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
+                        <SelectValue
+                          placeholder={
+                            lang === "ar" ? "اختر الجنس" : "Select gender"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="male">
+                          {lang === "ar" ? "ذكر" : "Male"}
+                        </SelectItem>
+                        <SelectItem value="female">
+                          {lang === "ar" ? "أنثى" : "Female"}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="grade">Grade</Label>
+                  <Label htmlFor="grade">
+                    {lang === "ar" ? "الصف الدراسي" : "Grade"}
+                  </Label>
                   <Select
                     value={caseFormData.grade}
                     onValueChange={(value) =>
@@ -433,26 +518,30 @@ export default function AdminUserDetailPage({
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select grade" />
+                      <SelectValue
+                        placeholder={lang === "ar" ? "اختر الصف" : "Select grade"}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {GRADES.map((grade) => (
                         <SelectItem key={grade.value} value={grade.value}>
-                          {grade.label}
+                          {grade.label[lang]}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
+                  <Label htmlFor="notes">
+                    {lang === "ar" ? "ملاحظات" : "Notes"}
+                  </Label>
                   <Input
                     id="notes"
                     value={caseFormData.notes}
                     onChange={(e) =>
                       setCaseFormData({ ...caseFormData, notes: e.target.value })
                     }
-                    placeholder="Additional notes"
+                    placeholder={lang === "ar" ? "ملاحظات إضافية" : "Additional notes"}
                   />
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
@@ -464,10 +553,16 @@ export default function AdminUserDetailPage({
                       setCaseFormError(null)
                     }}
                   >
-                    Cancel
+                    {lang === "ar" ? "إلغاء" : "Cancel"}
                   </Button>
                   <Button type="submit" disabled={isSubmittingCase}>
-                    {isSubmittingCase ? "Creating..." : "Create Case"}
+                    {isSubmittingCase
+                      ? lang === "ar"
+                        ? "جارٍ الإنشاء..."
+                        : "Creating..."
+                      : lang === "ar"
+                        ? "إنشاء الحالة"
+                        : "Create Case"}
                   </Button>
                 </div>
               </form>

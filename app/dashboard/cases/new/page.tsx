@@ -34,21 +34,21 @@ const OTHER_VALUE = "other"
 const TRAINING_SERVICE_ID = "attending-training"
 
 const GRADES = [
-  { value: "kg1", label: "KG 1" },
-  { value: "kg2", label: "KG 2" },
-  { value: "grade1", label: "Grade 1" },
-  { value: "grade2", label: "Grade 2" },
-  { value: "grade3", label: "Grade 3" },
-  { value: "grade4", label: "Grade 4" },
-  { value: "grade5", label: "Grade 5" },
-  { value: "grade6", label: "Grade 6" },
-  { value: "grade7", label: "Grade 7" },
-  { value: "grade8", label: "Grade 8" },
-  { value: "grade9", label: "Grade 9" },
-  { value: "grade10", label: "Grade 10" },
-  { value: "grade11", label: "Grade 11" },
-  { value: "grade12", label: "Grade 12" },
-  { value: "university", label: "University" },
+  { value: "kg1", label: { en: "KG 1", ar: "روضة 1" } },
+  { value: "kg2", label: { en: "KG 2", ar: "روضة 2" } },
+  { value: "grade1", label: { en: "Grade 1", ar: "الصف الأول" } },
+  { value: "grade2", label: { en: "Grade 2", ar: "الصف الثاني" } },
+  { value: "grade3", label: { en: "Grade 3", ar: "الصف الثالث" } },
+  { value: "grade4", label: { en: "Grade 4", ar: "الصف الرابع" } },
+  { value: "grade5", label: { en: "Grade 5", ar: "الصف الخامس" } },
+  { value: "grade6", label: { en: "Grade 6", ar: "الصف السادس" } },
+  { value: "grade7", label: { en: "Grade 7", ar: "الصف السابع" } },
+  { value: "grade8", label: { en: "Grade 8", ar: "الصف الثامن" } },
+  { value: "grade9", label: { en: "Grade 9", ar: "الصف التاسع" } },
+  { value: "grade10", label: { en: "Grade 10", ar: "الصف العاشر" } },
+  { value: "grade11", label: { en: "Grade 11", ar: "الصف الحادي عشر" } },
+  { value: "grade12", label: { en: "Grade 12", ar: "الصف الثاني عشر" } },
+  { value: "university", label: { en: "University", ar: "الجامعة" } },
 ]
 
 export default function NewProfilePage() {
@@ -161,7 +161,8 @@ export default function NewProfilePage() {
       const profileId = await addProfile({
         user: currentUser.id,
         name: isTraining
-          ? selectedProgram?.title[lang] || "Training Enrollment"
+          ? selectedProgram?.title[lang] ||
+            (lang === "ar" ? "التسجيل في التدريب" : "Training Enrollment")
           : formData.name,
         date_of_birth: isTraining ? "" : formData.date_of_birth,
         gender: isTraining ? undefined : (formData.gender as "male" | "female"),
@@ -209,20 +210,32 @@ export default function NewProfilePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Create New Case</h1>
-        <p className="text-muted-foreground">Fill in the case details</p>
+        <h1 className="text-2xl font-bold text-primary">
+          {lang === "ar" ? "إنشاء حالة جديدة" : "Create New Case"}
+        </h1>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "املأ تفاصيل الحالة" : "Fill in the case details"}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit}>
         {showBasicDetails && (
           <Card>
             <CardHeader>
-              <CardTitle>Case Information</CardTitle>
-              <CardDescription>Basic details about the case</CardDescription>
+              <CardTitle>
+                {lang === "ar" ? "معلومات الحالة" : "Case Information"}
+              </CardTitle>
+              <CardDescription>
+                {lang === "ar"
+                  ? "التفاصيل الأساسية حول الحالة"
+                  : "Basic details about the case"}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Case Name</Label>
+                <Label htmlFor="name">
+                  {lang === "ar" ? "اسم الحالة" : "Case Name"}
+                </Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -235,7 +248,9 @@ export default function NewProfilePage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="date_of_birth">Date of Birth</Label>
+                  <Label htmlFor="date_of_birth">
+                    {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+                  </Label>
                   <DateInput
                     id="date_of_birth"
                     value={formData.date_of_birth}
@@ -246,7 +261,9 @@ export default function NewProfilePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
+                  <Label htmlFor="gender">
+                    {lang === "ar" ? "الجنس" : "Gender"}
+                  </Label>
                   <Select
                     value={formData.gender}
                     onValueChange={(value) =>
@@ -254,18 +271,28 @@ export default function NewProfilePage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue
+                        placeholder={
+                          lang === "ar" ? "اختر الجنس" : "Select gender"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="male">
+                        {lang === "ar" ? "ذكر" : "Male"}
+                      </SelectItem>
+                      <SelectItem value="female">
+                        {lang === "ar" ? "أنثى" : "Female"}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="grade">Grade</Label>
+                <Label htmlFor="grade">
+                  {lang === "ar" ? "الصف الدراسي" : "Grade"}
+                </Label>
                 <Select
                   value={formData.grade}
                   onValueChange={(value) =>
@@ -273,12 +300,14 @@ export default function NewProfilePage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select grade" />
+                    <SelectValue
+                      placeholder={lang === "ar" ? "اختر الصف" : "Select grade"}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {GRADES.map((grade) => (
                       <SelectItem key={grade.value} value={grade.value}>
-                        {grade.label}
+                        {grade.label[lang]}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -535,7 +564,7 @@ export default function NewProfilePage() {
 
         <div className="mt-6 flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={() => router.back()}>
-            Cancel
+            {lang === "ar" ? "إلغاء" : "Cancel"}
           </Button>
           <Button
             type="submit"
@@ -544,7 +573,13 @@ export default function NewProfilePage() {
               (isTrainingSelected && !selectedProgramId)
             }
           >
-            {isSubmitting ? "Creating..." : "Create Case"}
+            {isSubmitting
+              ? lang === "ar"
+                ? "جارٍ الإنشاء..."
+                : "Creating..."
+              : lang === "ar"
+                ? "إنشاء الحالة"
+                : "Create Case"}
           </Button>
         </div>
       </form>

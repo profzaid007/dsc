@@ -41,10 +41,10 @@ const statusColors: Record<Tool["status"], string> = {
   archived: "bg-gray-100 text-gray-800",
 }
 
-const statusLabels: Record<Tool["status"], string> = {
-  active: "Active",
-  inactive: "Inactive",
-  archived: "Archived",
+const statusLabels: Record<Tool["status"], { en: string; ar: string }> = {
+  active: { en: "Active", ar: "نشط" },
+  inactive: { en: "Inactive", ar: "غير نشط" },
+  archived: { en: "Archived", ar: "مؤرشف" },
 }
 
 export default function AdminToolsPage() {
@@ -108,7 +108,7 @@ export default function AdminToolsPage() {
   const handleDelete = async (toolId: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (confirm("Are you sure you want to delete this tool?")) {
+    if (confirm(lang === "ar" ? "هل أنت متأكد من حذف هذه الأداة؟" : "Are you sure you want to delete this tool?")) {
       await deleteTool(toolId)
     }
   }
@@ -120,13 +120,17 @@ export default function AdminToolsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-primary">Tools</h1>
-            <p className="text-muted-foreground">Manage tool templates</p>
+            <h1 className="text-2xl font-bold text-primary">
+              {lang === "ar" ? "الأدوات" : "Tools"}
+            </h1>
+            <p className="text-muted-foreground">
+              {lang === "ar" ? "إدارة قوالب الأدوات" : "Manage tool templates"}
+            </p>
           </div>
           <Link href="/dashboard/admin/tools/new">
             <Button>
               <Plus className="me-2 h-4 w-4" />
-              New Tool
+              {lang === "ar" ? "أداة جديدة" : "New Tool"}
             </Button>
           </Link>
         </div>
@@ -139,13 +143,17 @@ export default function AdminToolsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Tools</h1>
-          <p className="text-muted-foreground">Manage tool templates</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "الأدوات" : "Tools"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar" ? "إدارة قوالب الأدوات" : "Manage tool templates"}
+          </p>
         </div>
         <Link href="/dashboard/admin/tools/new">
           <Button>
             <Plus className="me-2 h-4 w-4" />
-            New Tool
+            {lang === "ar" ? "أداة جديدة" : "New Tool"}
           </Button>
         </Link>
       </div>
@@ -156,10 +164,14 @@ export default function AdminToolsPage() {
           onValueChange={(v) => setFilterType(v as ToolType | "all")}
         >
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="All Types" />
+            <SelectValue
+              placeholder={lang === "ar" ? "كل الأنواع" : "All Types"}
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="all">
+              {lang === "ar" ? "كل الأنواع" : "All Types"}
+            </SelectItem>
             {toolTypeOrder
               .flatMap((key) => {
                 const toolType = toolTypes.find((item) => item.key === key)
@@ -177,13 +189,21 @@ export default function AdminToolsPage() {
           onValueChange={(v) => setFilterStatus(v as Tool["status"] | "all")}
         >
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="All Status" />
+            <SelectValue
+              placeholder={lang === "ar" ? "كل الحالات" : "All Status"}
+            />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
+            <SelectItem value="all">
+              {lang === "ar" ? "كل الحالات" : "All Status"}
+            </SelectItem>
+            <SelectItem value="active">{statusLabels.active[lang]}</SelectItem>
+            <SelectItem value="inactive">
+              {statusLabels.inactive[lang]}
+            </SelectItem>
+            <SelectItem value="archived">
+              {statusLabels.archived[lang]}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -192,12 +212,16 @@ export default function AdminToolsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-medium">No tools yet</h3>
+            <h3 className="mb-2 text-lg font-medium">
+              {lang === "ar" ? "لا توجد أدوات بعد" : "No tools yet"}
+            </h3>
             <p className="mb-4 text-center text-muted-foreground">
-              Create your first tool to get started
+              {lang === "ar"
+                ? "أنشئ أداتك الأولى للبدء"
+                : "Create your first tool to get started"}
             </p>
             <Link href="/dashboard/admin/tools/new">
-              <Button>Create Tool</Button>
+              <Button>{lang === "ar" ? "إنشاء أداة" : "Create Tool"}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -206,11 +230,17 @@ export default function AdminToolsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[300px]">Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Service Type</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-[300px]">
+                  {lang === "ar" ? "الاسم" : "Name"}
+                </TableHead>
+                <TableHead>{lang === "ar" ? "النوع" : "Type"}</TableHead>
+                <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
+                <TableHead>
+                  {lang === "ar" ? "نوع الخدمة" : "Service Type"}
+                </TableHead>
+                <TableHead className="text-right">
+                  {lang === "ar" ? "إجراءات" : "Actions"}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -232,7 +262,7 @@ export default function AdminToolsPage() {
                     <TableCell>{typeLabel}</TableCell>
                     <TableCell>
                       <Badge className={statusColors[tool.status]}>
-                        {statusLabels[tool.status]}
+                        {statusLabels[tool.status][lang]}
                       </Badge>
                     </TableCell>
                     <TableCell className="capitalize">

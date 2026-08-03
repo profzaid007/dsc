@@ -41,11 +41,11 @@ const statusColors: Record<AssignmentStatus, string> = {
   completed: "bg-green-100 text-green-800",
 }
 
-const statusLabels: Record<AssignmentStatus, string> = {
-  pending: "Pending",
-  assigned: "Assigned",
-  in_progress: "In Progress",
-  completed: "Completed",
+const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
+  pending: { en: "Pending", ar: "قيد الانتظار" },
+  assigned: { en: "Assigned", ar: "تم التعيين" },
+  in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
+  completed: { en: "Completed", ar: "مكتمل" },
 }
 
 interface AssignmentDetailPageProps {
@@ -88,7 +88,9 @@ export default function AssignmentDetailPage({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جارٍ التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -96,9 +98,11 @@ export default function AssignmentDetailPage({
   if (!assignment) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="mb-4 text-xl font-medium">Assignment not found</h2>
+        <h2 className="mb-4 text-xl font-medium">
+          {lang === "ar" ? "لم يتم العثور على المهمة" : "Assignment not found"}
+        </h2>
         <Button onClick={() => router.push("/dashboard/admin/assignments")}>
-          Back to Assignments
+          {lang === "ar" ? "العودة إلى المهام" : "Back to Assignments"}
         </Button>
       </div>
     )
@@ -107,12 +111,16 @@ export default function AssignmentDetailPage({
   if (!profile) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="mb-4 text-xl font-medium">Case not found</h2>
+        <h2 className="mb-4 text-xl font-medium">
+          {lang === "ar" ? "لم يتم العثور على الحالة" : "Case not found"}
+        </h2>
         <p className="mb-4 text-muted-foreground">
-          The linked case for this assignment was deleted.
+          {lang === "ar"
+            ? "تم حذف الحالة المرتبطة بهذه المهمة."
+            : "The linked case for this assignment was deleted."}
         </p>
         <Button onClick={() => router.push("/dashboard/admin/assignments")}>
-          Back to Assignments
+          {lang === "ar" ? "العودة إلى المهام" : "Back to Assignments"}
         </Button>
       </div>
     )
@@ -137,10 +145,15 @@ export default function AssignmentDetailPage({
             <h3 className="text-lg font-semibold">
               {(config as { title?: { en: string; ar: string } }).title?.[
                 lang
-              ] || "Request for Attachment"}
+              ] ||
+                (lang === "ar"
+                  ? "طلب إرفاق ملف"
+                  : "Request for Attachment")}
             </h3>
             <p className="mt-2 text-muted-foreground">
-              File upload request will appear here
+              {lang === "ar"
+                ? "سيظهر طلب رفع الملف هنا"
+                : "File upload request will appear here"}
             </p>
           </div>
         )
@@ -152,7 +165,9 @@ export default function AssignmentDetailPage({
         return (
           <div className="rounded-lg border bg-muted/30 p-6">
             <p className="text-muted-foreground">
-              Preview not available for this tool type
+              {lang === "ar"
+                ? "المعاينة غير متاحة لهذا النوع من الأدوات"
+                : "Preview not available for this tool type"}
             </p>
           </div>
         )
@@ -165,7 +180,11 @@ export default function AssignmentDetailPage({
 
     if (questions.length === 0) {
       return (
-        <p className="text-muted-foreground">No questions in this survey.</p>
+        <p className="text-muted-foreground">
+          {lang === "ar"
+            ? "لا توجد أسئلة في هذا الاستبيان."
+            : "No questions in this survey."}
+        </p>
       )
     }
 
@@ -187,7 +206,9 @@ export default function AssignmentDetailPage({
                     answer !== "" ? (
                       <p className="text-sm">{String(answer)}</p>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No answer</p>
+                      <p className="text-sm text-muted-foreground">
+                        {lang === "ar" ? "لا إجابة" : "No answer"}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -205,7 +226,11 @@ export default function AssignmentDetailPage({
 
     if (questions.length === 0) {
       return (
-        <p className="text-muted-foreground">No questions in this survey.</p>
+        <p className="text-muted-foreground">
+          {lang === "ar"
+            ? "لا توجد أسئلة في هذا الاستبيان."
+            : "No questions in this survey."}
+        </p>
       )
     }
 
@@ -237,7 +262,9 @@ export default function AssignmentDetailPage({
                         </p>
                       )
                     ) : (
-                      <p className="text-sm text-muted-foreground">No answer</p>
+                      <p className="text-sm text-muted-foreground">
+                        {lang === "ar" ? "لا إجابة" : "No answer"}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -256,7 +283,9 @@ export default function AssignmentDetailPage({
     if (items.length === 0) {
       return (
         <p className="text-muted-foreground">
-          No media items in this assignment.
+          {lang === "ar"
+            ? "لا توجد عناصر وسائط في هذه المهمة."
+            : "No media items in this assignment."}
         </p>
       )
     }
@@ -279,12 +308,16 @@ export default function AssignmentDetailPage({
                         <p className="text-sm">{String(answer)}</p>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          No answer
+                          {lang === "ar" ? "لا إجابة" : "No answer"}
                         </p>
                       )
                     ) : (
                       <p className="text-sm text-muted-foreground">
-                        {answer ? `File: ${answer}` : "No file uploaded"}
+                        {answer
+                          ? `${lang === "ar" ? "ملف" : "File"}: ${answer}`
+                          : lang === "ar"
+                            ? "لم يتم رفع ملف"
+                            : "No file uploaded"}
                       </p>
                     )}
                   </div>
@@ -305,14 +338,16 @@ export default function AssignmentDetailPage({
       responseKeys.length === 0 &&
       (!assignment.media || assignment.media.length === 0)
     ) {
-      return <p className="text-muted-foreground">No files uploaded yet.</p>
+      return <p className="text-muted-foreground">{lang === "ar" ? "لم يتم رفع أي ملفات بعد." : "No files uploaded yet."}</p>
     }
 
     return (
       <div className="space-y-4">
         {responseKeys.length > 0 && (
           <div className="rounded-lg border p-4">
-            <h4 className="mb-2 font-medium">File Responses</h4>
+            <h4 className="mb-2 font-medium">
+              {lang === "ar" ? "استجابات الملفات" : "File Responses"}
+            </h4>
             <ul className="space-y-2">
               {responseKeys.map((key) => (
                 <li key={key} className="flex items-center gap-2">
@@ -328,7 +363,9 @@ export default function AssignmentDetailPage({
 
         {assignment.media && assignment.media.length > 0 && (
           <div className="rounded-lg border p-4">
-            <h4 className="mb-2 font-medium">Uploaded Files</h4>
+            <h4 className="mb-2 font-medium">
+              {lang === "ar" ? "الملفات المرفوعة" : "Uploaded Files"}
+            </h4>
             <ul className="space-y-2">
               {assignment.media.map((file, idx) => (
                 <li key={idx}>
@@ -339,7 +376,7 @@ export default function AssignmentDetailPage({
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                   >
                     <Download className="h-4 w-4" />
-                    File {idx + 1}
+                    {lang === "ar" ? "ملف" : "File"} {idx + 1}
                   </a>
                 </li>
               ))}
@@ -355,7 +392,9 @@ export default function AssignmentDetailPage({
       <div className="space-y-4">
         {assignment.media && assignment.media.length > 0 && (
           <div className="rounded-lg border p-4">
-            <h4 className="mb-2 font-medium">Uploaded Files</h4>
+            <h4 className="mb-2 font-medium">
+              {lang === "ar" ? "الملفات المرفوعة" : "Uploaded Files"}
+            </h4>
             <ul className="space-y-2">
               {assignment.media.map((file, idx) => (
                 <li key={idx}>
@@ -366,7 +405,7 @@ export default function AssignmentDetailPage({
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                   >
                     <Download className="h-4 w-4" />
-                    File {idx + 1}
+                    {lang === "ar" ? "ملف" : "File"} {idx + 1}
                   </a>
                 </li>
               ))}
@@ -382,10 +421,13 @@ export default function AssignmentDetailPage({
       return (
         <div className="flex flex-col items-center justify-center py-12">
           <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="mb-2 text-lg font-medium">Not Yet Completed</h3>
+          <h3 className="mb-2 text-lg font-medium">
+            {lang === "ar" ? "لم تكتمل بعد" : "Not Yet Completed"}
+          </h3>
           <p className="text-muted-foreground">
-            This assignment is still pending. Responses will appear here once
-            the case completes it.
+            {lang === "ar"
+              ? "هذه المهمة لا تزال قيد الانتظار. ستظهر الردود هنا بمجرد اكتمال الحالة لها."
+              : "This assignment is still pending. Responses will appear here once the case completes it."}
           </p>
         </div>
       )
@@ -399,9 +441,13 @@ export default function AssignmentDetailPage({
         return (
           <div className="flex flex-col items-center justify-center py-12">
             <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-medium">No Responses</h3>
+            <h3 className="mb-2 text-lg font-medium">
+              {lang === "ar" ? "لا توجد ردود" : "No Responses"}
+            </h3>
             <p className="text-muted-foreground">
-              No response data available for this assignment.
+              {lang === "ar"
+                ? "لا توجد بيانات استجابة متاحة لهذه المهمة."
+                : "No response data available for this assignment."}
             </p>
           </div>
         )
@@ -454,10 +500,12 @@ export default function AssignmentDetailPage({
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              Assignment Details
+              {lang === "ar" ? "تفاصيل المهمة" : "Assignment Details"}
             </h1>
             <p className="text-muted-foreground">
-              View assignment and responses
+              {lang === "ar"
+                ? "عرض المهمة والردود"
+                : "View assignment and responses"}
             </p>
           </div>
         </div>
@@ -467,7 +515,7 @@ export default function AssignmentDetailPage({
           >
             <Button variant="outline">
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              {lang === "ar" ? "تعديل" : "Edit"}
             </Button>
           </Link>
         )}
@@ -478,14 +526,16 @@ export default function AssignmentDetailPage({
         <CardHeader>
           <div className="flex items-center gap-2">
             <Icon className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Assignment Information</CardTitle>
+            <CardTitle className="text-lg">
+              {lang === "ar" ? "معلومات المهمة" : "Assignment Information"}
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Case
+                {lang === "ar" ? "الحالة" : "Case"}
               </span>
               <p>
                 <Link
@@ -498,13 +548,16 @@ export default function AssignmentDetailPage({
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Assignment
+                {lang === "ar" ? "المهمة" : "Assignment"}
               </span>
-              <p>{assignment.name_en || "Unnamed Assignment"}</p>
+              <p>
+                {assignment.name_en ||
+                  (lang === "ar" ? "مهمة بدون اسم" : "Unnamed Assignment")}
+              </p>
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Type
+                {lang === "ar" ? "النوع" : "Type"}
               </span>
               <div>
                 <Badge variant="outline">
@@ -514,11 +567,11 @@ export default function AssignmentDetailPage({
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                Status
+                {lang === "ar" ? "الحالة" : "Status"}
               </span>
               <div>
                 <Badge className={statusColors[assignment.status]}>
-                  {statusLabels[assignment.status]}
+                  {statusLabels[assignment.status][lang]}
                 </Badge>
               </div>
             </div>
@@ -527,7 +580,7 @@ export default function AssignmentDetailPage({
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <span className="text-sm font-medium text-muted-foreground">
-                  Assigned Date
+                  {lang === "ar" ? "تاريخ التعيين" : "Assigned Date"}
                 </span>
                 <p>
                   {formatDate(assignment.assigned_at || assignment.created)}
@@ -535,9 +588,17 @@ export default function AssignmentDetailPage({
               </div>
               <div>
                 <span className="text-sm font-medium text-muted-foreground">
-                  Visible to User
+                  {lang === "ar" ? "مرئي للمستخدم" : "Visible to User"}
                 </span>
-                <p>{assignment.is_visible_to_user ? "Yes" : "No"}</p>
+                <p>
+                  {assignment.is_visible_to_user
+                    ? lang === "ar"
+                      ? "نعم"
+                      : "Yes"
+                    : lang === "ar"
+                      ? "لا"
+                      : "No"}
+                </p>
               </div>
             </div>
           </div>
@@ -547,16 +608,22 @@ export default function AssignmentDetailPage({
       {/* Tabs */}
       <Tabs defaultValue="view" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="view">View</TabsTrigger>
-          <TabsTrigger value="response">Response</TabsTrigger>
+          <TabsTrigger value="view">
+            {lang === "ar" ? "عرض" : "View"}
+          </TabsTrigger>
+          <TabsTrigger value="response">
+            {lang === "ar" ? "الرد" : "Response"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="view">
           <Card>
             <CardHeader>
-              <CardTitle>Tool Preview</CardTitle>
+              <CardTitle>{lang === "ar" ? "معاينة الأداة" : "Tool Preview"}</CardTitle>
               <CardDescription>
-                How the tool appears to the case (using config snapshot)
+                {lang === "ar"
+                  ? "كيف تظهر الأداة للحالة (باستخدام لقطة الإعدادات)"
+                  : "How the tool appears to the case (using config snapshot)"}
               </CardDescription>
             </CardHeader>
             <CardContent>{renderToolPreview()}</CardContent>
@@ -566,9 +633,11 @@ export default function AssignmentDetailPage({
         <TabsContent value="response">
           <Card>
             <CardHeader>
-              <CardTitle>Response</CardTitle>
+              <CardTitle>{lang === "ar" ? "الرد" : "Response"}</CardTitle>
               <CardDescription>
-                Submitted responses and uploaded files
+                {lang === "ar"
+                  ? "الردود المقدمة والملفات المرفوعة"
+                  : "Submitted responses and uploaded files"}
               </CardDescription>
             </CardHeader>
             <CardContent>{renderResponseView()}</CardContent>

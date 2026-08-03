@@ -40,9 +40,18 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-const ANSWER_TYPES: { value: SurveyAnswerType; label: string }[] = [
-  { value: "single_choice", label: "Single Choice (Radio)" },
-  { value: "multiple_choice", label: "Multiple Choice (Checkbox)" },
+const ANSWER_TYPES: {
+  value: SurveyAnswerType
+  label: { en: string; ar: string }
+}[] = [
+  {
+    value: "single_choice",
+    label: { en: "Single Choice (Radio)", ar: "اختيار واحد (أزرار اختيار)" },
+  },
+  {
+    value: "multiple_choice",
+    label: { en: "Multiple Choice (Checkbox)", ar: "اختيار من متعدد (خانات)" },
+  },
 ]
 
 interface SurveyBuilderPageProps {
@@ -225,7 +234,9 @@ export default function SurveyBuilderPage({
         </div>
         <div className="flex-1 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Question {index + 1}</span>
+            <span className="text-sm font-medium">
+              {lang === "ar" ? "سؤال" : "Question"} {index + 1}
+            </span>
             <div className="flex items-center gap-2">
               <Checkbox
                 id={`req-${question.id}`}
@@ -235,7 +246,7 @@ export default function SurveyBuilderPage({
                 }
               />
               <Label htmlFor={`req-${question.id}`} className="text-xs">
-                Required
+                {lang === "ar" ? "إجباري" : "Required"}
               </Label>
               <Button
                 variant="ghost"
@@ -247,7 +258,11 @@ export default function SurveyBuilderPage({
             </div>
           </div>
           <Input
-            placeholder="Enter question text"
+            placeholder={
+              lang === "ar"
+                ? "أدخل نص السؤال"
+                : "Enter question text"
+            }
             value={question.text}
             onChange={(e) =>
               updateQuestion(question.id, {
@@ -264,7 +279,7 @@ export default function SurveyBuilderPage({
     return (
       <div key={option.id} className="flex items-center gap-2">
         <Input
-          placeholder="Option label"
+          placeholder={lang === "ar" ? "نص الخيار" : "Option label"}
           value={option.label}
           onChange={(e) => updateOption(option.id, e.target.value)}
           className="flex-1"
@@ -284,7 +299,9 @@ export default function SurveyBuilderPage({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جارٍ التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -298,12 +315,22 @@ export default function SurveyBuilderPage({
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              {isEditMode ? "Edit Survey" : "Create Survey"}
+              {isEditMode
+                ? lang === "ar"
+                  ? "تعديل الاستبيان"
+                  : "Edit Survey"
+                : lang === "ar"
+                  ? "إنشاء استبيان"
+                  : "Create Survey"}
             </h1>
             <p className="text-muted-foreground">
               {isEditMode
-                ? "Update survey questions and options"
-                : "Build a survey with shared options for all questions"}
+                ? lang === "ar"
+                  ? "تحديث أسئلة وخيارات الاستبيان"
+                  : "Update survey questions and options"
+                : lang === "ar"
+                  ? "أنشئ استبياناً بخيارات مشتركة لجميع الأسئلة"
+                  : "Build a survey with shared options for all questions"}
             </p>
           </div>
         </div>
@@ -316,7 +343,13 @@ export default function SurveyBuilderPage({
           ) : (
             <Eye className="me-2 h-4 w-4" />
           )}
-          {showPreview ? "Hide Preview" : "Preview"}
+          {showPreview
+            ? lang === "ar"
+              ? "إخفاء المعاينة"
+              : "Hide Preview"
+            : lang === "ar"
+              ? "معاينة"
+              : "Preview"}
         </Button>
       </div>
 
@@ -326,22 +359,28 @@ export default function SurveyBuilderPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Basic Info</CardTitle>
+              <CardTitle>{lang === "ar" ? "معلومات أساسية" : "Basic Info"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Survey Name (EN)</Label>
+                  <Label>
+                    {lang === "ar" ? "اسم الاستبيان (إنجليزي)" : "Survey Name (EN)"}
+                  </Label>
                   <Input
                     value={formData.nameEn}
                     onChange={(e) =>
                       setFormData({ ...formData, nameEn: e.target.value })
                     }
-                    placeholder="Survey title"
+                    placeholder={
+                      lang === "ar" ? "عنوان الاستبيان" : "Survey title"
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Survey Name (AR)</Label>
+                  <Label>
+                    {lang === "ar" ? "اسم الاستبيان (عربي)" : "Survey Name (AR)"}
+                  </Label>
                   <Input
                     value={formData.nameAr}
                     onChange={(e) =>
@@ -398,7 +437,7 @@ export default function SurveyBuilderPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Answer Type</CardTitle>
+              <CardTitle>{lang === "ar" ? "نوع الإجابة" : "Answer Type"}</CardTitle>
             </CardHeader>
             <CardContent>
               <Select
@@ -416,7 +455,7 @@ export default function SurveyBuilderPage({
                 <SelectContent>
                   {ANSWER_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      {type.label[lang]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -426,16 +465,21 @@ export default function SurveyBuilderPage({
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Options (Shared for all questions)</CardTitle>
+              <CardTitle>
+                {lang === "ar"
+                  ? "الخيارات (مشتركة لجميع الأسئلة)"
+                  : "Options (Shared for all questions)"}
+              </CardTitle>
               <Button size="sm" onClick={addOption}>
                 <Plus className="me-2 h-4 w-4" />
-                Add Option
+                {lang === "ar" ? "إضافة خيار" : "Add Option"}
               </Button>
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-sm text-muted-foreground">
-                Minimum 5 options required. All questions will use these
-                options.
+                {lang === "ar"
+                  ? "مطلوب 5 خيارات كحد أدنى. ستستخدم جميع الأسئلة هذه الخيارات."
+                  : "Minimum 5 options required. All questions will use these options."}
               </p>
               <div className="space-y-2">
                 {options.map((opt, idx) => renderOptionItem(opt, idx))}
@@ -445,16 +489,18 @@ export default function SurveyBuilderPage({
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Questions</CardTitle>
+              <CardTitle>{lang === "ar" ? "الأسئلة" : "Questions"}</CardTitle>
               <Button size="sm" onClick={addQuestion}>
                 <Plus className="me-2 h-4 w-4" />
-                Add Question
+                {lang === "ar" ? "إضافة سؤال" : "Add Question"}
               </Button>
             </CardHeader>
             <CardContent>
               {questions.length === 0 ? (
                 <p className="py-4 text-center text-muted-foreground">
-                  No questions yet. Add one to start.
+                  {lang === "ar"
+                    ? "لا توجد أسئلة بعد. أضف واحداً للبدء."
+                    : "No questions yet. Add one to start."}
                 </p>
               ) : (
                 <DragList
@@ -469,7 +515,7 @@ export default function SurveyBuilderPage({
 
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={() => router.back()}>
-              Cancel
+              {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -482,11 +528,19 @@ export default function SurveyBuilderPage({
             >
               {isSubmitting
                 ? isEditMode
-                  ? "Saving..."
-                  : "Creating..."
+                  ? lang === "ar"
+                    ? "جارٍ الحفظ..."
+                    : "Saving..."
+                  : lang === "ar"
+                    ? "جارٍ الإنشاء..."
+                    : "Creating..."
                 : isEditMode
-                  ? "Save Changes"
-                  : "Create Survey"}
+                  ? lang === "ar"
+                    ? "حفظ التغييرات"
+                    : "Save Changes"
+                  : lang === "ar"
+                    ? "إنشاء استبيان"
+                    : "Create Survey"}
             </Button>
           </div>
         </div>
@@ -494,7 +548,7 @@ export default function SurveyBuilderPage({
         {showPreview && (
           <div className="sticky top-6 max-h-[calc(100vh-12rem)] overflow-auto rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
-              Live Preview
+              {lang === "ar" ? "معاينة مباشرة" : "Live Preview"}
             </p>
             <SurveyPreview
               config={{

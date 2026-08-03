@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAuth } from "@/hooks/useAuth"
+import { useLang } from "@/lib/lang-context"
 import { ProfileCard } from "@/components/profiles/ProfileCard"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ import { FolderKanban, Plus } from "lucide-react"
 export default function ProfilesPage() {
   const router = useRouter()
   const { currentUser } = useAuth()
+  const { lang } = useLang()
   const { profiles, isLoading } = useProfiles()
 
   useEffect(() => {
@@ -23,20 +25,24 @@ export default function ProfilesPage() {
   }, [currentUser, router])
 
   if (isLoading) {
-    return <PageLoader text="Loading cases..." />
+    return <PageLoader text={lang === "ar" ? "جارٍ تحميل الحالات..." : "Loading cases..."} />
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Cases</h1>
-          <p className="text-muted-foreground">Manage your cases</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {lang === "ar" ? "الحالات" : "Cases"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar" ? "إدارة حالاتك" : "Manage your cases"}
+          </p>
         </div>
         <Link href="/dashboard/cases/new">
           <Button>
             <Plus className="me-2 h-4 w-4" />
-            New Case
+            {lang === "ar" ? "حالة جديدة" : "New Case"}
           </Button>
         </Link>
       </div>
@@ -45,12 +51,16 @@ export default function ProfilesPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderKanban className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-medium">No cases yet</h3>
+            <h3 className="mb-2 text-lg font-medium">
+              {lang === "ar" ? "لا توجد حالات بعد" : "No cases yet"}
+            </h3>
             <p className="mb-4 text-center text-muted-foreground">
-              Create your first case to get started
+              {lang === "ar"
+                ? "أنشئ حالتك الأولى للبدء"
+                : "Create your first case to get started"}
             </p>
             <Link href="/dashboard/cases/new">
-              <Button>Create Case</Button>
+              <Button>{lang === "ar" ? "إنشاء الحالة" : "Create Case"}</Button>
             </Link>
           </CardContent>
         </Card>

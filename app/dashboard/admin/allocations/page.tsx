@@ -72,7 +72,7 @@ function ExpertCombobox({
   value,
   onChange,
   experts,
-  placeholder = "Select expert...",
+  placeholder,
 }: {
   value: string
   onChange: (value: string) => void
@@ -80,6 +80,7 @@ function ExpertCombobox({
   placeholder?: string
 }) {
   const [open, setOpen] = useState(false)
+  const { lang } = useLang()
   const selectedExpert = experts.find((e) => e.id === value)
 
   return (
@@ -91,15 +92,24 @@ function ExpertCombobox({
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {selectedExpert ? selectedExpert.name : placeholder}
+          {selectedExpert
+            ? selectedExpert.name
+            : placeholder ||
+              (lang === "ar" ? "اختر خبير..." : "Select expert...")}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0">
         <Command>
-          <CommandInput placeholder="Search experts..." />
+          <CommandInput
+            placeholder={
+              lang === "ar" ? "البحث عن الخبراء..." : "Search experts..."
+            }
+          />
           <CommandList>
-            <CommandEmpty>No experts found.</CommandEmpty>
+            <CommandEmpty>
+              {lang === "ar" ? "لم يتم العثور على خبراء." : "No experts found."}
+            </CommandEmpty>
             <CommandGroup>
               {experts.map((expert) => (
                 <CommandItem
@@ -192,7 +202,11 @@ export default function AllocationsPage() {
       )
     } catch (error) {
       console.error("Failed to save role tool types:", error)
-      alert("Failed to save. Please try again.")
+      alert(
+        lang === "ar"
+          ? "فشل الحفظ. يرجى المحاولة مرة أخرى."
+          : "Failed to save. Please try again."
+      )
     } finally {
       setIsSavingAll(false)
     }
@@ -259,7 +273,11 @@ export default function AllocationsPage() {
       (r) => !r.expert_id || !r.role
     )
     if (invalidRows.length > 0) {
-      alert("Please select an expert and role for each row.")
+      alert(
+        lang === "ar"
+          ? "يرجى اختيار خبير ودور لكل صف."
+          : "Please select an expert and role for each row."
+      )
       return
     }
 
@@ -313,7 +331,11 @@ export default function AllocationsPage() {
       await refreshAllocations()
     } catch (error) {
       console.error("Failed to save allocations:", error)
-      alert("Failed to save allocations. Please try again.")
+      alert(
+        lang === "ar"
+          ? "فشل حفظ التخصيصات. يرجى المحاولة مرة أخرى."
+          : "Failed to save allocations. Please try again."
+      )
     } finally {
       setIsSaving(false)
     }

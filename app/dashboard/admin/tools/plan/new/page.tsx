@@ -16,6 +16,7 @@ import { DragList } from "@/components/ui/drag-list"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { PlanPreview } from "@/components/tool-renderers/PlanPreview"
 import { Plus, Trash2, Eye, EyeOff, GripVertical } from "lucide-react"
+import { useLang } from "@/lib/lang-context"
 import type { PlanConfig } from "@/types/tool"
 
 function generateId(): string {
@@ -49,6 +50,7 @@ export default function PlanBuilderPage({
   searchParams: Promise<{ caseId?: string; edit?: string }>
 }) {
   const router = useRouter()
+  const { lang } = useLang()
   const { assignTool, updateAssignment, assignments, isLoading: isAssignmentsLoading } = useAssignments()
   const { getProfileById } = useProfiles()
   const { currentUser } = useAuth()
@@ -86,7 +88,11 @@ export default function PlanBuilderPage({
         setPlanTypeId(planType.id)
         setTypeError("")
       } catch (error) {
-        setTypeError('Tool type "plan" not found. Please contact admin.')
+        setTypeError(
+          lang === "ar"
+            ? 'نوع الأداة "plan" غير موجود. يرجى الاتصال بالمسؤول.'
+            : 'Tool type "plan" not found. Please contact admin.'
+        )
         console.error("Failed to fetch plan type:", error)
       }
     }
@@ -334,7 +340,9 @@ export default function PlanBuilderPage({
   const renderGoalItem = (goal: SimplePlanGoal, index: number) => (
     <div className="flex-1 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Goal {index + 1}</span>
+        <span className="text-sm font-medium">
+          {lang === "ar" ? "هدف" : "Goal"} {index + 1}
+        </span>
         <Button
           variant="ghost"
           size="icon"
@@ -346,12 +354,12 @@ export default function PlanBuilderPage({
       </div>
       <div className="space-y-2">
         <Input
-          placeholder="Goal Title"
+          placeholder={lang === "ar" ? "عنوان الهدف" : "Goal Title"}
           value={goal.title}
           onChange={(e) => updateGoal(goal.id, { title: e.target.value })}
         />
         <Input
-          placeholder="Description"
+          placeholder={lang === "ar" ? "الوصف" : "Description"}
           value={goal.description}
           onChange={(e) => updateGoal(goal.id, { description: e.target.value })}
         />
@@ -369,7 +377,9 @@ export default function PlanBuilderPage({
               updateStep(step.id, { completed: !!checked })
             }
           />
-          <span className="font-medium">Step {index + 1}</span>
+          <span className="font-medium">
+            {lang === "ar" ? "خطوة" : "Step"} {index + 1}
+          </span>
         </div>
         <Button
           variant="ghost"
@@ -383,12 +393,12 @@ export default function PlanBuilderPage({
 
       <div className="space-y-3">
         <Input
-          placeholder="Step Title"
+          placeholder={lang === "ar" ? "عنوان الخطوة" : "Step Title"}
           value={step.title}
           onChange={(e) => updateStep(step.id, { title: e.target.value })}
         />
         <Input
-          placeholder="Description"
+          placeholder={lang === "ar" ? "الوصف" : "Description"}
           value={step.description}
           onChange={(e) => updateStep(step.id, { description: e.target.value })}
         />
@@ -396,26 +406,28 @@ export default function PlanBuilderPage({
         {/* Fields matching preview layout */}
         <div className="grid gap-2 sm:grid-cols-2">
           <Input
-            placeholder="Notes"
+            placeholder={lang === "ar" ? "ملاحظات" : "Notes"}
             value={step.notes}
             onChange={(e) => updateStep(step.id, { notes: e.target.value })}
           />
           <Input
-            placeholder="Comments"
+            placeholder={lang === "ar" ? "تعليقات" : "Comments"}
             value={step.comments}
             onChange={(e) => updateStep(step.id, { comments: e.target.value })}
           />
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
           <DateInput
-            placeholder="Date of Achievement"
+            placeholder={
+              lang === "ar" ? "تاريخ الإنجاز" : "Date of Achievement"
+            }
             value={step.dateOfAchievement}
             onChange={(v) =>
               updateStep(step.id, { dateOfAchievement: v })
             }
           />
           <Input
-            placeholder="Evaluation"
+            placeholder={lang === "ar" ? "التقييم" : "Evaluation"}
             value={step.evaluation}
             onChange={(e) =>
               updateStep(step.id, { evaluation: e.target.value })
@@ -437,7 +449,9 @@ export default function PlanBuilderPage({
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">
+          {lang === "ar" ? "جارٍ التحميل..." : "Loading..."}
+        </p>
       </div>
     )
   }
@@ -446,9 +460,19 @@ export default function PlanBuilderPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Create Plan</h1>
+          <h1 className="text-2xl font-bold text-primary">
+            {editAssignmentId
+              ? lang === "ar"
+                ? "تعديل الخطة"
+                : "Edit Plan"
+              : lang === "ar"
+                ? "إنشاء خطة"
+                : "Create Plan"}
+          </h1>
           <p className="text-muted-foreground">
-            Create a plan for a specific case
+            {lang === "ar"
+              ? "إنشاء خطة لقضية محددة"
+              : "Create a plan for a specific case"}
           </p>
         </div>
         <Button
@@ -460,7 +484,13 @@ export default function PlanBuilderPage({
           ) : (
             <Eye className="me-2 h-4 w-4" />
           )}
-          {showPreview ? "Hide Preview" : "Preview"}
+          {showPreview
+            ? lang === "ar"
+              ? "إخفاء المعاينة"
+              : "Hide Preview"
+            : lang === "ar"
+              ? "معاينة"
+              : "Preview"}
         </Button>
       </div>
 
@@ -477,13 +507,15 @@ export default function PlanBuilderPage({
           {/* Case Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Case Selection *</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "اختيار القضية *" : "Case Selection *"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
-                placeholder="Select a case..."
+                placeholder={lang === "ar" ? "اختر قضية..." : "Select a case..."}
                 disabled={!!editAssignmentId}
               />
             </CardContent>
@@ -492,22 +524,26 @@ export default function PlanBuilderPage({
           {/* Plan Name - Only bilingual field */}
           <Card>
             <CardHeader>
-              <CardTitle>Plan Name *</CardTitle>
+              <CardTitle>{lang === "ar" ? "اسم الخطة *" : "Plan Name *"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Name (EN)</Label>
+                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
                     value={toolName.en}
                     onChange={(e) =>
                       setToolName({ ...toolName, en: e.target.value })
                     }
-                    placeholder="e.g., John's Development Plan"
+                    placeholder={
+                      lang === "ar"
+                        ? "مثال: خطة تطوير جون"
+                        : "e.g., John's Development Plan"
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Name (AR)</Label>
+                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
                   <Input
                     value={toolName.ar}
                     onChange={(e) =>
@@ -523,34 +559,38 @@ export default function PlanBuilderPage({
           {/* Child & Expert Info - Single fields */}
           <Card>
             <CardHeader>
-              <CardTitle>Child & Expert Information</CardTitle>
+              <CardTitle>
+                {lang === "ar"
+                  ? "معلومات الطفل والخبير"
+                  : "Child & Expert Information"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Child Name</Label>
+                  <Label>{lang === "ar" ? "اسم الطفل" : "Child Name"}</Label>
                   <Input
                     value={formData.childName}
                     onChange={(e) =>
                       setFormData({ ...formData, childName: e.target.value })
                     }
-                    placeholder="Child name"
+                    placeholder={lang === "ar" ? "اسم الطفل" : "Child name"}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Expert Name</Label>
+                  <Label>{lang === "ar" ? "اسم الخبير" : "Expert Name"}</Label>
                   <Input
                     value={formData.expertName}
                     onChange={(e) =>
                       setFormData({ ...formData, expertName: e.target.value })
                     }
-                    placeholder="Expert name"
+                    placeholder={lang === "ar" ? "اسم الخبير" : "Expert name"}
                   />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Start Date</Label>
+                  <Label>{lang === "ar" ? "تاريخ البداية" : "Start Date"}</Label>
                   <DateInput
                     value={formData.startDate}
                     onChange={(v) =>
@@ -559,7 +599,7 @@ export default function PlanBuilderPage({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>End Date</Label>
+                  <Label>{lang === "ar" ? "تاريخ النهاية" : "End Date"}</Label>
                   <DateInput
                     value={formData.endDate}
                     onChange={(v) =>
@@ -574,16 +614,18 @@ export default function PlanBuilderPage({
           {/* Goals - Single fields */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Goals</CardTitle>
+              <CardTitle>{lang === "ar" ? "الأهداف" : "Goals"}</CardTitle>
               <Button size="sm" onClick={addGoal}>
                 <Plus className="me-2 h-4 w-4" />
-                Add Goal
+                {lang === "ar" ? "إضافة هدف" : "Add Goal"}
               </Button>
             </CardHeader>
             <CardContent>
               {goals.length === 0 ? (
                 <p className="py-4 text-center text-muted-foreground">
-                  No goals yet. Click Add Goal to create one.
+                  {lang === "ar"
+                    ? "لا توجد أهداف بعد. انقر على إضافة هدف لإنشاء واحد."
+                    : "No goals yet. Click Add Goal to create one."}
                 </p>
               ) : (
                 <DragList
@@ -599,16 +641,18 @@ export default function PlanBuilderPage({
           {/* Steps - With all fields matching preview */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Steps</CardTitle>
+              <CardTitle>{lang === "ar" ? "الخطوات" : "Steps"}</CardTitle>
               <Button size="sm" onClick={addStep}>
                 <Plus className="me-2 h-4 w-4" />
-                Add Step
+                {lang === "ar" ? "إضافة خطوة" : "Add Step"}
               </Button>
             </CardHeader>
             <CardContent>
               {steps.length === 0 ? (
                 <p className="py-4 text-center text-muted-foreground">
-                  No steps yet. Click Add Step to create one.
+                  {lang === "ar"
+                    ? "لا توجد خطوات بعد. انقر على إضافة خطوة لإنشاء واحدة."
+                    : "No steps yet. Click Add Step to create one."}
                 </p>
               ) : (
                 <DragList
@@ -623,7 +667,7 @@ export default function PlanBuilderPage({
 
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={handleCancel}>
-              Cancel
+              {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -639,11 +683,19 @@ export default function PlanBuilderPage({
             >
               {isSubmitting
                 ? editAssignmentId
-                  ? "Saving..."
-                  : "Creating..."
+                  ? lang === "ar"
+                    ? "جارٍ الحفظ..."
+                    : "Saving..."
+                  : lang === "ar"
+                    ? "جارٍ الإنشاء..."
+                    : "Creating..."
                 : editAssignmentId
-                  ? "Save Changes"
-                  : "Create Plan"}
+                  ? lang === "ar"
+                    ? "حفظ التغييرات"
+                    : "Save Changes"
+                  : lang === "ar"
+                    ? "إنشاء خطة"
+                    : "Create Plan"}
             </Button>
           </div>
         </div>
@@ -651,7 +703,7 @@ export default function PlanBuilderPage({
         {showPreview && (
           <div className="sticky top-6 max-h-[calc(100vh-12rem)] overflow-auto rounded-lg border bg-card p-4">
             <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
-              Live Preview
+              {lang === "ar" ? "معاينة مباشرة" : "Live Preview"}
             </p>
             <PlanPreview
               config={{
