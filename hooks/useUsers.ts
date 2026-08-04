@@ -35,7 +35,10 @@ export function useUsers() {
     is_active?: boolean
   }) => {
     try {
-      const newUser = await pb.collection("users").create(data)
+      const newUser = await pb.collection("users").create({
+        ...data,
+        emailVisibility: true,
+      })
       setUsers((prev) => [newUser as unknown as User, ...prev])
       return newUser.id
     } catch (error) {

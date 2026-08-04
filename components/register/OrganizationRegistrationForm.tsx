@@ -121,6 +121,7 @@ export function OrganizationRegistrationForm() {
         contact_number: contactNumber,
         organization_name: organizationName,
         role: "user",
+        emailVisibility: true,
       })
 
       await pb.collection("cases").create({

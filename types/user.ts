@@ -18,6 +18,8 @@ export interface User {
   contact_number: string
   organization_name?: string
   user_type?: string // relation to lookups collection
+  message?: string
+  attachments?: string[]
   created: string
   updated: string
 }

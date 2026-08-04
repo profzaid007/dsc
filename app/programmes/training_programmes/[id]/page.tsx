@@ -171,6 +171,7 @@ export default function TrainingProgrammeDetailPage({
         name: enrollForm.name,
         contact_number: enrollForm.contactNumber,
         role: "individual",
+        emailVisibility: true,
       })
 
       await casesCollection.create({

@@ -20,6 +20,15 @@ export function useAuth() {
 
   const refreshAuth = useCallback(() => {
     const user = getCurrentUser()
+    if (user && user.is_active === false) {
+      pbLogout()
+      setCurrentUser(null)
+      setIsAuthenticated(false)
+      setIsAdmin(false)
+      setIsSuperAdmin(false)
+      setIsLoading(false)
+      return
+    }
     setCurrentUser(user)
     setIsAuthenticated(checkAuth())
     setIsAdmin(checkIsAdmin())
@@ -41,7 +50,18 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     try {
-      await authWithPassword(email, password)
+      const authData = await authWithPassword(email, password)
+      const user = authData.record as unknown as User
+      if (user && user.is_active === false) {
+        await pbLogout()
+        return {
+          success: false,
+          error:
+            user.role === "expert"
+              ? "Your account is pending approval. You will be able to log in once approved."
+              : "Your account has been deactivated. Please contact the administrator.",
+        }
+      }
       refreshAuth()
       return { success: true }
     } catch (error: any) {

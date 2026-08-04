@@ -7,16 +7,18 @@ import { localizedField, t } from "@/lib/i18n"
 import type { InfoPage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
-
+import { getPortalById } from "@/lib/portals"
+import { Button } from "@/components/ui/button"
 interface InfoPageProps {
   params: Promise<{ id: string }>
 }
+
+
 
 export default async function InfoPage({ params }: InfoPageProps) {
   const { id } = await params
   const cookieStore = await cookies()
   const lang = (cookieStore.get("lang")?.value as Lang) || "en"
-
   let record: Record<string, unknown> | null = null
   try {
     record = await pb
@@ -29,6 +31,7 @@ export default async function InfoPage({ params }: InfoPageProps) {
   const page = record as InfoPage | null
   const isPublished = !!page?.is_published
   const portalId = page?.portal_name
+  const infoPortal = portalId ? getPortalById(portalId) : undefined
   const backHref = portalId ? `/portal/${portalId}` : "/"
   const title = page ? localizedField(page, lang, "title") : ""
   const displayTitle = title || id.replace(/-/g, " ")
@@ -58,6 +61,15 @@ export default async function InfoPage({ params }: InfoPageProps) {
           className="cms-rendered sun-editor-editable space-y-4 text-gray-700 leading-relaxed [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:my-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:my-4 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:my-3 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic"
           dangerouslySetInnerHTML={{ __html: sanitizeCmsContent(localizedField(page, lang, "content")) }}
         />
+
+        <div className="tet">{infoPortal && (
+              <a href={infoPortal.ctaHref}>
+                <Button size="lg" className="px-4 py-3 text-xs lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg"
+                        style={{ backgroundColor: infoPortal.accent, color: "#fff" }}>
+                  {t(infoPortal.ctaLabel, lang)}
+                </Button>
+              </a>
+            )}</div>
       </div>
     )
   }
@@ -80,6 +92,16 @@ export default async function InfoPage({ params }: InfoPageProps) {
           {t({ en: "This page is being prepared. Check back later.", ar: "هذه الصفحة قيد الإعداد. تحقق لاحقاً." }, lang)}
         </p>
       </div>
+      {infoPortal && (
+        <div className="text-center">
+          <a href={infoPortal.ctaHref}>
+            <Button size="lg" className="px-4 py-3 text-xs lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg"
+                    style={{ backgroundColor: infoPortal.accent, color: "#fff" }}>
+              {t(infoPortal.ctaLabel, lang)}
+            </Button>
+          </a>
+        </div>
+      )}
     </div>
   )
 }

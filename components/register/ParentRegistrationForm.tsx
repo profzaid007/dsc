@@ -158,6 +158,7 @@ export function ParentRegistrationForm() {
         name,
         contact_number: contactNumber,
         role: "user",
+        emailVisibility: true,
       })
 
       for (const child of children) {

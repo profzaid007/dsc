@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import {
@@ -25,6 +25,26 @@ import {
   handlePocketBaseError,
   requestPasswordReset,
 } from "@/lib/pb"
+
+function ExpertPendingNotice() {
+  const searchParams = useSearchParams()
+  if (searchParams.get("expert_pending") !== "1") return null
+  const emailWarn = searchParams.get("warn") === "1"
+  return (
+    <>
+      <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+        Your application has been submitted. You will receive an email once your
+        account is approved.
+      </div>
+      {emailWarn && (
+        <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+          Your application was saved, but we couldn&apos;t send the notification
+          email. Our team will still review your application.
+        </div>
+      )}
+    </>
+  )
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -94,6 +114,9 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <Suspense fallback={null}>
+              <ExpertPendingNotice />
+            </Suspense>
             {error && (
               <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
                 {error}
