@@ -96,15 +96,27 @@ export function FooterSection() {
             </h3>
             <div className="grid grid-cols-1 gap-y-1 text-sm text-white/60 md:grid-cols-2 md:gap-x-4 md:gap-y-0.5">
               <p>
-                {t(
-                  {
-                    en: "+962 78012 7435",
-                    ar: "+962 78012 7435",
-                  },
-                  lang
-                )}
+                <a
+                  href="tel:+962780127435"
+                  className="hover:text-[#00a4e4]"
+                >
+                  {t(
+                    {
+                      en: "+962 78012 7435",
+                      ar: "+962 78012 7435",
+                    },
+                    lang
+                  )}
+                </a>
               </p>
-              <p>support@dsc.ac</p>
+              <p> 
+              <a 
+                href="mailto:support@dsc.ac"
+                className="hover:text-[#00a4e4]"
+              >
+              support@dsc.ac
+              </a>
+              </p>
               <p>www.dsc.ac</p>
               <p>
                 {t(
