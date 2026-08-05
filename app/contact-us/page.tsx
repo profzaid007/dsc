@@ -136,15 +136,20 @@ export default function ContactPage() {
                       <p className="text-sm font-semibold text-gray-900">
                         {t({ en: "Phone", ar: "الهاتف" }, lang)}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {t(
-                          {
-                            en: "+962 78012 7435",
-                            ar: "+962 78012 7435",
-                          },
-                          lang
-                        )}
-                      </p>
+                      <a 
+                        href="tel:+962780127435"
+                        className="hover:text-[#FFFF66]"
+                      >
+                        <p className="text-sm text-muted-foreground">
+                          {t(
+                            {
+                              en: "+962 78012 7435",
+                              ar: "+962 78012 7435",
+                            },
+                            lang
+                          )}
+                        </p>
+                      </a>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -153,15 +158,22 @@ export default function ContactPage() {
                       <p className="text-sm font-semibold text-gray-900">
                         {t({ en: "WhatsApp", ar: "واتساب" }, lang)}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {t(
-                          {
-                            en: "+962 788 689123",
-                            ar: "+962 788 689123",
-                          },
-                          lang
-                        )}
-                      </p>
+                      <a 
+                        href="https://wa.me/962788689123"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-[#FFFF66]"
+                      >
+                        <p className="text-sm text-muted-foreground">
+                          {t(
+                            {
+                              en: "+962 788 689123",
+                              ar: "+962 788 689123",
+                            },
+                            lang
+                          )}
+                        </p>
+                      </a>
                     </div>
                   </div>
 
@@ -171,15 +183,20 @@ export default function ContactPage() {
                       <p className="text-sm font-semibold text-gray-900">
                         {t({ en: "Telephone", ar: "هاتف ثابت" }, lang)}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {t(
-                          {
-                            en: "+962 6 5652527",
-                            ar: "+962 6 5652527",
-                          },
-                          lang
-                        )}
-                      </p>
+                      <a 
+                        href="tel:+96265652527"
+                        className="hover:text-[#FFFF66]"
+                      >
+                        <p className="text-sm text-muted-foreground">
+                          {t(
+                            {
+                              en: "+962 6 5652527",
+                              ar: "+962 6 5652527",
+                            },
+                            lang
+                          )}
+                        </p>
+                      </a>
                     </div>
                   </div>
 
@@ -189,9 +206,14 @@ export default function ContactPage() {
                       <p className="text-sm font-semibold text-gray-900">
                         {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        support@dsc.ac
-                      </p>
+                      <a
+                        href="mailto:support@dsc.ac"
+                        className="hover:text-[#FFFF66]"
+                      >
+                        <p className="text-sm text-muted-foreground">
+                          support@dsc.ac
+                        </p>
+                      </a>
                     </div>
                   </div>
 
