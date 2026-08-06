@@ -35,10 +35,23 @@ export function useRolesManagement() {
     []
   )
 
+  const addRole = useCallback(async (name: string) => {
+    const created = await rolesManagementCollection.create({ name })
+    setRoles((prev) => [...prev, created])
+    return created
+  }, [])
+
+  const removeRole = useCallback(async (id: string) => {
+    await rolesManagementCollection.delete(id)
+    setRoles((prev) => prev.filter((r) => r.id !== id))
+  }, [])
+
   return {
     roles,
     isLoading,
     updateRoleToolTypes,
+    addRole,
+    removeRole,
     refresh: fetchRoles,
   }
 }

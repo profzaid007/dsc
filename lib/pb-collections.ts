@@ -918,6 +918,17 @@ export const rolesManagementCollection = {
     return pb.collection("roles_management").update(id, data)
   },
 
+  async create(data: {
+    name: string
+    tool_types?: string[]
+  }): Promise<import("@/types/expert-role").RolesManagement> {
+    return pb.collection("roles_management").create(data)
+  },
+
+  async delete(id: string): Promise<void> {
+    await pb.collection("roles_management").delete(id)
+  },
+
   async getByName(
     name: string
   ): Promise<import("@/types/expert-role").RolesManagement | null> {

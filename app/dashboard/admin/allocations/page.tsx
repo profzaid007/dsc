@@ -61,6 +61,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRolesManagement } from "@/hooks/useRolesManagement"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { ToolTypeMultiSelect } from "@/components/admin/tool-type-multi-select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
   
 interface AllocationRow {
   id?: string
@@ -163,11 +172,16 @@ export default function AllocationsPage() {
     roles: roleMgmtRoles,
     isLoading: isRolesLoading,
     updateRoleToolTypes,
+    addRole,
+    removeRole,
   } = useRolesManagement()
   const { toolTypes: allToolTypes, isLoading: isToolTypesLoading, fetchToolTypes } = useToolTypes()
 
   const [roleToolTypesMap, setRoleToolTypesMap] = useState<Record<string, string[]>>({})
   const [isSavingAll, setIsSavingAll] = useState(false)
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false)
+  const [newRoleName, setNewRoleName] = useState("")
+  const [isAddingRole, setIsAddingRole] = useState(false)
 
   useEffect(() => {
     fetchToolTypes()
@@ -209,6 +223,59 @@ export default function AllocationsPage() {
       )
     } finally {
       setIsSavingAll(false)
+    }
+  }
+
+  const handleAddRole = async () => {
+    const roleName = newRoleName.trim()
+    if (!roleName) return
+
+    setIsAddingRole(true)
+    try {
+      const created = await addRole(roleName)
+      setRoleToolTypesMap((prev) => ({
+        ...prev,
+        [created.id]: created.tool_types || [],
+      }))
+      setRoleDialogOpen(false)
+      setNewRoleName("")
+    } catch (error) {
+      console.error("Failed to add role:", error)
+      alert(
+        lang === "ar"
+          ? "فشل إضافة الدور. يرجى المحاولة مرة أخرى."
+          : "Failed to add role. Please try again."
+      )
+    } finally {
+      setIsAddingRole(false)
+    }
+  }
+
+  const handleDeleteRole = async (roleId: string, roleName: string) => {
+    if (
+      !window.confirm(
+        lang === "ar"
+          ? `هل تريد حذف الدور "${roleName}"؟`
+          : `Delete role "${roleName}"?`
+      )
+    ) {
+      return
+    }
+
+    try {
+      await removeRole(roleId)
+      setRoleToolTypesMap((prev) => {
+        const next = { ...prev }
+        delete next[roleId]
+        return next
+      })
+    } catch (error) {
+      console.error("Failed to delete role:", error)
+      alert(
+        lang === "ar"
+          ? "فشل حذف الدور. يرجى المحاولة مرة أخرى."
+          : "Failed to delete role. Please try again."
+      )
     }
   }
 
@@ -577,14 +644,22 @@ export default function AllocationsPage() {
         <TabsContent value="roles">
           <Card>
             <CardHeader>
-              <CardTitle>
-                {lang === "ar" ? "إدارة أدوار الخبراء" : "Expert Role Management"}
-              </CardTitle>
-              <CardDescription>
-                {lang === "ar"
-                  ? "تحديد أنواع الأدوات المتاحة لكل دور"
-                  : "Assign which tool types each role can access"}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>
+                    {lang === "ar" ? "إدارة أدوار الخبراء" : "Expert Role Management"}
+                  </CardTitle>
+                  <CardDescription>
+                    {lang === "ar"
+                      ? "تحديد أنواع الأدوات المتاحة لكل دور"
+                      : "Assign which tool types each role can access"}
+                  </CardDescription>
+                </div>
+                <Button onClick={() => setRoleDialogOpen(true)}>
+                  <Plus className="me-2 h-4 w-4" />
+                  {lang === "ar" ? "إضافة دور" : "Add Role"}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {isRolesLoading || isToolTypesLoading ? (
@@ -599,36 +674,61 @@ export default function AllocationsPage() {
                       <TableHead>
                         {lang === "ar" ? "أنواع الأدوات المخصصة" : "Assigned Tool Types"}
                       </TableHead>
+                      <TableHead className="text-right">
+                        {lang === "ar" ? "إجراءات" : "Actions"}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {roleMgmtRoles.map((role) => (
-                      <TableRow key={role.id}>
-                        <TableCell className="font-medium capitalize">
-                          {role.name}
-                        </TableCell>
-                        <TableCell>
-                          <ToolTypeMultiSelect
-                            value={roleToolTypesMap[role.id] || role.tool_types || []}
-                            onChange={(toolTypeIds) =>
-                              handleRoleToolTypesChange(role.id, toolTypeIds)
-                            }
-                            toolTypes={allToolTypes}
-                            lang={lang}
-                            placeholder={
-                              lang === "ar"
-                                ? "اختر أنواع الأدوات..."
-                                : "Select tool types..."
-                            }
-                            emptyMessage={
-                              lang === "ar"
-                                ? "لا توجد أنواع أدوات"
-                                : "No tool types found"
-                            }
-                          />
+                    {roleMgmtRoles.map((role) => {
+                      const hasAssignments = allocations.some(
+                        (a) => a.role === role.name
+                      )
+                      return (
+                        <TableRow key={role.id}>
+                          <TableCell className="font-medium capitalize">
+                            {role.name}
                           </TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell>
+                            <ToolTypeMultiSelect
+                              value={roleToolTypesMap[role.id] || role.tool_types || []}
+                              onChange={(toolTypeIds) =>
+                                handleRoleToolTypesChange(role.id, toolTypeIds)
+                              }
+                              toolTypes={allToolTypes}
+                              lang={lang}
+                              placeholder={
+                                lang === "ar"
+                                  ? "اختر أنواع الأدوات..."
+                                  : "Select tool types..."
+                              }
+                              emptyMessage={
+                                lang === "ar"
+                                  ? "لا توجد أنواع أدوات"
+                                  : "No tool types found"
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={hasAssignments || isSavingAll}
+                              onClick={() => handleDeleteRole(role.id, role.name)}
+                              title={
+                                hasAssignments
+                                  ? lang === "ar"
+                                    ? "لا يمكن حذف دور معين لخبراء"
+                                    : "Cannot delete a role assigned to experts"
+                                  : undefined
+                              }
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               )}
@@ -650,6 +750,57 @@ export default function AllocationsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {lang === "ar" ? "إضافة دور جديد" : "Add New Role"}
+            </DialogTitle>
+            <DialogDescription>
+              {lang === "ar"
+                ? "أدخل اسم الدور الجديد ثم قم بتحديد أنواع الأدوات المتاحة له"
+                : "Enter a name for the new role, then assign the tool types it can access"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">
+                {lang === "ar" ? "اسم الدور" : "Role Name"}
+              </label>
+              <Input
+                value={newRoleName}
+                onChange={(e) => setNewRoleName(e.target.value)}
+                placeholder={lang === "ar" ? "مثال: محامي" : "e.g., lawyer"}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRoleDialogOpen(false)
+                setNewRoleName("")
+              }}
+              disabled={isAddingRole}
+            >
+              {lang === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              onClick={handleAddRole}
+              disabled={isAddingRole || !newRoleName.trim()}
+            >
+              {isAddingRole
+                ? lang === "ar"
+                  ? "جارٍ الإضافة..."
+                  : "Adding..."
+                : lang === "ar"
+                  ? "إضافة"
+                  : "Add"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
