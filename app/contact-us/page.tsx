@@ -12,6 +12,7 @@ import { Phone, Mail, MapPin, Loader2, Send } from "lucide-react"
 export default function ContactPage() {
   const { lang } = useLang()
   const [name, setName] = useState("")
+  const [countryCode, setCountryCode] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [email, setEmail] = useState("")
   const [description, setDescription] = useState("")
@@ -28,7 +29,7 @@ export default function ContactPage() {
       const html = [
         "<h2>New Contact Message</h2>",
         `<p><strong>Name:</strong> ${name}</p>`,
-        `<p><strong>Phone:</strong> ${phoneNumber}</p>`,
+        `<p><strong>Phone:</strong> ${countryCode} ${phoneNumber}</p>`,
         `<p><strong>Email:</strong> ${email}</p>`,
         description ? `<p><strong>Description:</strong><br/>${description}</p>` : "",
       ].join("\n")
@@ -276,6 +277,7 @@ export default function ContactPage() {
                       onClick={() => {
                         setDone(false)
                         setName("")
+                        setCountryCode("")
                         setPhoneNumber("")
                         setEmail("")
                         setDescription("")
@@ -308,19 +310,36 @@ export default function ContactPage() {
                       <label className="mb-1.5 block text-sm font-medium text-gray-700">
                         {t({ en: "Phone Number", ar: "رقم الهاتف" }, lang)}
                       </label>
-                      <Input
-                        type="tel"
-                        required
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder={t(
-                          {
-                            en: "Your phone number",
-                            ar: "رقم هاتفك",
-                          },
-                          lang
-                        )}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          type="tel"
+                          required
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                          placeholder={t(
+                            {
+                              en: "Country code",
+                              ar: "رمز الدولة",
+                            },
+                            lang
+                          )}
+                          className="w-28"
+                        />
+                        <Input
+                          type="tel"
+                          required
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          placeholder={t(
+                            {
+                              en: "Your phone number",
+                              ar: "رقم هاتفك",
+                            },
+                            lang
+                          )}
+                          className="flex-1"
+                        />
+                      </div>
                     </div>
 
                     <div>

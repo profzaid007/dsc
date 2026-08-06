@@ -39,6 +39,7 @@ interface Props {
 export function BookConsultDialog({ open, onOpenChange }: Props) {
 
   const [name, setName] = useState("")
+  const [countryCode, setCountryCode] = useState("")
   const [contact, setContact] = useState("")
   const [email, setEmail] = useState("")
   const [description, setDescription] = useState("")
@@ -76,7 +77,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       const html = [
         t({ en: "<h2>New Consultation Request</h2>", ar: "<h2>طلب استشارة جديد</h2>" }, lang),
         `<p><strong>${t({ en: "Name:", ar: "الاسم:" }, lang)}</strong> ${name}</p>`,
-        `<p><strong>${t({ en: "Contact:", ar: "التواصل:" }, lang)}</strong> ${contact}</p>`,
+        `<p><strong>${t({ en: "Contact:", ar: "التواصل:" }, lang)}</strong> ${countryCode} ${contact}</p>`,
         `<p><strong>${t({ en: "Email:", ar: "البريد الإلكتروني:" }, lang)}</strong> ${email}</p>`,
         issueType ? `<p><strong>${t({ en: "Issue Type:", ar: "نوع المشكلة:" }, lang)}</strong> ${issueType}</p>` : "",
         caseType ? `<p><strong>${t({ en: "Case Type:", ar: "نوع الحالة:" }, lang)}</strong> ${caseType}</p>` : "",
@@ -103,7 +104,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: `${name}`,
-          contact: `${contact}`,
+          contact: `${countryCode} ${contact}`,
           email: `${email}`,
           issueType: `${issueType}`,
           caseType: `${caseType}`,
@@ -134,6 +135,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
     // reset after dialog closes
     setTimeout(() => {
       setName("")
+      setCountryCode("")
       setContact("")
       setEmail("")
       setDescription("")
@@ -188,12 +190,24 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">{t({ en: "Contact", ar: "التواصل" }, lang)}</label>
-              <Input
-                required
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder={t({ en: "Phone number", ar: "رقم الهاتف" }, lang)}
-              />
+              <div className="flex gap-2">
+                <Input
+                  type="tel"
+                  required
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  placeholder={t({ en: "Country code", ar: "رمز الدولة" }, lang)}
+                  className="w-28"
+                />
+                <Input
+                  type="tel"
+                  required
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder={t({ en: "Phone number", ar: "رقم الهاتف" }, lang)}
+                  className="flex-1"
+                />
+              </div>
             </div>
 
             <div>
