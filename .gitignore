@@ -41,3 +41,5 @@ bun.lock
 
 # script 
 scripts/*
+
+dsc_billing.csv
