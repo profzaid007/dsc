@@ -468,6 +468,7 @@ export default function CmsServiceEditorPage() {
             onImageUpload={handleImageUpload}
             onDiscard={handleDiscard}
             onChange={handleContentChange}
+            direction="rtl"
           />
         </div>
       )}

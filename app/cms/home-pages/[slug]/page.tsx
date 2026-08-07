@@ -269,6 +269,7 @@ export default function CmsHomePageEditorPage() {
               isSaving={saving}
               onImageUpload={handleImageUpload}
               onDiscard={handleDiscard}
+              direction="rtl"
             />
           </TabsContent>
         </Tabs>

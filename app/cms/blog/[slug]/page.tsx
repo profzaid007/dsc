@@ -452,6 +452,7 @@ export default function CmsBlogEditorPage() {
             onImageUpload={handleImageUpload}
             onDiscard={handleDiscard}
             onChange={handleContentChange}
+            direction="rtl"
           />
         </div>
       )}

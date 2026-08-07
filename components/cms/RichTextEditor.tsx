@@ -16,6 +16,7 @@ interface RichTextEditorProps {
   onDiscard?: () => void
   onImageUpload?: (file: File) => Promise<string>
   onChange?: (html: string) => void
+  direction?: "ltr" | "rtl"
 }
 
 export function RichTextEditor({
@@ -26,6 +27,7 @@ export function RichTextEditor({
   onImageUpload,
   onDiscard,
   onChange,
+  direction = "ltr",
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<any>(null)
@@ -63,6 +65,7 @@ export function RichTextEditor({
         externalLibs: {
           codeMirror: { src: CodeMirror },
         },
+        textDirection: direction,
         toolbar_sticky: 93,
         value: initialContent,
         height: "600px",
@@ -129,6 +132,12 @@ export function RichTextEditor({
       })
 
       editorRef.current = instance
+
+      if (direction === "rtl") {
+        containerRef.current
+          ?.querySelector(".sun-editor-editable")
+          ?.setAttribute("lang", "ar")
+      }
     }
 
     init()
