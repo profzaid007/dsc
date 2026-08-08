@@ -120,7 +120,8 @@ export function OrganizationRegistrationForm() {
         name,
         contact_number: contactNumber,
         organization_name: organizationName,
-        role: "user",
+        role: "organization",
+        is_active:true,
         emailVisibility: true,
       })
 

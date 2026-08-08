@@ -157,7 +157,8 @@ export function ParentRegistrationForm() {
         passwordConfirm: password,
         name,
         contact_number: contactNumber,
-        role: "user",
+        role: "parent",
+        is_active:true,
         emailVisibility: true,
       })
 

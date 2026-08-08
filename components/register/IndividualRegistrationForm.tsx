@@ -77,8 +77,9 @@ export function IndividualRegistrationForm() {
         passwordConfirm: password,
         name,
         contact_number: contactNumber,
-        role: "user",
+        role: "individual",
         emailVisibility: true,
+        is_active:true
       })
 
       await authWithPassword(email.toLowerCase(), password)
