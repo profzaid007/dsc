@@ -116,7 +116,7 @@ export default function AdminCasesPage() {
               {lang === "ar" ? "إدارة جميع الحالات" : "Manage all cases"}
             </p>
           </div>
-          <Link href="/dashboard/cases/new">
+          <Link href="/dashboard/admin/cases/new">
             <Button>
               <Plus className="me-2 h-4 w-4" />
               {lang === "ar" ? "حالة جديدة" : "New Case"}
@@ -139,7 +139,7 @@ export default function AdminCasesPage() {
             {lang === "ar" ? "إدارة جميع الحالات" : "Manage all cases"}
           </p>
         </div>
-        <Link href="/dashboard/cases/new">
+        <Link href="/dashboard/admin/cases/new">
           <Button>
             <Plus className="me-2 h-4 w-4" />
             {lang === "ar" ? "حالة جديدة" : "New Case"}
@@ -228,7 +228,7 @@ export default function AdminCasesPage() {
                   : "Try adjusting your search query"}
             </p>
             {profiles.length === 0 && (
-              <Link href="/dashboard/cases/new">
+              <Link href="/dashboard/admin/cases/new">
                 <Button>
                   {lang === "ar" ? "إنشاء الحالة" : "Create Case"}
                 </Button>

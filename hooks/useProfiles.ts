@@ -49,11 +49,12 @@ export function useProfiles() {
     fetchProfiles()
   }, [fetchProfiles])
 
-  const addProfile = async (data: Partial<Profile>) => {
+  const addProfile = async (data: Partial<Profile>, userId?: string) => {
     try {
+      const ownerId = userId !== undefined ? userId : currentUser?.id
       const newProfile = await casesCollection.create({
         ...data,
-        user: currentUser?.id,
+        user: ownerId,
       } as any)
       setProfiles((prev) => [...prev, newProfile])
       return newProfile.id

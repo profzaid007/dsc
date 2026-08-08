@@ -6,8 +6,11 @@ import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
+import { useUsers } from "@/hooks/useUsers"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
+import pb from "@/lib/pb"
+import { sendCredentialsEmail } from "@/lib/send-credentials-email"
 import { formatDate } from "@/lib/format-date"
 import {
   Card,
@@ -18,6 +21,8 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
@@ -47,6 +52,10 @@ import {
   Trash2,
   FileText,
   Plus,
+  Link2,
+  UserX,
+  UserPlus,
+  KeyRound,
 } from "lucide-react"
 import Link from "next/link"
 import type { AssignmentStatus } from "@/types/assignment"
@@ -84,11 +93,12 @@ export default function AdminCaseDetailPage({
   const { id: caseId } = use(params)
   const router = useRouter()
   const { lang } = useLang()
-  const { currentUser } = useAuth()
-  const { getProfileById } = useProfiles()
+  const { currentUser, isAdmin } = useAuth()
+  const { getProfileById, updateProfile } = useProfiles()
   const { assignments, assignTool, deleteAssignment } = useAssignments()
   const { tools } = useTools()
   const { toolTypes, fetchToolTypes } = useToolTypes()
+  const { users } = useUsers()
 
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedToolId, setSelectedToolId] = useState<string>("")
@@ -99,10 +109,130 @@ export default function AdminCaseDetailPage({
   const [toolTypeFilter, setToolTypeFilter] = useState<string>("all")
   const [confirmToolType, setConfirmToolType] = useState<string | null>(null)
   const [allowedToolTypeIds, setAllowedToolTypeIds] = useState<string[]>([])
+  const [linkMode, setLinkMode] = useState<"existing" | "new">("existing")
+  const [linkUserId, setLinkUserId] = useState("")
+  const [newUser, setNewUser] = useState({ name: "", email: "", password: "" })
+  const [isLinking, setIsLinking] = useState(false)
+  const [linkError, setLinkError] = useState<string | null>(null)
+  const [linkSuccess, setLinkSuccess] = useState<string | null>(null)
 
   const profile = getProfileById(caseId)
   const caseAssignments = assignments.filter((a) => a.case === caseId)
   const isExpert = currentUser?.role === "expert"
+  const owner = profile ? users.find((u) => u.id === profile.user) : undefined
+  const linkableUsers = users.filter(
+    (u) => !["admin", "super_admin", "expert"].includes(u.role)
+  )
+
+  const handleLinkExisting = async () => {
+    if (!linkUserId) return
+    setIsLinking(true)
+    setLinkError(null)
+    setLinkSuccess(null)
+    try {
+      await updateProfile(caseId, { user: linkUserId })
+      setLinkSuccess(
+        lang === "ar" ? "تم ربط الحالة بالمستخدم." : "Case linked to user."
+      )
+      setLinkUserId("")
+    } catch (error) {
+      setLinkError(
+        error instanceof Error
+          ? error.message
+          : lang === "ar"
+            ? "فشل ربط المستخدم."
+            : "Failed to link user."
+      )
+    } finally {
+      setIsLinking(false)
+    }
+  }
+
+  const handleCreateAndLink = async () => {
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      setLinkError(
+        lang === "ar"
+          ? "يرجى ملء جميع الحقول المطلوبة."
+          : "Please fill in all required fields."
+      )
+      return
+    }
+    if (newUser.password.length < 8) {
+      setLinkError(
+        lang === "ar"
+          ? "يجب أن تكون كلمة المرور 8 أحرف على الأقل."
+          : "Password must be at least 8 characters."
+      )
+      return
+    }
+    setIsLinking(true)
+    setLinkError(null)
+    setLinkSuccess(null)
+    try {
+      const record = await pb.collection("users").create({
+        email: newUser.email.toLowerCase(),
+        password: newUser.password,
+        passwordConfirm: newUser.password,
+        name: newUser.name,
+        role: "user",
+        contact_number: "",
+        is_active: true,
+        emailVisibility: true,
+      })
+      await updateProfile(caseId, { user: record.id })
+      try {
+        await sendCredentialsEmail({
+          email: newUser.email.toLowerCase(),
+          name: newUser.name,
+          password: newUser.password,
+          caseName: profile?.name,
+          caseUrl: `${window.location.origin}/dashboard/cases/${caseId}`,
+        })
+        setLinkSuccess(
+          lang === "ar"
+            ? "تم إنشاء المستخدم وربط الحالة وإرسال بيانات الدخول بالبريد."
+            : "User created, case linked, and credentials emailed."
+        )
+      } catch {
+        setLinkSuccess(
+          lang === "ar"
+            ? "تم إنشاء المستخدم وربط الحالة، لكن تعذر إرسال البريد الإلكتروني."
+            : "User created and case linked, but the credentials email could not be sent."
+        )
+      }
+      setNewUser({ name: "", email: "", password: "" })
+    } catch (error) {
+      setLinkError(
+        error instanceof Error
+          ? error.message
+          : lang === "ar"
+            ? "فشل إنشاء المستخدم."
+            : "Failed to create user."
+      )
+    } finally {
+      setIsLinking(false)
+    }
+  }
+
+  const handleUnlink = async () => {
+    setIsLinking(true)
+    setLinkError(null)
+    setLinkSuccess(null)
+    try {
+      await updateProfile(caseId, { user: "" })
+      setLinkSuccess(lang === "ar" ? "تم فك ربط الحالة." : "Case unlinked.")
+    } catch (error) {
+      setLinkError(
+        error instanceof Error
+          ? error.message
+          : lang === "ar"
+            ? "فشل فك ربط المستخدم."
+            : "Failed to unlink user."
+      )
+    } finally {
+      setIsLinking(false)
+    }
+  }
 
   useEffect(() => {
     fetchToolTypes()
@@ -206,6 +336,212 @@ export default function AdminCaseDetailPage({
         </TabsList>
 
         <TabsContent value="overview">
+          {isAdmin && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Link2 className="h-5 w-5" />
+                  {lang === "ar" ? "المستخدم المرتبط" : "Linked User"}
+                </CardTitle>
+                <CardDescription>
+                  {lang === "ar"
+                    ? "اربط هذه الحالة بمستخدم ليتمكن من الوصول إليها"
+                    : "Link this case to a user so they can access it"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {linkError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                    {linkError}
+                  </div>
+                )}
+                {linkSuccess && (
+                  <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+                    {linkSuccess}
+                  </div>
+                )}
+
+                {owner ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{owner.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {owner.email}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUnlink}
+                      disabled={isLinking}
+                    >
+                      <UserX className="me-1 h-4 w-4" />
+                      {lang === "ar" ? "فك الربط" : "Unlink"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border p-4">
+                    <p className="mb-3 text-sm text-muted-foreground">
+                      {lang === "ar"
+                        ? "لا يوجد مستخدم مرتبط بهذه الحالة بعد."
+                        : "No user linked to this case yet."}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        type="button"
+                        variant={
+                          linkMode === "existing" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setLinkMode("existing")}
+                      >
+                        <Link2 className="me-1 h-4 w-4" />
+                        {lang === "ar" ? "مستخدم مسجل" : "Existing User"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={linkMode === "new" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setLinkMode("new")}
+                      >
+                        <UserPlus className="me-1 h-4 w-4" />
+                        {lang === "ar" ? "مستخدم جديد" : "New User"}
+                      </Button>
+                    </div>
+
+                    {linkMode === "existing" ? (
+                      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div className="flex-1 space-y-2">
+                          <Label>
+                            {lang === "ar" ? "المستخدم" : "User"}
+                          </Label>
+                          <Select
+                            value={linkUserId}
+                            onValueChange={setLinkUserId}
+                          >
+                            <SelectTrigger>
+                              <SelectValue
+                                placeholder={
+                                  lang === "ar"
+                                    ? "اختر مستخدمًا"
+                                    : "Select a user"
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {linkableUsers.length === 0 ? (
+                                <SelectItem value="__none__" disabled>
+                                  {lang === "ar"
+                                    ? "لا يوجد مستخدمون"
+                                    : "No users available"}
+                                </SelectItem>
+                              ) : (
+                                linkableUsers.map((user) => (
+                                  <SelectItem key={user.id} value={user.id}>
+                                    {user.name} ({user.email})
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          onClick={handleLinkExisting}
+                          disabled={isLinking || !linkUserId}
+                        >
+                          <Link2 className="me-1 h-4 w-4" />
+                          {lang === "ar" ? "ربط" : "Link"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="mt-4 space-y-3 rounded-lg bg-muted/50 p-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="link_user_name">
+                            {lang === "ar" ? "الاسم الكامل" : "Full Name"}
+                          </Label>
+                          <Input
+                            id="link_user_name"
+                            value={newUser.name}
+                            onChange={(e) =>
+                              setNewUser({ ...newUser, name: e.target.value })
+                            }
+                            placeholder={
+                              lang === "ar"
+                                ? "أدخل الاسم الكامل"
+                                : "Enter full name"
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="link_user_email">
+                            {lang === "ar" ? "البريد الإلكتروني" : "Email"}
+                          </Label>
+                          <Input
+                            id="link_user_email"
+                            type="email"
+                            value={newUser.email}
+                            onChange={(e) =>
+                              setNewUser({ ...newUser, email: e.target.value })
+                            }
+                            placeholder={
+                              lang === "ar"
+                                ? "أدخل عنوان البريد الإلكتروني"
+                                : "Enter email address"
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="link_user_password">
+                            {lang === "ar" ? "كلمة المرور" : "Password"}
+                          </Label>
+                          <Input
+                            id="link_user_password"
+                            type="password"
+                            value={newUser.password}
+                            onChange={(e) =>
+                              setNewUser({
+                                ...newUser,
+                                password: e.target.value,
+                              })
+                            }
+                            placeholder={
+                              lang === "ar"
+                                ? "8 أحرف على الأقل"
+                                : "Min 8 characters"
+                            }
+                          />
+                        </div>
+                        <Button
+                          onClick={handleCreateAndLink}
+                          disabled={isLinking}
+                          className="w-full"
+                        >
+                          <KeyRound className="me-1 h-4 w-4" />
+                          {isLinking
+                            ? lang === "ar"
+                              ? "جارٍ الإنشاء..."
+                              : "Creating..."
+                            : lang === "ar"
+                              ? "إنشاء مستخدم وربط"
+                              : "Create User & Link"}
+                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                          {lang === "ar"
+                            ? "سيتم إنشاء حساب جديد وسيتم إرسال بيانات الدخول إلى بريد المستخدم."
+                            : "A new account will be created and the login credentials will be emailed to the user."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
