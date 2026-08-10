@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
-import { ArrowLeft, List, Plus } from "lucide-react"
+import { ArrowLeft, List, Landmark, Plus } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -24,6 +24,15 @@ const settingsCards = [
     },
     href: "/dashboard/admin/settings/lookups",
     icon: List,
+  },
+  {
+    title: { en: "Payment Settings", ar: "إعدادات الدفع" },
+    description: {
+      en: "Bank details shown to users when paying for a case",
+      ar: "بيانات التحويل البنكي المعروضة للمستخدمين عند الدفع",
+    },
+    href: "/dashboard/admin/settings/payments",
+    icon: Landmark,
   },
 ]
 

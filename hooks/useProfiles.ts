@@ -68,8 +68,67 @@ export function useProfiles() {
     try {
       const updated = await casesCollection.update(id, data)
       setProfiles((prev) => prev.map((p) => (p.id === id ? updated : p)))
+      return updated
     } catch (error) {
       console.error("Failed to update profile:", error)
+      throw error
+    }
+  }
+
+  const setPaymentAmount = async (id: string, amount: number) => {
+    try {
+      const updated = await casesCollection.update(id, {
+        payment_amount: amount,
+        status: "awaiting_payment",
+      })
+      setProfiles((prev) => prev.map((p) => (p.id === id ? updated : p)))
+      return updated
+    } catch (error) {
+      console.error("Failed to set payment amount:", error)
+      throw error
+    }
+  }
+
+  const submitPaymentSlip = async (id: string, file: File) => {
+    try {
+      const updated = await casesCollection.updateWithFiles(
+        id,
+        { status: "under_review", payment_reject_reason: "" },
+        [file]
+      )
+      setProfiles((prev) => prev.map((p) => (p.id === id ? updated : p)))
+      return updated
+    } catch (error) {
+      console.error("Failed to submit payment slip:", error)
+      throw error
+    }
+  }
+
+  const approveCase = async (id: string) => {
+    try {
+      const updated = await casesCollection.update(id, {
+        status: "active",
+        is_paid: true,
+        payment_reject_reason: "",
+      })
+      setProfiles((prev) => prev.map((p) => (p.id === id ? updated : p)))
+      return updated
+    } catch (error) {
+      console.error("Failed to approve case:", error)
+      throw error
+    }
+  }
+
+  const rejectPayment = async (id: string, reason?: string) => {
+    try {
+      const updated = await casesCollection.update(id, {
+        status: "awaiting_payment",
+        payment_reject_reason: reason || "",
+      })
+      setProfiles((prev) => prev.map((p) => (p.id === id ? updated : p)))
+      return updated
+    } catch (error) {
+      console.error("Failed to reject payment:", error)
       throw error
     }
   }
@@ -97,6 +156,10 @@ export function useProfiles() {
     deleteProfile,
     getProfileById,
     getProfilesByUser,
+    setPaymentAmount,
+    submitPaymentSlip,
+    approveCase,
+    rejectPayment,
     refresh: fetchProfiles,
   }
 }

@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/select"
 
 import { formatDate } from "@/lib/format-date"
+import { CaseStatusBadge } from "@/components/cases/status-badge"
 import type { Profile } from "@/types/profile"
 
 interface AssignmentCount {
@@ -260,6 +261,9 @@ export default function AdminCasesPage() {
                   <TableHead>{lang === "ar" ? "الصف الدراسي" : "Grade"}</TableHead>
                   <TableHead>{lang === "ar" ? "المستخدم" : "User"}</TableHead>
                   <TableHead>
+                    {lang === "ar" ? "الحالة" : "Status"}
+                  </TableHead>
+                  <TableHead>
                     {lang === "ar" ? "التعيينات" : "Assignments"}
                   </TableHead>
                   <TableHead className="text-right">
@@ -305,6 +309,9 @@ export default function AdminCasesPage() {
                             ? `${profile.expand.user.name} (${profile.expand.user.email})`
                             : "—"}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        <CaseStatusBadge status={profile.status} />
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap items-center gap-1">

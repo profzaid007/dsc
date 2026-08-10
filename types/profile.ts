@@ -1,5 +1,10 @@
 export type ProfileStatus = "created"
 export type ProfileProgramStatus = "enrolled" | "attended" | "absent"
+export type CasePaymentStatus =
+  | "pending"
+  | "awaiting_payment"
+  | "under_review"
+  | "active"
 
 export interface UserDetails {
   name: string
@@ -24,6 +29,11 @@ export interface Profile {
   program_id?: string
   program_status?: ProfileProgramStatus
   user_details?: UserDetails
+  status?: CasePaymentStatus
+  is_paid?: boolean
+  payment_amount?: number
+  payment_slip?: string
+  payment_reject_reason?: string
   created: string
   updated: string
   expand?: {

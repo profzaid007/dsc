@@ -9,9 +9,12 @@ import { useToolTypes } from "@/hooks/useToolTypes"
 import { useUsers } from "@/hooks/useUsers"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
+import { usePaymentSettings } from "@/hooks/usePaymentSettings"
 import pb from "@/lib/pb"
 import { sendCredentialsEmail } from "@/lib/send-credentials-email"
 import { formatDate } from "@/lib/format-date"
+import { formatAmount } from "@/lib/payment"
+import { CaseStatusBadge } from "@/components/cases/status-badge"
 import {
   Card,
   CardContent,
@@ -56,6 +59,11 @@ import {
   UserX,
   UserPlus,
   KeyRound,
+  Wallet,
+  Save,
+  CheckCircle2,
+  XCircle,
+  Loader2,
 } from "lucide-react"
 import Link from "next/link"
 import type { AssignmentStatus } from "@/types/assignment"
@@ -94,11 +102,13 @@ export default function AdminCaseDetailPage({
   const router = useRouter()
   const { lang } = useLang()
   const { currentUser, isAdmin } = useAuth()
-  const { getProfileById, updateProfile } = useProfiles()
+  const { getProfileById, updateProfile, setPaymentAmount, approveCase, rejectPayment } =
+    useProfiles()
   const { assignments, assignTool, deleteAssignment } = useAssignments()
   const { tools } = useTools()
   const { toolTypes, fetchToolTypes } = useToolTypes()
   const { users } = useUsers()
+  const { bankDetails } = usePaymentSettings()
 
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedToolId, setSelectedToolId] = useState<string>("")
@@ -115,6 +125,11 @@ export default function AdminCaseDetailPage({
   const [isLinking, setIsLinking] = useState(false)
   const [linkError, setLinkError] = useState<string | null>(null)
   const [linkSuccess, setLinkSuccess] = useState<string | null>(null)
+  const [amountInput, setAmountInput] = useState("")
+  const [rejectInput, setRejectInput] = useState("")
+  const [isPaymentBusy, setIsPaymentBusy] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null)
 
   const profile = getProfileById(caseId)
   const caseAssignments = assignments.filter((a) => a.case === caseId)
@@ -231,6 +246,81 @@ export default function AdminCaseDetailPage({
       )
     } finally {
       setIsLinking(false)
+    }
+  }
+
+  const handleSetAmount = async () => {
+    if (!amountInput || Number(amountInput) <= 0) return
+    setIsPaymentBusy(true)
+    setPaymentError(null)
+    setPaymentSuccess(null)
+    try {
+      await setPaymentAmount(caseId, Number(amountInput))
+      setPaymentSuccess(
+        lang === "ar"
+          ? "تم تحديد المبلغ. الحالة الآن بانتظار الدفع."
+          : "Amount set. Case is now awaiting payment."
+      )
+      setAmountInput("")
+    } catch (error) {
+      setPaymentError(
+        error instanceof Error
+          ? error.message
+          : lang === "ar"
+            ? "فشل تحديد المبلغ."
+            : "Failed to set amount."
+      )
+    } finally {
+      setIsPaymentBusy(false)
+    }
+  }
+
+  const handleApprove = async () => {
+    setIsPaymentBusy(true)
+    setPaymentError(null)
+    setPaymentSuccess(null)
+    try {
+      await approveCase(caseId)
+      setPaymentSuccess(
+        lang === "ar"
+          ? "تم تفعيل الحالة. يمكن للمستخدم الوصول إليها الآن."
+          : "Case enabled. The user can now access it."
+      )
+    } catch (error) {
+      setPaymentError(
+        error instanceof Error
+          ? error.message
+          : lang === "ar"
+            ? "فشل تفعيل الحالة."
+            : "Failed to enable case."
+      )
+    } finally {
+      setIsPaymentBusy(false)
+    }
+  }
+
+  const handleReject = async () => {
+    setIsPaymentBusy(true)
+    setPaymentError(null)
+    setPaymentSuccess(null)
+    try {
+      await rejectPayment(caseId, rejectInput)
+      setPaymentSuccess(
+        lang === "ar"
+          ? "تم رفض الإيصال. سيعاد طلب الدفع للمستخدم."
+          : "Receipt rejected. The user will be asked to pay again."
+      )
+      setRejectInput("")
+    } catch (error) {
+      setPaymentError(
+        error instanceof Error
+          ? error.message
+          : lang === "ar"
+            ? "فشل رفض الدفع."
+            : "Failed to reject payment."
+      )
+    } finally {
+      setIsPaymentBusy(false)
     }
   }
 
@@ -538,6 +628,160 @@ export default function AdminCaseDetailPage({
                       </div>
                     )}
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          {isAdmin && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  {lang === "ar" ? "الدفع" : "Payment"}
+                  <CaseStatusBadge status={profile.status} />
+                </CardTitle>
+                <CardDescription>
+                  {lang === "ar"
+                    ? "حدد المبلغ، راجع الإيصال، وفعّل الحالة"
+                    : "Set the amount, review the receipt, and enable the case"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {paymentError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                    {paymentError}
+                  </div>
+                )}
+                {paymentSuccess && (
+                  <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+                    {paymentSuccess}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {lang === "ar" ? "المبلغ المحدد" : "Amount"}
+                    </p>
+                    <p className="text-xl font-bold text-primary">
+                      {formatAmount(profile.payment_amount, bankDetails.currency)}
+                    </p>
+                  </div>
+                  {profile.payment_slip && (
+                    <a
+                      href={pb.files.getURL(
+                        { collectionId: "cases", id: caseId },
+                        profile.payment_slip
+                      )}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Button variant="outline" size="sm">
+                        <FileText className="me-1 h-4 w-4" />
+                        {lang === "ar" ? "عرض الإيصال" : "View Receipt"}
+                      </Button>
+                    </a>
+                  )}
+                </div>
+
+                {profile.status === "pending" && (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="payment_amount">
+                        {lang === "ar"
+                          ? "مبلغ الدفع المطلوب"
+                          : "Required payment amount"}
+                      </Label>
+                      <Input
+                        id="payment_amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={amountInput}
+                        onChange={(e) => setAmountInput(e.target.value)}
+                        placeholder={
+                          lang === "ar" ? "أدخل المبلغ" : "Enter amount"
+                        }
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSetAmount}
+                      disabled={
+                        isPaymentBusy || !amountInput || Number(amountInput) <= 0
+                      }
+                    >
+                      {isPaymentBusy ? (
+                        <Loader2 className="me-1 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="me-1 h-4 w-4" />
+                      )}
+                      {lang === "ar"
+                        ? "تحديد المبلغ وإرسال"
+                        : "Set Amount & Notify"}
+                    </Button>
+                  </div>
+                )}
+
+                {profile.status === "awaiting_payment" && (
+                  <p className="text-sm text-muted-foreground">
+                    {lang === "ar"
+                      ? "بانتظار رفع إيصال التحويل من المستخدم."
+                      : "Waiting for the user to upload the transfer receipt."}
+                    {profile.payment_reject_reason && (
+                      <span className="ms-1 text-red-600">
+                        {lang === "ar" ? `الرفض: ${profile.payment_reject_reason}` : `Rejected: ${profile.payment_reject_reason}`}
+                      </span>
+                    )}
+                  </p>
+                )}
+
+                {profile.status === "under_review" && (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="flex-1 space-y-2">
+                      <Label htmlFor="reject_reason">
+                        {lang === "ar"
+                          ? "سبب الرفض (اختياري)"
+                          : "Reject reason (optional)"}
+                      </Label>
+                      <Input
+                        id="reject_reason"
+                        value={rejectInput}
+                        onChange={(e) => setRejectInput(e.target.value)}
+                        placeholder={
+                          lang === "ar"
+                            ? "مثال: المبلغ غير مطابق"
+                            : "e.g. Amount does not match"
+                        }
+                      />
+                    </div>
+                    <Button
+                      onClick={handleApprove}
+                      disabled={isPaymentBusy}
+                    >
+                      {isPaymentBusy ? (
+                        <Loader2 className="me-1 h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="me-1 h-4 w-4" />
+                      )}
+                      {lang === "ar" ? "تفعيل الحالة" : "Enable Case"}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleReject}
+                      disabled={isPaymentBusy}
+                    >
+                      <XCircle className="me-1 h-4 w-4" />
+                      {lang === "ar" ? "رفض" : "Reject"}
+                    </Button>
+                  </div>
+                )}
+
+                {profile.status === "active" && (
+                  <p className="text-sm text-green-700">
+                    {lang === "ar"
+                      ? "الحالة مفعلة والدفع مكتمل."
+                      : "Case is active and paid."}
+                  </p>
                 )}
               </CardContent>
             </Card>

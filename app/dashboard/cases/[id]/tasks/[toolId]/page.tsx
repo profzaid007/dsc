@@ -50,6 +50,7 @@ import type {
 } from "@/types/tool"
 import { cn } from "@/lib/utils"
 import pb from "@/lib/pb"
+import { PaymentGate } from "@/components/cases/PaymentGate"
 
 const RATING_LABELS: Record<number, { en: string; ar: string }> = {
   1: { en: "Very Low", ar: "منخفض جداً" },
@@ -221,6 +222,10 @@ export default function TakeSurveyToolPage({
         </Link>
       </div>
     )
+  }
+
+  if (profile.status && profile.status !== "active" && !isAdminOrExpert) {
+    return <PaymentGate profile={profile} />
   }
 
   const handleAnswer = (questionId: string, value: unknown) => {

@@ -22,14 +22,11 @@ import {
   PanelLeftOpen,
   UserCheck,
   BadgeCheck,
+  Wallet,
 } from "lucide-react"
 
 const adminNavigation = [
-  {
-    name: { en: "Users", ar: "المستخدمون" },
-    href: "/dashboard/admin/users",
-    icon: Users,
-  },
+  
   {
     name: { en: "Tools", ar: "الأدوات" },
     href: "/dashboard/admin/tools",
@@ -59,6 +56,16 @@ const adminNavigation = [
     name: { en: "Public Lectures", ar: "المحاضرات العامة" },
     href: "/dashboard/admin/public-lectures",
     icon: BookOpen,
+  },
+  {
+    name: { en: "Payments", ar: "المدفوعات" },
+    href: "/dashboard/admin/payments",
+    icon: Wallet,
+  },
+  {
+    name: { en: "Users", ar: "المستخدمون" },
+    href: "/dashboard/admin/users",
+    icon: Users,
   },
   {
     name: { en: "Settings", ar: "الإعدادات" },

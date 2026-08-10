@@ -11,6 +11,7 @@ import { getToolTypeLabel } from "@/lib/tool-types"
 import { formatDate } from "@/lib/format-date"
 import { caseExpertsCollection } from "@/lib/pb-collections"
 import { getAllowedToolTypesForRole } from "@/lib/pb-collections"
+import { PaymentGate } from "@/components/cases/PaymentGate"
 import {
   Card,
   CardContent,
@@ -109,6 +110,7 @@ export default function ProfileDetailPage({
   }
 
   return (
+    <PaymentGate profile={profile}>
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -471,5 +473,6 @@ export default function ProfileDetailPage({
         </TabsContent>
       </Tabs>
     </div>
+    </PaymentGate>
   )
 }

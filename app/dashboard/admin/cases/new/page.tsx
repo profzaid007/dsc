@@ -67,6 +67,8 @@ export default function AdminNewCasePage() {
     notes: "",
   })
 
+  const [paymentAmount, setPaymentAmount] = useState("")
+
   const [portalService, setPortalService] = useState({
     categoryId: "",
     subCategoryId: "",
@@ -195,6 +197,9 @@ export default function AdminNewCasePage() {
         formData.name ||
         (lang === "ar" ? "حالة جديدة" : "New Case")
 
+      const hasAmount = paymentAmount.trim() !== ""
+      const amount = hasAmount ? Number(paymentAmount) : undefined
+
       const caseId = await addProfile(
         {
           name: caseName,
@@ -207,6 +212,8 @@ export default function AdminNewCasePage() {
             portalService.subCategoryId === OTHER_VALUE
               ? portalService.customSubCategory
               : portalService.subCategoryId,
+          status: hasAmount ? "awaiting_payment" : "pending",
+          payment_amount: amount,
           case_details: {
             custom_category:
               portalService.categoryId === OTHER_VALUE
@@ -220,6 +227,22 @@ export default function AdminNewCasePage() {
         },
         userId
       )
+
+      if (!hasAmount) {
+        fetch("/api/telegram-notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: [
+              "*New Case Needs Payment Amount*",
+              "",
+              `*Case:* ${caseName}`,
+              `*Created by:* admin`,
+              `*Service:* ${portalService.subCategoryId || portalService.categoryId || "-"}`,
+            ].join("\n"),
+          }),
+        }).catch(() => {})
+      }
 
       let emailSent = false
       let emailError: string | undefined
@@ -456,6 +479,33 @@ export default function AdminNewCasePage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payment_amount">
+                {t({ en: "Payment Amount (optional)", ar: "مبلغ الدفع (اختياري)" }, lang)}
+              </Label>
+              <Input
+                id="payment_amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                placeholder={t(
+                  { en: "Enter amount", ar: "أدخل المبلغ" },
+                  lang
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  {
+                    en: "If left empty, the case stays in 'awaiting payment' status until you set the amount from the Payments page.",
+                    ar: "إذا تُرك فارغًا، تبقى الحالة في انتظار تحديد المبلغ من صفحة المدفوعات.",
+                  },
+                  lang
+                )}
+              </p>
             </div>
           </CardContent>
         </Card>

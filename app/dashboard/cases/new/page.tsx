@@ -178,6 +178,7 @@ export default function NewProfilePage() {
             `/programmes/training_programmes/${selectedProgramId}`
           : undefined,
         program_status: isTraining ? "enrolled" : undefined,
+        status: "pending",
         user_details: isTraining
           ? {
               name: currentUser.name,
@@ -198,6 +199,25 @@ export default function NewProfilePage() {
                   : undefined,
             },
       })
+
+      const caseName = isTraining
+        ? selectedProgram?.title[lang] ||
+          (lang === "ar" ? "التسجيل في التدريب" : "Training Enrollment")
+        : formData.name
+
+      fetch("/api/telegram-notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: [
+            "*New Case Needs Payment Amount*",
+            "",
+            `*Case:* ${caseName}`,
+            `*User:* ${currentUser.name} (${currentUser.email})`,
+            `*Service:* ${portalService.subCategoryId || portalService.categoryId || "-"}`,
+          ].join("\n"),
+        }),
+      }).catch(() => {})
 
       router.push(`/dashboard/cases/${profileId}`)
     } catch (error) {

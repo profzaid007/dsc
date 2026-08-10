@@ -105,6 +105,41 @@ export const casesCollection = {
     return pb.collection("cases").update(id, data)
   },
 
+  // Update with payment slip file upload using FormData
+  async updateWithFiles(
+    id: string,
+    data: Partial<Profile>,
+    files: File[],
+    filesToRemove?: string[]
+  ): Promise<Profile> {
+    const formData = new FormData()
+
+    // Preserve existing slip when adding a new one (PocketBase replaces all if not included)
+    if (files.length > 0 && (!filesToRemove || filesToRemove.length === 0)) {
+      const existing = await pb.collection("cases").getOne(id)
+      if (existing.payment_slip && typeof existing.payment_slip === "string") {
+        formData.append("payment_slip", existing.payment_slip)
+      }
+    }
+
+    files.forEach((file) => {
+      formData.append("payment_slip", file)
+    })
+
+    if (data.status !== undefined) {
+      formData.append("status", data.status)
+    }
+    if (data.payment_reject_reason !== undefined) {
+      formData.append("payment_reject_reason", data.payment_reject_reason)
+    }
+
+    if (filesToRemove && filesToRemove.length > 0) {
+      formData.append("payment_slip-", filesToRemove.join(","))
+    }
+
+    return pb.collection("cases").update(id, formData)
+  },
+
   async delete(id: string): Promise<void> {
     await pb.collection("cases").delete(id)
   },
