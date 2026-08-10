@@ -149,7 +149,7 @@ export default function SurveyBuilderPage({
   }
 
   const removeOption = (id: string) => {
-    if (options.length <= 5) return
+    if (options.length <= 3) return
     setOptions(options.filter((o) => o.id !== id))
   }
 
@@ -176,7 +176,7 @@ export default function SurveyBuilderPage({
   }
 
   const handleSubmit = async () => {
-    if (!formData.nameEn || options.length < 5 || questions.length === 0) return
+    if (!formData.nameEn || options.length < 3 || questions.length === 0) return
     setIsSubmitting(true)
 
     const config: SurveyConfig = {
@@ -288,7 +288,7 @@ export default function SurveyBuilderPage({
           variant="ghost"
           size="icon-xs"
           onClick={() => removeOption(option.id)}
-          disabled={options.length <= 5}
+          disabled={options.length <= 3}
         >
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
@@ -478,8 +478,8 @@ export default function SurveyBuilderPage({
             <CardContent>
               <p className="mb-4 text-sm text-muted-foreground">
                 {lang === "ar"
-                  ? "مطلوب 5 خيارات كحد أدنى. ستستخدم جميع الأسئلة هذه الخيارات."
-                  : "Minimum 5 options required. All questions will use these options."}
+                  ? "مطلوب 3 خيارات كحد أدنى. ستستخدم جميع الأسئلة هذه الخيارات."
+                  : "Minimum 3 options required. All questions will use these options."}
               </p>
               <div className="space-y-2">
                 {options.map((opt, idx) => renderOptionItem(opt, idx))}
@@ -521,7 +521,7 @@ export default function SurveyBuilderPage({
               onClick={handleSubmit}
               disabled={
                 !formData.nameEn ||
-                options.length < 5 ||
+                options.length < 3 ||
                 questions.length === 0 ||
                 isSubmitting
               }
