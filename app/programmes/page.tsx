@@ -60,7 +60,7 @@ export default function ProgrammesPage() {
     <div className="container mx-auto space-y-12 px-4 py-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-[#0b2545]">
-          {lang === "ar" ? "البرامج" : "Programmes"}
+          {lang === "ar" ? "الدورات والبرامج" : "Programmes"}
         </h1>
         <p className="mt-2 text-muted-foreground">
           {lang === "ar"
