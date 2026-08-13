@@ -42,7 +42,6 @@ const emptyForm: CreateLectureInput = {
   duration: 60,
   meetingLink: "",
   recordingUrl: "",
-  maxParticipants: undefined,
   thumbnail: "",
   status: "draft",
 }
@@ -297,24 +296,6 @@ export function LectureForm({
                 onChange={(e) => updateSchedule("location", e.target.value)}
                 placeholder="e.g., Main Conference Hall"
                 required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxParticipants">Maximum Participants</Label>
-              <Input
-                id="maxParticipants"
-                type="number"
-                min={1}
-                value={formData.maxParticipants || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    maxParticipants: e.target.value
-                      ? parseInt(e.target.value)
-                      : undefined,
-                  })
-                }
-                placeholder="Leave empty for unlimited"
               />
             </div>
           </div>

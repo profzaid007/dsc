@@ -252,13 +252,6 @@ export function useLectures() {
     }
   }
 
-  // Check if lecture is full
-  const isLectureFull = (lectureId: string) => {
-    const lecture = getLectureById(lectureId)
-    if (!lecture || !lecture.maxParticipants) return false
-    return lecture.currentRegistrations >= lecture.maxParticipants
-  }
-
   // Check if user is registered
   const isUserRegistered = (lectureId: string, userId: string) => {
     return registrations.some(
@@ -288,7 +281,6 @@ export function useLectures() {
     markAttendance,
     getAttendanceByLecture,
     getLectureStats,
-    isLectureFull,
     isUserRegistered,
     refresh: loadData,
   }

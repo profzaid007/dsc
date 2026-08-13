@@ -24,7 +24,6 @@ export interface Lecture {
   duration: number
   meetingLink?: string
   recordingUrl?: string
-  maxParticipants?: number
   currentRegistrations: number
   thumbnail?: string
   is_public: boolean

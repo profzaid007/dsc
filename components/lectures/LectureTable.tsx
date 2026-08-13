@@ -84,7 +84,6 @@ export function LectureTable({
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span>
                     {regCount}
-                    {lecture.maxParticipants && ` / ${lecture.maxParticipants}`}
                   </span>
                   {attCount > 0 && (
                     <span className="text-muted-foreground">

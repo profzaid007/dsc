@@ -33,7 +33,6 @@ export function lectureFromDB(record: Record<string, unknown>): Lecture {
     duration: record.duration as number,
     meetingLink: (record.meeting_link as string) || undefined,
     recordingUrl: (record.recording_url as string) || undefined,
-    maxParticipants: (record.max_participants as number) || undefined,
     currentRegistrations: (record.current_registrations as number) || 0,
     is_public: record.is_public as boolean,
     thumbnail: getThumbnailUrl(record),
@@ -56,8 +55,6 @@ function lectureToDB(
   if (data.meetingLink !== undefined) dbData.meeting_link = data.meetingLink
   if (data.recordingUrl !== undefined) dbData.recording_url = data.recordingUrl
   if (data.is_public !== undefined) dbData.is_public = data.is_public
-  if (data.maxParticipants !== undefined)
-    dbData.max_participants = data.maxParticipants
   if (data.status !== undefined) dbData.status = data.status
 
   return dbData

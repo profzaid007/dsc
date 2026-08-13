@@ -16,7 +16,6 @@ import {
   Calendar,
   Clock,
   MapPin,
-  Users,
   ExternalLink,
   User,
   Briefcase,
@@ -209,21 +208,6 @@ export default function PublicLectureDetailPage({
                   <p className="font-medium">{lecture.schedule.location}</p>
                 </div>
               </div>
-
-              {lecture.maxParticipants && (
-                <>
-                  <Separator />
-                  <div className="flex items-center gap-3">
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">
-                        {lang === "ar" ? "الحد الأقصى:" : "Max participants:"}{" "}
-                        {lecture.maxParticipants}
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
 
               {lecture.meetingLink && (
                 <>

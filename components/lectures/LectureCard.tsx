@@ -4,7 +4,7 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, MapPin, Users } from "lucide-react"
+import { Calendar, Clock, MapPin } from "lucide-react"
 import type { Lecture } from "@/types/lecture"
 import { useLang } from "@/lib/lang-context"
 import { formatDate } from "@/lib/format-date"
@@ -14,7 +14,6 @@ interface LectureCardProps {
   onRegister?: () => void
   onView?: () => void
   isRegistered?: boolean
-  isFull?: boolean
   showStatus?: boolean
 }
 
@@ -37,7 +36,6 @@ export function LectureCard({
   onRegister,
   onView,
   isRegistered = false,
-  isFull = false,
   showStatus = false,
 }: LectureCardProps) {
   const { lang } = useLang()
@@ -108,16 +106,6 @@ export function LectureCard({
           <span className="truncate">{lecture.schedule.location}</span>
         </div>
 
-        {lecture.maxParticipants && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>
-              {lang === "ar" ? "الحد الأقصى:" : "Max:"} {lecture.maxParticipants}{" "}
-              {lang === "ar" ? "مشارك" : "participants"}
-            </span>
-          </div>
-        )}
-
         <p className="line-clamp-2 text-sm text-muted-foreground">
           {lecture.description[lang]}
         </p>
@@ -132,15 +120,10 @@ export function LectureCard({
             <Button
               className="flex-1"
               onClick={onRegister}
-              disabled={isFull}
             >
-              {isFull
-                ? lang === "ar"
-                  ? "ممتلئ"
-                  : "Full"
-                : lang === "ar"
-                  ? "تسجيل"
-                  : "Register"}
+              {lang === "ar"
+                ? "تسجيل"
+                : "Register"}
             </Button>
           )}
           {isRegistered && !isPast && (

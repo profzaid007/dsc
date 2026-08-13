@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import { useLang } from "@/lib/lang-context"
 
 interface RegistrationFormProps {
@@ -16,14 +16,12 @@ interface RegistrationFormProps {
     phone?: string
   }) => Promise<void>
   isSubmitting?: boolean
-  isFull?: boolean
   isAlreadyRegistered?: boolean
 }
 
 export function RegistrationForm({
   onSubmit,
   isSubmitting = false,
-  isFull = false,
   isAlreadyRegistered = false,
 }: RegistrationFormProps) {
   const { lang } = useLang()
@@ -50,23 +48,6 @@ export function RegistrationForm({
               {lang === "ar"
                 ? "أنت مسجل بالفعل في هذه المحاضرة."
                 : "You are already registered for this lecture."}
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (isFull) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {lang === "ar"
-                ? "عذراً، هذه المحاضرة ممتلئة."
-                : "Sorry, this lecture is full."}
             </AlertDescription>
           </Alert>
         </CardContent>
