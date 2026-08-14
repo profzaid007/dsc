@@ -14,7 +14,7 @@ export interface Portal {
   heroTitle: BilingualString;
   heroText: BilingualString;
   ctaLabel: BilingualString;
-  ctaHref: string;
+  ctaHref: "/register",
   accent: string;
   image: string; 
   banner: string; 
@@ -40,7 +40,7 @@ export const PORTALS: Portal[] = [
       ar: "نقدم برامج التدخل المبكر وخطط الدعم المخصصة لكل فرد.",
     },
     ctaLabel: { en: "Get Started Now", ar: "ابدأ الآن" },
-    ctaHref: "https://wa.me/message/XGN76UVRTVL7C1",
+    ctaHref: "/register",
     accent: "#008f53",
     secondary: "#0f3090",
     menu: [
@@ -82,7 +82,7 @@ export const PORTALS: Portal[] = [
       ar: " الوصول إلى مسارات الإرشاد وخطط إدارة التوتر والدعم الموجه من متخصصين مؤهلين.",
     },
     ctaLabel: { en: "Start Your Wellness Plan", ar: "ابدأ خطة العافية" },
-    ctaHref: "https://wa.me/message/XGN76UVRTVL7C1",
+    ctaHref: "/register",
     accent: "#631a7b",
     secondary: "#0f3090",
     menu: [
@@ -124,7 +124,7 @@ export const PORTALS: Portal[] = [
       ar: "اكتشف مختبرات الابتكار وموارد النمذجة الأولية ومسارات الاستشارات التي تسرع النتائج الحقيقية.",
     },
     ctaLabel: { en: "Explore Innovation Tracks", ar: "استكشف مسارات الابتكار" },
-    ctaHref: "https://wa.me/message/XGN76UVRTVL7C1",
+    ctaHref: "/register",
     accent: "#df9b00",
     secondary: "#0f3090",
     menu: [
@@ -166,7 +166,7 @@ export const PORTALS: Portal[] = [
       ar: "من دعم المناهج إلى الفصول الرقمية، نساعد المؤسسات على تقديم نمو تعليمي قابل للقياس.",
     },
     ctaLabel: { en: "Browse Education Services", ar: "تصفح خدمات التعليم" },
-    ctaHref: "https://wa.me/message/XGN76UVRTVL7C1",
+    ctaHref: "/register",
     accent: "#0f3090",
     secondary: "#008f53",
     menu: [
@@ -208,7 +208,7 @@ export const PORTALS: Portal[] = [
       ar: "الوصول إلى الاستشارات والتشخيصات ونماذج التنفيذ الاستراتيجي المصممة لتحقيق الأهداف التنظيمية.",
     },
     ctaLabel: { en: "Request Institutional Plan", ar: "اطلب خطة مؤسسية" },
-    ctaHref: "https://wa.me/message/XGN76UVRTVL7C1",
+    ctaHref: "/register",
     accent: "#121e31",
     secondary: "#00a4e4",
     menu: [
