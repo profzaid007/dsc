@@ -92,6 +92,7 @@ export function RichTextEditor({
         events: {
           onChange: (params: { data: string }) => {
             setContent(params.data)
+            lastSyncedInitialContent.current = params.data
             onChangeRef.current?.(params.data)
           },
           onImageUploadBefore: async (params: any) => {
@@ -159,6 +160,11 @@ export function RichTextEditor({
   // Update editor content when initialContent prop changes
   useEffect(() => {
     if (editorRef.current && initialContent !== lastSyncedInitialContent.current) {
+      const current = editorRef.current.$.html.get()
+      if (current === initialContent) {
+        lastSyncedInitialContent.current = initialContent
+        return
+      }
       editorRef.current.$.html.set(initialContent)
       setContent(initialContent)
       lastSyncedInitialContent.current = initialContent
