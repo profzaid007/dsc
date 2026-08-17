@@ -35,7 +35,7 @@ export default async function PortalPage({ params }: PortalPageProps) {
         <div className="flex items-center px-4 lg:px-12"
              style={{ backgroundColor: portal.accent }}>
           <div className="max-w-lg">
-            <h2 className="mb-4 text-1xl lg:text-5xl font-bold tracking-tight text-white">
+            <h2 className="mb-4 text-1xl lg:text-4xl font-bold tracking-tight text-white">
               {t(portal.heroTitle, lang)}
             </h2>
             <p className="mb-8 text-sm lg:text-xl text-white/80">

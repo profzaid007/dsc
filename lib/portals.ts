@@ -32,8 +32,8 @@ export const PORTALS: Portal[] = [
     banner: "/banners/banner-1.png",
     tagline: { en: "Supporting Abilities, Empowering Potential", ar: "دعم القدرات، تمكين الإمكانات" },
     heroTitle: {
-      en: "We discover abilities, provide support, and build potential gaps",
-      ar: "نكتشف القدرات ونقدم الدعم ونبني فجوات الإمكانات",
+      en: "Multidimensional diagnosis and assessment serving as a starting point for treatment—if required—followed by the development of capabilities for creativity, innovation, and entrepreneurship",
+      ar: "تشخيص متعدد الأبعاد (كنقطة انطلاق) نحو العلاج إن كان مطلوباً، ثم تطوير القدرات نحو الإبداع والابتكار والريادة",
     },
     heroText: {
       en: "We offer early intervention programs and personalized support plans for every individual.",
@@ -55,7 +55,6 @@ export const PORTALS: Portal[] = [
     ],
     services: [
       { id: "autism-spectrum-disorder", icon: "heartHandshake", name: { en: "Autism Spectrum Disorder", ar: "اضطراب طيف التوحد" } },
-      { id: "adhd", icon: "zap", name: { en: "ADHD", ar: "ADHD" } },
       { id: "learning-disabilities", icon: "bookOpen", name: { en: "Learning Disabilities", ar: "صعوبات التعلم" } },
       { id: "speech-language-disorders", icon: "messageCircle", name: { en: "Speech & Language Disorders", ar: "اضطرابات الكلام واللغة" } },
       { id: "intellectual-disability", icon: "brain", name: { en: "Intellectual Disability", ar: "الإعاقة الذهنية" } },
