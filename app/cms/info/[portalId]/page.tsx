@@ -7,6 +7,7 @@ import { getPortalById } from "@/lib/portals"
 import { infoPagesCollection } from "@/lib/pb-collections"
 import pb from "@/lib/pb"
 import { Card } from "@/components/ui/card"
+import { DragList } from "@/components/ui/drag-list"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +25,7 @@ interface InfoPageRecord {
   title_en: string
   icon?: string
   is_published: boolean
+  order: number
 }
 
 export default function CmsPortalServicesPage() {
@@ -36,11 +38,12 @@ export default function CmsPortalServicesPage() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [savingOrder, setSavingOrder] = useState(false)
 
   const loadPages = useCallback(async () => {
     const data = await pb.collection("info_pages").getFullList({
       filter: `portal_name = "${portalId}"`,
-      sort: "-created",
+      sort: "order",
     })
     setPages(data as unknown as InfoPageRecord[])
   }, [portalId])
@@ -74,6 +77,26 @@ export default function CmsPortalServicesPage() {
       setDeleting(null)
     }
   }
+
+  const handleReorder = useCallback(async (items: InfoPageRecord[]) => {
+    setSavingOrder(true)
+    try {
+      await Promise.all(
+        items.map((item) =>
+          infoPagesCollection.update(item.id, { order: item.order })
+        )
+      )
+      setPages(items)
+    } 
+
+    catch {
+      alert("Failed to save order.")
+    } 
+
+    finally {
+      setSavingOrder(false)
+    }
+  }, [])
 
   if (!portal) {
     return (
@@ -138,74 +161,59 @@ export default function CmsPortalServicesPage() {
             Create your first page
           </Button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {pages.map((p) => {
-            const iconUrl = p.icon ? pb.files.getUrl(p as never, p.icon) : null
-            return (
-              <Card
-                key={p.id}
-                className="flex items-center gap-4 p-4 transition-all hover:shadow-md"
-              >
-                <div
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: `${portal.accent}15` }}
-                >
-                  {iconUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={iconUrl}
-                      alt=""
-                      className="h-6 w-6 object-contain"
-                    />
-                  ) : (
-                    <FileText
-                      className="h-6 w-6"
-                      style={{ color: portal.accent }}
-                    />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-medium">{p.title_en}</h3>
-                  <div className="mt-1 flex items-center gap-2">
-                    {p.is_published ? (
-                      <Badge
-                        variant="default"
-                        className="text-xs"
-                        style={{
-                          backgroundColor: portal.accent,
-                          color: "#fff",
-                        }}
-                      >
-                        Published
-                      </Badge>
+        ) : (
+          <DragList
+            items={pages}
+            onReorder={handleReorder}
+            keyExtractor={(p) => p.id}
+            containerClassName="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            renderItem={(p) => {
+              const iconUrl = p.icon ? pb.files.getUrl(p as never, p.icon) : null
+              return (
+                <>
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
+                    style={{ backgroundColor: `${portal.accent}15` }}
+                  >
+                    {iconUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={iconUrl} alt="" className="h-6 w-6 object-contain" />
                     ) : (
-                      <Badge variant="secondary" className="text-xs">
-                        Draft
-                      </Badge>
+                      <FileText className="h-6 w-6" style={{ color: portal.accent }} />
                     )}
                   </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Link href={`/cms/info/${portalId}/${p.slug}`}>
-                    <Button variant="ghost" size="sm">
-                      <Pencil className="h-4 w-4" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate font-medium">{p.title_en}</h3>
+                    <div className="mt-1 flex items-center gap-2">
+                      {p.is_published ? (
+                        <Badge variant="default" className="text-xs" style={{ backgroundColor: portal.accent, color: "#fff" }}>
+                          Published
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">Draft</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Link href={`/cms/info/${portalId}/${p.slug}`}>
+                      <Button variant="ghost" size="sm">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(p.id, p.title_en)}
+                      disabled={deleting === p.id}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(p.id, p.title_en)}
-                    disabled={deleting === p.id}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+                  </div>
+                </>
+              )
+            }}
+          />
+        )}
     </div>
   )
 }

@@ -15,6 +15,7 @@ interface DragListProps<T extends DragItem> {
   onReorder: (items: T[]) => void
   renderItem: (item: T, index: number) => React.ReactNode
   keyExtractor: (item: T) => string
+  containerClassName?: string
 }
 
 export function DragList<T extends DragItem>({
@@ -22,6 +23,7 @@ export function DragList<T extends DragItem>({
   onReorder,
   renderItem,
   keyExtractor,
+  containerClassName,
 }: DragListProps<T>) {
   const sortedItems = [...items].sort((a, b) => a.order - b.order)
 
@@ -46,7 +48,7 @@ export function DragList<T extends DragItem>({
   )
 
   return (
-    <div className="space-y-2">
+    <div className={cn(containerClassName ?? "space-y-2")}>
       {sortedItems.map((item, index) => (
         <div
           key={keyExtractor(item)}

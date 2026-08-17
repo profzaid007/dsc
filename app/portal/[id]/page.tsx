@@ -27,6 +27,7 @@ export default async function PortalPage({ params }: PortalPageProps) {
     .collection("info_pages")
     .getFullList({
       filter: `portal_name = "${id}" && is_published = true`,
+      sort: 'order' 
     })
 
   return (

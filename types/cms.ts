@@ -9,6 +9,7 @@ export interface InfoPage {
   is_published: boolean
   media: string[]
   icon?: string
+  order: number
   created: string
   updated: string
 }
