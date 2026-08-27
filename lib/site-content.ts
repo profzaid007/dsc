@@ -64,7 +64,7 @@ export const SITE_CONTENT: SiteContent = {
       ar: "الخدمات المؤسسية",
     },
     contactUs: { en: "Contact Us", ar: "تواصل معنا" },
-    bookConsultation: { en: "Book Consult", ar: "احجز استشارة" },
+    bookConsultation: { en: "Quick Free Consultation", ar: "استشارة مجانية سريعة" },
   },
 
   hero: {

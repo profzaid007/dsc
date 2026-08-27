@@ -159,7 +159,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            {t({ en: "Book Consult", ar: "حجز استشارة" }, lang)}
+            {t({ en: "Quick Free Consultation", ar: "استشارة مجانية سريعة" }, lang)}
           </DialogTitle>
 
           <DialogDescription>
