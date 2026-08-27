@@ -16,6 +16,7 @@ import {
   BadgeCheck,
   Building2,
   Stethoscope,
+  ClipboardCheck,
 } from "lucide-react"
 
 const SERVICE_STEPS = [
@@ -35,11 +36,11 @@ const PROVIDER_STEPS = [
   { icon: ShieldCheck, en: "Verification", ar: "التحقق" },
   { icon: Building2, en: "DSC Approval", ar: "موافقة DSC" },
   { icon: Stethoscope, en: "Provide / Collaborate", ar: "قدّم / تعاون" },
+  { icon: ClipboardCheck, en: "Reports & Reviews", ar: "التقارير والمراجعات" },
 ]
 
 export function ServiceJourney() {
   const { lang } = useLang()
-  const isAr = lang === "ar"
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-white py-20 md:py-28">
@@ -49,20 +50,19 @@ export function ServiceJourney() {
         <div className="absolute -right-32 top-1/3 h-64 w-64 rounded-full bg-[#edf3fb] opacity-60 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto max-w-[900px] px-6">
+      <div className="relative mx-auto max-w-[1100px] px-6">
         {/* Section heading */}
-        <h2
-          className="animate-fade-in-up mb-16 text-center text-2xl font-bold tracking-tight text-[#0b2545] md:text-3xl"
-        >
+        <h2 className="animate-fade-in-up mb-14 text-center text-3xl font-bold tracking-tight text-[#0b2545] md:text-4xl">
           {t(
             { en: "Your Journey with DSC", ar: "رحلتك مع DSC" },
             lang
           )}
         </h2>
 
-        <div className="journey-container flex flex-col items-center gap-0 md:flex-row md:gap-14">
+        {/* Cards + logo container */}
+        <div className="relative flex flex-col items-center md:flex-row">
           {/* SERVICE RECIPIENT */}
-          <div className="animate-fade-in-left delay-200 journey-card flex-1 rounded-2xl bg-[#edf7f1] p-6 md:p-7">
+          <div className="animate-fade-in-left delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#edf7f1] p-6 pr-10 md:rounded-r-none md:pr-12 md:pl-6">
             <h3 className="mb-5 text-sm font-bold tracking-widest text-[#557d6b]">
               {t(
                 { en: "SERVICE RECIPIENT JOURNEY", ar: "مسار مقدم الخدمة" },
@@ -73,11 +73,11 @@ export function ServiceJourney() {
               {SERVICE_STEPS.map((step, i) => (
                 <li
                   key={i}
-                  className="animate-fade-in-left flex items-center gap-3 text-sm font-medium text-[#40505a]"
+                  className="animate-fade-in-left flex items-center gap-3 text-base font-medium text-[#40505a]"
                   style={{ animationDelay: `${300 + i * 80}ms` }}
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#d4ede0] text-[#438b70]">
-                    <step.icon className="h-4 w-4" />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#d4ede0] text-[#438b70]">
+                    <step.icon className="h-5 w-5" />
                   </span>
                   <span>{t({ en: step.en, ar: step.ar }, lang)}</span>
                 </li>
@@ -85,21 +85,21 @@ export function ServiceJourney() {
             </ul>
           </div>
 
-          {/* CENTER DSC LOGO */}
-          <div className="animate-fade-in-up delay-500 my-8 flex shrink-0 items-center justify-center md:my-0">
-            <div className="relative flex h-[110px] w-[110px] items-center justify-center">
+          {/* CENTER DSC LOGO — overlapping both cards */}
+          <div className="animate-fade-in-up delay-500 z-[2] my-8 flex shrink-0 items-center justify-center md:my-0">
+            <div className="relative flex h-[160px] w-[160px] items-center justify-center">
               {/* Glow rings */}
-              <div className="animate-pulse-ring absolute left-1/2 top-1/2 h-[110px] w-[110px] rounded-full border-2 border-[#c9a227]/30" />
-              <div className="animate-pulse-ring-delayed absolute left-1/2 top-1/2 h-[110px] w-[110px] rounded-full border border-[#c9a227]/20" />
+              <div className="animate-pulse-ring absolute left-1/2 top-1/2 h-[160px] w-[160px] rounded-full border-2 border-[#c9a227]/30" />
+              <div className="animate-pulse-ring-delayed absolute left-1/2 top-1/2 h-[160px] w-[160px] rounded-full border border-[#c9a227]/20" />
 
               {/* Logo circle */}
-              <div className="relative z-10 flex h-[100px] w-[100px] items-center justify-center rounded-full border-2 border-[#c9a227] bg-white shadow-lg">
-                <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full border border-[#e6d590]">
+              <div className="relative z-10 flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-[#c9a227] bg-white shadow-lg">
+                <div className="flex h-[112px] w-[112px] items-center justify-center rounded-full border border-[#e6d590]">
                   <Image
                     src="/logo.svg"
                     alt="DSC Logo"
-                    width={48}
-                    height={48}
+                    width={80}
+                    height={80}
                     className="object-contain"
                   />
                 </div>
@@ -122,7 +122,7 @@ export function ServiceJourney() {
           </div>
 
           {/* PROVIDER / PARTNER */}
-          <div className="animate-fade-in-right delay-200 journey-card flex-1 rounded-2xl bg-[#edf3fb] p-6 md:p-7">
+          <div className="animate-fade-in-right delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#edf3fb] p-6 pl-10 md:rounded-l-none md:pl-12 md:pr-6">
             <h3 className="mb-5 text-sm font-bold tracking-widest text-[#52719a]">
               {t(
                 { en: "PROVIDER / PARTNER JOURNEY", ar: "مسار المزود / الشريك" },
@@ -133,11 +133,11 @@ export function ServiceJourney() {
               {PROVIDER_STEPS.map((step, i) => (
                 <li
                   key={i}
-                  className="animate-fade-in-right flex items-center gap-3 text-sm font-medium text-[#40505a]"
+                  className="animate-fade-in-right flex items-center gap-3 text-base font-medium text-[#40505a]"
                   style={{ animationDelay: `${300 + i * 80}ms` }}
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#d0e2f5] text-[#456f9f]">
-                    <step.icon className="h-4 w-4" />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#d0e2f5] text-[#456f9f]">
+                    <step.icon className="h-5 w-5" />
                   </span>
                   <span>{t({ en: step.en, ar: step.ar }, lang)}</span>
                 </li>

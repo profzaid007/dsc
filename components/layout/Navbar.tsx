@@ -13,7 +13,7 @@ import { SITE_CONTENT } from "@/lib/site-content"
 import Image from "next/image"
 import { BookConsultDialog } from "../BookConsultDialog"
 
-const DEFAULT_SIDEBAR_ITEMS = [
+const NAV_LINKS = [
   { en: "Home", ar: "الرئيسية", href: "/" },
   { en: "About Us", ar: "من نحن", href: "/about-us" },
   { en: "Blog", ar: "المدونة", href: "/blog" },
@@ -36,9 +36,6 @@ export function Navbar() {
   const portalId = isPortal ? pathname.split("/portal/")[1] : null
   const portal = portalId ? getPortalById(portalId) : null
 
-  const logoBg = portal?.accent ?? (isHome ? "#d4af37" : "#d4af37")
-  const logoGradient = "radial-gradient(circle, #d4af37 0%, #aa7c11 100%)"
-
   const [consultOpen, setConsultOpen] = useState(false)
   const [accountPopoverOpen, setAccountPopoverOpen] = useState(false)
 
@@ -60,20 +57,16 @@ export function Navbar() {
 
   const accentColor = portal?.accent ?? "#0b1a30"
 
-  const showSidebar = !isAppRoute
+  if (isAppRoute) return null
 
   return (
     <div className="w-full">
-      {/* Main Navbar */}
-      <header
-        className="border-b bg-white px-4 sm:px-6 lg:px-10"
-        style={{ borderColor: `${accentColor}20` }}
-      >
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between py-4">
+      <header className="border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-10">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 py-4">
           {/* Left: Logo + Hamburger (mobile) */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
-              className="mr-2 rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+              className="rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -84,66 +77,83 @@ export function Navbar() {
               )}
             </button>
 
-            <Link href="/" className="flex items-center gap-4">
-              <div className="flex h-[60px] w-[60px] items-center justify-center">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex h-[56px] w-[56px] items-center justify-center">
                 <Image
                   src="/logo.svg"
                   alt="DSC Logo"
-                  width={60}
-                  height={60}
+                  width={56}
+                  height={56}
                   className="object-contain"
                 />
               </div>
               <div className="hidden sm:block">
                 <h1
-                  className="text-[1.8rem] font-bold"
+                  className="text-xl font-bold leading-tight"
                   style={{ color: accentColor }}
                 >
                   {headerText}
                 </h1>
-                <p className="text-sm font-semibold text-[#0076a3]">
+                <p className="text-[13px] font-semibold text-[#0076a3] leading-tight">
                   {subheading}
                 </p>
               </div>
             </Link>
           </div>
 
-          {/* Right: Language + Auth */}
-          <div className="flex items-center gap-4">
+          {/* Center: Nav links (desktop) */}
+          <nav className="hidden items-center gap-1 md:flex">
+            {NAV_LINKS.map((item, i) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={i}
+                  href={item.href}
+                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-gray-100 text-[#0a3d62]"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-[#0a3d62]"
+                  }`}
+                >
+                  {t({ en: item.en, ar: item.ar }, lang)}
+                </Link>
+              )
+            })}
+          </nav>
+
+          {/* Right: Language + Auth + Consult */}
+          <div className="flex items-center gap-2">
             <button
               onClick={toggleLang}
-              className="text-base font-bold transition-colors hover:text-[#0076a3]"
-              style={{ color: accentColor }}
+              className="rounded-md px-2 py-1.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0076a3]"
             >
               {t({ en: "العربية", ar: "English" }, lang)}
             </button>
 
             {!isAuthenticated && (
-                <div className="flex flex-row gap-1">
-                  <Link
-                    href="/login"
-                    onClick={() => setAccountPopoverOpen(false)}
-                    className="hidden md:flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
-                  >
-                    <LogIn className="h-4 w-4 text-muted-foreground" />
-                    {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setAccountPopoverOpen(false)}
-                    className="hidden md:flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
-                  >
-                    <UserPlus className="h-4 w-4 text-muted-foreground" />
-                    {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
-                  </Link>
-                </div>
+              <>
+                <Link
+                  href="/login"
+                  className="hidden items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0a3d62] md:flex"
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
+                </Link>
+                <Link
+                  href="/register"
+                  className="hidden items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0a3d62] md:flex"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
+                </Link>
+              </>
             )}
 
             {isAuthenticated && (
               <div className="relative hidden md:block" ref={accountRef}>
                 <button
                   onClick={() => setAccountPopoverOpen(!accountPopoverOpen)}
-                  className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-accent transition-colors"
+                  className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-gray-50"
                 >
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
@@ -194,7 +204,7 @@ export function Navbar() {
               <Button
                 variant="default"
                 size="sm"
-                className="gap-2 flex"
+                className="hidden gap-2 md:flex"
                 onClick={() => setConsultOpen(true)}
               >
                 <Calendar className="h-4 w-4" />
@@ -203,139 +213,125 @@ export function Navbar() {
             )}
 
             <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
-
           </div>
         </div>
       </header>
 
-      {/* Sidebar - Desktop (horizontal) */}
-      {showSidebar && (
-        <nav
-          className="hidden border-b md:block"
-          style={{ backgroundColor: `${accentColor}08`, borderColor: `${accentColor}15` }}
-        >
-          <div className="mx-auto flex max-w-[1400px] gap-4 justify-between px-4 sm:px-6 lg:px-10">
-            {DEFAULT_SIDEBAR_ITEMS.map((item, i) => (
-              <Link
-                key={i}
-                href={item.href}
-                className="px-4 py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-100"
-                style={{ borderBottom: "2px solid transparent" }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderBottomColor = accentColor)}
-                onMouseLeave={(e) => (e.currentTarget.style.borderBottomColor = "transparent")}
-              >
-                {t({ en: item.en, ar: item.ar }, lang)}
-              </Link>
-            ))}
-          </div>
-        </nav>
-      )}
-
-      {/* Sidebar - Mobile (collapsible) */}
+      {/* Mobile menu (dropdown) */}
       {mobileMenuOpen && (
-        <nav
-          className="border-b md:hidden"
-          style={{ backgroundColor: `${accentColor}08`, borderColor: `${accentColor}15` }}
-        >
+        <nav className="border-b border-gray-200 bg-white md:hidden">
           <div className="flex flex-col gap-1 px-4 py-3">
-            {DEFAULT_SIDEBAR_ITEMS.map((item, i) => (
-              <Link
-                key={i}
-                href={item.href}
-                className="px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 rounded-lg"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t({ en: item.en, ar: item.ar }, lang)}
-              </Link>
-            ))}
-            <div className="mt-2 border-t border-gray-200 pt-2 flex flex-col gap-2">
-              {!isAuthenticated && (
-                <>
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
-                  >
-                    <LogIn className="h-4 w-4" />
-                    {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
-                  </Link>
-                </>
-              )}
-              {isAuthenticated && (
-                <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                    {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
-                  </div>
-                  <span className="font-medium truncate">
-                    {currentUser?.name || ""}
-                  </span>
+            {NAV_LINKS.map((item, i) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={i}
+                  href={item.href}
+                  className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-gray-100 text-[#0a3d62]"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t({ en: item.en, ar: item.ar }, lang)}
+                </Link>
+              )
+            })}
+
+            <div className="my-2 border-t border-gray-100" />
+
+            {!isAuthenticated && (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
+                </Link>
+              </>
+            )}
+
+            {isAuthenticated && (
+              <div className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
                 </div>
-              )}
-              {isAuthenticated && (
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 justify-start"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Link href="/dashboard">
-                    <LayoutDashboard className="h-4 w-4" />
-                    {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
-                  </Link>
-                </Button>
-              )}
-              {isAdmin && (
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 justify-start"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Link href="/cms">
-                    <FileText className="h-4 w-4" />
-                    {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
-                  </Link>
-                </Button>
-              )}
-              {isAuthenticated && (
-                <>
-                  <div className="my-1 border-t" />
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false)
-                      logout()
-                      router.push("/")
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors text-left"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
-                  </button>
-                </>
-              )}
+                <span className="font-medium truncate">
+                  {currentUser?.name || ""}
+                </span>
+              </div>
+            )}
+
+            {isAuthenticated && (
               <Button
-                variant="default"
+                asChild
+                variant="outline"
                 size="sm"
                 className="gap-2 justify-start"
-                onClick={() => {
-                  setMobileMenuOpen(false)
-                  setConsultOpen(true)
-                }}
+                onClick={() => setMobileMenuOpen(false)}
               >
-                <Calendar className="h-4 w-4" />
-                {t(SITE_CONTENT.nav.bookConsultation, lang)}
+                <Link href="/dashboard">
+                  <LayoutDashboard className="h-4 w-4" />
+                  {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
+                </Link>
               </Button>
-            </div>
+            )}
+
+            {isAdmin && (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="gap-2 justify-start"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Link href="/cms">
+                  <FileText className="h-4 w-4" />
+                  {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
+                </Link>
+              </Button>
+            )}
+
+            {isAuthenticated && (
+              <>
+                <div className="my-1 border-t" />
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    logout()
+                    router.push("/")
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
+                </button>
+              </>
+            )}
+
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-2 justify-start mt-1"
+              onClick={() => {
+                setMobileMenuOpen(false)
+                setConsultOpen(true)
+              }}
+            >
+              <Calendar className="h-4 w-4" />
+              {t(SITE_CONTENT.nav.bookConsultation, lang)}
+            </Button>
           </div>
         </nav>
       )}
