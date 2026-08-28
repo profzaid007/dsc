@@ -7,8 +7,16 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
+import { COUNTRY_CODES } from "@/lib/country-codes"
 import {
   PortalServiceSelector,
   type PortalServiceValue,
@@ -23,6 +31,7 @@ export function OrganizationRegistrationForm() {
 
   const [organizationName, setOrganizationName] = useState("")
   const [name, setName] = useState("")
+  const [countryCode, setCountryCode] = useState(COUNTRY_CODES[0].dialCode)
   const [contactNumber, setContactNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -118,7 +127,7 @@ export function OrganizationRegistrationForm() {
         password,
         passwordConfirm: password,
         name,
-        contact_number: contactNumber,
+        contact_number: `${countryCode} ${contactNumber}`,
         organization_name: organizationName,
         role: "organization",
         is_active:true,
@@ -203,14 +212,29 @@ export function OrganizationRegistrationForm() {
                 {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                value={contactNumber}
-                onChange={(e) => setContactNumber(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. +966 50 000 0000", ar: "مثال: 966+ 50 000 0000" },
-                  lang
-                )}
-              />
+              <div className="flex gap-2">
+                <Select value={countryCode} onValueChange={setCountryCode}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRY_CODES.map((c) => (
+                      <SelectItem key={c.value} value={c.dialCode}>
+                        {t(c.label, lang)} ({c.dialCode})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={contactNumber}
+                  onChange={(e) => setContactNumber(e.target.value)}
+                  placeholder={t(
+                    { en: "e.g. 50 000 0000", ar: "مثال: 50 000 0000" },
+                    lang
+                  )}
+                  className="flex-1"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
