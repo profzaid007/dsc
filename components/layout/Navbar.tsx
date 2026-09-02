@@ -57,25 +57,25 @@ export function Navbar() {
 
   const accentColor = portal?.accent ?? "#0b1a30"
 
-  if (isAppRoute) return null
-
   return (
     <div className="w-full">
       <header className="border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-10">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 py-4">
           {/* Left: Logo + Hamburger (mobile) */}
           <div className="flex items-center gap-3">
-            <button
-              className="rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </button>
+            {!isAppRoute && (
+              <button
+                className="rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </button>
+            )}
 
             <Link href="/" className="flex items-center gap-3">
               <div className="flex h-[56px] w-[56px] items-center justify-center">
@@ -102,24 +102,26 @@ export function Navbar() {
           </div>
 
           {/* Center: Nav links (desktop) */}
-          <nav className="hidden items-center gap-1 md:flex">
-            {NAV_LINKS.map((item, i) => {
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={i}
-                  href={item.href}
-                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-gray-100 text-[#0a3d62]"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-[#0a3d62]"
-                  }`}
-                >
-                  {t({ en: item.en, ar: item.ar }, lang)}
-                </Link>
-              )
-            })}
-          </nav>
+          {!isAppRoute && (
+            <nav className="hidden items-center gap-1 md:flex">
+              {NAV_LINKS.map((item, i) => {
+                const isActive = pathname === item.href
+                return (
+                  <Link
+                    key={i}
+                    href={item.href}
+                    className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-gray-100 text-[#0a3d62]"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-[#0a3d62]"
+                    }`}
+                  >
+                    {t({ en: item.en, ar: item.ar }, lang)}
+                  </Link>
+                )
+              })}
+            </nav>
+          )}
 
           {/* Right: Language + Auth + Consult */}
           <div className="flex items-center gap-2">
@@ -218,7 +220,7 @@ export function Navbar() {
       </header>
 
       {/* Mobile menu (dropdown) */}
-      {mobileMenuOpen && (
+      {!isAppRoute && mobileMenuOpen && (
         <nav className="border-b border-gray-200 bg-white md:hidden">
           <div className="flex flex-col gap-1 px-4 py-3">
             {NAV_LINKS.map((item, i) => {
