@@ -15,6 +15,7 @@ import { DateInput } from "@/components/ui/date-input"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { COUNTRY_CODES } from "@/lib/country-codes"
 import {
   Select,
   SelectContent,
@@ -191,22 +192,26 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
             <div>
               <label className="mb-1 block text-sm font-medium">{t({ en: "Contact", ar: "التواصل" }, lang)}</label>
               <div className="flex gap-2">
-                <Input
-                  type="tel"
-                  required
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  placeholder={t({ en: "Country code", ar: "رمز الدولة" }, lang)}
-                  className="w-28"
-                />
-                <Input
-                  type="tel"
-                  required
-                  value={contact}
-                  onChange={(e) => setContact(e.target.value)}
-                  placeholder={t({ en: "Phone number", ar: "رقم الهاتف" }, lang)}
-                  className="flex-1"
-                />
+
+               <Select value={countryCode} onValueChange={setCountryCode}>
+                 <SelectTrigger className="w-40">
+                  <SelectValue placeholder="+966" />
+                 </SelectTrigger>
+                 <SelectContent position="popper" sideOffset={4} className="max-h-60! overflow-y-auto w-40">
+                   {COUNTRY_CODES.map((c) => (
+                     <SelectItem key={c.value} value={c.dialCode}>
+                       {t(c.label, lang)} ({c.dialCode})
+                     </SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
+
+               <Input
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder={t({ en: "Phone number", ar: "رقم الهاتف" }, lang)}
+                className="flex-1"
+              />
               </div>
             </div>
 
@@ -239,10 +244,10 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                   value={consultationType}
                   onValueChange={(v: "online" | "face-to-face") => setConsultationType(v)}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-40">
                     <SelectValue placeholder={t({ en: "Select type", ar: "اختر النوع" }, lang)} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" sideOffset={4} className="overflow-y-auto">
                     <SelectItem value="online">{t({ en: "Online", ar: "أونلاين" }, lang)}</SelectItem>
                     <SelectItem value="face-to-face">{t({ en: "Face to Face", ar: "وجهاً لوجه" }, lang)}</SelectItem>
                   </SelectContent>

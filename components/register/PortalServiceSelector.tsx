@@ -83,7 +83,7 @@ export function PortalServiceSelector({
               )}
             />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper">
             {PORTALS.map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {getPortalLabel(p, lang)}
@@ -133,7 +133,7 @@ export function PortalServiceSelector({
                 )}
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" className="max-h-60! max-w-40">
               {services.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
                   {t(s.name, lang)}

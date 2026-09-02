@@ -8,6 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Phone, Mail, MapPin, Loader2, Send } from "lucide-react"
+import { COUNTRY_CODES } from "@/lib/country-codes"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function ContactPage() {
   const { lang } = useLang()
@@ -311,20 +319,19 @@ export default function ContactPage() {
                         {t({ en: "Phone Number", ar: "رقم الهاتف" }, lang)}
                       </label>
                       <div className="flex gap-2">
-                        <Input
-                          type="tel"
-                          required
-                          value={countryCode}
-                          onChange={(e) => setCountryCode(e.target.value)}
-                          placeholder={t(
-                            {
-                              en: "Country code",
-                              ar: "رمز الدولة",
-                            },
-                            lang
-                          )}
-                          className="w-28"
-                        />
+                         <Select value={countryCode} onValueChange={setCountryCode}>
+                           <SelectTrigger className="w-40">
+                            <SelectValue placeholder={t({ en: "Your country code", ar: "رمز بلدك" }, lang)}
+                          />
+                           </SelectTrigger>
+                           <SelectContent position="popper" sideOffset={4} className="max-h-60! overflow-y-auto w-40">
+                             {COUNTRY_CODES.map((c) => (
+                               <SelectItem key={c.value} value={c.dialCode}>
+                                 {t(c.label, lang)} ({c.dialCode})
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
                         <Input
                           type="tel"
                           required
