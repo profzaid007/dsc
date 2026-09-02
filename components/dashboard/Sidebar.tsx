@@ -23,10 +23,26 @@ import {
   UserCheck,
   BadgeCheck,
   Wallet,
+  Building2,
+  Briefcase,
+  FileText,
+  Calendar,
+  MessageSquare,
+  UserCircle,
+  StickyNote,
+  Baby,
+  Heart,
+  ClipboardCheck,
 } from "lucide-react"
 
-const adminNavigation = [
-  
+type NavItem = {
+  name: { en: string; ar: string }
+  href: string
+  icon: typeof LayoutDashboard
+  superAdminOnly?: boolean
+}
+
+const adminNavigation: NavItem[] = [
   {
     name: { en: "Tools", ar: "الأدوات" },
     href: "/dashboard/admin/tools",
@@ -75,12 +91,102 @@ const adminNavigation = [
   },
 ]
 
-type NavItem = {
-  name: { en: string; ar: string }
-  href: string
-  icon: typeof LayoutDashboard
-  superAdminOnly?: boolean
-}
+const organizationNavigation: NavItem[] = [
+  {
+    name: { en: "Projects", ar: "المشاريع" },
+    href: "/dashboard/institution/projects",
+    icon: Briefcase,
+  },
+  {
+    name: { en: "Quotations", ar: "عروض الأسعار" },
+    href: "/dashboard/institution/quotations",
+    icon: MessageSquare,
+  },
+  {
+    name: { en: "Services", ar: "الخدمات" },
+    href: "/dashboard/institution/services",
+    icon: FolderKanban,
+  },
+  {
+    name: { en: "Documents", ar: "المستندات" },
+    href: "/dashboard/institution/documents",
+    icon: FileText,
+  },
+]
+
+const individualNavigation: NavItem[] = [
+  {
+    name: { en: "Cases", ar: "الحالات" },
+    href: "/dashboard/individual/cases",
+    icon: Users,
+  },
+  {
+    name: { en: "Appointments", ar: "المواعيد" },
+    href: "/dashboard/individual/appointments",
+    icon: Calendar,
+  },
+  {
+    name: { en: "Services", ar: "الخدمات" },
+    href: "/dashboard/individual/services",
+    icon: FolderKanban,
+  },
+  {
+    name: { en: "Reports", ar: "التقارير" },
+    href: "/dashboard/individual/reports",
+    icon: FileText,
+  },
+]
+
+const parentNavigation: NavItem[] = [
+  {
+    name: { en: "Children", ar: "الأطفال" },
+    href: "/dashboard/parent/children",
+    icon: Baby,
+  },
+  {
+    name: { en: "Cases", ar: "الحالات" },
+    href: "/dashboard/parent/cases",
+    icon: Users,
+  },
+  {
+    name: { en: "Appointments", ar: "المواعيد" },
+    href: "/dashboard/parent/appointments",
+    icon: Calendar,
+  },
+  {
+    name: { en: "Services", ar: "الخدمات" },
+    href: "/dashboard/parent/services",
+    icon: FolderKanban,
+  },
+  {
+    name: { en: "Reports", ar: "التقارير" },
+    href: "/dashboard/parent/reports",
+    icon: FileText,
+  },
+]
+
+const expertNavigation: NavItem[] = [
+  {
+    name: { en: "Cases", ar: "الحالات" },
+    href: "/dashboard/expert/cases",
+    icon: Users,
+  },
+  {
+    name: { en: "Schedule", ar: "الجدول" },
+    href: "/dashboard/expert/schedule",
+    icon: Calendar,
+  },
+  {
+    name: { en: "Profile", ar: "الملف الشخصي" },
+    href: "/dashboard/expert/profile",
+    icon: UserCircle,
+  },
+  {
+    name: { en: "Notes", ar: "الملاحظات" },
+    href: "/dashboard/expert/notes",
+    icon: StickyNote,
+  },
+]
 
 function renderNavItem(
   item: NavItem,
@@ -124,7 +230,11 @@ export function DashboardSidebar() {
     isLoading: isAuthLoading,
   } = useAuth()
 
-  const isExpert = currentUser?.role === "expert"
+  const role = currentUser?.role
+  const isExpert = role === "expert"
+  const isOrganization = role === "organization"
+  const isIndividual = role === "individual"
+  const isParent = role === "parent"
 
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -147,6 +257,31 @@ export function DashboardSidebar() {
     router.push("/login")
   }
 
+  const dashboardHref =
+    isAdmin
+      ? "/dashboard/admin"
+      : isExpert
+        ? "/dashboard/expert"
+        : isOrganization
+          ? "/dashboard/institution"
+          : isIndividual
+            ? "/dashboard/individual"
+            : isParent
+              ? "/dashboard/parent"
+              : "/dashboard"
+
+  const dashboardLabel = isAdmin
+    ? { en: "Admin Dashboard", ar: "لوحة التحكم" }
+    : isExpert
+      ? { en: "Expert Dashboard", ar: "لوحة التحكم" }
+      : isOrganization
+        ? { en: "Organization Dashboard", ar: "لوحة التحكم" }
+        : isIndividual
+          ? { en: "My Dashboard", ar: "لوحة التحكم" }
+          : isParent
+            ? { en: "Parent Dashboard", ar: "لوحة التحكم" }
+            : { en: "Dashboard", ar: "لوحة التحكم" }
+
   return (
     <aside
       className={cn(
@@ -157,7 +292,7 @@ export function DashboardSidebar() {
       <div className={cn("border-b border-primary/20", isCollapsed ? "p-2" : "p-4")}>
         <div className={cn("flex items-center", isCollapsed ? "justify-center" : "justify-between")}>
           {!isCollapsed && (
-            <SmartLink href="/dashboard" className="flex items-center gap-2">
+            <SmartLink href={dashboardHref} className="flex items-center gap-2">
               <span className="text-xl font-bold">DSC</span>
             </SmartLink>
           )}
@@ -182,76 +317,40 @@ export function DashboardSidebar() {
       </div>
 
       <nav className={cn("flex-1 space-y-1", isCollapsed ? "p-2" : "p-4")}>
-        {/* Dashboard - shown for both admin and user */}
+        {/* Dashboard home */}
         <SmartLink
-          href="/dashboard"
+          href={dashboardHref}
           className={cn(
             "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
             isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
-            pathname === "/dashboard"
+            pathname === dashboardHref
               ? "bg-white/20 text-white"
               : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
           )}
-          title={isCollapsed ? (lang === "ar" ? "لوحة التحكم" : "Dashboard") : undefined}
+          title={isCollapsed ? dashboardLabel[lang] : undefined}
         >
           <LayoutDashboard className="h-5 w-5 shrink-0" />
-          {!isCollapsed && (lang === "ar" ? "لوحة التحكم" : "Dashboard")}
+          {!isCollapsed && dashboardLabel[lang]}
         </SmartLink>
 
-        {/* Cases - shown for both admin and user */}
-        <SmartLink
-          href={isAdmin || isExpert ? "/dashboard/admin/cases" : "/dashboard/cases"}
-          className={cn(
-            "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
-            isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
-            pathname === "/dashboard/cases" ||
-              pathname === "/dashboard/admin/cases" ||
-              pathname.startsWith("/dashboard/admin/cases/")
-              ? "bg-white/20 text-white"
-              : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
-          )}
-          title={isCollapsed ? (lang === "ar" ? "الحالات" : "Cases") : undefined}
-        >
-          <Users className="h-5 w-5 shrink-0" />
-          {!isCollapsed && (lang === "ar" ? "الحالات" : "Cases")}
-        </SmartLink>
-
-        {/* Expert section - only for experts */}
-        {isExpert && (
+        {/* Role-specific navigation */}
+        {isOrganization && (
           <>
-            {!isCollapsed && (
-              <div className="pt-4 pb-2">
-                <span className="px-3 text-xs font-medium tracking-wider text-primary-foreground/50 uppercase">
-                  {lang === "ar" ? "خبير" : "Expert"}
-                </span>
-              </div>
-            )}
-            {renderNavItem(
-              {
-                name: { en: "Tools", ar: "الأدوات" },
-                href: "/dashboard/admin/tools",
-                icon: Wrench,
-              },
-              pathname,
-              lang,
-              true,
-              isCollapsed
-            )}
-            {renderNavItem(
-              {
-                name: { en: "Assignments", ar: "التعيينات" },
-                href: "/dashboard/admin/assignments",
-                icon: ClipboardList,
-              },
-              pathname,
-              lang,
-              true,
-              isCollapsed
+            {organizationNavigation.map((item) =>
+              renderNavItem(item, pathname, lang, false, isCollapsed)
             )}
           </>
         )}
 
-        {/* Admin section - only for admins */}
+        {isExpert && (
+          <>
+            {expertNavigation.map((item) =>
+              renderNavItem(item, pathname, lang, false, isCollapsed)
+            )}
+          </>
+        )}
+
+        {/* Admin navigation */}
         {isAdmin && (
           <>
             {!isCollapsed && (
@@ -265,6 +364,24 @@ export function DashboardSidebar() {
               if (item.superAdminOnly && !isSuperAdmin) return null
               return renderNavItem(item, pathname, lang, true, isCollapsed)
             })}
+          </>
+        )}
+
+        {/* Individual navigation */}
+        {isIndividual && (
+          <>
+            {individualNavigation.map((item) =>
+              renderNavItem(item, pathname, lang, false, isCollapsed)
+            )}
+          </>
+        )}
+
+        {/* Parent navigation */}
+        {isParent && (
+          <>
+            {parentNavigation.map((item) =>
+              renderNavItem(item, pathname, lang, false, isCollapsed)
+            )}
           </>
         )}
       </nav>
