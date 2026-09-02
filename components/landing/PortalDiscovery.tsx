@@ -129,7 +129,7 @@ export function PortalDiscovery() {
         </div>
 
         {/* Category Icons */}
-        <div className="animate-fade-in-up delay-200 mb-12 flex items-start justify-between gap-3 px-4">
+        <div className="animate-fade-in-up delay-200 mb-12 flex items-start justify-between gap-1 px-2 sm:gap-3 sm:px-4">
           {PORTAL_CATEGORIES.map((cat) => (
             <Link
               key={cat.id}
@@ -137,17 +137,17 @@ export function PortalDiscovery() {
               className="group flex flex-1 flex-col items-center text-center"
             >
               <div
-                className="mb-3 flex h-[80px] w-[80px] items-center justify-center rounded-full transition-all duration-200 group-hover:scale-110 group-hover:shadow-lg"
+                className="mb-2 flex h-[56px] w-[56px] items-center justify-center rounded-full transition-all duration-200 group-hover:scale-110 group-hover:shadow-lg sm:mb-3 sm:h-[80px] sm:w-[80px]"
                 style={{
                   backgroundColor: cat.color,
                   boxShadow: `0 4px 12px ${cat.color}30`,
                 }}
               >
-                <div className="h-10 w-10">
+                <div className="h-7 w-7 sm:h-10 sm:w-10">
                   {cat.icon}
                 </div>
               </div>
-              <span className="text-sm font-bold leading-tight text-[#24313d]">
+              <span className="text-[10px] font-bold leading-tight text-[#24313d] sm:text-sm">
                 {t(cat.name, lang)}
               </span>
             </Link>
@@ -159,7 +159,7 @@ export function PortalDiscovery() {
           {t({ en: "Popular Services", ar: "الخدمات الأكثر طلباً" }, lang)}
         </h3>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {POPULAR_SERVICES.map((item) => {
             const portal = PORTALS.find((p) => p.id === item.portalId)
             const service = portal?.services.find((s) => s.id === item.serviceId)
