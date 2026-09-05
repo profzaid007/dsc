@@ -226,7 +226,7 @@ export function ParentRegistrationForm() {
       }
 
       await authWithPassword(email, password)
-      // router.push("/dashboard")
+      router.push("/dashboard")
     } catch (err) {
       setError(handlePocketBaseError(err))
     } finally {
