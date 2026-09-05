@@ -118,7 +118,7 @@ export function ChildFormBlock({
                   )}
                 />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="male">
                   {t({ en: "Male", ar: "ذكر" }, lang)}
                 </SelectItem>

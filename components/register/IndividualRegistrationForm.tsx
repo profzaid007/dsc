@@ -34,29 +34,14 @@ import { cn } from "@/lib/utils"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
+import { LANGUAGES } from "@/lib/language-list"
 import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
 import { prefetchDNS } from "react-dom"
-
 
 const GENDERS = [
   { label: { en: "Male", ar: "ذكر" }, value: "male" },
   { label: { en: "Female", ar: "نث" }, value: "female" },
   { label: { en: "Other", ar: "آخر" }, value: "other" },
-]
-
-const LANGUAGES = [
-  { label: { en: "Arabic", ar: "العربية" }, value: "arabic" },
-  { label: { en: "English", ar: "الإنجليزية" }, value: "english" },
-  { label: { en: "French", ar: "الفرنسية" }, value: "french" },
-  { label: { en: "Spanish", ar: "الإسبانية" }, value: "spanish" },
-  { label: { en: "Hindi", ar: "الهندية" }, value: "hindi" },
-  { label: { en: "Urdu", ar: "الأردية" }, value: "urdu" },
-  { label: { en: "Tagalog", ar: "التاغالوغية" }, value: "tagalog" },
-  { label: { en: "Malayalam", ar: "الماليalam" }, value: "malayalam" },
-  { label: { en: "Tamil", ar: "التاميلية" }, value: "tamil" },
-  { label: { en: "Turkish", ar: "التركية" }, value: "turkish" },
-  { label: { en: "Persian", ar: "الفارسية" }, value: "persian" },
-  { label: { en: "Bengali", ar: "البنغالية" }, value: "bengali" },
 ]
 
 export function IndividualRegistrationForm() {

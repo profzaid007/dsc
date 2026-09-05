@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -13,11 +14,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
+import { LANGUAGES } from "@/lib/language-list"
 import { ChildFormBlock, type ChildFormData } from "./ChildFormBlock"
-import { Plus } from "lucide-react"
+import { Check, ChevronsUpDown, Plus, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
 
 const OTHER_VALUE = "other"
@@ -48,11 +65,16 @@ export function ParentRegistrationForm() {
   const router = useRouter()
 
   const [name, setName] = useState("")
-  const [countryCode, setCountryCode] = useState(COUNTRY_CODES[0].dialCode)
+  const [countryCode, setCountryCode] = useState("")
   const [contactNumber, setContactNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [nationality, setNationality] = useState("")
+  const [residence, setResidence] = useState("")
+  const [relationshipToChildren, setRelationshipToChildren] = useState("")
+  const [notes, setNotes] = useState("")
+  const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -171,6 +193,15 @@ export function ParentRegistrationForm() {
         emailVisibility: true,
       })
 
+      const extra_data = await pb.collection("parent_profiles").create({ 
+        user: user.id, 
+        nationality: nationality, 
+        country_of_residence: residence, 
+        relationship_to_children: relationshipToChildren, 
+        preferred_languages: preferredLanguages.join(", "),
+        notes: notes,
+      })
+
       for (const child of children) {
         await pb.collection("cases").create({
           user: user.id,
@@ -195,7 +226,7 @@ export function ParentRegistrationForm() {
       }
 
       await authWithPassword(email, password)
-      router.push("/dashboard")
+      // router.push("/dashboard")
     } catch (err) {
       setError(handlePocketBaseError(err))
     } finally {
@@ -241,10 +272,10 @@ export function ParentRegistrationForm() {
               </Label>
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
+                  <SelectTrigger className="w-30">
+                    <SelectValue placeholder="+966" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" className="max-h-60! max-w-30">
                     {COUNTRY_CODES.map((c) => (
                       <SelectItem key={c.value} value={c.dialCode}>
                         {t(c.label, lang)} ({c.dialCode})
@@ -306,6 +337,152 @@ export function ParentRegistrationForm() {
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Nationality", ar: "الجنسية" }, lang)}
+              </Label>
+              <Input
+                value={nationality}
+                onChange={(e) => setNationality(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Saudi", ar: "مثال: سعودي" },
+                  lang
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Country of Residence", ar: "بلد الإقامة" }, lang)}
+              </Label>
+              <Input
+                value={residence}
+                onChange={(e) => setResidence(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Saudi Arabia", ar: "مثال: المملكة العربية السعودية" },
+                  lang
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Relationship to Children", ar: "صلة القرابة بالأطفال" }, lang)}
+              </Label>
+              <Input
+                value={relationshipToChildren}
+                onChange={(e) => setRelationshipToChildren(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Father", ar: "مثال: أب" },
+                  lang
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Preferred Languages", ar: "اللغات المفضلة" }, lang)}
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between h-auto min-h-10"
+                >
+                  <div className="flex flex-wrap gap-1">
+                    {preferredLanguages.length > 0 ? (
+                      preferredLanguages.map((langValue) => {
+                        const langOption = LANGUAGES.find((l) => l.value === langValue)
+                        return (
+                          <Badge
+                            key={langValue}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {langOption ? t(langOption.label, lang) : langValue}
+                            <X
+                              className="h-3 w-3 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setPreferredLanguages(
+                                  preferredLanguages.filter((l) => l !== langValue)
+                                )
+                              }}
+                            />
+                          </Badge>
+                        )
+                      })
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t(
+                          { en: "Select languages...", ar: "اختر اللغات..." },
+                          lang
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder={t({ en: "Search languages...", ar: "البحث عن اللغات..." }, lang)} />
+                  <CommandList>
+                    <CommandEmpty>
+                      {t({ en: "No language found.", ar: "لم يتم العثور على لغة." }, lang)}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {LANGUAGES.map((langOption) => (
+                        <CommandItem
+                          key={langOption.value}
+                          value={langOption.value}
+                          onSelect={() => {
+                            setPreferredLanguages(
+                              preferredLanguages.includes(langOption.value)
+                                ? preferredLanguages.filter((l) => l !== langOption.value)
+                                : [...preferredLanguages, langOption.value]
+                            )
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              preferredLanguages.includes(langOption.value)
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {t(langOption.label, lang)}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Notes", ar: "ملاحظات" }, lang)}
+            </Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t(
+                {
+                  en: "Add any additional notes...",
+                  ar: "أضف أي ملاحظات إضافية...",
+                },
+                lang
+              )}
+              rows={3}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -330,12 +507,12 @@ export function ParentRegistrationForm() {
           onClick={addChild}
           className="w-full gap-2"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 p-4" />
           {t({ en: "Add Another Child", ar: "إضافة طفل آخر" }, lang)}
         </Button>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" className="p-4 w-full" disabled={isSubmitting}>
         {isSubmitting
           ? t({ en: "Registering...", ar: "جارٍ التسجيل..." }, lang)
           : t({ en: "Register", ar: "تسجيل" }, lang)}
