@@ -14,40 +14,155 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
+import { LANGUAGES } from "@/lib/language-list"
 import pb from "@/lib/pb"
-import { Paperclip, X } from "lucide-react"
+import { Check, ChevronsUpDown, Paperclip, X } from "lucide-react"
+
+function humanize(value: string): string {
+  return value
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
+const AGE_GROUPS = [
+  "0-3",
+  "4-6",
+  "7-12",
+  "13-17",
+  "18-25",
+  "26-40",
+  "41-60",
+  "60+",
+  "all_ages",
+].map((value) => ({ value, label: humanize(value) }))
+
+const SPECIALIZATIONS = [
+  "assessment_and_diagnosis",
+  "consultation",
+  "therapy_and_intervention",
+  "educational_support",
+  "research_and_statistics",
+  "academic_supervision",
+  "training_and_workshops",
+  "curriculum_development",
+  "program_development",
+  "psychological_services",
+  "special_education",
+  "speech_and_language_services",
+  "occupational_therapy",
+  "behavioral_services",
+  "career_and_vocational_guidance",
+  "technology_and_digital_solutions",
+  "translation_and_content_services",
+  "institutional_and_organizational_consulting",
+  "other",
+].map((value) => ({ value, label: humanize(value) }))
+
+const CLIENT_TYPES = [
+  "children",
+  "adolescents",
+  "adults",
+  "parents_and_families",
+  "students",
+  "teachers_and_educators",
+  "researchers_and_academics",
+  "schools_and_educational_institutions",
+  "universities_and_higher_education_institutions",
+  "healthcare_professionals_and_institutions",
+  "organizations_and_ngos",
+  "businesses_and_companies",
+  "government_institutions",
+  "other",
+].map((value) => ({ value, label: humanize(value) }))
+
+const CONSULTATION_MODES = [
+  "online",
+  "at_dsc",
+  "home_visit",
+  "client_institution",
+  "hybrid",
+].map((value) => ({ value, label: humanize(value) }))
 
 export function ExpertApplicationForm() {
   const { lang } = useLang()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null)
 
+  // user fields
   const [name, setName] = useState("")
-  const [countryCode, setCountryCode] = useState(COUNTRY_CODES[0].dialCode)
-  const [contactNumber, setContactNumber] = useState("")
+  const [fullLegalName, setFullLegalName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirm, setPasswordConfirm] = useState("")
+  const [countryCode, setCountryCode] = useState("")
+  const [contactNumber, setContactNumber] = useState("")
+
+  // Extra fields
+  const [nationality, setNationality] = useState("")
+  const [residence, setResidence] = useState("")
+  const [city, setCity] = useState("")
+  const [whatsappCountryCode, setWhatsappCountryCode] = useState("")
+  const [whatsappNumber, setWhatsappNumber] = useState("")
+  const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
+  const [ageGroup, setAgeGroup] = useState<string[]>([])
+  const [specialization, setSpecialization] = useState<string[]>([])
+  const [clientType, setClientType] = useState<string[]>([])
+  const [consultationMode, setConsultationMode] = useState("")
+  const [fee, setFee] = useState("")
+  const [availability, setAvailability] = useState("")
   const [message, setMessage] = useState("")
   const [files, setFiles] = useState<File[]>([])
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null)
+
+  // Booleans
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [step, setStep] = useState<1 | 2>(1)
 
   const passwordTooShort = password.length > 0 && password.length < 8
   const passwordsMismatch =
     passwordConfirm.length > 0 && password !== passwordConfirm
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles((prev) => [...prev, ...Array.from(e.target.files!)])
+    const file = e.target.files?.[0]
+    if (file) {
+      setFiles([file])
     }
   }
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleProfilePhotoChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setProfilePhoto(e.target.files?.[0] ?? null)
+  }
+
+  const removeProfilePhoto = () => {
+    setProfilePhoto(null)
   }
 
   const fileToBase64 = (file: File): Promise<string> => {
@@ -91,13 +206,22 @@ export function ExpertApplicationForm() {
     return true
   }
 
+  const handleNext = () => {
+    if (!validate()) return
+    window.scrollTo({ 
+      top: 0 
+    })
+    setStep(2)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
     if (!validate()) return
 
-    const totalSize = files.reduce((sum, f) => sum + f.size, 0)
+    const totalSize =
+      files.reduce((sum, f) => sum + f.size, 0) + (profilePhoto?.size ?? 0)
     if (totalSize > 35 * 1024 * 1024) {
       setError(
         t(
@@ -119,23 +243,64 @@ export function ExpertApplicationForm() {
         `<p><strong>Name:</strong> ${name}</p>`,
         `<p><strong>Contact Number:</strong> ${contactNumber}</p>`,
         `<p><strong>Email:</strong> ${email}</p>`,
+        nationality ? `<p><strong>Nationality:</strong> ${nationality}</p>` : "",
+        residence ? `<p><strong>Country of Residence:</strong> ${residence}</p>` : "",
+        city ? `<p><strong>City:</strong> ${city}</p>` : "",
+        fullLegalName ? `<p><strong>Full Legal Name:</strong> ${fullLegalName}</p>` : "",
+        whatsappNumber ? `<p><strong>WhatsApp Number:</strong> ${whatsappCountryCode} ${whatsappNumber}</p>` : "",
+        preferredLanguages.length ? `<p><strong>Preferred Languages:</strong> ${preferredLanguages.join(", ")}</p>` : "",
+        ageGroup.length ? `<p><strong>Age Group:</strong> ${AGE_GROUPS.filter((o) => ageGroup.includes(o.value)).map((o) => o.label).join(", ")}</p>` : "",
+        specialization.length ? `<p><strong>Specialization:</strong> ${SPECIALIZATIONS.filter((o) => specialization.includes(o.value)).map((o) => o.label).join(", ")}</p>` : "",
+        clientType.length ? `<p><strong>Client Type:</strong> ${CLIENT_TYPES.filter((o) => clientType.includes(o.value)).map((o) => o.label).join(", ")}</p>` : "",
+        consultationMode ? `<p><strong>Consultation Mode:</strong> ${CONSULTATION_MODES.find((o) => o.value === consultationMode)?.label ?? consultationMode}</p>` : "",
+        fee ? `<p><strong>Fee:</strong> ${fee}</p>` : "",
+        availability ? `<p><strong>Availability:</strong> ${availability}</p>` : "",
         message ? `<p><strong>Message:</strong><br/>${message}</p>` : "",
+        profilePhoto ? `<p><strong>Profile Photo:</strong> ${profilePhoto.name}</p>` : "",
         files.length ? `<p><strong>Attachments:</strong> ${files.map((f) => f.name).join(", ")}</p>` : "",
       ].join("\n")
 
-      const formData = new FormData()
-      formData.set("email", email.toLowerCase())
-      formData.set("password", password)
-      formData.set("passwordConfirm", passwordConfirm)
-      formData.set("name", name)
-      formData.set("role", "expert")
-      formData.set("contact_number", `${countryCode} ${contactNumber}`)
-      formData.set("is_active", "false")
-      formData.set("emailVisibility", "true")
-      formData.set("message", message)
-      files.forEach((file) => formData.append("attachments", file))
+      const userFormData = new FormData()
+      const extraFormData = new FormData()
 
-      await pb.collection("users").create(formData)
+      // User Form
+      userFormData.set("email", email.toLowerCase())
+      userFormData.set("emailVisibility", "true")
+      userFormData.set("password", password)
+      userFormData.set("passwordConfirm", passwordConfirm)
+      userFormData.set("name", name)
+      userFormData.set("role", "expert")
+      userFormData.set("contact_number", `${countryCode} ${contactNumber}`)
+      userFormData.set("is_active", "false")
+
+      // Create user record
+      const user = await pb.collection("users").create(userFormData)
+
+      // Extra fields
+      extraFormData.set("user", user.id)
+      extraFormData.set("full_legal_name", fullLegalName)
+      if (profilePhoto) extraFormData.append("profile_photo", profilePhoto)
+
+      extraFormData.set("nationality", nationality)
+      extraFormData.set("country_of_residence", residence)
+      extraFormData.set("city", city)
+      extraFormData.set("whatsapp_country_code", whatsappCountryCode)
+      extraFormData.set("whatsapp_number",whatsappNumber)
+
+      ageGroup.forEach((v) => extraFormData.append("age_group", v))
+      specialization.forEach((v) => extraFormData.append("specialization_type", v))
+      clientType.forEach((v) => extraFormData.append("client_type", v))
+      extraFormData.set("consultation_mode", consultationMode)
+      extraFormData.set("preferred_languages", preferredLanguages.join(", "))
+
+      files.forEach((file) => extraFormData.append("cv", file))
+
+      extraFormData.set("bio", message)
+      extraFormData.set("availability", availability)
+      extraFormData.set("fee", fee)
+
+      // Create extra record
+      await pb.collection("expert_profiles").create(extraFormData)
 
       let attachments: { filename: string; content: string }[] = []
       if (files.length > 0) {
@@ -177,10 +342,15 @@ export function ExpertApplicationForm() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {t(
-              { en: "Expert Application", ar: "طلب التقديم كخبير" },
-              lang
-            )}
+            {step === 1
+              ? t(
+                { en: "Personal Information", ar: "المعلومات الشخصية" },
+                lang
+              )
+              : t(
+                { en: "Client Preferences", ar: "تفضيلات العميل" },
+                lang
+              )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -190,6 +360,8 @@ export function ExpertApplicationForm() {
             </div>
           )}
 
+          {step === 1 && (
+            <>
           <div className="space-y-2">
             <Label>
               {t({ en: "Full Name", ar: "الاسم الكامل" }, lang)}
@@ -208,15 +380,59 @@ export function ExpertApplicationForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>
+                {t({ en: "Nationality", ar: "الجنسية" }, lang)}
+              </Label>
+              <Input
+                value={nationality}
+                onChange={(e) => setNationality(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Saudi", ar: "مثال: سعودي" },
+                  lang
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Country of Residence", ar: "بلد الإقامة" }, lang)}
+              </Label>
+              <Input
+                value={residence}
+                onChange={(e) => setResidence(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Saudi Arabia", ar: "مثال: المملكة العربية السعودية" },
+                  lang
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "City", ar: "المدينة" }, lang)}
+              </Label>
+              <Input
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Riyadh", ar: "مثال: الرياض" },
+                  lang
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>
                 {t({ en: "Contact Number", ar: "رقم التواصل" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
+                  <SelectTrigger className="w-30">
+                    <SelectValue placeholder="+966" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" className="max-h-60! max-w-30">
                     {COUNTRY_CODES.map((c) => (
                       <SelectItem key={c.value} value={c.dialCode}>
                         {t(c.label, lang)} ({c.dialCode})
@@ -248,6 +464,39 @@ export function ExpertApplicationForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
               />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label>
+                {t({ en: "WhatsApp Number", ar: "رقم الواتساب" }, lang)}
+              </Label>
+              <div className="flex gap-2">
+                <Select
+                  value={whatsappCountryCode}
+                  onValueChange={setWhatsappCountryCode}
+                >
+                  <SelectTrigger className="w-30">
+                    <SelectValue placeholder="+966" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="max-h-60! max-w-30">
+                    {COUNTRY_CODES.map((c) => (
+                      <SelectItem key={c.value} value={c.dialCode}>
+                        {t(c.label, lang)} ({c.dialCode})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="tel"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  placeholder={t(
+                    { en: "e.g. 55 000 0000", ar: "مثال: 55 000 0000" },
+                    lang
+                  )}
+                  className="flex-1"
+                />
+              </div>
             </div>
           </div>
 
@@ -312,6 +561,393 @@ export function ExpertApplicationForm() {
 
           <div className="space-y-2">
             <Label>
+              {t({ en: "Preferred Languages", ar: "اللغات المفضلة" }, lang)}
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between h-auto min-h-10"
+                >
+                  <div className="flex flex-wrap gap-1">
+                    {preferredLanguages.length > 0 ? (
+                      preferredLanguages.map((langValue) => {
+                        const langOption = LANGUAGES.find((l) => l.value === langValue)
+                        return (
+                          <Badge
+                            key={langValue}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {langOption ? t(langOption.label, lang) : langValue}
+                            <X
+                              className="h-3 w-3 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setPreferredLanguages(
+                                  preferredLanguages.filter((l) => l !== langValue)
+                                )
+                              }}
+                            />
+                          </Badge>
+                        )
+                      })
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t(
+                          { en: "Select languages...", ar: "اختر اللغات..." },
+                          lang
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder={t({ en: "Search languages...", ar: "البحث عن اللغات..." }, lang)} />
+                  <CommandList>
+                    <CommandEmpty>
+                      {t({ en: "No language found.", ar: "لم يتم العثور على لغة." }, lang)}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {LANGUAGES.map((langOption) => (
+                        <CommandItem
+                          key={langOption.value}
+                          value={langOption.value}
+                          onSelect={() => {
+                            setPreferredLanguages(
+                              preferredLanguages.includes(langOption.value)
+                                ? preferredLanguages.filter((l) => l !== langOption.value)
+                                : [...preferredLanguages, langOption.value]
+                            )
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              preferredLanguages.includes(langOption.value)
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {t(langOption.label, lang)}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Button type="button" className="p-4 w-full" onClick={handleNext}>
+            {t({ en: "Next", ar: "التالي" }, lang)}
+          </Button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Full Legal Name", ar: "الاسم القانوني الكامل" }, lang)}
+            </Label>
+            <Input
+              value={fullLegalName}
+              onChange={(e) => setFullLegalName(e.target.value)}
+              placeholder={t(
+                { en: "e.g. Mohammed Abdullah Al-Rashid", ar: "مثال: محمد عبدالله الراشد" },
+                lang
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Age Group", ar: "الفئة العمرية" }, lang)}
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between h-auto min-h-10"
+                  >
+                    <div className="flex flex-wrap gap-1">
+                      {ageGroup.length > 0 ? (
+                        ageGroup.map((value) => {
+                          const option = AGE_GROUPS.find((o) => o.value === value)
+                          return (
+                            <Badge
+                              key={value}
+                              variant="secondary"
+                              className="flex items-center gap-1"
+                            >
+                              {option ? option.label : value}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setAgeGroup(ageGroup.filter((v) => v !== value))
+                                }}
+                              />
+                            </Badge>
+                          )
+                        })
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {t({ en: "Select age groups...", ar: "اختر الفئات العمرية..." }, lang)}
+                        </span>
+                      )}
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder={t({ en: "Search age groups...", ar: "البحث عن الفئات..." }, lang)} />
+                    <CommandList>
+                      <CommandEmpty>
+                        {t({ en: "No age group found.", ar: "لم يتم العثور على فئة." }, lang)}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {AGE_GROUPS.map((option) => (
+                          <CommandItem
+                            key={option.value}
+                            value={option.value}
+                            onSelect={() => {
+                              setAgeGroup(
+                                ageGroup.includes(option.value)
+                                  ? ageGroup.filter((v) => v !== option.value)
+                                  : [...ageGroup, option.value]
+                              )
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                ageGroup.includes(option.value) ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {option.label}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Consultation Mode", ar: "وضع الاستشارة" }, lang)}
+              </Label>
+              <Select value={consultationMode} onValueChange={setConsultationMode}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t({ en: "Select mode...", ar: "اختر الوضع..." }, lang)} />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60!">
+                  {CONSULTATION_MODES.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Specialization", ar: "التخصص" }, lang)}
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between h-auto min-h-10"
+                >
+                  <div className="flex flex-wrap gap-1">
+                    {specialization.length > 0 ? (
+                      specialization.map((value) => {
+                        const option = SPECIALIZATIONS.find((o) => o.value === value)
+                        return (
+                          <Badge
+                            key={value}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {option ? option.label : value}
+                            <X
+                              className="h-3 w-3 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSpecialization(specialization.filter((v) => v !== value))
+                              }}
+                            />
+                          </Badge>
+                        )
+                      })
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t({ en: "Select specializations...", ar: "اختر التخصصات..." }, lang)}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder={t({ en: "Search specializations...", ar: "البحث عن التخصصات..." }, lang)} />
+                  <CommandList>
+                    <CommandEmpty>
+                      {t({ en: "No specialization found.", ar: "لم يتم العثور على تخصص." }, lang)}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {SPECIALIZATIONS.map((option) => (
+                        <CommandItem
+                          key={option.value}
+                          value={option.value}
+                          onSelect={() => {
+                            setSpecialization(
+                              specialization.includes(option.value)
+                                ? specialization.filter((v) => v !== option.value)
+                                : [...specialization, option.value]
+                            )
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              specialization.includes(option.value) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {option.label}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Client Type", ar: "نوع العميل" }, lang)}
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between h-auto min-h-10"
+                >
+                  <div className="flex flex-wrap gap-1">
+                    {clientType.length > 0 ? (
+                      clientType.map((value) => {
+                        const option = CLIENT_TYPES.find((o) => o.value === value)
+                        return (
+                          <Badge
+                            key={value}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {option ? option.label : value}
+                            <X
+                              className="h-3 w-3 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setClientType(clientType.filter((v) => v !== value))
+                              }}
+                            />
+                          </Badge>
+                        )
+                      })
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t({ en: "Select client types...", ar: "اختر أنواع العملاء..." }, lang)}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder={t({ en: "Search client types...", ar: "البحث عن أنواع العملاء..." }, lang)} />
+                  <CommandList>
+                    <CommandEmpty>
+                      {t({ en: "No client type found.", ar: "لم يتم العثور على نوع عميل." }, lang)}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {CLIENT_TYPES.map((option) => (
+                        <CommandItem
+                          key={option.value}
+                          value={option.value}
+                          onSelect={() => {
+                            setClientType(
+                              clientType.includes(option.value)
+                                ? clientType.filter((v) => v !== option.value)
+                                : [...clientType, option.value]
+                            )
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              clientType.includes(option.value) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {option.label}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Fee", ar: "الرسوم" }, lang)}
+            </Label>
+            <Input
+              type="text"
+              min="0"
+              value={fee}
+              onChange={(e) => setFee(e.target.value)}
+              placeholder={t(
+                { en: "e.g. 500 per session", ar: "مثال: 500" },
+                lang
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Availability", ar: "أوقات التوفر" }, lang)}
+            </Label>
+            <Input
+              value={availability}
+              onChange={(e) => setAvailability(e.target.value)}
+              placeholder={t(
+                { en: "e.g. Weekdays 9am-5pm", ar: "مثال: أيام الأسبوع 9ص-5م" },
+                lang
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>
               {t({ en: "Message", ar: "رسالة" }, lang)}
             </Label>
             <Textarea
@@ -330,13 +966,60 @@ export function ExpertApplicationForm() {
 
           <div className="space-y-2">
             <Label>
-              {t({ en: "Attachments", ar: "المرفقات" }, lang)}
+              {t({ en: "Profile Photo", ar: "الصورة الشخصية" }, lang)}
+            </Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-4">
+              <input
+                ref={profilePhotoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePhotoChange}
+                className="hidden"
+                id="profile-photo-upload"
+              />
+              <label
+                htmlFor="profile-photo-upload"
+                className="flex flex-col items-center justify-center cursor-pointer gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Paperclip className="h-5 w-5" />
+                <span>
+                  {t(
+                    {
+                      en: "Click to upload your profile photo",
+                      ar: "انقر لرفع صورتك الشخصية",
+                    },
+                    lang
+                  )}
+                </span>
+              </label>
+            </div>
+
+            {profilePhoto && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1 text-sm">
+                  <Paperclip className="h-3 w-3" />
+                  <span className="max-w-[150px] truncate">
+                    {profilePhoto.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={removeProfilePhoto}
+                    className="hover:text-red-500 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Upload CV", ar: "رفع السيرة الذاتية" }, lang)}
             </Label>
             <div className="border-2 border-dashed border-border rounded-lg p-4">
               <input
                 ref={fileInputRef}
                 type="file"
-                multiple
                 onChange={handleFileChange}
                 className="hidden"
                 id="file-upload"
@@ -349,8 +1032,8 @@ export function ExpertApplicationForm() {
                 <span>
                   {t(
                     {
-                      en: "Click to attach files or drag and drop",
-                      ar: "انقر لإرفاق ملفات أو اسحب وأفلت",
+                      en: "Click to upload your CV",
+                      ar: "انقر لرفع سيرتك الذاتية",
                     },
                     lang
                   )}
@@ -380,11 +1063,25 @@ export function ExpertApplicationForm() {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting
-              ? t({ en: "Submitting...", ar: "جارٍ الإرسال..." }, lang)
-              : t({ en: "Submit Application", ar: "إرسال الطلب" }, lang)}
-          </Button>
+
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                window.scrollTo({ top: 0 })
+                setStep(1)
+              }}
+            >
+              {t({ en: "Back", ar: "رجوع" }, lang)}
+            </Button>
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting
+                ? t({ en: "Submitting...", ar: "جارٍ الإرسال..." }, lang)
+                : t({ en: "Submit Application", ar: "إرسال الطلب" }, lang)}
+            </Button>
+          </div>
           <p className="text-center text-sm text-muted-foreground">
             {t(
               {
@@ -394,6 +1091,8 @@ export function ExpertApplicationForm() {
               lang
             )}
           </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </form>
