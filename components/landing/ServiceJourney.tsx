@@ -4,10 +4,17 @@ import Image from "next/image"
 import { useLang } from "@/lib/lang-context"
 import { t } from "@/lib/i18n"
 import {
+  Users,
   UserPlus,
+  Rocket,
   UserCheck,
+  UserCircle,
   ClipboardList,
+  FolderOpen,
   Handshake,
+  ListChecks,
+  RefreshCw,
+  RefreshCcw,
   CreditCard,
   HeartHandshake,
   FileBarChart,
@@ -20,23 +27,36 @@ import {
 } from "lucide-react"
 
 const SERVICE_STEPS = [
-  { icon: UserPlus, en: "Tell Us About Yourself", ar: "أخبرنا عن نفسك" },
-  { icon: UserCheck, en: "Create Account", ar: "إنشاء حساب" },
-  { icon: ClipboardList, en: "Case / Profile", ar: "الملف / الحالة" },
-  { icon: Handshake, en: "Choose Service", ar: "اختر الخدمة" },
-  { icon: CreditCard, en: "Book & Pay", ar: "احجز وادفع" },
-  { icon: HeartHandshake, en: "Receive Service", ar: "تلقَّ الخدمة" },
-  { icon: FileBarChart, en: "Reports & Follow-Up", ar: "التقارير والمتابعة" },
+  { icon: UserPlus, en: "Create Account", ar: "إنشاء حساب" },
+  { icon: FolderOpen, en: "Case", ar: "الحالة" },
+  { icon: ClipboardList, en: "Need", ar: "الاحتياج" },
+  { icon: ClipboardCheck, en: "Assessment", ar: "التقييم" },
+  { icon: ListChecks, en: "Individual Plan", ar: "الخطة الفردية" },
+  { icon: HeartHandshake, en: "Intervention", ar: "التدخل" },
+  { icon: RefreshCw, en: "Follow-up", ar: "المتابعة" },
+  { icon: FileBarChart, en: "Outcomes", ar: "النتائج" },
+]
+
+const INSTIUTION_STEPS = [
+  { icon: UserPlus, en: "Create Account", ar: "إنشاء حساب" },
+  { icon: UserCircle, en: "Profile", ar: "الملف الشخصي" },
+  { icon: ShieldCheck, en: "Verification", ar: "التحقق" },
+  { icon: Handshake, en: "Partnership", ar: "الشراكة" },
+  { icon: Users, en: "Collaboration", ar: "التعاون" },
+  { icon: Rocket, en: "Implementation", ar: "التنفيذ" },
+  { icon: ClipboardCheck, en: "Evaluation", ar: "التقييم" },
+  { icon: RefreshCcw, en: "Continuity", ar: "الاستمرارية" },
 ]
 
 const PROVIDER_STEPS = [
-  { icon: Briefcase, en: "Tell Us About Yourself", ar: "أخبرنا عن نفسك" },
-  { icon: BadgeCheck, en: "Select Role", ar: "اختر الدور" },
-  { icon: ClipboardList, en: "Create Profile", ar: "إنشاء ملف" },
+  { icon: UserPlus, en: "Create Account", ar: "إنشاء حساب" },
+  { icon: UserCircle, en: "Profile", ar: "الملف الشخصي" },
   { icon: ShieldCheck, en: "Verification", ar: "التحقق" },
-  { icon: Building2, en: "DSC Approval", ar: "موافقة DSC" },
-  { icon: Stethoscope, en: "Provide / Collaborate", ar: "قدّم / تعاون" },
-  { icon: ClipboardCheck, en: "Reports & Reviews", ar: "التقارير والمراجعات" },
+  { icon: BadgeCheck, en: "Approval", ar: "الموافقة" },
+  { icon: Users, en: "Assignment", ar: "التكليف" },
+  { icon: HeartHandshake, en: "Service", ar: "الخدمة" },
+  { icon: RefreshCw, en: "Follow-up", ar: "المتابعة" },
+  { icon: CreditCard, en: "Payment", ar: "الدفع" },
 ]
 
 export function ServiceJourney() {
@@ -60,9 +80,9 @@ export function ServiceJourney() {
         </h2>
 
         {/* Cards + logo container */}
-        <div className="relative flex flex-col items-center md:flex-row">
+        <div className="relative flex flex-col items-center md:flex-row gap-4">
           {/* SERVICE RECIPIENT */}
-          <div className="animate-fade-in-left delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#edf7f1] p-6 pr-10 md:rounded-r-none md:pr-12 md:pl-6">
+          <div className="animate-fade-in-left delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#edf7f1] p-6 pr-10 md:pr-12 md:pl-6">
             <h3 className="mb-5 text-sm font-bold tracking-widest text-[#557d6b]">
               {t(
                 { en: "SERVICE RECIPIENT JOURNEY", ar: "مسار مقدم الخدمة" },
@@ -85,47 +105,34 @@ export function ServiceJourney() {
             </ul>
           </div>
 
-          {/* CENTER DSC LOGO — overlapping both cards */}
-          <div className="animate-fade-in-up delay-500 z-[2] my-8 flex shrink-0 items-center justify-center md:my-0">
-            <div className="relative flex h-[160px] w-[160px] items-center justify-center">
-              {/* Glow rings */}
-              <div className="animate-pulse-ring absolute left-1/2 top-1/2 h-[160px] w-[160px] rounded-full border-2 border-[#c9a227]/30" />
-              <div className="animate-pulse-ring-delayed absolute left-1/2 top-1/2 h-[160px] w-[160px] rounded-full border border-[#c9a227]/20" />
-
-              {/* Logo circle */}
-              <div className="relative z-10 flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-[#c9a227] bg-white shadow-lg">
-                <div className="flex h-[112px] w-[112px] items-center justify-center rounded-full border border-[#e6d590]">
-                  <Image
-                    src="/logo.svg"
-                    alt="DSC Logo"
-                    width={80}
-                    height={80}
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-
-              {/* Orbit particles */}
-              <div className="animate-orbit-1 absolute left-1/2 top-1/2 -ml-1.5 -mt-1.5">
-                <div className="h-3 w-3 rounded-full bg-[#438b70] opacity-80" />
-              </div>
-              <div className="animate-orbit-2 absolute left-1/2 top-1/2 -ml-1 -mt-1">
-                <div className="h-2 w-2 rounded-full bg-[#c9a227] opacity-80" />
-              </div>
-              <div className="animate-orbit-3 absolute left-1/2 top-1/2 -ml-1 -mt-1">
-                <div className="h-2 w-2 rounded-full bg-[#456f9f] opacity-80" />
-              </div>
-              <div className="animate-orbit-4 absolute left-1/2 top-1/2 -ml-1.5 -mt-1.5">
-                <div className="h-3 w-3 rounded-full bg-[#e6c200] opacity-70" />
-              </div>
-            </div>
+          <div className="animate-fade-in-left delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#fbf6ed] p-6 pr-10 md:pr-12 md:pl-6">
+            <h3 className="mb-5 text-sm font-bold tracking-widest text-[#8a7530]">
+              {t(
+                { en: "PROVIDER / INSTITUTION JOURNEY", ar: "مسار المزود / المؤسسة" },
+                lang
+              )}
+            </h3>
+            <ul className="space-y-4">
+              {INSTIUTION_STEPS.map((step, i) => (
+                <li
+                  key={i}
+                  className="animate-fade-in-left flex items-center gap-3 text-base font-medium text-[#40505a]"
+                  style={{ animationDelay: `${300 + i * 80}ms` }}
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f5e2b8] text-[#9f7d45]">
+                    <step.icon className="h-5 w-5" />
+                  </span>
+                  <span>{t({ en: step.en, ar: step.ar }, lang)}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* PROVIDER / PARTNER */}
-          <div className="animate-fade-in-right delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#edf3fb] p-6 pl-10 md:rounded-l-none md:pl-12 md:pr-6">
+          <div className="animate-fade-in-right delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#edf3fb] p-6 pl-10 md:pr-12 md:pl-6">
             <h3 className="mb-5 text-sm font-bold tracking-widest text-[#52719a]">
               {t(
-                { en: "PROVIDER / PARTNER JOURNEY", ar: "مسار المزود / الشريك" },
+                { en: "EXPERT / SPECIALIST JOURNEY", ar: "مسار الخبير / الأخصائي" },
                 lang
               )}
             </h3>

@@ -93,7 +93,7 @@ export function HeroSection() {
         </p>
 
         {/* CTA */}
-        <div className="animate-fade-in-up delay-600 mt-10">
+        {/* <div className="animate-fade-in-up delay-600 mt-10">
           <Link href="/register">
             <Button
               size="lg"
@@ -105,9 +105,10 @@ export function HeroSection() {
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-[#e6c200] to-[#c9a227] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             </Button>
-          </Link>
-        </div>
-      </div>
+          </Link> 
+        </div> */}
+
+      </div> 
 
       {/* Bottom gradient fade */}
       <div className="absolute bottom-0 left-0 z-[4] h-32 w-full bg-gradient-to-t from-white to-transparent" />
