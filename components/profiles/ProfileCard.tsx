@@ -9,11 +9,12 @@ import { CaseStatusBadge } from "@/components/cases/status-badge"
 
 interface ProfileCardProps {
   profile: Profile
+  hrefPrefix?: string
 }
 
-export function ProfileCard({ profile }: ProfileCardProps) {
+export function ProfileCard({ profile, hrefPrefix = "/dashboard/cases" }: ProfileCardProps) {
   return (
-    <SmartLink href={`/dashboard/cases/${profile.id}`}>
+    <SmartLink href={`${hrefPrefix}/${profile.id}`}>
       <Card className="h-full cursor-pointer transition-all hover:shadow-md">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">

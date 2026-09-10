@@ -102,7 +102,7 @@ export default function ProfileDetailPage({
         <h2 className="mb-4 text-xl font-medium">
           {lang === "ar" ? "الحالة غير موجودة" : "Case not found"}
         </h2>
-        <Link href="/dashboard/cases">
+        <Link href="/dashboard/parent/cases">
           <Button>{lang === "ar" ? "العودة إلى الحالات" : "Back to Cases"}</Button>
         </Link>
       </div>
@@ -326,7 +326,7 @@ export default function ProfileDetailPage({
                         <div className="flex items-center gap-2">
                           {!assignment.is_not_template ? (
                             <Link
-                              href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
+                              href={`/dashboard/parent/cases/${id}/tasks/${assignment.id}`}
                             >
                               <Button
                                 variant="outline"
@@ -338,7 +338,7 @@ export default function ProfileDetailPage({
                             </Link>
                           ) : (
                             <Link
-                              href={`/dashboard/cases/${id}/tasks/${assignment.id}`}
+                              href={`/dashboard/parent/cases/${id}/tasks/${assignment.id}`}
                             >
                               <Button
                                 variant="outline"

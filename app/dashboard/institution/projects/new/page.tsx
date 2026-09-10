@@ -221,7 +221,7 @@ export default function NewProfilePage() {
         }),
       }).catch(() => {})
 
-      router.push(`/dashboard/parent/cases/${profileId}`)
+      router.push(`/dashboard/institution/projects/${profileId}`)
     } catch (error) {
       console.error("Failed to create profile:", error)
     } finally {
@@ -233,10 +233,10 @@ export default function NewProfilePage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-primary">
-          {lang === "ar" ? "إنشاء حالة جديدة" : "Create New Case"}
+          {lang === "ar" ? "إنشاء مشروع جديد" : "Create New Project"}
         </h1>
         <p className="text-muted-foreground">
-          {lang === "ar" ? "املأ تفاصيل الحالة" : "Fill in the case details"}
+          {lang === "ar" ? "املأ تفاصيل المشروع" : "Fill in the project details"}
         </p>
       </div>
 
@@ -245,18 +245,18 @@ export default function NewProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "معلومات الحالة" : "Case Information"}
+                {lang === "ar" ? "معلومات المشروع" : "Project Information"}
               </CardTitle>
               <CardDescription>
                 {lang === "ar"
-                  ? "التفاصيل الأساسية حول الحالة"
-                  : "Basic details about the case"}
+                  ? "التفاصيل الأساسية حول المشروع"
+                  : "Basic details about the project"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  {lang === "ar" ? "اسم الحالة" : "Case Name"}
+                  {lang === "ar" ? "اسم المشروع" : "Project Name"}
                 </Label>
                 <Input
                   id="name"
@@ -347,8 +347,8 @@ export default function NewProfilePage() {
             <CardDescription>
               {t(
                 {
-                  en: "Select the service this case belongs to",
-                  ar: "اختر الخدمة التي تنتمي إليها هذه الحالة",
+                  en: "Select the service this project belongs to",
+                  ar: "اختر الخدمة التي ينتمي إليها هذا المشروع",
                 },
                 lang
               )}
@@ -600,8 +600,8 @@ export default function NewProfilePage() {
                 ? "جارٍ الإنشاء..."
                 : "Creating..."
               : lang === "ar"
-                ? "إنشاء الحالة"
-                : "Create Case"}
+                ? "إنشاء مشروع"
+                : "Create Project"}
           </Button>
         </div>
       </form>

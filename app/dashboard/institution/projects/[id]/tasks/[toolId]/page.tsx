@@ -215,9 +215,9 @@ export default function TakeSurveyToolPage({
         <h2 className="mb-4 text-xl font-medium">
           {lang === "ar" ? "الأداة غير موجودة" : "Tool not found"}
         </h2>
-        <Link href="/dashboard/parent/cases">
+        <Link href="/dashboard/institution/projects">
           <Button>
-            {lang === "ar" ? "العودة إلى الحالات" : "Back to Cases"}
+            {lang === "ar" ? "العودة إلى المشاريع" : "Back to Projects"}
           </Button>
         </Link>
       </div>
@@ -409,7 +409,7 @@ export default function TakeSurveyToolPage({
         })
       }
 
-      router.push(`/dashboard/parent/cases/${profile.id}`)
+      router.push(`/dashboard/institution/projects/${profile.id}`)
     } catch (error) {
       console.error("Failed to submit:", error)
     } finally {
@@ -1696,7 +1696,7 @@ export default function TakeSurveyToolPage({
             {(isMeetingTool || isReportTool || isPlanTool) && (
               <div className="flex gap-2 pt-4">
                 <Button
-                  onClick={() => router.push(`/dashboard/parent/cases/${profile.id}`)}
+                  onClick={() => router.push(`/dashboard/institution/projects/${profile.id}`)}
                 >
                   {lang === "ar" ? "العودة" : "Back"}
                 </Button>
@@ -1714,7 +1714,7 @@ export default function TakeSurveyToolPage({
                 {lang === "ar" ? "تعديل الإجابات" : "Edit Answers"}
               </Button>
               <Button
-                onClick={() => router.push(`/dashboard/parent/cases/${profile.id}`)}
+                onClick={() => router.push(`/dashboard/institution/projects/${profile.id}`)}
               >
                 {lang === "ar" ? "العودة" : "Back"}
               </Button>

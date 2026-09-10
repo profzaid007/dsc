@@ -55,7 +55,7 @@ export default function ParentDashboardPage() {
                 : `Welcome back, ${currentUser?.name}`}
             </p>
           </div>
-          <Link href={`/dashboard/${currentUser?.role}cases/new`}>
+          <Link href={`/dashboard/parent/cases/new`}>
             <Button>{lang === "ar" ? "حالة جديدة" : "New Case"}</Button>
           </Link>
         </div>
@@ -81,7 +81,7 @@ export default function ParentDashboardPage() {
               : `Welcome back, ${currentUser?.name}`}
           </p>
         </div>
-        <Link href={`/dashboard/${currentUser?.role}cases/new`}>
+        <Link href={`/dashboard/parent/cases/new`}>
           <Button>{lang === "ar" ? "حالة جديدة" : "New Case"}</Button>
         </Link>
       </div>
@@ -116,7 +116,7 @@ export default function ParentDashboardPage() {
                 ? "أنشئ حالتك الأولى للبدء"
                 : "Create your first case to get started"}
             </p>
-            <Link href={`/dashboard/${currentUser?.role}cases/new`}>
+            <Link href={`/dashboard/parent/cases/new`}>
               <Button>{lang === "ar" ? "إنشاء الحالة" : "Create Case"}</Button>
             </Link>
           </CardContent>

@@ -19,7 +19,7 @@ export default function ProfilesPage() {
   const { profiles, isLoading } = useProfiles()
 
   if (isLoading) {
-    return <PageLoader text={lang === "ar" ? "جارٍ تحميل المشاريع..." : "Loading projects..."} />
+    return <PageLoader text={lang === "ar" ? "جارٍ تحميل الحالات..." : "Loading cases..."} />
   }
 
   return (
@@ -27,16 +27,16 @@ export default function ProfilesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            {lang === "ar" ? "المشاريع" : "Projects"}
+            {lang === "ar" ? "الحالات" : "Cases"}
           </h1>
           <p className="text-muted-foreground">
-            {lang === "ar" ? "إدارة مشاريعك" : "Manage your projects"}
+            {lang === "ar" ? "إدارة حالاتك" : "Manage your cases"}
           </p>
         </div>
-        <Link href="/dashboard/institution/projects/new">
+        <Link href="/dashboard/individual/cases/new">
           <Button>
             <Plus className="me-2 h-4 w-4" />
-            {lang === "ar" ? "مشروع جديد" : "New Project"}
+            {lang === "ar" ? "حالة جديدة" : "New Case"}
           </Button>
         </Link>
       </div>
@@ -46,15 +46,15 @@ export default function ProfilesPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderKanban className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-medium">
-              {lang === "ar" ? "لا توجد مشاريع بعد" : "No projects yet"}
+              {lang === "ar" ? "لا توجد حالات بعد" : "No cases yet"}
             </h3>
             <p className="mb-4 text-center text-muted-foreground">
               {lang === "ar"
-                ? "أنشئ مشروعك الأول للبدء"
-                : "Create your first project to get started"}
+                ? "أنشئ حالتك الأولى للبدء"
+                : "Create your first case to get started"}
             </p>
-            <Link href="/dashboard/institution/projects/new">
-              <Button>{lang === "ar" ? "إنشاء مشروع" : "Create Project"}</Button>
+            <Link href="/dashboard/individual/cases/new">
+              <Button>{lang === "ar" ? "إنشاء الحالة" : "Create Case"}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -64,7 +64,7 @@ export default function ProfilesPage() {
             <ProfileCard
               key={profile.id}
               profile={profile}
-              hrefPrefix="/dashboard/institution/projects"
+              hrefPrefix="/dashboard/individual/cases"
             />
           ))}
         </div>

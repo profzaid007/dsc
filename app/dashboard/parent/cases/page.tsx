@@ -33,7 +33,7 @@ export default function ProfilesPage() {
             {lang === "ar" ? "إدارة حالاتك" : "Manage your cases"}
           </p>
         </div>
-        <Link href="/dashboard/cases/new">
+        <Link href="/dashboard/parent/cases/new">
           <Button>
             <Plus className="me-2 h-4 w-4" />
             {lang === "ar" ? "حالة جديدة" : "New Case"}
@@ -53,7 +53,7 @@ export default function ProfilesPage() {
                 ? "أنشئ حالتك الأولى للبدء"
                 : "Create your first case to get started"}
             </p>
-            <Link href="/dashboard/cases/new">
+            <Link href="/dashboard/parent/cases/new">
               <Button>{lang === "ar" ? "إنشاء الحالة" : "Create Case"}</Button>
             </Link>
           </CardContent>
@@ -61,7 +61,11 @@ export default function ProfilesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {profiles.map((profile) => (
-            <ProfileCard key={profile.id} profile={profile} />
+            <ProfileCard
+              key={profile.id}
+              profile={profile}
+              hrefPrefix="/dashboard/parent/cases"
+            />
           ))}
         </div>
       )}

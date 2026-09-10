@@ -28,6 +28,7 @@ import {
   handlePocketBaseError,
   requestPasswordReset,
 } from "@/lib/pb"
+import { getDashboardPath } from "@/lib/dashboard-routes"
 
 function ExpertPendingNotice() {
   const searchParams = useSearchParams()
@@ -52,7 +53,7 @@ function ExpertPendingNotice() {
 export default function LoginPage() {
 
   const router = useRouter()
-  const { login, currentUser } = useAuth()
+  const { login } = useAuth()
   const { lang } = useLang()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -78,7 +79,7 @@ export default function LoginPage() {
     const result = await login(email.toLowerCase(), password)
 
     if (result.success) {
-      router.push(`/dashboard/${currentUser?.role}`)
+      router.push(getDashboardPath(result.role))
     } else {
       setError(result.error || "Invalid credentials")
       setIsLoading(false)

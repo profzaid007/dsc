@@ -29,6 +29,7 @@ import { PORTALS, getPortalById } from "@/lib/portals"
 import { trainingProgramsCollection } from "@/lib/pb-training"
 import type { TrainingProgram } from "@/types/training"
 import { type PortalServiceValue } from "@/components/register/PortalServiceSelector"
+import pb from "@/lib/pb"
 
 const OTHER_VALUE = "other"
 const TRAINING_SERVICE_ID = "attending-training"
@@ -158,15 +159,47 @@ export default function NewProfilePage() {
         ? trainingPrograms.find((p) => p.id === selectedProgramId)
         : null
 
+      const portal = getPortalById(portalService.categoryId)
+      const portalLabel =
+        portalService.categoryId === OTHER_VALUE
+          ? portalService.customCategory
+          : portal?.title[lang]
+      const serviceLabel =
+        portalService.subCategoryId === OTHER_VALUE
+          ? portalService.customSubCategory
+          : portal?.services.find((s) => s.id === portalService.subCategoryId)
+              ?.name[lang]
+
+      let profileDob = ""
+      let profileGender: "male" | "female" | undefined
+      if (!isTraining) {
+        try {
+          const individualProfile = await pb
+            .collection("individual_profiles")
+            .getFirstListItem(`user = "${currentUser.id}"`)
+          profileDob = (individualProfile.date_of_birth as string) || ""
+          profileGender =
+            (individualProfile.gender as "male" | "female" | undefined) ||
+            undefined
+        } catch {
+          // profile record not found — create case without personal details
+        }
+      }
+
+      const derivedName =
+        [currentUser.name, portalLabel, serviceLabel]
+          .filter(Boolean)
+          .join(" - ") || currentUser.name
+
       const profileId = await addProfile({
         user: currentUser.id,
         name: isTraining
           ? selectedProgram?.title[lang] ||
             (lang === "ar" ? "التسجيل في التدريب" : "Training Enrollment")
-          : formData.name,
-        date_of_birth: isTraining ? "" : formData.date_of_birth,
-        gender: isTraining ? undefined : (formData.gender as "male" | "female"),
-        grade: isTraining ? "" : formData.grade,
+          : derivedName,
+        date_of_birth: isTraining ? "" : profileDob,
+        gender: isTraining ? undefined : profileGender,
+        grade: "",
         notes: formData.notes,
         portal_type: isTraining ? "Attending Training" : portalService.categoryId,
         service_type: isTraining
@@ -205,7 +238,7 @@ export default function NewProfilePage() {
       const caseName = isTraining
         ? selectedProgram?.title[lang] ||
           (lang === "ar" ? "التسجيل في التدريب" : "Training Enrollment")
-        : formData.name
+        : derivedName
 
       fetch("/api/telegram-notify", {
         method: "POST",
@@ -221,7 +254,7 @@ export default function NewProfilePage() {
         }),
       }).catch(() => {})
 
-      router.push(`/dashboard/parent/cases/${profileId}`)
+      router.push(`/dashboard/individual/cases/${profileId}`)
     } catch (error) {
       console.error("Failed to create profile:", error)
     } finally {

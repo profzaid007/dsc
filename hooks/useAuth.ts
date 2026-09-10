@@ -63,7 +63,7 @@ export function useAuth() {
         }
       }
       refreshAuth()
-      return { success: true }
+      return { success: true as const, role: user.role }
     } catch (error: any) {
       return { success: false, error: error.message }
     }
