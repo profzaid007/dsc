@@ -136,6 +136,10 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
+            <p className="mt-2 text-2xl font-bold text-primary">DSC</p>
+            <p>Development Secrets Consultancy</p>
+
             <p className="max-w-[220px] text-sm text-muted-foreground">
               {t(
                 {
@@ -150,12 +154,10 @@ export default function LoginPage() {
         <div className="lg:col-span-8">
           <Card className="w-full max-w-lg mx-auto overflow-hidden rounded-2xl shadow-xl xl:max-w-xl">
             <CardHeader className="text-center">
-              <CardTitle className="mt-2 text-2xl font-bold text-primary">DSC</CardTitle>
-              <CardDescription>Development Secrets Consultancy</CardDescription>
-              <div className="mx-auto h-1 w-12 rounded-full bg-gradient-to-r from-[#c9a227] to-[#e6c200]" />
               <h1 className="mt-5 text-2xl font-bold text-primary">
                 {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
               </h1>
+              <div className="mt-3 mx-auto h-1 w-12 rounded-full bg-gradient-to-r from-[#c9a227] to-[#e6c200]" />
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
