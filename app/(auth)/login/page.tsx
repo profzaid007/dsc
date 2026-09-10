@@ -50,8 +50,9 @@ function ExpertPendingNotice() {
 }
 
 export default function LoginPage() {
+
   const router = useRouter()
-  const { login } = useAuth()
+  const { login, currentUser } = useAuth()
   const { lang } = useLang()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -77,7 +78,7 @@ export default function LoginPage() {
     const result = await login(email.toLowerCase(), password)
 
     if (result.success) {
-      router.push("/dashboard")
+      router.push(`/dashboard/${currentUser?.role}`)
     } else {
       setError(result.error || "Invalid credentials")
       setIsLoading(false)
