@@ -108,7 +108,7 @@ export function ServiceJourney() {
           <div className="animate-fade-in-left delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#fbf6ed] p-6 pr-10 md:pr-12 md:pl-6">
             <h3 className="mb-5 text-sm font-bold tracking-widest text-[#8a7530]">
               {t(
-                { en: "PROVIDER / INSTITUTION JOURNEY", ar: "مسار المزود / المؤسسة" },
+                { en: "PROVIDER / INSTITUTION JOURNEY", ar: "(الشركاء والداعمون) وليس المزود" },
                 lang
               )}
             </h3>
@@ -132,7 +132,7 @@ export function ServiceJourney() {
           <div className="animate-fade-in-right delay-200 journey-card z-[1] w-full flex-1 rounded-2xl bg-[#edf3fb] p-6 pl-10 md:pr-12 md:pl-6">
             <h3 className="mb-5 text-sm font-bold tracking-widest text-[#52719a]">
               {t(
-                { en: "EXPERT / SPECIALIST JOURNEY", ar: "مسار الخبير / الأخصائي" },
+                { en: "EXPERT / SPECIALIST JOURNEY", ar: "الخبراء ومقدمو الخدمات" },
                 lang
               )}
             </h3>
