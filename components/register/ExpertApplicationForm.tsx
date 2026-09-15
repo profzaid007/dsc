@@ -103,6 +103,18 @@ const CONSULTATION_MODES = [
   "hybrid",
 ].map((value) => ({ value, label: humanize(value) }))
 
+const ACADEMIC_DEGREES = [
+  { value: "high_school_secondary", label: "High School / Secondary" },
+  { value: "diploma", label: "Diploma" },
+  { value: "associate_degree", label: "Associate Degree" },
+  { value: "bachelors_degree", label: "Bachelor's Degree" },
+  { value: "masters_degree", label: "Master's Degree" },
+  { value: "doctorate_phd", label: "Doctorate (PhD)" },
+  { value: "professional_degree", label: "Professional Degree" },
+  { value: "postdoctoral_fellowship", label: "Postdoctoral / Fellowship" },
+  { value: "other", label: "Other" },
+]
+
 export function ExpertApplicationForm() {
   const { lang } = useLang()
   const router = useRouter()
@@ -122,6 +134,9 @@ export function ExpertApplicationForm() {
   const [nationality, setNationality] = useState("")
   const [residence, setResidence] = useState("")
   const [city, setCity] = useState("")
+  const [highestAcademicDegree, setHighestAcademicDegree] = useState("")
+  const [degreeTitle, setDegreeTitle] = useState("")
+  const [fieldOfStudy, setFieldOfStudy] = useState("")
   const [whatsappCountryCode, setWhatsappCountryCode] = useState("")
   const [whatsappNumber, setWhatsappNumber] = useState("")
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
@@ -247,6 +262,9 @@ export function ExpertApplicationForm() {
         residence ? `<p><strong>Country of Residence:</strong> ${residence}</p>` : "",
         city ? `<p><strong>City:</strong> ${city}</p>` : "",
         fullLegalName ? `<p><strong>Full Legal Name:</strong> ${fullLegalName}</p>` : "",
+        highestAcademicDegree ? `<p><strong>Highest Academic Degree:</strong> ${ACADEMIC_DEGREES.find((o) => o.value === highestAcademicDegree)?.label ?? highestAcademicDegree}</p>` : "",
+        degreeTitle ? `<p><strong>Degree Title:</strong> ${degreeTitle}</p>` : "",
+        fieldOfStudy ? `<p><strong>Field of Study:</strong> ${fieldOfStudy}</p>` : "",
         whatsappNumber ? `<p><strong>WhatsApp Number:</strong> ${whatsappCountryCode} ${whatsappNumber}</p>` : "",
         preferredLanguages.length ? `<p><strong>Preferred Languages:</strong> ${preferredLanguages.join(", ")}</p>` : "",
         ageGroup.length ? `<p><strong>Age Group:</strong> ${AGE_GROUPS.filter((o) => ageGroup.includes(o.value)).map((o) => o.label).join(", ")}</p>` : "",
@@ -286,6 +304,9 @@ export function ExpertApplicationForm() {
       extraFormData.set("city", city)
       extraFormData.set("whatsapp_country_code", whatsappCountryCode)
       extraFormData.set("whatsapp_number",whatsappNumber)
+      extraFormData.set("highest_academic_degree", highestAcademicDegree)
+      extraFormData.set("degree_title", degreeTitle)
+      extraFormData.set("field_of_study", fieldOfStudy)
 
       ageGroup.forEach((v) => extraFormData.append("age_group", v))
       specialization.forEach((v) => extraFormData.append("specialization_type", v))
@@ -415,6 +436,62 @@ export function ExpertApplicationForm() {
                 onChange={(e) => setCity(e.target.value)}
                 placeholder={t(
                   { en: "e.g. Riyadh", ar: "مثال: الرياض" },
+                  lang
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Highest Academic Degree", ar: "أعلى مؤهل أكاديمي" }, lang)}
+              </Label>
+              <Select
+                value={highestAcademicDegree}
+                onValueChange={setHighestAcademicDegree}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue
+                    placeholder={t(
+                      { en: "Select degree...", ar: "اختر المؤهل..." },
+                      lang
+                    )}
+                  />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60!">
+                  {ACADEMIC_DEGREES.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Degree Title", ar: "عنوان الشهادة" }, lang)}
+              </Label>
+              <Input
+                value={degreeTitle}
+                onChange={(e) => setDegreeTitle(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Bachelor of Education", ar: "مثال: بكالوريوس تربية" },
+                  lang
+                )}
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label>
+                {t({ en: "Field of Study", ar: "مجال الدراسة" }, lang)}
+              </Label>
+              <Input
+                value={fieldOfStudy}
+                onChange={(e) => setFieldOfStudy(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Special Education", ar: "مثال: التربية الخاصة" },
                   lang
                 )}
               />
