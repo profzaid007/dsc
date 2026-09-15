@@ -36,6 +36,7 @@ import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { LANGUAGES } from "@/lib/language-list"
 import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+import { getDashboardPath } from "@/lib/dashboard-routes"
 import { prefetchDNS } from "react-dom"
 
 const GENDERS = [
@@ -56,7 +57,8 @@ export function IndividualRegistrationForm() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
-  // Extra fields 
+  // Extra fields
+  const [fullLegalName, setFullLegalName] = useState("")
   const [gender, setGender] = useState("")
   const [dateOfBirth, setDateOfBirth] = useState("")
   const [nationality, setNationality] = useState("")
@@ -126,6 +128,7 @@ export function IndividualRegistrationForm() {
 
       const extra_data = await pb.collection("individual_profiles").create({ 
         user: user.id, 
+        full_legal_name: fullLegalName,
         gender: gender, 
         date_of_birth: dateOfBirth,
         nationality: nationality, 
@@ -137,7 +140,7 @@ export function IndividualRegistrationForm() {
       })
 
       await authWithPassword(email.toLowerCase(), password)
-      router.push("/dashboard")
+      router.push(getDashboardPath("individual"))
 
     } catch (err) {
       setError(handlePocketBaseError(err))
@@ -172,6 +175,21 @@ export function IndividualRegistrationForm() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t(
                   { en: "e.g. Ahmed Hassan", ar: "مثال: أحمد حسن" },
+                  lang
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Full Legal Name", ar: "الاسم الكامل القانوني" }, lang)}
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                value={fullLegalName}
+                onChange={(e) => setFullLegalName(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Ahmed bin Hassan Al-Rashid", ar: "مثال: أحمد بن حسن الراشد" },
                   lang
                 )}
               />

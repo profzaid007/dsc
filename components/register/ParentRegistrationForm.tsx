@@ -36,6 +36,7 @@ import { ChildFormBlock, type ChildFormData } from "./ChildFormBlock"
 import { Check, ChevronsUpDown, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+import { getDashboardPath } from "@/lib/dashboard-routes"
 
 const OTHER_VALUE = "other"
 
@@ -72,6 +73,7 @@ export function ParentRegistrationForm() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [nationality, setNationality] = useState("")
   const [residence, setResidence] = useState("")
+  const [fullLegalName, setFullLegalName] = useState("")
   const [relationshipToChildren, setRelationshipToChildren] = useState("")
   const [notes, setNotes] = useState("")
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
@@ -195,6 +197,7 @@ export function ParentRegistrationForm() {
 
       const extra_data = await pb.collection("parent_profiles").create({ 
         user: user.id, 
+        full_legal_name: fullLegalName,
         nationality: nationality, 
         country_of_residence: residence, 
         relationship_to_children: relationshipToChildren, 
@@ -209,9 +212,18 @@ export function ParentRegistrationForm() {
           date_of_birth: child.date_of_birth,
           gender: child.gender,
           grade: child.grade,
-          category: child.portalService.categoryId,
-          sub_category: child.portalService.subCategoryId,
+          portal_type: child.portalService.categoryId,
+          service_type: child.portalService.subCategoryId === OTHER_VALUE
+            ? child.portalService.customSubCategory
+            : child.portalService.subCategoryId,
           notes: child.notes,
+          status: "pending",
+          user_details: {
+            full_legal_name: fullLegalName,
+            name: user.name,
+            email: user.email,
+            contact: user.contact_number,
+          },
           case_details: {
             custom_category:
               child.portalService.categoryId === OTHER_VALUE
@@ -226,7 +238,7 @@ export function ParentRegistrationForm() {
       }
 
       await authWithPassword(email, password)
-      router.push("/dashboard")
+      router.push(getDashboardPath("parent"))
     } catch (err) {
       setError(handlePocketBaseError(err))
     } finally {
@@ -260,6 +272,21 @@ export function ParentRegistrationForm() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t(
                   { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
+                  lang
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Full Legal Name", ar: "الاسم الكامل القانوني" }, lang)}
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                value={fullLegalName}
+                onChange={(e) => setFullLegalName(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Mohammed bin Hassan Al-Rashid", ar: "مثال: محمد بن حسن الراشد" },
                   lang
                 )}
               />

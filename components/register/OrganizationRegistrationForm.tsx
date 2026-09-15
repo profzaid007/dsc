@@ -39,6 +39,7 @@ import {
   type PortalServiceValue,
 } from "./PortalServiceSelector"
 import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+import { getDashboardPath } from "@/lib/dashboard-routes"
 
 const OTHER_VALUE = "other"
 
@@ -77,6 +78,7 @@ export function OrganizationRegistrationForm() {
   const [website, setWebsite] = useState("")
   const [representativeNumber, setRepresentativeNumber] = useState("")
   const [representativeTitle, setRepresentativeTitle] = useState("")
+  const [fullLegalName, setFullLegalName] = useState("")
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -170,6 +172,7 @@ export function OrganizationRegistrationForm() {
 
       const extra_data = await pb.collection("organization_profiles").create({ 
         user: user.id, 
+        full_legal_name: fullLegalName,
         organization_name: organizationName, 
         organization_type: organizationType, 
         country: country, 
@@ -185,9 +188,18 @@ export function OrganizationRegistrationForm() {
       await pb.collection("cases").create({
         user: user.id,
         name: organizationName,
-        category: portalService.categoryId,
-        sub_category: portalService.subCategoryId,
+        portal_type: portalService.categoryId,
+        service_type: portalService.subCategoryId === OTHER_VALUE
+          ? portalService.customSubCategory
+          : portalService.subCategoryId,
         notes,
+        status: "pending",
+        user_details: {
+          full_legal_name: fullLegalName,
+          name: user.name,
+          email: user.email,
+          contact: user.contact_number,
+        },
         case_details: {
           custom_category:
             portalService.categoryId === OTHER_VALUE
@@ -201,7 +213,7 @@ export function OrganizationRegistrationForm() {
       })
 
       await authWithPassword(email.toLowerCase(), password)
-      router.push("/dashboard")
+      router.push(getDashboardPath("organization"))
     } catch (err) {
       setError(handlePocketBaseError(err))
     } finally {
@@ -250,6 +262,21 @@ export function OrganizationRegistrationForm() {
                 onChange={(e) => setOrganizationName(e.target.value)}
                 placeholder={t(
                   { en: "e.g. ABC Company", ar: "مثال: شركة أبجد" },
+                  lang
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                {t({ en: "Full Legal Name", ar: "الاسم الكامل القانوني" }, lang)}
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                value={fullLegalName}
+                onChange={(e) => setFullLegalName(e.target.value)}
+                placeholder={t(
+                  { en: "e.g. Mohammed bin Hassan Al-Rashid", ar: "مثال: محمد بن حسن الراشد" },
                   lang
                 )}
               />
