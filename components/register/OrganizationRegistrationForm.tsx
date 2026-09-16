@@ -378,14 +378,18 @@ export function OrganizationRegistrationForm() {
               <Label>
                 {t({ en: "Country", ar: "الدولة" }, lang)}
               </Label>
-              <Input
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. Saudi Arabia", ar: "مثال: المملكة العربية السعودية" },
-                  lang
-                )}
-              />
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t({ en: "Select country...", ar: "اختر الدولة..." }, lang)} />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60!">
+                  {COUNTRY_CODES.map((c) => (
+                    <SelectItem key={c.value} value={c.label.en}>
+                      {t(c.label, lang)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

@@ -370,28 +370,36 @@ export function ParentRegistrationForm() {
               <Label>
                 {t({ en: "Nationality", ar: "الجنسية" }, lang)}
               </Label>
-              <Input
-                value={nationality}
-                onChange={(e) => setNationality(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. Saudi", ar: "مثال: سعودي" },
-                  lang
-                )}
-              />
+              <Select value={nationality} onValueChange={setNationality}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t({ en: "Select nationality...", ar: "اختر الجنسية..." }, lang)} />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60!">
+                  {COUNTRY_CODES.map((c) => (
+                    <SelectItem key={c.value} value={c.label.en}>
+                      {t(c.label, lang)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label>
                 {t({ en: "Country of Residence", ar: "بلد الإقامة" }, lang)}
               </Label>
-              <Input
-                value={residence}
-                onChange={(e) => setResidence(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. Saudi Arabia", ar: "مثال: المملكة العربية السعودية" },
-                  lang
-                )}
-              />
+              <Select value={residence} onValueChange={setResidence}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t({ en: "Select country of residence...", ar: "اختر بلد الإقامة..." }, lang)} />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-60!">
+                  {COUNTRY_CODES.map((c) => (
+                    <SelectItem key={c.value} value={c.label.en}>
+                      {t(c.label, lang)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
