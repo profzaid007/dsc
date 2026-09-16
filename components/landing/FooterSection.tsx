@@ -12,7 +12,7 @@ export function FooterSection() {
   return (
     <footer id="contact" className="scroll-mt-16" style={{ backgroundColor: "#0b1a30" }}>
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-4">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-x-8 md:gap-y-4">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 md:gap-x-8 md:gap-y-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <Image src="/logo.svg" alt="DSC Logo" width={32} height={32} className="object-contain" />
@@ -29,7 +29,7 @@ export function FooterSection() {
                 </p>
               </div>
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <a
                 href="https://wa.me/message/XGN76UVRTVL7C1"
                 target="_blank"
@@ -73,11 +73,11 @@ export function FooterSection() {
             </div>
           </div>
 
-          <div className="hidden md:flex md:flex-col md:gap-0.5">
+          <div className="hidden md:flex md:flex-col gap-2">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-start md:text-center text-white">
               {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
             </h3>
-            <nav className="grid grid-cols-1 gap-y-0.5 md:grid-cols-2 md:gap-x-4">
+            <nav className="grid grid-cols-1 gap-y-1 md:grid-cols-2 md:gap-x-4">
               {PORTALS.map((portal, i) => (
                 <Link
                   key={i}
@@ -94,7 +94,7 @@ export function FooterSection() {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-start text-white md:text-center">
               {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
             </h3>
-            <div className="grid grid-cols-1 gap-y-1 text-sm text-white/60 md:grid-cols-2 md:gap-x-4 md:gap-y-0.5">
+            <div className="grid grid-cols-1 gap-y-1 text-sm text-white/60 md:grid-cols-2 md:gap-x-4">
               <p>
                 <a
                   href="tel:+962780127435"
@@ -133,8 +133,27 @@ export function FooterSection() {
         </div>
 
         <div className="mt-6 border-t border-white/10 pt-3 text-center text-xs text-white/40 md:mt-3 md:pt-2">
-          © 2026 Development Secrets Consultancy.{" "}
-          {t({ en: "All rights reserved.", ar: "جميع الحقوق محفوظة." }, lang)}
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/privacy-policy"
+              className="transition-colors hover:text-[#00a4e4]"
+            >
+              {t({ en: "Privacy Policy", ar: "سياسة الخصوصية" }, lang)}
+            </Link>
+            <span aria-hidden="true" className="text-white/20">
+              ·
+            </span>
+            <Link
+              href="/terms"
+              className="transition-colors hover:text-[#00a4e4]"
+            >
+              {t({ en: "Terms of Service", ar: "شروط الخدمة" }, lang)}
+            </Link>
+          </div>
+          <div className="mt-1">
+            © 2026 Development Secrets Consultancy.{" "}
+            {t({ en: "All rights reserved.", ar: "جميع الحقوق محفوظة." }, lang)}
+          </div>
         </div>
       </div>
     </footer>
