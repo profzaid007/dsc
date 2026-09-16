@@ -17,7 +17,7 @@ const NAV_LINKS = [
   { en: "Home", ar: "الرئيسية", href: "/" },
   { en: "About Us", ar: "من نحن", href: "/about-us" },
   { en: "Blog", ar: "المدونة", href: "/blog" },
-  { en: "Training and Courses", ar: "الدورات والبرامج", href: "/programmes" },
+  { en: "Training and Lectures", ar: "التدريب والمحاضرات", href: "/programmes" },
   { en: "Contact Us", ar: "اتصل بنا", href: "/contact-us" }
 ]
 
