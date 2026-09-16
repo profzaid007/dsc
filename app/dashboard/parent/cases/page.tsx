@@ -19,7 +19,7 @@ export default function ProfilesPage() {
   const { profiles, isLoading } = useProfiles()
 
   if (isLoading) {
-    return <PageLoader text={lang === "ar" ? "جارٍ تحميل الحالات..." : "Loading cases..."} />
+    return <PageLoader text={lang === "ar" ? "جارٍ تحميل الأطفال..." : "Loading children..."} />
   }
 
   return (
@@ -27,16 +27,16 @@ export default function ProfilesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            {lang === "ar" ? "الحالات" : "Cases"}
+            {lang === "ar" ? "الأطفال" : "Children"}
           </h1>
           <p className="text-muted-foreground">
-            {lang === "ar" ? "إدارة حالاتك" : "Manage your cases"}
+            {lang === "ar" ? "إدارة أطفالك" : "Manage your children"}
           </p>
         </div>
         <Link href="/dashboard/parent/cases/new">
           <Button>
             <Plus className="me-2 h-4 w-4" />
-            {lang === "ar" ? "حالة جديدة" : "New Case"}
+            {lang === "ar" ? "إضافة طفل" : "Add Child"}
           </Button>
         </Link>
       </div>
@@ -46,15 +46,15 @@ export default function ProfilesPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderKanban className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-medium">
-              {lang === "ar" ? "لا توجد حالات بعد" : "No cases yet"}
+              {lang === "ar" ? "لا يوجد أطفال بعد" : "No children yet"}
             </h3>
             <p className="mb-4 text-center text-muted-foreground">
               {lang === "ar"
-                ? "أنشئ حالتك الأولى للبدء"
-                : "Create your first case to get started"}
+                ? "أضف طفلك الأول للبدء"
+                : "Add your first child to get started"}
             </p>
             <Link href="/dashboard/parent/cases/new">
-              <Button>{lang === "ar" ? "إنشاء الحالة" : "Create Case"}</Button>
+              <Button>{lang === "ar" ? "إضافة طفل" : "Add Child"}</Button>
             </Link>
           </CardContent>
         </Card>

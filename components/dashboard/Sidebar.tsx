@@ -140,13 +140,8 @@ const individualNavigation: NavItem[] = [
 const parentNavigation: NavItem[] = [
   {
     name: { en: "Children", ar: "الأطفال" },
-    href: "/dashboard/parent/children",
-    icon: Baby,
-  },
-  {
-    name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/parent/cases",
-    icon: Users,
+    icon: Baby,
   },
   {
     name: { en: "Appointments", ar: "المواعيد" },

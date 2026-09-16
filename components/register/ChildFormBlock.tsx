@@ -27,6 +27,7 @@ export interface ChildFormData {
   date_of_birth: string
   gender: string
   grade: string
+  relationship: string
   portalService: PortalServiceValue
   notes: string
 }
@@ -138,6 +139,21 @@ export function ChildFormBlock({
               onChange={(e) => updateField("grade", e.target.value)}
               placeholder={t(
                 { en: "e.g. Grade 3", ar: "مثال: الصف الثالث" },
+                lang
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              {t({ en: "Relationship to Child", ar: "صلة القرابة بالطفل" }, lang)}
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              value={data.relationship}
+              onChange={(e) => updateField("relationship", e.target.value)}
+              placeholder={t(
+                { en: "e.g. Father", ar: "مثال: أب" },
                 lang
               )}
             />

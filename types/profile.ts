@@ -19,6 +19,7 @@ export interface Profile {
   date_of_birth?: string
   gender?: "male" | "female"
   grade?: string
+  relationship?: string
   notes?: string
   category?: string
   sub_category?: string

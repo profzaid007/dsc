@@ -252,6 +252,14 @@ export default function ProfileDetailPage({
                         {profile.grade || "—"}
                       </span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {lang === "ar" ? "صلة القرابة" : "Relationship"}
+                      </span>
+                      <span className="font-medium">
+                        {profile.relationship || "—"}
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
 

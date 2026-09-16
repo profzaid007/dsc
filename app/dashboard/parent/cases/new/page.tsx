@@ -63,6 +63,7 @@ export default function NewProfilePage() {
     date_of_birth: "",
     gender: "",
     grade: "",
+    relationship: "",
     notes: "",
   })
 
@@ -167,6 +168,7 @@ export default function NewProfilePage() {
         date_of_birth: isTraining ? "" : formData.date_of_birth,
         gender: isTraining ? undefined : (formData.gender as "male" | "female"),
         grade: isTraining ? "" : formData.grade,
+        relationship: isTraining ? undefined : formData.relationship,
         notes: formData.notes,
         portal_type: isTraining ? "Attending Training" : portalService.categoryId,
         service_type: isTraining
@@ -334,6 +336,22 @@ export default function NewProfilePage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="relationship">
+                  {lang === "ar" ? "صلة القرابة بالطفل" : "Relationship to Child"}
+                  <span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Input
+                  id="relationship"
+                  value={formData.relationship}
+                  onChange={(e) =>
+                    setFormData({ ...formData, relationship: e.target.value })
+                  }
+                  placeholder={lang === "ar" ? "مثال: أب" : "e.g. Father"}
+                  required
+                />
               </div>
             </CardContent>
           </Card>

@@ -51,6 +51,7 @@ function makeEmptyChild(): ChildFormData {
     date_of_birth: "",
     gender: "",
     grade: "",
+    relationship: "",
     portalService: {
       categoryId: "",
       subCategoryId: "",
@@ -59,6 +60,21 @@ function makeEmptyChild(): ChildFormData {
     },
     notes: "",
   }
+}
+
+function hasChildData(child: ChildFormData): boolean {
+  return Boolean(
+    child.name ||
+      child.date_of_birth ||
+      child.gender ||
+      child.grade ||
+      child.relationship ||
+      child.portalService.categoryId ||
+      child.portalService.subCategoryId ||
+      child.portalService.customCategory ||
+      child.portalService.customSubCategory ||
+      child.notes
+  )
 }
 
 export function ParentRegistrationForm() {
@@ -74,7 +90,6 @@ export function ParentRegistrationForm() {
   const [nationality, setNationality] = useState("")
   const [residence, setResidence] = useState("")
   const [fullLegalName, setFullLegalName] = useState("")
-  const [relationshipToChildren, setRelationshipToChildren] = useState("")
   const [notes, setNotes] = useState("")
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -117,12 +132,18 @@ export function ParentRegistrationForm() {
       return false
     }
     for (const child of children) {
-      if (!child.name || !child.date_of_birth || !child.gender) {
+      if (!hasChildData(child)) continue
+      if (
+        !child.name ||
+        !child.date_of_birth ||
+        !child.gender ||
+        !child.relationship
+      ) {
         setError(
           t(
             {
-              en: "Please fill in all child information",
-              ar: "يرجى ملء جميع معلومات الطفل",
+              en: "Please fill in all required child information including relationship",
+              ar: "يرجى ملء جميع معلومات الطفل المطلوبة بما في ذلك صلة القرابة",
             },
             lang
           )
@@ -200,18 +221,19 @@ export function ParentRegistrationForm() {
         full_legal_name: fullLegalName,
         nationality: nationality, 
         country_of_residence: residence, 
-        relationship_to_children: relationshipToChildren, 
         preferred_languages: preferredLanguages.join(", "),
         notes: notes,
       })
 
       for (const child of children) {
+        if (!hasChildData(child)) continue
         await pb.collection("cases").create({
           user: user.id,
           name: child.name,
           date_of_birth: child.date_of_birth,
           gender: child.gender,
           grade: child.grade,
+          relationship: child.relationship,
           portal_type: child.portalService.categoryId,
           service_type: child.portalService.subCategoryId === OTHER_VALUE
             ? child.portalService.customSubCategory
@@ -401,20 +423,6 @@ export function ParentRegistrationForm() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label>
-                {t({ en: "Relationship to Children", ar: "صلة القرابة بالأطفال" }, lang)}
-              </Label>
-              <Input
-                value={relationshipToChildren}
-                onChange={(e) => setRelationshipToChildren(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. Father", ar: "مثال: أب" },
-                  lang
-                )}
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
@@ -522,9 +530,20 @@ export function ParentRegistrationForm() {
       </Card>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">
-          {t({ en: "Children Information", ar: "معلومات الأطفال" }, lang)}
-        </h3>
+        <div>
+          <h3 className="text-lg font-semibold">
+            {t({ en: "Children Information", ar: "معلومات الأطفال" }, lang)}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {t(
+              {
+                en: "Optional. You can add your children now or later from your dashboard.",
+                ar: "اختياري. يمكنك إضافة أطفالك الآن أو لاحقًا من لوحة التحكم.",
+              },
+              lang
+            )}
+          </p>
+        </div>
         {children.map((child, index) => (
           <ChildFormBlock
             key={child.id}
@@ -532,7 +551,7 @@ export function ParentRegistrationForm() {
             data={child}
             onChange={(data) => updateChild(child.id, data)}
             onRemove={() => removeChild(child.id)}
-            canRemove={children.length > 1}
+            canRemove
           />
         ))}
 
