@@ -180,7 +180,7 @@ export default function AdminNewCasePage() {
           password: newUser.password,
           passwordConfirm: newUser.password,
           name: newUser.name,
-          role: "user",
+          role: "individual",
           contact_number: "",
           is_active: true,
           emailVisibility: true,
@@ -656,34 +656,14 @@ export default function AdminNewCasePage() {
             <CardDescription>
               {t(
                 {
-                  en: "Optional — assign this case to a registered user, or create a new account for the user. You can link a user later from the case page.",
-                  ar: "اختياري — خصص هذه الحالة لمستخدم مسجل، أو أنشئ حسابًا جديدًا للمستخدم. يمكنك ربط مستخدم لاحقًا من صفحة الحالة.",
+                  en: "Optional — assign this case to a registered user",
+                  ar: "اختياري — خصص هذه الحالة لمستخدم مسجل",
                 },
                 lang
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant={userLinkMode === "existing" ? "default" : "outline"}
-                onClick={() => setUserLinkMode("existing")}
-              >
-                <Link2 className="me-2 h-4 w-4" />
-                {t({ en: "Existing User", ar: "مستخدم مسجل" }, lang)}
-              </Button>
-              <Button
-                type="button"
-                variant={userLinkMode === "new" ? "default" : "outline"}
-                onClick={() => setUserLinkMode("new")}
-              >
-                <UserPlus className="me-2 h-4 w-4" />
-                {t({ en: "New User", ar: "مستخدم جديد" }, lang)}
-              </Button>
-            </div>
-
-            {userLinkMode === "existing" ? (
+          <CardContent className="space-y-4">            
               <div className="space-y-2">
                 <Label>
                   {t({ en: "User", ar: "المستخدم" }, lang)}
@@ -711,76 +691,14 @@ export default function AdminNewCasePage() {
                     ) : (
                       linkableUsers.map((user) => (
                         <SelectItem key={user.id} value={user.id}>
-                          {user.name} ({user.email})
+                          {user.name} ({user.email}) - {user.role}
                         </SelectItem>
                       ))
                     )}
                   </SelectContent>
                 </Select>
               </div>
-            ) : (
-              <div className="space-y-4 rounded-lg border p-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new_user_name">
-                    {t({ en: "Full Name", ar: "الاسم الكامل" }, lang)}
-                  </Label>
-                  <Input
-                    id="new_user_name"
-                    value={newUser.name}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, name: e.target.value })
-                    }
-                    placeholder={t(
-                      { en: "Enter full name", ar: "أدخل الاسم الكامل" },
-                      lang
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new_user_email">
-                    {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
-                  </Label>
-                  <Input
-                    id="new_user_email"
-                    type="email"
-                    value={newUser.email}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, email: e.target.value })
-                    }
-                    placeholder={t(
-                      { en: "Enter email address", ar: "أدخل عنوان البريد الإلكتروني" },
-                      lang
-                    )}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new_user_password">
-                    {t({ en: "Password", ar: "كلمة المرور" }, lang)}
-                  </Label>
-                  <Input
-                    id="new_user_password"
-                    type="password"
-                    value={newUser.password}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, password: e.target.value })
-                    }
-                    placeholder={t(
-                      { en: "Min 8 characters", ar: "8 أحرف على الأقل" },
-                      lang
-                    )}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      {
-                        en: "The user will log in with this email and password, and the credentials are emailed after creation. Leave these fields empty to create the case without an account.",
-                        ar: "سيسجل المستخدم الدخول بهذا البريد وكلمة المرور، وسيتم إرسال بيانات الدخول عبر البريد الإلكتروني بعد الإنشاء. اترك هذه الحقول فارغة لإنشاء الحالة بدون حساب.",
-                      },
-                      lang
-                    )}
-                  </p>
-                </div>
-              </div>
-            )}
+           
           </CardContent>
         </Card>
 

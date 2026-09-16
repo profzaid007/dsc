@@ -59,6 +59,51 @@ export function useUsers() {
     }
   }
 
+  const getDeletionBlockers = async (id: string) => {
+    const [userCases, expertAssignments] = await Promise.all([
+      pb.collection("cases").getFullList({ filter: `user = "${id}"` }),
+      pb.collection("case_experts").getFullList({
+        filter: `expert_id = "${id}"`,
+      }),
+    ])
+    return {
+      cases: userCases.length,
+      assignments: expertAssignments.length,
+    }
+  }
+
+  const deleteUser = async (id: string) => {
+    try {
+      const blockers = await getDeletionBlockers(id)
+      if (blockers.cases > 0 || blockers.assignments > 0) {
+        throw new Error(
+          "This user has linked cases or expert assignments and cannot be deleted."
+        )
+      }
+
+      const profileCollections = [
+        "individual_profiles",
+        "parent_profiles",
+        "organization_profiles",
+        "expert_profiles",
+      ]
+      for (const collection of profileCollections) {
+        const records = await pb.collection(collection).getFullList({
+          filter: `user = "${id}"`,
+        })
+        for (const record of records) {
+          await pb.collection(collection).delete(record.id)
+        }
+      }
+
+      await pb.collection("users").delete(id)
+      setUsers((prev) => prev.filter((u) => u.id !== id))
+    } catch (error) {
+      console.error("Failed to delete user:", error)
+      throw error
+    }
+  }
+
   const refresh = fetchUsers
 
   return {
@@ -66,6 +111,8 @@ export function useUsers() {
     isLoading,
     addUser,
     updateUser,
+    deleteUser,
+    getDeletionBlockers,
     refresh,
   }
 }

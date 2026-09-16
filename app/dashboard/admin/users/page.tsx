@@ -28,17 +28,33 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   Plus,
   Users,
   Search,
   ArrowUp,
   ArrowDown,
+  ArrowLeft,
   Eye,
+  Trash2,
+  User as UserIcon,
+  Building2,
+  GraduationCap,
+  Shield,
 } from "lucide-react"
 import type { User, UserRole } from "@/types/user"
+import { IndividualRegistrationForm } from "@/components/register/IndividualRegistrationForm"
+import { ParentRegistrationForm } from "@/components/register/ParentRegistrationForm"
+import { OrganizationRegistrationForm } from "@/components/register/OrganizationRegistrationForm"
+import { ExpertApplicationForm } from "@/components/register/ExpertApplicationForm"
 
 const ALL_ROLES: UserRole[] = [
-  "user",
   "admin",
   "individual",
   "parent",
@@ -48,7 +64,6 @@ const ALL_ROLES: UserRole[] = [
 ]
 
 const roleLabels: Record<string, { en: string; ar: string }> = {
-  user: { en: "User", ar: "مستخدم" },
   admin: { en: "Admin", ar: "مشرف" },
   individual: { en: "Individual", ar: "فرد" },
   parent: { en: "Parent", ar: "ولي أمر" },
@@ -57,9 +72,57 @@ const roleLabels: Record<string, { en: string; ar: string }> = {
   super_admin: { en: "Super Admin", ar: "مشرف عام" },
 }
 
+type AddUserType = "individual" | "parent" | "organization" | "expert" | "admin"
+
+const USER_TYPE_OPTIONS: {
+  value: AddUserType
+  icon: React.ComponentType<{ className?: string }>
+  label: { en: string; ar: string }
+  description: { en: string; ar: string }
+}[] = [
+  {
+    value: "individual",
+    icon: UserIcon,
+    label: { en: "Individual", ar: "فرد" },
+    description: { en: "Personal user account", ar: "حساب مستخدم فردي" },
+  },
+  {
+    value: "parent",
+    icon: Users,
+    label: { en: "Parent", ar: "ولي أمر" },
+    description: { en: "Parent or guardian account", ar: "حساب ولي أمر" },
+  },
+  {
+    value: "organization",
+    icon: Building2,
+    label: { en: "Organization", ar: "منظمة" },
+    description: { en: "Institution or company account", ar: "حساب مؤسسة أو شركة" },
+  },
+  {
+    value: "expert",
+    icon: GraduationCap,
+    label: { en: "Expert", ar: "خبير" },
+    description: { en: "Expert account with profile", ar: "حساب خبير مع ملف شخصي" },
+  },
+  {
+    value: "admin",
+    icon: Shield,
+    label: { en: "Admin", ar: "مشرف" },
+    description: { en: "Admin or super admin account", ar: "حساب مشرف أو مشرف عام" },
+  },
+]
+
 export default function AdminUsersPage() {
   const { lang } = useLang()
-  const { users, isLoading: isUsersLoading, addUser, updateUser } = useUsers()
+  const {
+    users,
+    isLoading: isUsersLoading,
+    addUser,
+    updateUser,
+    deleteUser,
+    getDeletionBlockers,
+    refresh,
+  } = useUsers()
   const { profiles, isLoading: isProfilesLoading } = useProfiles()
 
   const [searchQuery, setSearchQuery] = useState("")
@@ -67,6 +130,7 @@ export default function AdminUsersPage() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
   const [showAddModal, setShowAddModal] = useState(false)
+  const [addUserType, setAddUserType] = useState<AddUserType | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -74,10 +138,19 @@ export default function AdminUsersPage() {
     email: "",
     password: "",
     passwordConfirm: "",
-    role: "user" as UserRole,
+    role: "admin" as UserRole,
     contact_number: "",
     is_active: true,
   })
+
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
+  const [deleteBlockers, setDeleteBlockers] = useState<{
+    cases: number
+    assignments: number
+  } | null>(null)
+  const [isCheckingDelete, setIsCheckingDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
 
   const isLoading = isUsersLoading || isProfilesLoading
 
@@ -124,7 +197,27 @@ export default function AdminUsersPage() {
     }
   }
 
-  const handleAddUser = async (e: React.FormEvent) => {
+  const resetAddModal = () => {
+    setShowAddModal(false)
+    setAddUserType(null)
+    setFormError(null)
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      passwordConfirm: "",
+      role: "admin",
+      contact_number: "",
+      is_active: true,
+    })
+  }
+
+  const handleRegistrationSuccess = () => {
+    resetAddModal()
+    refresh()
+  }
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError(null)
 
@@ -152,16 +245,7 @@ export default function AdminUsersPage() {
         contact_number: formData.contact_number,
         is_active: formData.is_active,
       })
-      setShowAddModal(false)
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        passwordConfirm: "",
-        role: "user",
-        contact_number: "",
-        is_active: true,
-      })
+      resetAddModal()
     } catch (error: any) {
       setFormError(
         error?.message ||
@@ -171,6 +255,51 @@ export default function AdminUsersPage() {
       )
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteClick = async (user: User) => {
+    setDeleteTarget(user)
+    setDeleteBlockers(null)
+    setDeleteError("")
+    setIsCheckingDelete(true)
+    try {
+      const blockers = await getDeletionBlockers(user.id)
+      setDeleteBlockers(blockers)
+    } catch (error: any) {
+      setDeleteError(
+        error?.message ||
+          (lang === "ar"
+            ? "فشل التحقق من السجلات المرتبطة."
+            : "Failed to check linked records.")
+      )
+    } finally {
+      setIsCheckingDelete(false)
+    }
+  }
+
+  const closeDeleteDialog = () => {
+    setDeleteTarget(null)
+    setDeleteBlockers(null)
+    setDeleteError("")
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    setIsDeleting(true)
+    setDeleteError("")
+    try {
+      await deleteUser(deleteTarget.id)
+      closeDeleteDialog()
+    } catch (error: any) {
+      setDeleteError(
+        error?.message ||
+          (lang === "ar"
+            ? "فشل حذف المستخدم. حاول مرة أخرى."
+            : "Failed to delete user. Please try again.")
+      )
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -195,6 +324,10 @@ export default function AdminUsersPage() {
       </div>
     )
   }
+
+  const isBlocked =
+    deleteBlockers !== null &&
+    (deleteBlockers.cases > 0 || deleteBlockers.assignments > 0)
 
   return (
     <div className="space-y-6">
@@ -387,12 +520,25 @@ export default function AdminUsersPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <SmartLink href={`/dashboard/admin/users/${user.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="me-1 h-4 w-4" />
-                          {lang === "ar" ? "عرض" : "View"}
-                        </Button>
-                      </SmartLink>
+                      <div className="flex items-center justify-end gap-1">
+                        <SmartLink href={`/dashboard/admin/users/${user.id}`}>
+                          <Button variant="ghost" size="sm">
+                            <Eye className="me-1 h-4 w-4" />
+                            {lang === "ar" ? "عرض" : "View"}
+                          </Button>
+                        </SmartLink>
+                        {user.role !== "super_admin" &&
+                          (caseCounts[user.id] || 0) === 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleDeleteClick(user)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -403,154 +549,347 @@ export default function AdminUsersPage() {
       )}
 
       {/* Add User Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="mx-4 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle>{lang === "ar" ? "إضافة مستخدم جديد" : "Add New User"}</CardTitle>
-              <CardDescription>
-                {lang === "ar"
-                  ? "أنشئ حساب مستخدم جديد. سيتمكن المستخدم من تسجيل الدخول باستخدام بريده الإلكتروني وكلمة المرور."
-                  : "Create a new user account. The user will be able to log in with their email and password."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddUser} className="space-y-4">
-                {formError && (
-                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                    {formError}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="name">
-                    {lang === "ar" ? "الاسم الكامل" : "Full Name"} <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder={lang === "ar" ? "أدخل الاسم الكامل" : "Enter full name"}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">
-                    {lang === "ar" ? "البريد الإلكتروني" : "Email"} <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder={lang === "ar" ? "أدخل عنوان البريد الإلكتروني" : "Enter email address"}
-                    required
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+      <Dialog
+        open={showAddModal}
+        onOpenChange={(open) => {
+          if (!open) resetAddModal()
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {addUserType
+                ? lang === "ar"
+                  ? `إضافة ${
+                      USER_TYPE_OPTIONS.find((o) => o.value === addUserType)?.label.ar
+                    } جديد`
+                  : `Add New ${
+                      USER_TYPE_OPTIONS.find((o) => o.value === addUserType)?.label.en
+                    }`
+                : lang === "ar"
+                  ? "إضافة مستخدم جديد"
+                  : "Add New User"}
+            </DialogTitle>
+            <DialogDescription>
+              {addUserType
+                ? lang === "ar"
+                  ? "املأ النموذج أدناه لإنشاء الحساب."
+                  : "Fill in the form below to create the account."
+                : lang === "ar"
+                  ? "اختر نوع المستخدم الذي تريد إنشاءه."
+                  : "Choose the type of user you want to create."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {!addUserType ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {USER_TYPE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setAddUserType(option.value)
+                    setFormError(null)
+                  }}
+                  className="flex items-start gap-3 rounded-lg border p-4 text-start transition-colors hover:border-primary/50 hover:bg-primary/5"
+                >
+                  <option.icon className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
+                  <span>
+                    <span className="block font-medium">
+                      {option.label[lang]}
+                    </span>
+                    <span className="block text-sm text-muted-foreground">
+                      {option.description[lang]}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setAddUserType(null)
+                  setFormError(null)
+                }}
+              >
+                <ArrowLeft className="me-2 h-4 w-4" />
+                {lang === "ar" ? "رجوع" : "Back"}
+              </Button>
+
+              {addUserType === "admin" ? (
+                <form onSubmit={handleAddAdmin} className="space-y-4">
+                  {formError && (
+                    <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                      {formError}
+                    </div>
+                  )}
                   <div className="space-y-2">
-                    <Label htmlFor="password">
-                      {lang === "ar" ? "كلمة المرور" : "Password"} <span className="text-red-500">*</span>
+                    <Label htmlFor="name">
+                      {lang === "ar" ? "الاسم الكامل" : "Full Name"}{" "}
+                      <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder={lang === "ar" ? "8 أحرف على الأقل" : "Min 8 characters"}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="passwordConfirm">
-                      {lang === "ar" ? "تأكيد كلمة المرور" : "Confirm Password"} <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="passwordConfirm"
-                      type="password"
-                      value={formData.passwordConfirm}
+                      id="name"
+                      value={formData.name}
                       onChange={(e) =>
-                        setFormData({ ...formData, passwordConfirm: e.target.value })
+                        setFormData({ ...formData, name: e.target.value })
                       }
-                      placeholder={lang === "ar" ? "أكد كلمة المرور" : "Confirm password"}
+                      placeholder={
+                        lang === "ar" ? "أدخل الاسم الكامل" : "Enter full name"
+                      }
                       required
                     />
                   </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="role">
-                      {lang === "ar" ? "الدور" : "Role"}
+                    <Label htmlFor="email">
+                      {lang === "ar" ? "البريد الإلكتروني" : "Email"}{" "}
+                      <span className="text-red-500">*</span>
                     </Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, role: value as UserRole })
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ALL_ROLES.filter((r) => r !== "super_admin").map((role) => (
-                          <SelectItem key={role} value={role}>
-                            {roleLabels[role]?.[lang] || role}
+                      placeholder={
+                        lang === "ar"
+                          ? "أدخل عنوان البريد الإلكتروني"
+                          : "Enter email address"
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="password">
+                        {lang === "ar" ? "كلمة المرور" : "Password"}{" "}
+                        <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) =>
+                          setFormData({ ...formData, password: e.target.value })
+                        }
+                        placeholder={
+                          lang === "ar" ? "8 أحرف على الأقل" : "Min 8 characters"
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="passwordConfirm">
+                        {lang === "ar"
+                          ? "تأكيد كلمة المرور"
+                          : "Confirm Password"}{" "}
+                        <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="passwordConfirm"
+                        type="password"
+                        value={formData.passwordConfirm}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            passwordConfirm: e.target.value,
+                          })
+                        }
+                        placeholder={
+                          lang === "ar" ? "أكد كلمة المرور" : "Confirm password"
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="role">
+                        {lang === "ar" ? "الدور" : "Role"}
+                      </Label>
+                      <Select
+                        value={formData.role}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, role: value as UserRole })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">
+                            {roleLabels.admin?.[lang]}
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          <SelectItem value="super_admin">
+                            {roleLabels.super_admin?.[lang]}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact_number">
+                        {lang === "ar" ? "رقم الاتصال" : "Contact Number"}
+                      </Label>
+                      <Input
+                        id="contact_number"
+                        value={formData.contact_number}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            contact_number: e.target.value,
+                          })
+                        }
+                        placeholder={
+                          lang === "ar" ? "رقم الهاتف" : "Phone number"
+                        }
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact_number">
-                      {lang === "ar" ? "رقم الاتصال" : "Contact Number"}
-                    </Label>
-                    <Input
-                      id="contact_number"
-                      value={formData.contact_number}
-                      onChange={(e) =>
-                        setFormData({ ...formData, contact_number: e.target.value })
+                  <div className="flex items-center gap-2 pt-2">
+                    <Switch
+                      id="is_active"
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, is_active: checked })
                       }
-                      placeholder={lang === "ar" ? "رقم الهاتف" : "Phone number"}
                     />
+                    <Label htmlFor="is_active" className="cursor-pointer">
+                      {lang === "ar" ? "حساب نشط" : "Active account"}
+                    </Label>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 pt-2">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, is_active: checked })
-                    }
-                  />
-                  <Label htmlFor="is_active" className="cursor-pointer">
-                    {lang === "ar" ? "حساب نشط" : "Active account"}
-                  </Label>
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowAddModal(false)
-                      setFormError(null)
-                    }}
-                  >
-                    {lang === "ar" ? "إلغاء" : "Cancel"}
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting
-                      ? lang === "ar"
-                        ? "جارٍ الإنشاء..."
-                        : "Creating..."
-                      : lang === "ar"
-                        ? "إنشاء مستخدم"
-                        : "Create User"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={resetAddModal}
+                    >
+                      {lang === "ar" ? "إلغاء" : "Cancel"}
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting
+                        ? lang === "ar"
+                          ? "جارٍ الإنشاء..."
+                          : "Creating..."
+                        : lang === "ar"
+                          ? "إنشاء مستخدم"
+                          : "Create User"}
+                    </Button>
+                  </div>
+                </form>
+              ) : addUserType === "individual" ? (
+                <IndividualRegistrationForm onSuccess={handleRegistrationSuccess} />
+              ) : addUserType === "parent" ? (
+                <ParentRegistrationForm
+                  onSuccess={handleRegistrationSuccess}
+                  hideChildren
+                />
+              ) : addUserType === "organization" ? (
+                <OrganizationRegistrationForm onSuccess={handleRegistrationSuccess} />
+              ) : (
+                <ExpertApplicationForm onSuccess={handleRegistrationSuccess} />
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Dialog */}
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog()
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {lang === "ar" ? "حذف المستخدم" : "Delete User"}
+            </DialogTitle>
+            <DialogDescription>
+              {deleteTarget?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          {isCheckingDelete ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              {lang === "ar"
+                ? "جارٍ التحقق من السجلات المرتبطة..."
+                : "Checking linked records..."}
+            </p>
+          ) : deleteError ? (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                {deleteError}
+              </div>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={closeDeleteDialog}>
+                  {lang === "ar" ? "إغلاق" : "Close"}
+                </Button>
+              </div>
+            </div>
+          ) : isBlocked ? (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+                {lang === "ar"
+                  ? `لا يمكن حذف ${deleteTarget?.name}. لدى هذا المستخدم سجلات مرتبطة:`
+                  : `Cannot delete ${deleteTarget?.name}. This user has linked records:`}
+                <ul className="mt-2 list-disc space-y-1 ps-5">
+                  {deleteBlockers!.cases > 0 && (
+                    <li>
+                      {lang === "ar"
+                        ? `${deleteBlockers!.cases} حالة`
+                        : `${deleteBlockers!.cases} case(s)`}
+                    </li>
+                  )}
+                  {deleteBlockers!.assignments > 0 && (
+                    <li>
+                      {lang === "ar"
+                        ? `${deleteBlockers!.assignments} تعيين خبير`
+                        : `${deleteBlockers!.assignments} expert assignment(s)`}
+                    </li>
+                  )}
+                </ul>
+              </div>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={closeDeleteDialog}>
+                  {lang === "ar" ? "إغلاق" : "Close"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {lang === "ar"
+                  ? `هل أنت متأكد من حذف ${deleteTarget?.name}؟ لا يمكن التراجع عن هذا الإجراء.`
+                  : `Are you sure you want to delete ${deleteTarget?.name}? This action cannot be undone.`}
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={closeDeleteDialog}>
+                  {lang === "ar" ? "إلغاء" : "Cancel"}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting
+                    ? lang === "ar"
+                      ? "جارٍ الحذف..."
+                      : "Deleting..."
+                    : lang === "ar"
+                      ? "حذف"
+                      : "Delete"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

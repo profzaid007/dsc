@@ -35,6 +35,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   ArrowLeft,
   Users,
   Mail,
@@ -43,6 +50,7 @@ import {
   FolderKanban,
   Plus,
   Eye,
+  Trash2,
 } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/format-date"
@@ -67,7 +75,6 @@ const GRADES = [
 ]
 
 const roleLabels: Record<string, { en: string; ar: string }> = {
-  user: { en: "User", ar: "مستخدم" },
   admin: { en: "Admin", ar: "مشرف" },
   individual: { en: "Individual", ar: "فرد" },
   parent: { en: "Parent", ar: "ولي أمر" },
@@ -84,7 +91,7 @@ export default function AdminUserDetailPage({
   const { id: userId } = use(params)
   const router = useRouter()
   const { lang } = useLang()
-  const { users } = useUsers()
+  const { users, deleteUser, getDeletionBlockers } = useUsers()
   const { profiles, isLoading: isProfilesLoading, refresh: refreshProfiles } = useProfiles()
 
   const [activeTab, setActiveTab] = useState("overview")
@@ -99,9 +106,61 @@ export default function AdminUserDetailPage({
     notes: "",
   })
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteBlockers, setDeleteBlockers] = useState<{
+    cases: number
+    assignments: number
+  } | null>(null)
+  const [isCheckingDelete, setIsCheckingDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
+
   const user = users.find((u) => u.id === userId)
 
   const userCases = profiles.filter((p) => p.user === userId)
+
+  const handleDeleteClick = async () => {
+    setShowDeleteDialog(true)
+    setDeleteBlockers(null)
+    setDeleteError("")
+    setIsCheckingDelete(true)
+    try {
+      const blockers = await getDeletionBlockers(userId)
+      setDeleteBlockers(blockers)
+    } catch (error: any) {
+      setDeleteError(
+        error?.message ||
+          (lang === "ar"
+            ? "فشل التحقق من السجلات المرتبطة."
+            : "Failed to check linked records.")
+      )
+    } finally {
+      setIsCheckingDelete(false)
+    }
+  }
+
+  const closeDeleteDialog = () => {
+    setShowDeleteDialog(false)
+    setDeleteBlockers(null)
+    setDeleteError("")
+  }
+
+  const confirmDelete = async () => {
+    setIsDeleting(true)
+    setDeleteError("")
+    try {
+      await deleteUser(userId)
+      router.push("/dashboard/admin/users")
+    } catch (error: any) {
+      setDeleteError(
+        error?.message ||
+          (lang === "ar"
+            ? "فشل حذف المستخدم. حاول مرة أخرى."
+            : "Failed to delete user. Please try again.")
+      )
+      setIsDeleting(false)
+    }
+  }
 
   const handleAddCase = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -171,6 +230,16 @@ export default function AdminUserDetailPage({
           <h1 className="text-2xl font-bold text-primary">{user.name}</h1>
           <p className="text-muted-foreground">{user.email}</p>
         </div>
+        {user.role !== "super_admin" && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteClick}
+          >
+            <Trash2 className="me-1 h-4 w-4" />
+            {lang === "ar" ? "حذف" : "Delete"}
+          </Button>
+        )}
         <Badge
           variant="outline"
           className={
@@ -570,6 +639,98 @@ export default function AdminUserDetailPage({
           </Card>
         </div>
       )}
+
+      {/* Delete User Dialog */}
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog()
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {lang === "ar" ? "حذف المستخدم" : "Delete User"}
+            </DialogTitle>
+            <DialogDescription>{user.name}</DialogDescription>
+          </DialogHeader>
+
+          {isCheckingDelete ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              {lang === "ar"
+                ? "جارٍ التحقق من السجلات المرتبطة..."
+                : "Checking linked records..."}
+            </p>
+          ) : deleteError ? (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                {deleteError}
+              </div>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={closeDeleteDialog}>
+                  {lang === "ar" ? "إغلاق" : "Close"}
+                </Button>
+              </div>
+            </div>
+          ) : deleteBlockers &&
+            (deleteBlockers.cases > 0 || deleteBlockers.assignments > 0) ? (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+                {lang === "ar"
+                  ? `لا يمكن حذف ${user.name}. لدى هذا المستخدم سجلات مرتبطة:`
+                  : `Cannot delete ${user.name}. This user has linked records:`}
+                <ul className="mt-2 list-disc space-y-1 ps-5">
+                  {deleteBlockers.cases > 0 && (
+                    <li>
+                      {lang === "ar"
+                        ? `${deleteBlockers.cases} حالة`
+                        : `${deleteBlockers.cases} case(s)`}
+                    </li>
+                  )}
+                  {deleteBlockers.assignments > 0 && (
+                    <li>
+                      {lang === "ar"
+                        ? `${deleteBlockers.assignments} تعيين خبير`
+                        : `${deleteBlockers.assignments} expert assignment(s)`}
+                    </li>
+                  )}
+                </ul>
+              </div>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={closeDeleteDialog}>
+                  {lang === "ar" ? "إغلاق" : "Close"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {lang === "ar"
+                  ? `هل أنت متأكد من حذف ${user.name}؟ لا يمكن التراجع عن هذا الإجراء.`
+                  : `Are you sure you want to delete ${user.name}? This action cannot be undone.`}
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={closeDeleteDialog}>
+                  {lang === "ar" ? "إلغاء" : "Cancel"}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting
+                    ? lang === "ar"
+                      ? "جارٍ الحذف..."
+                      : "Deleting..."
+                    : lang === "ar"
+                      ? "حذف"
+                      : "Delete"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

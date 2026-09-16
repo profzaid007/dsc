@@ -28,8 +28,7 @@ export function useProfiles() {
             : []
       } else if (
         currentUser &&
-        (currentUser.role === "user" ||
-          currentUser.role === "individual" ||
+        (currentUser.role === "individual" ||
           currentUser.role === "organization" ||
           currentUser.role === "parent")
       ) {

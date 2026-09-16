@@ -45,7 +45,11 @@ const GENDERS = [
   { label: { en: "Other", ar: "آخر" }, value: "other" },
 ]
 
-export function IndividualRegistrationForm() {
+export function IndividualRegistrationForm({
+  onSuccess,
+}: {
+  onSuccess?: () => void
+} = {}) {
 
   const { lang } = useLang()
   const router = useRouter()
@@ -139,8 +143,12 @@ export function IndividualRegistrationForm() {
         notes: notes,
       })
 
-      await authWithPassword(email.toLowerCase(), password)
-      router.push(getDashboardPath("individual"))
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        await authWithPassword(email.toLowerCase(), password)
+        router.push(getDashboardPath("individual"))
+      }
 
     } catch (err) {
       setError(handlePocketBaseError(err))

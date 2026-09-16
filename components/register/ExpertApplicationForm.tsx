@@ -115,7 +115,11 @@ const ACADEMIC_DEGREES = [
   { value: "other", label: "Other" },
 ]
 
-export function ExpertApplicationForm() {
+export function ExpertApplicationForm({
+  onSuccess,
+}: {
+  onSuccess?: () => void
+} = {}) {
   const { lang } = useLang()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -346,7 +350,9 @@ export function ExpertApplicationForm() {
         }),
       })
 
-      if (!response.ok) {
+      if (onSuccess) {
+        onSuccess()
+      } else if (!response.ok) {
         router.push("/login?expert_pending=1&warn=1")
       } else {
         router.push("/login?expert_pending=1")

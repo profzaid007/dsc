@@ -189,7 +189,7 @@ export default function AdminCaseDetailPage({
         password: newUser.password,
         passwordConfirm: newUser.password,
         name: newUser.name,
-        role: "user",
+        role: "individual",
         contact_number: "",
         is_active: true,
         emailVisibility: true,

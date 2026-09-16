@@ -44,6 +44,11 @@ type NavItem = {
 
 const adminNavigation: NavItem[] = [
   {
+    name: { en: "Cases", ar: "الحالات" },
+    href: "/dashboard/admin/cases",
+    icon: Users,
+  },
+  {
     name: { en: "Tools", ar: "الأدوات" },
     href: "/dashboard/admin/tools",
     icon: Wrench,

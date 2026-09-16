@@ -77,7 +77,13 @@ function hasChildData(child: ChildFormData): boolean {
   )
 }
 
-export function ParentRegistrationForm() {
+export function ParentRegistrationForm({
+  onSuccess,
+  hideChildren = false,
+}: {
+  onSuccess?: () => void
+  hideChildren?: boolean
+} = {}) {
   const { lang } = useLang()
   const router = useRouter()
 
@@ -259,8 +265,12 @@ export function ParentRegistrationForm() {
         })
       }
 
-      await authWithPassword(email, password)
-      router.push(getDashboardPath("parent"))
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        await authWithPassword(email, password)
+        router.push(getDashboardPath("parent"))
+      }
     } catch (err) {
       setError(handlePocketBaseError(err))
     } finally {
@@ -529,42 +539,44 @@ export function ParentRegistrationForm() {
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold">
-            {t({ en: "Children Information", ar: "معلومات الأطفال" }, lang)}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t(
-              {
-                en: "Optional. You can add your children now or later from your dashboard.",
-                ar: "اختياري. يمكنك إضافة أطفالك الآن أو لاحقًا من لوحة التحكم.",
-              },
-              lang
-            )}
-          </p>
-        </div>
-        {children.map((child, index) => (
-          <ChildFormBlock
-            key={child.id}
-            index={index}
-            data={child}
-            onChange={(data) => updateChild(child.id, data)}
-            onRemove={() => removeChild(child.id)}
-            canRemove
-          />
-        ))}
+      {!hideChildren && (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold">
+              {t({ en: "Children Information", ar: "معلومات الأطفال" }, lang)}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                {
+                  en: "Optional. You can add your children now or later from your dashboard.",
+                  ar: "اختياري. يمكنك إضافة أطفالك الآن أو لاحقًا من لوحة التحكم.",
+                },
+                lang
+              )}
+            </p>
+          </div>
+          {children.map((child, index) => (
+            <ChildFormBlock
+              key={child.id}
+              index={index}
+              data={child}
+              onChange={(data) => updateChild(child.id, data)}
+              onRemove={() => removeChild(child.id)}
+              canRemove
+            />
+          ))}
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addChild}
-          className="w-full gap-2"
-        >
-          <Plus className="h-4 w-4 p-4" />
-          {t({ en: "Add Another Child", ar: "إضافة طفل آخر" }, lang)}
-        </Button>
-      </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addChild}
+            className="w-full gap-2"
+          >
+            <Plus className="h-4 w-4 p-4" />
+            {t({ en: "Add Another Child", ar: "إضافة طفل آخر" }, lang)}
+          </Button>
+        </div>
+      )}
 
       <Button type="submit" className="p-4 w-full" disabled={isSubmitting}>
         {isSubmitting

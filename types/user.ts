@@ -1,6 +1,5 @@
 export type UserType = "parent" | "individual" | "organization" | "expert"
 export type UserRole =
-  | "user"
   | "super_admin"
   | "admin"
   | "individual"

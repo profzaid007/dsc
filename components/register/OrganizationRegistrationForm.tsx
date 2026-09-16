@@ -53,7 +53,11 @@ const ORGANIZATION_TYPES = [
   { label: { en: "Other", ar: "أخرى" }, value: "other" },
 ]
 
-export function OrganizationRegistrationForm() {
+export function OrganizationRegistrationForm({
+  onSuccess,
+}: {
+  onSuccess?: () => void
+} = {}) {
   const { lang } = useLang()
   const router = useRouter()
 
@@ -212,8 +216,12 @@ export function OrganizationRegistrationForm() {
         },
       })
 
-      await authWithPassword(email.toLowerCase(), password)
-      router.push(getDashboardPath("organization"))
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        await authWithPassword(email.toLowerCase(), password)
+        router.push(getDashboardPath("organization"))
+      }
     } catch (err) {
       setError(handlePocketBaseError(err))
     } finally {
