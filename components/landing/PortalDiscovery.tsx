@@ -33,6 +33,20 @@ const PORTAL_CATEGORIES = [
     ),
   },
   {
+    id: "4",
+    color: "#e9a23b",
+    name: { en: "Education", ar: "التعليم" },
+    icon: (
+      <svg viewBox="0 0 32 32" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 9l11-5 11 5-11 5z" />
+        <path d="M8 12v7c3 3 13 3 16 0v-7" />
+        <path d="M27 10v9" />
+        <path d="M5 20v-8" />
+        <path d="M3 24h7" />
+      </svg>
+    ),
+  },
+  {
     id: "3",
     color: "#7042ad",
     name: { en: "Innovation", ar: "الابتكار" },
@@ -47,20 +61,6 @@ const PORTAL_CATEGORIES = [
         <path d="M7 6l2 2" />
         <path d="M25 6l-2 2" />
         <circle cx="16" cy="13" r="3" />
-      </svg>
-    ),
-  },
-  {
-    id: "4",
-    color: "#e9a23b",
-    name: { en: "Education", ar: "التعليم" },
-    icon: (
-      <svg viewBox="0 0 32 32" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 9l11-5 11 5-11 5z" />
-        <path d="M8 12v7c3 3 13 3 16 0v-7" />
-        <path d="M27 10v9" />
-        <path d="M5 20v-8" />
-        <path d="M3 24h7" />
       </svg>
     ),
   },
