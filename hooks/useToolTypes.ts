@@ -4,6 +4,7 @@ import { useState, useCallback } from "react"
 import { toolTypesCollection } from "@/lib/pb-collections"
 import type { ToolTypeRecord } from "@/lib/tool-types"
 import type { BilingualString } from "@/types/tool"
+import { getErrorMessage } from "@/lib/pb"
 
 export function useToolTypes() {
   const [toolTypes, setToolTypes] = useState<ToolTypeRecord[]>([])
@@ -18,8 +19,7 @@ export function useToolTypes() {
       setToolTypes(data)
       return data
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch tool types"
+      const message = getErrorMessage(err)
       setError(message)
       return []
     } finally {

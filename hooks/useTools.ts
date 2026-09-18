@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { toolsCollection } from "@/lib/pb-collections"
 import type { Tool, ToolType, ServiceType } from "@/types/tool"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export function useTools() {
   const [tools, setTools] = useState<Tool[]>([])
@@ -14,6 +16,7 @@ export function useTools() {
       setTools(data)
     } catch (error) {
       console.error("Failed to fetch tools:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }

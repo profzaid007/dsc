@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { getPortalById } from "@/lib/portals"
 import { infoPagesCollection } from "@/lib/pb-collections"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import { Card } from "@/components/ui/card"
 import { DragList } from "@/components/ui/drag-list"
 import { Badge } from "@/components/ui/badge"
@@ -62,7 +63,8 @@ export default function CmsPortalServicesPage() {
         portal_name: portalId,
       })
       router.push(`/cms/info/${portalId}/${newPage.slug}`)
-    } catch {
+    } catch (err) {
+      toast.error(getErrorMessage(err))
       setCreating(false)
     }
   }
@@ -89,8 +91,8 @@ export default function CmsPortalServicesPage() {
       setPages(items)
     } 
 
-    catch {
-      alert("Failed to save order.")
+    catch (err) {
+      toast.error("Failed to save order.", { description: getErrorMessage(err) })
     } 
 
     finally {

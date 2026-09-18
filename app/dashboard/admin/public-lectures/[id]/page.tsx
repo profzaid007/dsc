@@ -9,6 +9,8 @@ import { useLectures } from "@/hooks/useLectures"
 import { LectureForm } from "@/components/lectures"
 import { useLang } from "@/lib/lang-context"
 import { formatDateTime } from "@/lib/format-date"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 import {
   ArrowLeft,
   Calendar,
@@ -82,7 +84,10 @@ export default function AdminLectureDetailPage({
       setIsEditing(false)
     } catch (error) {
       console.error("Failed to update lecture:", error)
-      alert(lang === "ar" ? "فشل تحديث المحاضرة" : "Failed to update lecture")
+      toast.error(
+        lang === "ar" ? "فشل تحديث المحاضرة" : "Failed to update lecture",
+        { description: getErrorMessage(error) }
+      )
     } finally {
       setIsSubmitting(false)
     }

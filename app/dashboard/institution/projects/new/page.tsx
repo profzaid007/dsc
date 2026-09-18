@@ -29,6 +29,8 @@ import { PORTALS, getPortalById } from "@/lib/portals"
 import { trainingProgramsCollection } from "@/lib/pb-training"
 import type { TrainingProgram } from "@/types/training"
 import { type PortalServiceValue } from "@/components/register/PortalServiceSelector"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 const OTHER_VALUE = "other"
 const TRAINING_SERVICE_ID = "attending-training"
@@ -224,6 +226,7 @@ export default function NewProfilePage() {
       router.push(`/dashboard/institution/projects/${profileId}`)
     } catch (error) {
       console.error("Failed to create profile:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }

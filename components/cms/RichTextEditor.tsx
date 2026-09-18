@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2, Save, RotateCcw } from "lucide-react"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 import "suneditor/css/editor"
 import "suneditor/css/contents"
@@ -126,6 +128,7 @@ export function RichTextEditor({
               return false
             } catch (error) {
               console.error("Image upload failed:", error)
+              toast.error(getErrorMessage(error))
               return false
             }
           },

@@ -35,6 +35,8 @@ import {
   Send,
 } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 const assignmentStatusLabels: Record<
   string,
@@ -91,6 +93,7 @@ export default function ProfileDetailPage({
         }
       } catch (error) {
         console.error("Failed to fetch expert role:", error)
+        toast.error(getErrorMessage(error))
       }
     }
     fetchExpertRole()

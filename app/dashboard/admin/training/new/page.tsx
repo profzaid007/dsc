@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation"
 import { ProgramForm } from "@/components/training"
 import { useTraining } from "@/hooks/useTraining"
 import { useLang } from "@/lib/lang-context"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,7 +23,10 @@ export default function NewTrainingProgramPage() {
       router.push(`/dashboard/admin/training/${newId}`)
     } catch (error) {
       console.error("Failed to create program:", error)
-      alert(lang === "ar" ? "فشل إنشاء البرنامج" : "Failed to create program")
+      toast.error(
+        lang === "ar" ? "فشل إنشاء البرنامج" : "Failed to create program",
+        { description: getErrorMessage(error) }
+      )
     } finally {
       setIsSubmitting(false)
     }

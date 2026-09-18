@@ -22,7 +22,8 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Loader2, ArrowLeft, Trash2, Copy } from "lucide-react"
-import pb from "@/lib/pb"
+import { toast } from "sonner"
+import pb, { getErrorMessage } from "@/lib/pb"
 
 function extractThumbnail(record: Record<string, unknown>): string {
   const t = record.thumbnail
@@ -152,8 +153,8 @@ export default function CmsBlogEditorPage() {
         if (updated.slug !== slug) {
           router.push(`/cms/blog/${updated.slug}`)
         }
-      } catch {
-        alert("Failed to save. Make sure the slug is unique.")
+      } catch (err) {
+        toast.error("Failed to save. Make sure the slug is unique.", { description: getErrorMessage(err) })
       } finally {
         setSaving(false)
       }
@@ -248,8 +249,8 @@ export default function CmsBlogEditorPage() {
         setPage(updated)
         pageRecordRef.current = updated as unknown as Record<string, unknown>
         setThumbnailUrl(pb.files.getUrl(updated as never, updated.thumbnail))
-      } catch {
-        alert("Failed to upload thumbnail.")
+      } catch (err) {
+        toast.error("Failed to upload thumbnail.", { description: getErrorMessage(err) })
       } finally {
         setUploadingThumbnail(false)
       }
@@ -264,8 +265,8 @@ export default function CmsBlogEditorPage() {
       setPage(updated)
       pageRecordRef.current = updated as unknown as Record<string, unknown>
       setThumbnailUrl(null)
-    } catch {
-      alert("Failed to remove thumbnail.")
+    } catch (err) {
+      toast.error("Failed to remove thumbnail.", { description: getErrorMessage(err) })
     }
   }, [page])
 
@@ -276,7 +277,8 @@ export default function CmsBlogEditorPage() {
     try {
       await blogPagesCollection.delete(page.id)
       router.push("/cms/blog")
-    } catch {
+    } catch (err) {
+      toast.error(getErrorMessage(err))
       setDeleting(false)
     }
   }, [page, router])

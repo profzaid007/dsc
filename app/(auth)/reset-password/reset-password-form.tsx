@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { confirmPasswordReset, handlePocketBaseError } from "@/lib/pb"
+import { confirmPasswordReset, getErrorMessage } from "@/lib/pb"
 
 export function ResetPasswordForm() {
   const router = useRouter()
@@ -48,7 +48,7 @@ export function ResetPasswordForm() {
       if (status === 400) {
         setError("Invalid or expired reset link. Please request a new one.")
       } else {
-        setError(handlePocketBaseError(err))
+        setError(getErrorMessage(err))
       }
     } finally {
       setIsLoading(false)

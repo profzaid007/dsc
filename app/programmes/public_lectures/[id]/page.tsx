@@ -20,6 +20,8 @@ import {
   User,
   Briefcase,
 } from "lucide-react"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export default function PublicLectureDetailPage({
   params,
@@ -39,6 +41,7 @@ export default function PublicLectureDetailPage({
         setLecture(data)
       } catch (err) {
         console.error("Failed to load lecture:", err)
+        toast.error(getErrorMessage(err))
       } finally {
         setIsLoading(false)
       }

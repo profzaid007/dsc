@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useUsers } from "@/hooks/useUsers"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import type { RecordModel } from "pocketbase"
 import {
   Card,
@@ -222,7 +222,7 @@ export default function ExpertApprovalPage() {
       setSelectedUser(null)
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : "Failed to approve. Please try again."
+        getErrorMessage(err) || "Failed to approve. Please try again."
       )
       await refresh()
     } finally {

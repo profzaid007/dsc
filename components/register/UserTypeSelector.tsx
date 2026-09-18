@@ -5,7 +5,8 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
+import { toast } from "sonner"
 import type { LookupEntry } from "@/types/lookup"
 import { User, Users, Building2, GraduationCap } from "lucide-react"
 
@@ -37,6 +38,7 @@ export function UserTypeSelector() {
         setUserTypes(data as unknown as LookupEntry[])
       } catch (error) {
         console.error("Failed to fetch user types:", error)
+        toast.error(getErrorMessage(error))
       } finally {
         setIsLoading(false)
       }

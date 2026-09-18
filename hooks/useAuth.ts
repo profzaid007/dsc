@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import pb, {
   getCurrentUser,
+  getErrorMessage,
   isAuthenticated as checkAuth,
   isAdmin as checkIsAdmin,
   isSuperAdmin as checkIsSuperAdmin,
@@ -65,7 +66,11 @@ export function useAuth() {
       refreshAuth()
       return { success: true as const, role: user.role }
     } catch (error: any) {
-      return { success: false, error: error.message }
+      const status = (error as { status?: number } | null)?.status
+      if (status === 400 || status === 401) {
+        return { success: false, error: "Incorrect email or password." }
+      }
+      return { success: false, error: getErrorMessage(error) }
     }
   }
 

@@ -7,7 +7,7 @@ import { useUsers } from "@/hooks/useUsers"
 import { useLang } from "@/lib/lang-context"
 import { t } from "@/lib/i18n"
 import { PORTALS, getPortalById } from "@/lib/portals"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import { sendCredentialsEmail } from "@/lib/send-credentials-email"
 import {
   Card,
@@ -257,20 +257,18 @@ export default function AdminNewCasePage() {
           })
           emailSent = true
         } catch (error) {
-          emailError =
-            error instanceof Error ? error.message : "Failed to send email"
+          emailError = getErrorMessage(error) || "Failed to send email"
         }
       }
 
       setResult({ caseId, caseName, user: createdUser, emailSent, emailError })
     } catch (error) {
       setFormError(
-        error instanceof Error
-          ? error.message
-          : t(
-              { en: "Failed to create case. Please try again.", ar: "فشل إنشاء الحالة. حاول مرة أخرى." },
-              lang
-            )
+        getErrorMessage(error) ||
+          t(
+            { en: "Failed to create case. Please try again.", ar: "فشل إنشاء الحالة. حاول مرة أخرى." },
+            lang
+          )
       )
     } finally {
       setIsSubmitting(false)

@@ -14,7 +14,7 @@ import { useLang } from "@/lib/lang-context"
 import { formatDate } from "@/lib/format-date"
 import { trainingProgramsCollection } from "@/lib/pb-training"
 import { casesCollection } from "@/lib/pb-collections"
-import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
 import type { TrainingProgram } from "@/types/training"
 import {
@@ -29,6 +29,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react"
+import { toast } from "sonner"
 
 const typeLabels = {
   online: { en: "Online", ar: "عبر الإنترنت" },
@@ -96,6 +97,7 @@ export default function TrainingProgrammeDetailPage({
         setProgram(data)
       } catch (err) {
         console.error("Failed to load programme:", err)
+        toast.error(getErrorMessage(err))
       } finally {
         setIsLoading(false)
       }
@@ -120,6 +122,7 @@ export default function TrainingProgrammeDetailPage({
         }
       } catch (err) {
         console.error("Failed to check existing enrollment:", err)
+        toast.error(getErrorMessage(err))
       } finally {
         setIsEnrolleeChecking(false)
       }
@@ -198,7 +201,7 @@ export default function TrainingProgrammeDetailPage({
       )
       setEnrollForm(initialEnrollmentForm)
     } catch (err) {
-      setEnrollError(handlePocketBaseError(err))
+      setEnrollError(getErrorMessage(err))
     } finally {
       setIsEnrolling(false)
     }
@@ -232,7 +235,7 @@ export default function TrainingProgrammeDetailPage({
           : "You have been enrolled successfully!"
       )
     } catch (err) {
-      setEnrollError(handlePocketBaseError(err))
+      setEnrollError(getErrorMessage(err))
     } finally {
       setIsEnrolling(false)
     }

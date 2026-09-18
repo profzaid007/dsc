@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
@@ -184,16 +186,16 @@ export default function AdminUsersPage() {
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
       await updateUser(userId, { role: newRole as UserRole })
-    } catch {
-      // Error already logged in hook
+    } catch (err) {
+      toast.error(getErrorMessage(err))
     }
   }
 
   const handleStatusChange = async (userId: string, isActive: boolean) => {
     try {
       await updateUser(userId, { is_active: isActive })
-    } catch {
-      // Error already logged in hook
+    } catch (err) {
+      toast.error(getErrorMessage(err))
     }
   }
 
@@ -248,7 +250,7 @@ export default function AdminUsersPage() {
       resetAddModal()
     } catch (error: any) {
       setFormError(
-        error?.message ||
+        getErrorMessage(error) ||
           (lang === "ar"
             ? "فشل إنشاء المستخدم. حاول مرة أخرى."
             : "Failed to create user. Please try again.")
@@ -268,7 +270,7 @@ export default function AdminUsersPage() {
       setDeleteBlockers(blockers)
     } catch (error: any) {
       setDeleteError(
-        error?.message ||
+        getErrorMessage(error) ||
           (lang === "ar"
             ? "فشل التحقق من السجلات المرتبطة."
             : "Failed to check linked records.")
@@ -293,7 +295,7 @@ export default function AdminUsersPage() {
       closeDeleteDialog()
     } catch (error: any) {
       setDeleteError(
-        error?.message ||
+        getErrorMessage(error) ||
           (lang === "ar"
             ? "فشل حذف المستخدم. حاول مرة أخرى."
             : "Failed to delete user. Please try again.")

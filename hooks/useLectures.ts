@@ -8,6 +8,7 @@ import type {
   UpdateLectureInput,
   LectureStats,
 } from "@/types/lecture"
+import { getErrorMessage } from "@/lib/pb"
 import {
   lecturesCollection,
   lectureRegistrationsCollection,
@@ -34,7 +35,8 @@ export function useLectures() {
       setRegistrations(registrationsData)
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load lectures")
+      const message = getErrorMessage(err)
+      setError(message)
       console.error("Failed to load lectures:", err)
     } finally {
       setIsLoading(false)

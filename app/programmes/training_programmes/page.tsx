@@ -8,6 +8,8 @@ import { trainingProgramsCollection } from "@/lib/pb-training"
 import { ProgramCard } from "@/components/training"
 import type { TrainingProgram } from "@/types/training"
 import { Search, GraduationCap } from "lucide-react"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export default function TrainingProgrammesPage() {
   const router = useRouter()
@@ -23,6 +25,7 @@ export default function TrainingProgrammesPage() {
         setPrograms(data)
       } catch (err) {
         console.error("Failed to load training programmes:", err)
+        toast.error(getErrorMessage(err))
       } finally {
         setIsLoading(false)
       }

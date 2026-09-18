@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import type { PaymentBankDetails } from "@/lib/payment"
 import { DEFAULT_BANK_DETAILS } from "@/lib/payment"
+import { toast } from "sonner"
 
 export function usePaymentSettings() {
   const [bankDetails, setBankDetails] =
@@ -23,6 +24,7 @@ export function usePaymentSettings() {
       }
     } catch (error) {
       console.error("Failed to fetch payment settings:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }

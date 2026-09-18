@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { caseExpertsCollection } from "@/lib/pb-collections"
 import type { CaseExpert } from "@/types/allocation"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export function useAllocations(caseId?: string) {
   const [allocations, setAllocations] = useState<CaseExpert[]>([])
@@ -19,6 +21,7 @@ export function useAllocations(caseId?: string) {
       setAllocations(data)
     } catch (error) {
       console.error("Failed to fetch allocations:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }

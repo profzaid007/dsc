@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export default function ContactPage() {
   const { lang } = useLang()
@@ -60,16 +62,8 @@ export default function ContactPage() {
       }
 
       setDone(true)
-    } catch {
-      setError(
-        t(
-          {
-            en: "Something went wrong. Please try again later.",
-            ar: "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقًا.",
-          },
-          lang
-        )
-      )
+    } catch (err) {
+      toast.error(getErrorMessage(err))
     } finally {
       setSubmitting(false)
     }

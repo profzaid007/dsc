@@ -18,7 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Eye, Loader2, Plus, Pencil, Lock, Trash2 } from "lucide-react"
-import pb from "@/lib/pb"
+import { toast } from "sonner"
+import pb, { getErrorMessage } from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
 
 export default function CmsHomePagesListPage() {
@@ -58,8 +59,8 @@ export default function CmsHomePagesListPage() {
       setNewTitle("")
       setShowCreate(false)
       loadPages()
-    } catch {
-      alert("Failed to create page. Slug must be unique.")
+    } catch (err) {
+      toast.error("Failed to create page. Slug must be unique.", { description: getErrorMessage(err) })
     } finally {
       setCreatingPage(false)
     }
@@ -71,8 +72,8 @@ export default function CmsHomePagesListPage() {
         is_published: !page.is_published,
       })
       setPages((prev) => prev.map((p) => (p.id === page.id ? updated : p)))
-    } catch {
-      alert("Failed to update status.")
+    } catch (err) {
+      toast.error("Failed to update status.", { description: getErrorMessage(err) })
     }
   }
 
@@ -81,8 +82,8 @@ export default function CmsHomePagesListPage() {
     try {
       await homePagesCollection.delete(page.id)
       setPages((prev) => prev.filter((p) => p.id !== page.id))
-    } catch {
-      alert("Failed to delete page.")
+    } catch (err) {
+      toast.error("Failed to delete page.", { description: getErrorMessage(err) })
     }
   }
 

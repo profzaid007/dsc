@@ -11,6 +11,7 @@ import type {
   UpdateCertificateInput,
   ProgramStats,
 } from "@/types/training"
+import { getErrorMessage } from "@/lib/pb"
 import {
   trainingProgramsCollection,
   trainingRegistrationsCollection,
@@ -38,7 +39,8 @@ export function useTraining() {
       setRegistrations(registrationsData)
       setCertificates(certificatesData)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load training data")
+      const message = getErrorMessage(err)
+      setError(message)
       console.error("Failed to load training data:", err)
     } finally {
       setIsLoading(false)

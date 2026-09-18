@@ -41,6 +41,8 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useLang } from "@/lib/lang-context"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 import type { ExpertRole } from "@/types/allocation"
 import { EXPERT_ROLES } from "@/types/allocation"
 import {
@@ -216,10 +218,11 @@ export default function AllocationsPage() {
       )
     } catch (error) {
       console.error("Failed to save role tool types:", error)
-      alert(
+      toast.error(
         lang === "ar"
           ? "فشل الحفظ. يرجى المحاولة مرة أخرى."
-          : "Failed to save. Please try again."
+          : "Failed to save. Please try again.",
+        { description: getErrorMessage(error) }
       )
     } finally {
       setIsSavingAll(false)
@@ -241,10 +244,11 @@ export default function AllocationsPage() {
       setNewRoleName("")
     } catch (error) {
       console.error("Failed to add role:", error)
-      alert(
+      toast.error(
         lang === "ar"
           ? "فشل إضافة الدور. يرجى المحاولة مرة أخرى."
-          : "Failed to add role. Please try again."
+          : "Failed to add role. Please try again.",
+        { description: getErrorMessage(error) }
       )
     } finally {
       setIsAddingRole(false)
@@ -271,10 +275,11 @@ export default function AllocationsPage() {
       })
     } catch (error) {
       console.error("Failed to delete role:", error)
-      alert(
+      toast.error(
         lang === "ar"
           ? "فشل حذف الدور. يرجى المحاولة مرة أخرى."
-          : "Failed to delete role. Please try again."
+          : "Failed to delete role. Please try again.",
+        { description: getErrorMessage(error) }
       )
     }
   }
@@ -398,10 +403,11 @@ export default function AllocationsPage() {
       await refreshAllocations()
     } catch (error) {
       console.error("Failed to save allocations:", error)
-      alert(
+      toast.error(
         lang === "ar"
           ? "فشل حفظ التخصيصات. يرجى المحاولة مرة أخرى."
-          : "Failed to save allocations. Please try again."
+          : "Failed to save allocations. Please try again.",
+        { description: getErrorMessage(error) }
       )
     } finally {
       setIsSaving(false)

@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { casesCollection, caseExpertsCollection } from "@/lib/pb-collections"
 import type { Profile } from "@/types/profile"
-import { getCurrentUser } from "@/lib/pb"
+import { toast } from "sonner"
+import { getCurrentUser, getErrorMessage } from "@/lib/pb"
 
 export function useProfiles() {
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -39,6 +40,7 @@ export function useProfiles() {
       setProfiles(data)
     } catch (error) {
       console.error("Failed to fetch profiles:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }

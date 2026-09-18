@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { homePagesCollection } from "@/lib/pb-collections"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import type { HomePage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { ArrowLeft, Loader2, Trash2, Copy } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 
@@ -43,7 +44,8 @@ export default function CmsHomePageEditorPage() {
             slug,
             title: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, " "),
           })
-        } catch {
+        } catch (err) {
+          toast.error(getErrorMessage(err))
           existingPage = await homePagesCollection.getBySlug(slug)
         }
       }
@@ -140,7 +142,8 @@ export default function CmsHomePageEditorPage() {
     try {
       await homePagesCollection.delete(page.id)
       router.push("/cms/home-pages")
-    } catch {
+    } catch (err) {
+      toast.error(getErrorMessage(err))
       setDeleting(false)
     }
   }, [page, router])

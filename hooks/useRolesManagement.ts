@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { rolesManagementCollection } from "@/lib/pb-collections"
 import type { RolesManagement } from "@/types/expert-role"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export function useRolesManagement() {
   const [roles, setRoles] = useState<RolesManagement[]>([])
@@ -14,6 +16,7 @@ export function useRolesManagement() {
       setRoles(data)
     } catch (error) {
       console.error("Failed to fetch roles:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }

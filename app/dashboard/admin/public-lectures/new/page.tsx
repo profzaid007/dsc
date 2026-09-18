@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation"
 import { LectureForm } from "@/components/lectures"
 import { useLectures } from "@/hooks/useLectures"
 import { useLang } from "@/lib/lang-context"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,7 +23,10 @@ export default function NewLecturePage() {
       router.push("/dashboard/admin/public-lectures")
     } catch (error) {
       console.error("Failed to create lecture:", error)
-      alert(lang === "ar" ? "فشل إنشاء المحاضرة" : "Failed to create lecture")
+      toast.error(
+        lang === "ar" ? "فشل إنشاء المحاضرة" : "Failed to create lecture",
+        { description: getErrorMessage(error) }
+      )
     } finally {
       setIsSubmitting(false)
     }

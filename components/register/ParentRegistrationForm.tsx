@@ -35,7 +35,7 @@ import { LANGUAGES } from "@/lib/language-list"
 import { ChildFormBlock, type ChildFormData } from "./ChildFormBlock"
 import { Check, ChevronsUpDown, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 
 const OTHER_VALUE = "other"
@@ -272,7 +272,7 @@ export function ParentRegistrationForm({
         router.push(getDashboardPath("parent"))
       }
     } catch (err) {
-      setError(handlePocketBaseError(err))
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }

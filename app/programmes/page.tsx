@@ -11,6 +11,8 @@ import { ProgramCard } from "@/components/training"
 import type { Lecture } from "@/types/lecture"
 import type { TrainingProgram } from "@/types/training"
 import { BookOpen, GraduationCap, ChevronRight } from "lucide-react"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export default function ProgrammesPage() {
   const router = useRouter()
@@ -39,6 +41,7 @@ export default function ProgrammesPage() {
         setPrograms(upcomingPrograms)
       } catch (err) {
         console.error("Failed to load programmes:", err)
+        toast.error(getErrorMessage(err))
       } finally {
         setIsLoading(false)
       }

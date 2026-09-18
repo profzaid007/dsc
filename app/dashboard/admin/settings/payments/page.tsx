@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import { usePaymentSettings } from "@/hooks/usePaymentSettings"
 import type { PaymentBankDetails } from "@/lib/payment"
+import { getErrorMessage } from "@/lib/pb"
 import {
   Card,
   CardContent,
@@ -68,11 +69,10 @@ export default function PaymentSettingsPage() {
       setSaved(true)
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : lang === "ar"
+        getErrorMessage(err) ||
+          (lang === "ar"
             ? "فشل حفظ الإعدادات."
-            : "Failed to save settings."
+            : "Failed to save settings.")
       )
     } finally {
       setIsSaving(false)

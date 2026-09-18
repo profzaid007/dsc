@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import { caseToolsCollection, toolTypesCollection } from "@/lib/pb-collections"
 import type { CaseTool } from "@/types/assignment"
 import type { ToolConfig } from "@/types/tool"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export function useAssignments(caseId?: string) {
   const [assignments, setAssignments] = useState<CaseTool[]>([])
@@ -20,6 +22,7 @@ export function useAssignments(caseId?: string) {
       setAssignments(data)
     } catch (error) {
       console.error("Failed to fetch assignments:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }

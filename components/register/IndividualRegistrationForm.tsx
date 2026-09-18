@@ -35,7 +35,7 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { LANGUAGES } from "@/lib/language-list"
-import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 import { prefetchDNS } from "react-dom"
 
@@ -151,7 +151,7 @@ export function IndividualRegistrationForm({
       }
 
     } catch (err) {
-      setError(handlePocketBaseError(err))
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }

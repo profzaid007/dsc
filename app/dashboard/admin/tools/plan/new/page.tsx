@@ -6,6 +6,8 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAuth } from "@/hooks/useAuth"
 import { toolTypesCollection } from "@/lib/pb-collections"
+import { getErrorMessage } from "@/lib/pb"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -89,9 +91,10 @@ export default function PlanBuilderPage({
         setTypeError("")
       } catch (error) {
         setTypeError(
-          lang === "ar"
-            ? 'نوع الأداة "plan" غير موجود. يرجى الاتصال بالمسؤول.'
-            : 'Tool type "plan" not found. Please contact admin.'
+          getErrorMessage(error) ||
+            (lang === "ar"
+              ? 'نوع الأداة "plan" غير موجود. يرجى الاتصال بالمسؤول.'
+              : 'Tool type "plan" not found. Please contact admin.')
         )
         console.error("Failed to fetch plan type:", error)
       }
@@ -188,6 +191,7 @@ export default function PlanBuilderPage({
         }
       } catch (e) {
         console.error("Failed to read searchParams:", e)
+        toast.error(getErrorMessage(e))
       } finally {
         setIsInitializing(false)
         hasInitialized.current = true
@@ -313,6 +317,7 @@ export default function PlanBuilderPage({
       }
     } catch (error) {
       console.error(editAssignmentId ? "Failed to update plan:" : "Failed to create plan:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }

@@ -49,7 +49,8 @@ import type {
   PlanConfig,
 } from "@/types/tool"
 import { cn } from "@/lib/utils"
-import pb from "@/lib/pb"
+import { toast } from "sonner"
+import pb, { getErrorMessage } from "@/lib/pb"
 import { PaymentGate } from "@/components/cases/PaymentGate"
 
 const RATING_LABELS: Record<number, { en: string; ar: string }> = {
@@ -343,6 +344,7 @@ export default function TakeSurveyToolPage({
       })
     } catch (error) {
       console.error("Failed to save notes:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsSavingNotes(false)
     }
@@ -412,6 +414,7 @@ export default function TakeSurveyToolPage({
       router.push(`/dashboard/individual/cases/${profile.id}`)
     } catch (error) {
       console.error("Failed to submit:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }

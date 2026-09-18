@@ -38,7 +38,7 @@ import {
   PortalServiceSelector,
   type PortalServiceValue,
 } from "./PortalServiceSelector"
-import pb, { authWithPassword, handlePocketBaseError } from "@/lib/pb"
+import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 
 const OTHER_VALUE = "other"
@@ -223,7 +223,7 @@ export function OrganizationRegistrationForm({
         router.push(getDashboardPath("organization"))
       }
     } catch (err) {
-      setError(handlePocketBaseError(err))
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }

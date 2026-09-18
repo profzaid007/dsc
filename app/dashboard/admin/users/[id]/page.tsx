@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import {
   Card,
   CardContent,
@@ -129,7 +129,7 @@ export default function AdminUserDetailPage({
       setDeleteBlockers(blockers)
     } catch (error: any) {
       setDeleteError(
-        error?.message ||
+        getErrorMessage(error) ||
           (lang === "ar"
             ? "فشل التحقق من السجلات المرتبطة."
             : "Failed to check linked records.")
@@ -153,7 +153,7 @@ export default function AdminUserDetailPage({
       router.push("/dashboard/admin/users")
     } catch (error: any) {
       setDeleteError(
-        error?.message ||
+        getErrorMessage(error) ||
           (lang === "ar"
             ? "فشل حذف المستخدم. حاول مرة أخرى."
             : "Failed to delete user. Please try again.")
@@ -195,7 +195,7 @@ export default function AdminUserDetailPage({
       refreshProfiles()
     } catch (error: any) {
       setCaseFormError(
-        error?.message ||
+        getErrorMessage(error) ||
           (lang === "ar"
             ? "فشل إنشاء الحالة. حاول مرة أخرى."
             : "Failed to create case. Please try again.")

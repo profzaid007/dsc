@@ -42,7 +42,7 @@ import {
   Loader2,
   FileText,
 } from "lucide-react"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 
 const QUEUE_TABS: { value: string; statuses: CasePaymentStatus[] }[] = [
   { value: "all", statuses: ["pending", "awaiting_payment", "under_review"] },
@@ -99,11 +99,8 @@ export default function AdminPaymentsPage() {
       await fn()
     } catch (error) {
       setErrorMsg(
-        error instanceof Error
-          ? error.message
-          : lang === "ar"
-            ? "فشل تنفيذ الإجراء."
-            : "Action failed."
+        getErrorMessage(error) ||
+          (lang === "ar" ? "فشل تنفيذ الإجراء." : "Action failed.")
       )
     } finally {
       setBusyId(null)

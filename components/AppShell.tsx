@@ -1,5 +1,6 @@
 "use client"
 
+import { Toaster } from "sonner"
 import { LangProvider, useLang } from "@/lib/lang-context"
 import { DirectionProvider } from "@/components/form/DirectionProvider"
 import { Navbar } from "@/components/layout/Navbar"
@@ -11,6 +12,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <DirectionProvider lang={lang}>
+      <Toaster position="top-center" richColors closeButton />
       <div className="flex min-h-svh flex-col bg-transparent">
         <Navbar />
         <main className="flex flex-1 flex-col">{children}</main>

@@ -85,4 +85,12 @@ export function handlePocketBaseError(error: any): string {
   return error?.message || "An unexpected error occurred. Please try again."
 }
 
+/**
+ * Extracts a user-friendly error message from any thrown value.
+ * Use this in UI catch blocks before showing it to the user.
+ */
+export function getErrorMessage(error: unknown): string {
+  return handlePocketBaseError(error)
+}
+
 export default pb

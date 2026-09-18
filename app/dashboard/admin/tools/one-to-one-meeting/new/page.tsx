@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { toolTypesCollection } from "@/lib/pb-collections"
+import { getErrorMessage } from "@/lib/pb"
+import { toast } from "sonner"
 import { formatDate } from "@/lib/format-date"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -56,9 +58,10 @@ export default function OneToOneMeetingNewPage({
         setTypeError("")
       } catch (error) {
         setTypeError(
-          lang === "ar"
-            ? 'نوع الأداة "one_to_one_meeting" غير موجود. يرجى الاتصال بالمسؤول.'
-            : 'Tool type "one_to_one_meeting" not found. Please contact admin.'
+          getErrorMessage(error) ||
+            (lang === "ar"
+              ? 'نوع الأداة "one_to_one_meeting" غير موجود. يرجى الاتصال بالمسؤول.'
+              : 'Tool type "one_to_one_meeting" not found. Please contact admin.')
         )
         console.error("Failed to fetch meeting type:", error)
       }
@@ -114,6 +117,7 @@ export default function OneToOneMeetingNewPage({
         }
       } catch (e) {
         console.error("Failed to read searchParams:", e)
+        toast.error(getErrorMessage(e))
       } finally {
         setIsInitializing(false)
         hasInitialized.current = true
@@ -160,6 +164,7 @@ export default function OneToOneMeetingNewPage({
       }
     } catch (error) {
       console.error(editAssignmentId ? "Failed to update meeting:" : "Failed to create meeting:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }

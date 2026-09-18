@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 import { blogCategoriesCollection } from "@/lib/pb-collections"
 import type { BlogCategory } from "@/types/cms"
 import { Button } from "@/components/ui/button"
@@ -62,8 +64,8 @@ export default function BlogCategoriesPage() {
       setNewLabelEn("")
       setNewLabelAr("")
       load()
-    } catch {
-      alert("Failed to add category. The key may already exist.")
+    } catch (err) {
+      toast.error("Failed to add category. The key may already exist.", { description: getErrorMessage(err) })
     } finally {
       setAdding(false)
     }
@@ -75,8 +77,8 @@ export default function BlogCategoriesPage() {
     try {
       await blogCategoriesCollection.delete(id)
       setCategories((prev) => prev.filter((c) => c.id !== id))
-    } catch {
-      alert("Failed to delete category. It may be in use.")
+    } catch (err) {
+      toast.error("Failed to delete category. It may be in use.", { description: getErrorMessage(err) })
     } finally {
       setDeletingId(null)
     }
@@ -109,8 +111,8 @@ export default function BlogCategoriesPage() {
       })
       setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)))
       cancelEdit()
-    } catch {
-      alert("Failed to update category.")
+    } catch (err) {
+      toast.error("Failed to update category.", { description: getErrorMessage(err) })
     } finally {
       setSavingEdit(false)
     }

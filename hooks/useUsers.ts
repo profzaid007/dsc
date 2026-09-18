@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import type { User } from "@/types/user"
+import { toast } from "sonner"
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([])
@@ -16,6 +17,7 @@ export function useUsers() {
       setUsers(data as unknown as User[])
     } catch (error) {
       console.error("Failed to fetch users:", error)
+      toast.error(getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }

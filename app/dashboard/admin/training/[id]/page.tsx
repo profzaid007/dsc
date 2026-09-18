@@ -40,7 +40,8 @@ import { ProgramForm, ProgramReportCard } from "@/components/training"
 import { useLang } from "@/lib/lang-context"
 import { formatDate } from "@/lib/format-date"
 import { casesCollection } from "@/lib/pb-collections"
-import { handlePocketBaseError } from "@/lib/pb"
+import { getErrorMessage } from "@/lib/pb"
+import { toast } from "sonner"
 import type { Profile } from "@/types/profile"
 import {
   ArrowLeft,
@@ -164,6 +165,7 @@ export default function AdminTrainingProgramDetailPage({
       setEnrollments(data)
     } catch (err) {
       console.error("Failed to load enrollments:", err)
+      toast.error(getErrorMessage(err))
       setEnrollments([])
     } finally {
       setEnrollmentsLoading(false)
@@ -221,8 +223,9 @@ export default function AdminTrainingProgramDetailPage({
       resetCertForm()
     } catch (error) {
       console.error("Failed to issue certificate:", error)
-      alert(
-        lang === "ar" ? "فشل إصدار الشهادة" : "Failed to issue certificate"
+      toast.error(
+        lang === "ar" ? "فشل إصدار الشهادة" : "Failed to issue certificate",
+        { description: getErrorMessage(error) }
       )
     } finally {
       setIsCertSubmitting(false)
@@ -264,7 +267,10 @@ export default function AdminTrainingProgramDetailPage({
       setIsEditing(false)
     } catch (error) {
       console.error("Failed to update program:", error)
-      alert(lang === "ar" ? "فشل تحديث البرنامج" : "Failed to update program")
+      toast.error(
+        lang === "ar" ? "فشل تحديث البرنامج" : "Failed to update program",
+        { description: getErrorMessage(error) }
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -294,7 +300,7 @@ export default function AdminTrainingProgramDetailPage({
       await fetchEnrollments()
     } catch (error) {
       console.error("Failed to update enrollment status:", error)
-      alert(handlePocketBaseError(error))
+      toast.error(getErrorMessage(error))
     }
   }
 

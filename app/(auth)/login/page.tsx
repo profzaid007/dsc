@@ -25,7 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  handlePocketBaseError,
+  getErrorMessage,
   requestPasswordReset,
 } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
@@ -104,7 +104,7 @@ export default function LoginPage() {
       if (status === 429) {
         setResetError("Too many attempts. Please try again later.")
       } else {
-        setResetError(handlePocketBaseError(err))
+        setResetError(getErrorMessage(err))
       }
     } finally {
       setResetLoading(false)

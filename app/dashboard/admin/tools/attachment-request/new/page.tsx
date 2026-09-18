@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { toolTypesCollection } from "@/lib/pb-collections"
+import { getErrorMessage } from "@/lib/pb"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -69,9 +71,10 @@ export default function AttachmentRequestBuilderPage({
         setTypeError("")
       } catch (error) {
         setTypeError(
-          lang === "ar"
-            ? 'نوع الأداة "attachment_request" غير موجود. يرجى الاتصال بالمسؤول.'
-            : 'Tool type "attachment_request" not found. Please contact admin.'
+          getErrorMessage(error) ||
+            (lang === "ar"
+              ? 'نوع الأداة "attachment_request" غير موجود. يرجى الاتصال بالمسؤول.'
+              : 'Tool type "attachment_request" not found. Please contact admin.')
         )
         console.error("Failed to fetch attachment_request type:", error)
       }
@@ -90,6 +93,7 @@ export default function AttachmentRequestBuilderPage({
         }
       } catch (e) {
         console.error("Failed to read searchParams:", e)
+        toast.error(getErrorMessage(e))
       } finally {
         setIsInitializing(false)
       }
@@ -167,6 +171,7 @@ export default function AttachmentRequestBuilderPage({
         "Failed to create attachment request and assignment:",
         error
       )
+      toast.error(getErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }

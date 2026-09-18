@@ -8,6 +8,8 @@ import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
 import { getAllowedToolTypesForExpert } from "@/lib/pb-collections"
+import { getErrorMessage } from "@/lib/pb"
+import { toast } from "sonner"
 import type { Tool, ToolType } from "@/types/tool"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -82,6 +84,7 @@ export default function AdminToolsPage() {
         setExpertAllowedToolTypeIds(allowed)
       } catch (error) {
         console.error("Failed to fetch expert allowed tool types:", error)
+        toast.error(getErrorMessage(error))
       }
     }
     fetchExpertToolTypes()

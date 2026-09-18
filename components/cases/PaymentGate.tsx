@@ -26,7 +26,7 @@ import {
   ReceiptText,
   Loader2,
 } from "lucide-react"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 
 function Panel({
   icon,
@@ -104,13 +104,7 @@ export function PaymentGate({
         }),
       }).catch(() => {})
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : lang === "ar"
-            ? "فشل رفع إيصال الدفع."
-            : "Failed to upload payment slip."
-      )
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 import { blogPagesCollection } from "@/lib/pb-collections"
 import { formatDate } from "@/lib/format-date"
 import { BlogPage } from "@/types/cms"
@@ -45,7 +47,8 @@ export default function CmsBlogListPage() {
         category: "",
       })
       router.push(`/cms/blog/${newPost.slug}`)
-    } catch {
+    } catch (err) {
+      toast.error(getErrorMessage(err))
       setCreating(false)
     }
   }

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { getPortalById } from "@/lib/portals"
 import { infoPagesCollection } from "@/lib/pb-collections"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import type { InfoPage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Loader2, Copy, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 function extractIcon(record: Record<string, unknown>): string {
   const icon = record.icon
@@ -160,8 +161,8 @@ export default function CmsServiceEditorPage() {
         if (updated.slug !== pageSlug) {
           router.push(`/cms/info/${portalId}/${updated.slug}`)
         }
-      } catch {
-        alert("Failed to save. Make sure the slug is unique.")
+      } catch (err) {
+        toast.error("Failed to save. Make sure the slug is unique.", { description: getErrorMessage(err) })
       } finally {
         setSaving(false)
       }
@@ -265,8 +266,8 @@ export default function CmsServiceEditorPage() {
         setIconUrl(
           iconFile ? pb.files.getUrl(pageRecordRef.current, iconFile) : null
         )
-      } catch {
-        alert("Please upload a valid image.")
+      } catch (err) {
+        toast.error("Please upload a valid image.", { description: getErrorMessage(err) })
       } finally {
         e.target.value = ""
         setUploadingIcon(false)
@@ -282,8 +283,8 @@ export default function CmsServiceEditorPage() {
       setPage(updated)
       pageRecordRef.current = updated as unknown as Record<string, unknown>
       setIconUrl(null)
-    } catch {
-      alert("Failed to remove icon.")
+    } catch (err) {
+      toast.error("Failed to remove icon.", { description: getErrorMessage(err) })
     }
   }, [page])
 
@@ -294,7 +295,8 @@ export default function CmsServiceEditorPage() {
     try {
       await infoPagesCollection.delete(page.id)
       router.push(`/cms/info/${portalId}`)
-    } catch {
+    } catch (err) {
+      toast.error(getErrorMessage(err))
       setDeleting(false)
     }
   }, [page, portalId, router])

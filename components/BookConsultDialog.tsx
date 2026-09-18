@@ -32,6 +32,7 @@ import { getPortalById } from "@/lib/portals"
 import { formatDate } from "@/lib/format-date"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
+import { getErrorMessage } from "@/lib/pb"
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -125,7 +126,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       router.push("https://wa.me/message/XGN76UVRTVL7C1")
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : t({ en: "Something went wrong", ar: "حدث خطأ ما" }, lang))
+      setError(getErrorMessage(err))
     } finally {
       setSubmitting(false)
     }

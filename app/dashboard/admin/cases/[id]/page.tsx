@@ -10,7 +10,8 @@ import { useUsers } from "@/hooks/useUsers"
 import { useLang } from "@/lib/lang-context"
 import { useAuth } from "@/hooks/useAuth"
 import { usePaymentSettings } from "@/hooks/usePaymentSettings"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
+import { toast } from "sonner"
 import { sendCredentialsEmail } from "@/lib/send-credentials-email"
 import { formatDate } from "@/lib/format-date"
 import { formatAmount } from "@/lib/payment"
@@ -152,11 +153,8 @@ export default function AdminCaseDetailPage({
       setLinkUserId("")
     } catch (error) {
       setLinkError(
-        error instanceof Error
-          ? error.message
-          : lang === "ar"
-            ? "فشل ربط المستخدم."
-            : "Failed to link user."
+        getErrorMessage(error) ||
+          (lang === "ar" ? "فشل ربط المستخدم." : "Failed to link user.")
       )
     } finally {
       setIsLinking(false)
@@ -208,21 +206,19 @@ export default function AdminCaseDetailPage({
             ? "تم إنشاء المستخدم وربط الحالة وإرسال بيانات الدخول بالبريد."
             : "User created, case linked, and credentials emailed."
         )
-      } catch {
+      } catch (err) {
         setLinkSuccess(
           lang === "ar"
             ? "تم إنشاء المستخدم وربط الحالة، لكن تعذر إرسال البريد الإلكتروني."
             : "User created and case linked, but the credentials email could not be sent."
         )
+        toast.error(getErrorMessage(err))
       }
       setNewUser({ name: "", email: "", password: "" })
     } catch (error) {
       setLinkError(
-        error instanceof Error
-          ? error.message
-          : lang === "ar"
-            ? "فشل إنشاء المستخدم."
-            : "Failed to create user."
+        getErrorMessage(error) ||
+          (lang === "ar" ? "فشل إنشاء المستخدم." : "Failed to create user.")
       )
     } finally {
       setIsLinking(false)
@@ -238,11 +234,8 @@ export default function AdminCaseDetailPage({
       setLinkSuccess(lang === "ar" ? "تم فك ربط الحالة." : "Case unlinked.")
     } catch (error) {
       setLinkError(
-        error instanceof Error
-          ? error.message
-          : lang === "ar"
-            ? "فشل فك ربط المستخدم."
-            : "Failed to unlink user."
+        getErrorMessage(error) ||
+          (lang === "ar" ? "فشل فك ربط المستخدم." : "Failed to unlink user.")
       )
     } finally {
       setIsLinking(false)
@@ -264,11 +257,8 @@ export default function AdminCaseDetailPage({
       setAmountInput("")
     } catch (error) {
       setPaymentError(
-        error instanceof Error
-          ? error.message
-          : lang === "ar"
-            ? "فشل تحديد المبلغ."
-            : "Failed to set amount."
+        getErrorMessage(error) ||
+          (lang === "ar" ? "فشل تحديد المبلغ." : "Failed to set amount.")
       )
     } finally {
       setIsPaymentBusy(false)
@@ -288,11 +278,8 @@ export default function AdminCaseDetailPage({
       )
     } catch (error) {
       setPaymentError(
-        error instanceof Error
-          ? error.message
-          : lang === "ar"
-            ? "فشل تفعيل الحالة."
-            : "Failed to enable case."
+        getErrorMessage(error) ||
+          (lang === "ar" ? "فشل تفعيل الحالة." : "Failed to enable case.")
       )
     } finally {
       setIsPaymentBusy(false)
@@ -313,11 +300,8 @@ export default function AdminCaseDetailPage({
       setRejectInput("")
     } catch (error) {
       setPaymentError(
-        error instanceof Error
-          ? error.message
-          : lang === "ar"
-            ? "فشل رفض الدفع."
-            : "Failed to reject payment."
+        getErrorMessage(error) ||
+          (lang === "ar" ? "فشل رفض الدفع." : "Failed to reject payment.")
       )
     } finally {
       setIsPaymentBusy(false)
@@ -348,6 +332,7 @@ export default function AdminCaseDetailPage({
         }
       } catch (error) {
         console.error("Failed to fetch allowed tool types for case:", error)
+        toast.error(getErrorMessage(error))
       }
     }
     fetchAllowedToolTypes()

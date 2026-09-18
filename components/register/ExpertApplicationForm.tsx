@@ -33,7 +33,7 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { LANGUAGES } from "@/lib/language-list"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import { Check, ChevronsUpDown, Paperclip, X } from "lucide-react"
 
 function humanize(value: string): string {
@@ -358,7 +358,7 @@ export function ExpertApplicationForm({
         router.push("/login?expert_pending=1")
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong")
+      setError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }

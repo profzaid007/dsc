@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import pb from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 
 export type LookupType = "tool_types" | "case_types" | "user_types"
 
@@ -41,8 +41,7 @@ export function useLookups() {
       setLookups(records)
       return records
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch lookups"
+      const message = getErrorMessage(err)
       setError(message)
       return []
     } finally {
@@ -77,8 +76,7 @@ export function useLookups() {
         setLookups((prev) => [record, ...prev])
         return record
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to create lookup"
+        const message = getErrorMessage(err)
         setError(message)
         return null
       }
@@ -116,8 +114,7 @@ export function useLookups() {
         )
         return record
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to update lookup"
+        const message = getErrorMessage(err)
         setError(message)
         return null
       }
@@ -132,8 +129,7 @@ export function useLookups() {
       setLookups((prev) => prev.filter((item) => item.id !== id))
       return true
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to delete lookup"
+      const message = getErrorMessage(err)
       setError(message)
       return false
     }

@@ -8,6 +8,8 @@ import { publicLecturesPublicCollection } from "@/lib/pb-lectures"
 import { LectureCard } from "@/components/lectures"
 import type { Lecture } from "@/types/lecture"
 import { Search, BookOpen } from "lucide-react"
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 
 export default function PublicLecturesPage() {
   const router = useRouter()
@@ -23,6 +25,7 @@ export default function PublicLecturesPage() {
         setLectures(data)
       } catch (err) {
         console.error("Failed to load public lectures:", err)
+        toast.error(getErrorMessage(err))
       } finally {
         setIsLoading(false)
       }
