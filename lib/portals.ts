@@ -151,7 +151,7 @@ export const PORTALS: Portal[] = [
   // },
   {
     id: "4",
-    title: { en: "Education", ar: "التعليم" },
+    title: { en: "Education and Innovation", ar: "التعليم والابتكار" },
     portalName: { en: "Education Portal", ar: "بوابة التعليم" },
     image: "/portals/portal-4.jpg",
     banner: "/banners/banner-4.png",
