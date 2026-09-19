@@ -35,7 +35,7 @@ const PORTAL_CATEGORIES = [
   {
     id: "4",
     color: "#e9a23b",
-    name: { en: "Education", ar: "التعليم" },
+    name: { en: "Education and Innovation", ar: "التعليم والابتكار" },
     icon: (
       <svg viewBox="0 0 32 32" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 9l11-5 11 5-11 5z" />
@@ -46,24 +46,24 @@ const PORTAL_CATEGORIES = [
       </svg>
     ),
   },
-  {
-    id: "3",
-    color: "#7042ad",
-    name: { en: "Innovation", ar: "الابتكار" },
-    icon: (
-      <svg viewBox="0 0 32 32" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M11 20c-2-2-3-4-3-7a8 8 0 0 1 16 0c0 3-1 5-3 7" />
-        <path d="M12 24h8" />
-        <path d="M13 27h6" />
-        <path d="M16 4v3" />
-        <path d="M5 13H2" />
-        <path d="M30 13h-3" />
-        <path d="M7 6l2 2" />
-        <path d="M25 6l-2 2" />
-        <circle cx="16" cy="13" r="3" />
-      </svg>
-    ),
-  },
+  // {
+  //   id: "3",
+  //   color: "#7042ad",
+  //   name: { en: "Innovation", ar: "الابتكار" },
+  //   icon: (
+  //     <svg viewBox="0 0 32 32" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+  //       <path d="M11 20c-2-2-3-4-3-7a8 8 0 0 1 16 0c0 3-1 5-3 7" />
+  //       <path d="M12 24h8" />
+  //       <path d="M13 27h6" />
+  //       <path d="M16 4v3" />
+  //       <path d="M5 13H2" />
+  //       <path d="M30 13h-3" />
+  //       <path d="M7 6l2 2" />
+  //       <path d="M25 6l-2 2" />
+  //       <circle cx="16" cy="13" r="3" />
+  //     </svg>
+  //   ),
+  // },
   {
     id: "5",
     color: "#31a3a8",
