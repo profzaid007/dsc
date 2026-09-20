@@ -157,7 +157,7 @@ export default function ProfileDetailPage({
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
-                      {lang === "ar" ? "نوع البوابة" : "Portal Type"}
+                      {lang === "ar" ? "نوع الخدمة" : "Service Type"}
                     </span>
                     <span className="font-medium">
                       {lang === "ar" ? "حضور تدريب" : "Attending Training"}
@@ -165,7 +165,7 @@ export default function ProfileDetailPage({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
-                      {lang === "ar" ? "نوع الحالة" : "Case Type"}
+                      {lang === "ar" ? "نوع المشكلة" : "Issue Type"}
                     </span>
                     <span className="font-medium">
                       {profile.service_type ||

@@ -453,8 +453,8 @@ export default function NewProfilePage() {
                     <Label>
                       {t(
                         {
-                          en: "Custom issue type",
-                          ar: "اسم نوع المشكلة المخصص",
+                          en: "Custom service type",
+                          ar: "اسم نوع الخدمة المخصص",
                         },
                         lang
                       )}
@@ -469,7 +469,7 @@ export default function NewProfilePage() {
                         })
                       }
                       placeholder={t(
-                        { en: "Enter issue type", ar: "أدخل اسم نوع المشكلة" },
+                        { en: "Enter service type", ar: "أدخل اسم نوع الخدمة" },
                         lang
                       )}
                     />
@@ -479,7 +479,7 @@ export default function NewProfilePage() {
                 {portalService.categoryId && (
                   <div className="space-y-2">
                     <Label>
-                      {t({ en: "Case Type", ar: "نوع الحالة" }, lang)}
+                      {t({ en: "Issue Type", ar: "نوع المشكلة" }, lang)}
                       <span className="text-red-500 ms-1">*</span>
                     </Label>
                     <Select
@@ -495,8 +495,8 @@ export default function NewProfilePage() {
                         <SelectValue
                           placeholder={t(
                             {
-                              en: "Select case type",
-                              ar: "اختر نوع الحالة",
+                              en: "Select issue type",
+                              ar: "اختر نوع المشكلة",
                             },
                             lang
                           )}
@@ -523,8 +523,8 @@ export default function NewProfilePage() {
                     <Label>
                       {t(
                         {
-                          en: "Custom case type",
-                          ar: "اسم نوع الحالة المخصص",
+                          en: "Custom issue type",
+                          ar: "اسم نوع المشكلة المخصص",
                         },
                         lang
                       )}
@@ -539,7 +539,7 @@ export default function NewProfilePage() {
                         })
                       }
                       placeholder={t(
-                        { en: "Enter case type", ar: "أدخل اسم نوع الحالة" },
+                        { en: "Enter issue type", ar: "أدخل اسم نوع المشكلة" },
                         lang
                       )}
                     />
