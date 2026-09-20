@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,9 +37,18 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { LANGUAGES } from "@/lib/language-list"
-import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
+import pb, {
+  authWithPassword,
+  getErrorMessage,
+  getFieldErrors,
+} from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
-import { prefetchDNS } from "react-dom"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
+import { toast } from "sonner"
 
 const GENDERS = [
   { label: { en: "Male", ar: "ذكر" }, value: "male" },
@@ -50,7 +61,6 @@ export function IndividualRegistrationForm({
 }: {
   onSuccess?: () => void
 } = {}) {
-
   const { lang } = useLang()
   const router = useRouter()
 
@@ -72,93 +82,121 @@ export function IndividualRegistrationForm({
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [notes, setNotes] = useState("")
 
-  // const [portalService, setPortalService] = useState<PortalServiceValue>({
-  //   categoryId: "",
-  //   subCategoryId: "",
-  //   customCategory: "",
-  //   customSubCategory: "",
-  // })
-  // const [notes, setNotes] = useState("")
-  //
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  const passwordTooShort = password.length > 0 && password.length < 8
+  const passwordsMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword
+
+  const fieldErrorNode = (...keys: string[]) => {
+    const msg = keys.map((k) => fieldErrors[k]).find(Boolean)
+    return msg ? <p className="text-xs text-red-500">{msg}</p> : null
+  }
 
   const validate = (): boolean => {
-    if (!name || !contactNumber || !email || !password || !gender) {
-      setError(
-        t(
-          {
-            en: "Please fill in all required fields",
-            ar: "يرجى ملء جميع الحقول المطلوبة",
-          },
-          lang
-        )
-      )
-      return false
-    }
-    if (password !== confirmPassword) {
-      setError(
-        t(
-          { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
-          lang
-        )
-      )
-      return false
-    }
+    const errs: Record<string, string> = {}
+    const required = t(
+      { en: "This field is required.", ar: "هذا الحقل مطلوب." },
+      lang
+    )
 
+    if (!name.trim()) errs.name = required
+    if (!fullLegalName.trim()) errs.fullLegalName = required
+    if (!contactNumber.trim()) errs.contactNumber = required
+    if (!email.trim()) errs.email = required
+    else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
+    if (!password) errs.password = required
+    else if (password.length < 8)
+      errs.password = t(
+        {
+          en: "Password must be at least 8 characters.",
+          ar: "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+        },
+        lang
+      )
+    if (!confirmPassword) errs.confirmPassword = required
+    else if (password !== confirmPassword)
+      errs.confirmPassword = t(
+        { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
+        lang
+      )
+    if (!gender) errs.gender = required
+
+    setFieldErrors(errs)
+    if (Object.keys(errs).length > 0) {
+      setError("")
+      return false
+    }
     return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setFieldErrors({})
 
     if (!validate()) return
 
     setIsSubmitting(true)
 
     try {
+      const cleanName = name.trim()
+      const cleanFullLegalName = fullLegalName.trim()
+      const cleanEmail = normalizeEmail(email)
 
       const user = await pb.collection("users").create({
-        email: email.toLowerCase(),
+        email: cleanEmail,
         password,
         passwordConfirm: password,
-        name,
-        contact_number: `${countryCode} ${contactNumber}`,
+        name: cleanName,
+        contact_number: `${countryCode} ${contactNumber.trim()}`.trim(),
         role: "individual",
         emailVisibility: true,
-        is_active: true
+        is_active: true,
       })
 
-      const extra_data = await pb.collection("individual_profiles").create({ 
-        user: user.id, 
-        full_legal_name: fullLegalName,
-        gender: gender, 
+      await pb.collection("individual_profiles").create({
+        user: user.id,
+        full_legal_name: cleanFullLegalName,
+        gender: gender,
         date_of_birth: dateOfBirth,
-        nationality: nationality, 
-        country_of_residence: residence, 
-        emergency_contact_name: emContactName, 
-        emergency_contact_phone: emContactNumber, 
-        preferred_languages: preferredLanguages.join(", "), 
-        notes: notes,
+        nationality: nationality,
+        country_of_residence: residence,
+        emergency_contact_name: emContactName.trim(),
+        emergency_contact_phone: emContactNumber.trim(),
+        preferred_languages: preferredLanguages.join(", "),
+        notes: notes.trim(),
       })
+
+      toast.success(
+        t(
+          { en: "Account created successfully.", ar: "تم إنشاء الحساب بنجاح." },
+          lang
+        )
+      )
 
       if (onSuccess) {
         onSuccess()
       } else {
-        await authWithPassword(email.toLowerCase(), password)
+        await authWithPassword(cleanEmail, password)
         router.push(getDashboardPath("individual"))
       }
-
     } catch (err) {
-      setError(getErrorMessage(err))
+      const fieldErrs = getFieldErrors(err, lang)
+      if (Object.keys(fieldErrs).length > 0) {
+        setFieldErrors(fieldErrs)
+      } else {
+        setError(getErrorMessage(err, lang))
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <Card>
         <CardHeader>
           <CardTitle>
@@ -181,11 +219,14 @@ export function IndividualRegistrationForm({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                aria-invalid={fieldErrors.name ? true : undefined}
                 placeholder={t(
                   { en: "e.g. Ahmed Hassan", ar: "مثال: أحمد حسن" },
                   lang
                 )}
               />
+              {fieldErrorNode("name")}
             </div>
 
             <div className="space-y-2">
@@ -196,11 +237,18 @@ export function IndividualRegistrationForm({
               <Input
                 value={fullLegalName}
                 onChange={(e) => setFullLegalName(e.target.value)}
+                autoComplete="name"
+                aria-invalid={
+                  fieldErrors.fullLegalName || fieldErrors.full_legal_name
+                    ? true
+                    : undefined
+                }
                 placeholder={t(
                   { en: "e.g. Ahmed bin Hassan Al-Rashid", ar: "مثال: أحمد بن حسن الراشد" },
                   lang
                 )}
               />
+              {fieldErrorNode("fullLegalName", "full_legal_name")}
             </div>
 
             <div className="space-y-2">
@@ -224,6 +272,13 @@ export function IndividualRegistrationForm({
                 <Input
                   value={contactNumber}
                   onChange={(e) => setContactNumber(e.target.value)}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  aria-invalid={
+                    fieldErrors.contactNumber || fieldErrors.contact_number
+                      ? true
+                      : undefined
+                  }
                   placeholder={t(
                     { en: "e.g. 50 000 0000", ar: "مثال: 50 000 0000" },
                     lang
@@ -231,6 +286,7 @@ export function IndividualRegistrationForm({
                   className="flex-1"
                 />
               </div>
+              {fieldErrorNode("contactNumber", "contact_number")}
             </div>
 
             <div className="space-y-2">
@@ -238,10 +294,10 @@ export function IndividualRegistrationForm({
                 {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="email"
+              <EmailInput
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
+                error={fieldErrors.email}
                 placeholder="your@email.com"
               />
             </div>
@@ -251,12 +307,24 @@ export function IndividualRegistrationForm({
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={fieldErrors.password ? true : undefined}
                 placeholder="••••••••"
               />
+              {fieldErrorNode("password")}
+              {!fieldErrors.password && passwordTooShort && (
+                <p className="text-xs text-red-500">
+                  {t(
+                    {
+                      en: "Password must be at least 8 characters.",
+                      ar: "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+                    },
+                    lang
+                  )}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -267,12 +335,24 @@ export function IndividualRegistrationForm({
                 )}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                aria-invalid={fieldErrors.confirmPassword || fieldErrors.passwordConfirm ? true : undefined}
                 placeholder="••••••••"
               />
+              {fieldErrorNode("confirmPassword", "passwordConfirm")}
+              {!fieldErrors.confirmPassword && !fieldErrors.passwordConfirm && passwordsMismatch && (
+                <p className="text-xs text-red-500">
+                  {t(
+                    {
+                      en: "Passwords do not match",
+                      ar: "كلمات المرور غير متطابقة",
+                    },
+                    lang
+                  )}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>
@@ -294,6 +374,7 @@ export function IndividualRegistrationForm({
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrorNode("gender")}
             </div>
 
             <div className="space-y-2">
@@ -352,6 +433,7 @@ export function IndividualRegistrationForm({
               <Input
                 value={emContactName}
                 onChange={(e) => setEmContactName(e.target.value)}
+                autoComplete="off"
                 placeholder={t(
                   { en: "e.g. Fatima Al-Hassan", ar: "مثال: فاطمة الحسن" },
                   lang
@@ -366,6 +448,8 @@ export function IndividualRegistrationForm({
               <Input
                 value={emContactNumber}
                 onChange={(e) => setEmContactNumber(e.target.value)}
+                autoComplete="off"
+                inputMode="tel"
                 placeholder={t(
                   { en: "e.g. 55 000 0000", ar: "مثال: 55 000 0000" },
                   lang

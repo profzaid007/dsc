@@ -6,10 +6,13 @@ import { getErrorMessage } from "@/lib/pb"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
+import { t } from "@/lib/i18n"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { SkeletonTable } from "@/components/ui/skeleton"
 import { SmartLink } from "@/components/smart-link"
@@ -55,6 +58,11 @@ import { IndividualRegistrationForm } from "@/components/register/IndividualRegi
 import { ParentRegistrationForm } from "@/components/register/ParentRegistrationForm"
 import { OrganizationRegistrationForm } from "@/components/register/OrganizationRegistrationForm"
 import { ExpertApplicationForm } from "@/components/register/ExpertApplicationForm"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
 
 const ALL_ROLES: UserRole[] = [
   "admin",
@@ -229,6 +237,10 @@ export default function AdminUsersPage() {
       )
       return
     }
+    if (!isValidEmail(formData.email)) {
+      setFormError(t(EMAIL_INVALID_MESSAGE, lang))
+      return
+    }
     if (formData.password !== formData.passwordConfirm) {
       setFormError(
         lang === "ar" ? "كلمتا المرور غير متطابقتين." : "Passwords do not match."
@@ -239,14 +251,20 @@ export default function AdminUsersPage() {
     setIsSubmitting(true)
     try {
       await addUser({
-        email: formData.email.toLowerCase(),
+        email: normalizeEmail(formData.email),
         password: formData.password,
         passwordConfirm: formData.passwordConfirm,
-        name: formData.name,
+        name: formData.name.trim(),
         role: formData.role,
-        contact_number: formData.contact_number,
+        contact_number: formData.contact_number.trim(),
         is_active: formData.is_active,
       })
+      toast.success(
+        t(
+          { en: "User created successfully.", ar: "تم إنشاء المستخدم بنجاح." },
+          lang
+        )
+      )
       resetAddModal()
     } catch (error: any) {
       setFormError(
@@ -651,12 +669,11 @@ export default function AdminUsersPage() {
                       {lang === "ar" ? "البريد الإلكتروني" : "Email"}{" "}
                       <span className="text-red-500">*</span>
                     </Label>
-                    <Input
+                    <EmailInput
                       id="email"
-                      type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
+                      onChange={(value) =>
+                        setFormData({ ...formData, email: value })
                       }
                       placeholder={
                         lang === "ar"
@@ -672,9 +689,8 @@ export default function AdminUsersPage() {
                         {lang === "ar" ? "كلمة المرور" : "Password"}{" "}
                         <span className="text-red-500">*</span>
                       </Label>
-                      <Input
+                      <PasswordInput
                         id="password"
-                        type="password"
                         value={formData.password}
                         onChange={(e) =>
                           setFormData({ ...formData, password: e.target.value })
@@ -692,9 +708,8 @@ export default function AdminUsersPage() {
                           : "Confirm Password"}{" "}
                         <span className="text-red-500">*</span>
                       </Label>
-                      <Input
+                      <PasswordInput
                         id="passwordConfirm"
-                        type="password"
                         value={formData.passwordConfirm}
                         onChange={(e) =>
                           setFormData({

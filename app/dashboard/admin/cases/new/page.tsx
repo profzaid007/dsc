@@ -7,8 +7,7 @@ import { useUsers } from "@/hooks/useUsers"
 import { useLang } from "@/lib/lang-context"
 import { t } from "@/lib/i18n"
 import { PORTALS, getPortalById } from "@/lib/portals"
-import pb, { getErrorMessage } from "@/lib/pb"
-import { sendCredentialsEmail } from "@/lib/send-credentials-email"
+import { getErrorMessage } from "@/lib/pb"
 import {
   Card,
   CardContent,
@@ -28,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { UserPlus, Link2, Mail, KeyRound } from "lucide-react"
+import { Link2 } from "lucide-react"
 
 const OTHER_VALUE = "other"
 
@@ -76,22 +75,11 @@ export default function AdminNewCasePage() {
     customSubCategory: "",
   })
 
-  const [userLinkMode, setUserLinkMode] = useState<"existing" | "new">(
-    "existing"
-  )
   const [existingUserId, setExistingUserId] = useState("")
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    password: "",
-  })
 
   const [result, setResult] = useState<{
     caseId: string
     caseName: string
-    user?: { name: string; email: string; password: string }
-    emailSent: boolean
-    emailError?: string
   } | null>(null)
 
   const linkableUsers = users.filter(
@@ -136,62 +124,9 @@ export default function AdminNewCasePage() {
       return
     }
 
-    if (userLinkMode === "new") {
-      const hasAnyNewUserField =
-        newUser.name.trim() !== "" ||
-        newUser.email.trim() !== "" ||
-        newUser.password !== ""
-      if (hasAnyNewUserField) {
-        if (!newUser.name.trim() || !newUser.email.trim() || !newUser.password) {
-          setFormError(
-            t(
-              {
-                en: "Fill in all of the new user's fields, or leave them empty to skip.",
-                ar: "أدخل جميع حقول المستخدم الجديد، أو اتركها فارغة للتخطي.",
-              },
-              lang
-            )
-          )
-          return
-        }
-        if (newUser.password.length < 8) {
-          setFormError(
-            t(
-              { en: "Password must be at least 8 characters.", ar: "يجب أن تكون كلمة المرور 8 أحرف على الأقل." },
-              lang
-            )
-          )
-          return
-        }
-      }
-    }
-
     setIsSubmitting(true)
     try {
-      let userId = existingUserId
-      let createdUser: { name: string; email: string; password: string } | undefined
-
-      const shouldCreateUser =
-        userLinkMode === "new" && newUser.email.trim() !== ""
-
-      if (shouldCreateUser) {
-        const record = await pb.collection("users").create({
-          email: newUser.email.toLowerCase(),
-          password: newUser.password,
-          passwordConfirm: newUser.password,
-          name: newUser.name,
-          role: "individual",
-          contact_number: "",
-          is_active: true,
-          emailVisibility: true,
-        })
-        userId = record.id
-        createdUser = {
-          name: newUser.name,
-          email: newUser.email.toLowerCase(),
-          password: newUser.password,
-        }
-      }
+      const userId = existingUserId
 
       const caseName =
         formData.name ||
@@ -244,24 +179,7 @@ export default function AdminNewCasePage() {
         }).catch(() => {})
       }
 
-      let emailSent = false
-      let emailError: string | undefined
-      if (createdUser) {
-        try {
-          await sendCredentialsEmail({
-            email: createdUser.email,
-            name: createdUser.name,
-            password: createdUser.password,
-            caseName,
-            caseUrl: `${window.location.origin}/dashboard/cases/${caseId}`,
-          })
-          emailSent = true
-        } catch (error) {
-          emailError = getErrorMessage(error) || "Failed to send email"
-        }
-      }
-
-      setResult({ caseId, caseName, user: createdUser, emailSent, emailError })
+      setResult({ caseId, caseName })
     } catch (error) {
       setFormError(
         getErrorMessage(error) ||
@@ -297,53 +215,6 @@ export default function AdminNewCasePage() {
               </span>
               <span className="font-medium">{result.caseName}</span>
             </div>
-            {result.user && (
-              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                <p className="mb-3 flex items-center gap-2 font-medium text-green-800">
-                  <UserPlus className="h-4 w-4" />
-                  {t(
-                    { en: "New user account created", ar: "تم إنشاء حساب المستخدم" },
-                    lang
-                  )}
-                </p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}:
-                    </span>
-                    <span className="font-medium">{result.user.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <KeyRound className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      {t({ en: "Password", ar: "كلمة المرور" }, lang)}:
-                    </span>
-                    <span className="font-medium">{result.user.password}</span>
-                  </div>
-                </div>
-                {result.emailSent ? (
-                  <p className="mt-3 text-sm text-green-700">
-                    {t(
-                      { en: "Credentials were emailed to the user.", ar: "تم إرسال بيانات الدخول إلى بريد المستخدم." },
-                      lang
-                    )}
-                  </p>
-                ) : (
-                  <p className="mt-3 text-sm text-amber-700">
-                    {t(
-                      { en: "Email could not be sent", ar: "تعذر إرسال البريد الإلكتروني" },
-                      lang
-                    )}
-                    {result.emailError ? `: ${result.emailError}` : ""} —{" "}
-                    {t(
-                      { en: "share these credentials with the user manually.", ar: "شارك بيانات الدخول مع المستخدم يدويًا." },
-                      lang
-                    )}
-                  </p>
-                )}
-              </div>
-            )}
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => router.push("/dashboard/admin/cases")}>
                 {t({ en: "Back to Cases", ar: "العودة إلى الحالات" }, lang)}

@@ -12,6 +12,7 @@ import type {
   ProgramStats,
 } from "@/types/training"
 import { getErrorMessage } from "@/lib/pb"
+import { normalizeEmail } from "@/lib/validators"
 import {
   trainingProgramsCollection,
   trainingRegistrationsCollection,
@@ -126,7 +127,8 @@ export function useTraining() {
     const newRegistration = await trainingRegistrationsCollection.create({
       programId,
       ...userData,
-      email: userData.email.toLowerCase(),
+      userName: userData.userName.trim(),
+      email: normalizeEmail(userData.email),
       registeredAt: new Date().toISOString(),
       status: "registered",
     })

@@ -8,9 +8,15 @@ import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useUsers } from "@/hooks/useUsers"
 import { useLang } from "@/lib/lang-context"
+import { t } from "@/lib/i18n"
 import { useAuth } from "@/hooks/useAuth"
 import { usePaymentSettings } from "@/hooks/usePaymentSettings"
 import pb, { getErrorMessage } from "@/lib/pb"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
 import { toast } from "sonner"
 import { sendCredentialsEmail } from "@/lib/send-credentials-email"
 import { formatDate } from "@/lib/format-date"
@@ -26,6 +32,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -170,6 +178,10 @@ export default function AdminCaseDetailPage({
       )
       return
     }
+    if (!isValidEmail(newUser.email)) {
+      setLinkError(t(EMAIL_INVALID_MESSAGE, lang))
+      return
+    }
     if (newUser.password.length < 8) {
       setLinkError(
         lang === "ar"
@@ -182,11 +194,14 @@ export default function AdminCaseDetailPage({
     setLinkError(null)
     setLinkSuccess(null)
     try {
+      const cleanName = newUser.name.trim()
+      const cleanEmail = normalizeEmail(newUser.email)
+
       const record = await pb.collection("users").create({
-        email: newUser.email.toLowerCase(),
+        email: cleanEmail,
         password: newUser.password,
         passwordConfirm: newUser.password,
-        name: newUser.name,
+        name: cleanName,
         role: "individual",
         contact_number: "",
         is_active: true,
@@ -195,8 +210,8 @@ export default function AdminCaseDetailPage({
       await updateProfile(caseId, { user: record.id })
       try {
         await sendCredentialsEmail({
-          email: newUser.email.toLowerCase(),
-          name: newUser.name,
+          email: cleanEmail,
+          name: cleanName,
           password: newUser.password,
           caseName: profile?.name,
           caseUrl: `${window.location.origin}/dashboard/cases/${caseId}`,
@@ -556,12 +571,11 @@ export default function AdminCaseDetailPage({
                           <Label htmlFor="link_user_email">
                             {lang === "ar" ? "البريد الإلكتروني" : "Email"}
                           </Label>
-                          <Input
+                          <EmailInput
                             id="link_user_email"
-                            type="email"
                             value={newUser.email}
-                            onChange={(e) =>
-                              setNewUser({ ...newUser, email: e.target.value })
+                            onChange={(value) =>
+                              setNewUser({ ...newUser, email: value })
                             }
                             placeholder={
                               lang === "ar"
@@ -574,9 +588,8 @@ export default function AdminCaseDetailPage({
                           <Label htmlFor="link_user_password">
                             {lang === "ar" ? "كلمة المرور" : "Password"}
                           </Label>
-                          <Input
+                          <PasswordInput
                             id="link_user_password"
-                            type="password"
                             value={newUser.password}
                             onChange={(e) =>
                               setNewUser({

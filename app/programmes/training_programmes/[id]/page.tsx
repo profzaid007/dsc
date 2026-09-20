@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -17,6 +19,11 @@ import { casesCollection } from "@/lib/pb-collections"
 import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
 import type { TrainingProgram } from "@/types/training"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
 import {
   ArrowLeft,
   Calendar,
@@ -137,6 +144,11 @@ export default function TrainingProgrammeDetailPage({
     if (!enrollForm.email.trim()) {
       return lang === "ar" ? "البريد الإلكتروني مطلوب" : "Email is required"
     }
+    if (!isValidEmail(enrollForm.email)) {
+      return lang === "ar"
+        ? "يرجى إدخال بريد إلكتروني صحيح"
+        : EMAIL_INVALID_MESSAGE.en
+    }
     if (!enrollForm.password) {
       return lang === "ar" ? "كلمة المرور مطلوبة" : "Password is required"
     }
@@ -167,12 +179,16 @@ export default function TrainingProgrammeDetailPage({
 
     setIsEnrolling(true)
     try {
+      const cleanName = enrollForm.name.trim()
+      const cleanEmail = normalizeEmail(enrollForm.email)
+      const cleanContact = enrollForm.contactNumber.trim()
+
       const user = await pb.collection("users").create({
-        email: enrollForm.email.toLowerCase(),
+        email: cleanEmail,
         password: enrollForm.password,
         passwordConfirm: enrollForm.password,
-        name: enrollForm.name,
-        contact_number: enrollForm.contactNumber,
+        name: cleanName,
+        contact_number: cleanContact,
         role: "individual",
         emailVisibility: true,
       })
@@ -186,13 +202,13 @@ export default function TrainingProgrammeDetailPage({
         program_id: id,
         program_status: "enrolled",
         user_details: {
-          name: enrollForm.name,
-          email: enrollForm.email,
-          contact: enrollForm.contactNumber,
+          name: cleanName,
+          email: cleanEmail,
+          contact: cleanContact,
         },
       })
 
-      await authWithPassword(enrollForm.email.toLowerCase(), enrollForm.password)
+      await authWithPassword(cleanEmail, enrollForm.password)
 
       setEnrollSuccess(
         lang === "ar"
@@ -425,12 +441,11 @@ export default function TrainingProgrammeDetailPage({
             <Label htmlFor="enroll-email">
               {lang === "ar" ? "البريد الإلكتروني *" : "Email *"}
             </Label>
-            <Input
+            <EmailInput
               id="enroll-email"
-              type="email"
               value={enrollForm.email}
-              onChange={(e) =>
-                setEnrollForm({ ...enrollForm, email: e.target.value })
+              onChange={(value) =>
+                setEnrollForm({ ...enrollForm, email: value })
               }
               required
             />
@@ -459,9 +474,8 @@ export default function TrainingProgrammeDetailPage({
               <Label htmlFor="enroll-password">
                 {lang === "ar" ? "كلمة المرور *" : "Password *"}
               </Label>
-              <Input
+              <PasswordInput
                 id="enroll-password"
-                type="password"
                 value={enrollForm.password}
                 onChange={(e) =>
                   setEnrollForm({ ...enrollForm, password: e.target.value })
@@ -473,9 +487,8 @@ export default function TrainingProgrammeDetailPage({
               <Label htmlFor="enroll-confirm">
                 {lang === "ar" ? "تأكيد كلمة المرور *" : "Confirm Password *"}
               </Label>
-              <Input
+              <PasswordInput
                 id="enroll-confirm"
-                type="password"
                 value={enrollForm.confirmPassword}
                 onChange={(e) =>
                   setEnrollForm({

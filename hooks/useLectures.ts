@@ -9,6 +9,7 @@ import type {
   LectureStats,
 } from "@/types/lecture"
 import { getErrorMessage } from "@/lib/pb"
+import { normalizeEmail } from "@/lib/validators"
 import {
   lecturesCollection,
   lectureRegistrationsCollection,
@@ -130,7 +131,8 @@ export function useLectures() {
     const newRegistration = await lectureRegistrationsCollection.create({
       lectureId,
       ...userData,
-      email: userData.email.toLowerCase(),
+      userName: userData.userName.trim(),
+      email: normalizeEmail(userData.email),
       registeredAt: new Date().toISOString(),
       status: "registered",
     })

@@ -3,6 +3,8 @@
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,8 +35,14 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { LANGUAGES } from "@/lib/language-list"
-import pb, { getErrorMessage } from "@/lib/pb"
+import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { Check, ChevronsUpDown, Paperclip, X } from "lucide-react"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
+import { toast } from "sonner"
 
 function humanize(value: string): string {
   return value
@@ -157,11 +165,17 @@ export function ExpertApplicationForm({
   // Booleans
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [step, setStep] = useState<1 | 2>(1)
 
   const passwordTooShort = password.length > 0 && password.length < 8
   const passwordsMismatch =
     passwordConfirm.length > 0 && password !== passwordConfirm
+
+  const fieldErrorNode = (...keys: string[]) => {
+    const msg = keys.map((k) => fieldErrors[k]).find(Boolean)
+    return msg ? <p className="text-xs text-red-500">{msg}</p> : null
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -198,28 +212,35 @@ export function ExpertApplicationForm({
   }
 
   const validate = (): boolean => {
-    if (!name || !contactNumber || !email || !password || !passwordConfirm) {
-      setError(
-        t(
-          { en: "Please fill in all required fields", ar: "يرجى ملء جميع الحقول المطلوبة" },
-          lang
-        )
+    const errs: Record<string, string> = {}
+    const required = t(
+      { en: "This field is required.", ar: "هذا الحقل مطلوب." },
+      lang
+    )
+
+    if (!name.trim()) errs.name = required
+    if (!contactNumber.trim()) errs.contactNumber = required
+    if (!email.trim()) errs.email = required
+    else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
+    if (!password) errs.password = required
+    else if (password.length < 8)
+      errs.password = t(
+        {
+          en: "Password must be at least 8 characters.",
+          ar: "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+        },
+        lang
       )
-      return false
-    }
-    if (password.length < 8) {
-      setError(
-        t(
-          { en: "Password must be at least 8 characters", ar: "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل" },
-          lang
-        )
+    if (!passwordConfirm) errs.passwordConfirm = required
+    else if (password !== passwordConfirm)
+      errs.passwordConfirm = t(
+        { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
+        lang
       )
-      return false
-    }
-    if (password !== passwordConfirm) {
-      setError(
-        t({ en: "Passwords do not match", ar: "كلمتا المرور غير متطابقتين" }, lang)
-      )
+
+    setFieldErrors(errs)
+    if (Object.keys(errs).length > 0) {
+      setError("")
       return false
     }
     return true
@@ -257,15 +278,20 @@ export function ExpertApplicationForm({
     setIsSubmitting(true)
 
     try {
+      const cleanName = name.trim()
+      const cleanFullLegalName = fullLegalName.trim()
+      const cleanEmail = normalizeEmail(email)
+      const cleanContact = `${countryCode} ${contactNumber.trim()}`.trim()
+
       const html = [
         "<h2>New Expert Application</h2>",
-        `<p><strong>Name:</strong> ${name}</p>`,
-        `<p><strong>Contact Number:</strong> ${contactNumber}</p>`,
-        `<p><strong>Email:</strong> ${email}</p>`,
+        `<p><strong>Name:</strong> ${cleanName}</p>`,
+        `<p><strong>Contact Number:</strong> ${cleanContact}</p>`,
+        `<p><strong>Email:</strong> ${cleanEmail}</p>`,
         nationality ? `<p><strong>Nationality:</strong> ${nationality}</p>` : "",
         residence ? `<p><strong>Country of Residence:</strong> ${residence}</p>` : "",
         city ? `<p><strong>City:</strong> ${city}</p>` : "",
-        fullLegalName ? `<p><strong>Full Legal Name:</strong> ${fullLegalName}</p>` : "",
+        fullLegalName ? `<p><strong>Full Legal Name:</strong> ${cleanFullLegalName}</p>` : "",
         highestAcademicDegree ? `<p><strong>Highest Academic Degree:</strong> ${ACADEMIC_DEGREES.find((o) => o.value === highestAcademicDegree)?.label ?? highestAcademicDegree}</p>` : "",
         degreeTitle ? `<p><strong>Degree Title:</strong> ${degreeTitle}</p>` : "",
         fieldOfStudy ? `<p><strong>Field of Study:</strong> ${fieldOfStudy}</p>` : "",
@@ -286,13 +312,13 @@ export function ExpertApplicationForm({
       const extraFormData = new FormData()
 
       // User Form
-      userFormData.set("email", email.toLowerCase())
+      userFormData.set("email", cleanEmail)
       userFormData.set("emailVisibility", "true")
       userFormData.set("password", password)
       userFormData.set("passwordConfirm", passwordConfirm)
-      userFormData.set("name", name)
+      userFormData.set("name", cleanName)
       userFormData.set("role", "expert")
-      userFormData.set("contact_number", `${countryCode} ${contactNumber}`)
+      userFormData.set("contact_number", cleanContact)
       userFormData.set("is_active", "false")
 
       // Create user record
@@ -300,7 +326,7 @@ export function ExpertApplicationForm({
 
       // Extra fields
       extraFormData.set("user", user.id)
-      extraFormData.set("full_legal_name", fullLegalName)
+      extraFormData.set("full_legal_name", cleanFullLegalName)
       if (profilePhoto) extraFormData.append("profile_photo", profilePhoto)
 
       extraFormData.set("nationality", nationality)
@@ -342,13 +368,23 @@ export function ExpertApplicationForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "admin@dsc.ac",
-          to: email,
+          to: cleanEmail,
           cc: "admin@dsc.ac",
-          subject: `Expert application from: ${name}`,
+          subject: `Expert application from: ${cleanName}`,
           html,
           attachments,
         }),
       })
+
+      toast.success(
+        t(
+          {
+            en: "Application submitted successfully.",
+            ar: "تم إرسال الطلب بنجاح.",
+          },
+          lang
+        )
+      )
 
       if (onSuccess) {
         onSuccess()
@@ -358,14 +394,20 @@ export function ExpertApplicationForm({
         router.push("/login?expert_pending=1")
       }
     } catch (err) {
-      setError(getErrorMessage(err))
+      const fieldErrs = getFieldErrors(err, lang)
+      if (Object.keys(fieldErrs).length > 0) {
+        setFieldErrors(fieldErrs)
+        setStep(1)
+      } else {
+        setError(getErrorMessage(err, lang))
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <Card>
         <CardHeader>
           <CardTitle>
@@ -397,11 +439,14 @@ export function ExpertApplicationForm({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
+              autoComplete="name"
+              aria-invalid={fieldErrors.name ? true : undefined}
               placeholder={t(
                 { en: "e.g. Dr. Ahmed Al-Rashid", ar: "مثال: د. أحمد الراشد" },
                 lang
               )}
             />
+            {fieldErrorNode("name")}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -535,6 +580,13 @@ export function ExpertApplicationForm({
                   type="tel"
                   value={contactNumber}
                   onChange={(e) => setContactNumber(e.target.value)}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  aria-invalid={
+                    fieldErrors.contactNumber || fieldErrors.contact_number
+                      ? true
+                      : undefined
+                  }
                   placeholder={t(
                     { en: "e.g. 50 000 0000", ar: "مثال: 50 000 0000" },
                     lang
@@ -542,6 +594,7 @@ export function ExpertApplicationForm({
                   className="flex-1"
                 />
               </div>
+              {fieldErrorNode("contactNumber", "contact_number")}
             </div>
 
             <div className="space-y-2">
@@ -549,10 +602,10 @@ export function ExpertApplicationForm({
                 {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="email"
+              <EmailInput
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
+                error={fieldErrors.email}
                 placeholder="your@email.com"
               />
             </div>
@@ -597,10 +650,10 @@ export function ExpertApplicationForm({
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={fieldErrors.password ? true : undefined}
                 placeholder={t(
                   { en: "Min 8 characters", ar: "8 أحرف على الأقل" },
                   lang
@@ -612,8 +665,9 @@ export function ExpertApplicationForm({
                   lang
                 )}
               </p>
-              {passwordTooShort && (
-                <p className="text-sm text-red-500">
+              {fieldErrorNode("password")}
+              {!fieldErrors.password && passwordTooShort && (
+                <p className="text-xs text-red-500">
                   {t(
                     {
                       en: "Password must be at least 8 characters",
@@ -630,17 +684,18 @@ export function ExpertApplicationForm({
                 {t({ en: "Confirm Password", ar: "تأكيد كلمة المرور" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
+                aria-invalid={fieldErrors.passwordConfirm ? true : undefined}
                 placeholder={t(
                   { en: "Re-enter your password", ar: "أعد إدخال كلمة المرور" },
                   lang
                 )}
               />
-              {passwordsMismatch && (
-                <p className="text-sm text-red-500">
+              {fieldErrorNode("passwordConfirm")}
+              {!fieldErrors.passwordConfirm && passwordsMismatch && (
+                <p className="text-xs text-red-500">
                   {t(
                     { en: "Passwords do not match", ar: "كلمتا المرور غير متطابقتين" },
                     lang

@@ -5,6 +5,7 @@ import { useLang } from "@/lib/lang-context"
 import { t } from "@/lib/i18n"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Phone, Mail, MapPin, Loader2, Send } from "lucide-react"
@@ -18,6 +19,11 @@ import {
 } from "@/components/ui/select"
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
 
 export default function ContactPage() {
   const { lang } = useLang()
@@ -32,16 +38,25 @@ export default function ContactPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError("")
 
+    if (!isValidEmail(email)) {
+      toast.error(t(EMAIL_INVALID_MESSAGE, lang))
+      return
+    }
+
+    setSubmitting(true)
+
     try {
+      const cleanName = name.trim()
+      const cleanEmail = normalizeEmail(email)
+
       const html = [
         "<h2>New Contact Message</h2>",
-        `<p><strong>Name:</strong> ${name}</p>`,
-        `<p><strong>Phone:</strong> ${countryCode} ${phoneNumber}</p>`,
-        `<p><strong>Email:</strong> ${email}</p>`,
-        description ? `<p><strong>Description:</strong><br/>${description}</p>` : "",
+        `<p><strong>Name:</strong> ${cleanName}</p>`,
+        `<p><strong>Phone:</strong> ${countryCode} ${phoneNumber.trim()}</p>`,
+        `<p><strong>Email:</strong> ${cleanEmail}</p>`,
+        description ? `<p><strong>Description:</strong><br/>${description.trim()}</p>` : "",
       ].join("\n")
 
       const response = await fetch("/api/send-email", {
@@ -49,9 +64,9 @@ export default function ContactPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "admin@dsc.ac",
-          to: email,
+          to: cleanEmail,
           cc: "contact@dsc.ac",
-          subject: `Contact message from: ${name}`,
+          subject: `Contact message from: ${cleanName}`,
           html,
         }),
       })
@@ -61,9 +76,18 @@ export default function ContactPage() {
         throw new Error(errMsg || "Failed to send message")
       }
 
+      toast.success(
+        t(
+          {
+            en: "Message sent successfully.",
+            ar: "تم إرسال الرسالة بنجاح.",
+          },
+          lang
+        )
+      )
       setDone(true)
     } catch (err) {
-      toast.error(getErrorMessage(err))
+      toast.error(getErrorMessage(err, lang))
     } finally {
       setSubmitting(false)
     }
@@ -301,6 +325,7 @@ export default function ContactPage() {
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        autoComplete="name"
                         placeholder={t(
                           { en: "Your full name", ar: "اسمك الكامل" },
                           lang
@@ -331,6 +356,8 @@ export default function ContactPage() {
                           required
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
+                          autoComplete="tel"
+                          inputMode="tel"
                           placeholder={t(
                             {
                               en: "Your phone number",
@@ -347,11 +374,10 @@ export default function ContactPage() {
                       <label className="mb-1.5 block text-sm font-medium text-gray-700">
                         {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
                       </label>
-                      <Input
-                        type="email"
-                        required
+                      <EmailInput
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={setEmail}
+                        required
                         placeholder={t(
                           {
                             en: "your@email.com",

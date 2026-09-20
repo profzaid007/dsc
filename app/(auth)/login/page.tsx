@@ -15,7 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -29,6 +30,11 @@ import {
   requestPasswordReset,
 } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
 
 function ExpertPendingNotice() {
   const searchParams = useSearchParams()
@@ -69,19 +75,34 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
-      setError("Please enter email and password")
+      setError(
+        t(
+          { en: "Please enter email and password", ar: "يرجى إدخال البريد الإلكتروني وكلمة المرور" },
+          lang
+        )
+      )
+      return
+    }
+    if (!isValidEmail(email)) {
+      setError(t(EMAIL_INVALID_MESSAGE, lang))
       return
     }
 
     setIsLoading(true)
     setError("")
 
-    const result = await login(email.toLowerCase(), password)
+    const result = await login(normalizeEmail(email), password)
 
     if (result.success) {
       router.push(getDashboardPath(result.role))
     } else {
-      setError(result.error || "Invalid credentials")
+      setError(
+        result.error ||
+          t(
+            { en: "Incorrect email or password.", ar: "البريد الإلكتروني أو كلمة المرور غير صحيحة." },
+            lang
+          )
+      )
       setIsLoading(false)
     }
   }
@@ -89,7 +110,16 @@ export default function LoginPage() {
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!resetEmail) {
-      setResetError("Please enter your email")
+      setResetError(
+        t(
+          { en: "Please enter your email", ar: "يرجى إدخال بريدك الإلكتروني" },
+          lang
+        )
+      )
+      return
+    }
+    if (!isValidEmail(resetEmail)) {
+      setResetError(t(EMAIL_INVALID_MESSAGE, lang))
       return
     }
 
@@ -97,14 +127,22 @@ export default function LoginPage() {
     setResetError("")
 
     try {
-      await requestPasswordReset(resetEmail)
+      await requestPasswordReset(normalizeEmail(resetEmail))
       setResetSent(true)
     } catch (err: unknown) {
       const status = (err as { status?: number } | null)?.status
       if (status === 429) {
-        setResetError("Too many attempts. Please try again later.")
+        setResetError(
+          t(
+            {
+              en: "Too many attempts. Please try again later.",
+              ar: "محاولات كثيرة. يرجى المحاولة لاحقًا.",
+            },
+            lang
+          )
+        )
       } else {
-        setResetError(getErrorMessage(err))
+        setResetError(getErrorMessage(err, lang))
       }
     } finally {
       setResetLoading(false)
@@ -162,7 +200,7 @@ export default function LoginPage() {
               <div className="mt-3 mx-auto h-1 w-12 rounded-full bg-gradient-to-r from-[#c9a227] to-[#e6c200]" />
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 <Suspense fallback={null}>
                   <ExpertPendingNotice />
                 </Suspense>
@@ -173,12 +211,11 @@ export default function LoginPage() {
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input
+                  <EmailInput
                     id="email"
-                    type="email"
                     placeholder="your@email.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={setEmail}
                     required
                   />
                 </div>
@@ -197,12 +234,12 @@ export default function LoginPage() {
                       Forgot password?
                     </button>
                   </div>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                     required
                   />
                 </div>
@@ -253,7 +290,7 @@ export default function LoginPage() {
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleForgotSubmit} className="space-y-4">
+            <form onSubmit={handleForgotSubmit} className="space-y-4" noValidate>
               {resetError && (
                 <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
                   {resetError}
@@ -261,12 +298,11 @@ export default function LoginPage() {
               )}
               <div className="space-y-2">
                 <Label htmlFor="reset-email">Email</Label>
-                <Input
+                <EmailInput
                   id="reset-email"
-                  type="email"
                   placeholder="your@email.com"
                   value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
+                  onChange={setResetEmail}
                   autoFocus
                   required
                 />

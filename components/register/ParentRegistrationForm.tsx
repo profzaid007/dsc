@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,8 +37,18 @@ import { LANGUAGES } from "@/lib/language-list"
 import { ChildFormBlock, type ChildFormData } from "./ChildFormBlock"
 import { Check, ChevronsUpDown, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
+import pb, {
+  authWithPassword,
+  getErrorMessage,
+  getFieldErrors,
+} from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
+import { toast } from "sonner"
 
 const OTHER_VALUE = "other"
 
@@ -100,6 +112,7 @@ export function ParentRegistrationForm({
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const [children, setChildren] = useState<ChildFormData[]>([makeEmptyChild()])
 
@@ -115,30 +128,55 @@ export function ParentRegistrationForm({
     setChildren((prev) => prev.map((c) => (c.id === id ? data : c)))
   }
 
+  const passwordTooShort = password.length > 0 && password.length < 8
+  const passwordsMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword
+
+  const fieldErrorNode = (...keys: string[]) => {
+    const msg = keys.map((k) => fieldErrors[k]).find(Boolean)
+    return msg ? <p className="text-xs text-red-500">{msg}</p> : null
+  }
+
   const validate = (): boolean => {
-    if (!name || !contactNumber || !email || !password) {
-      setError(
-        t(
-          {
-            en: "Please fill in all required fields",
-            ar: "يرجى ملء جميع الحقول المطلوبة",
-          },
-          lang
-        )
+    const errs: Record<string, string> = {}
+    const required = t(
+      { en: "This field is required.", ar: "هذا الحقل مطلوب." },
+      lang
+    )
+
+    if (!name.trim()) errs.name = required
+    if (!fullLegalName.trim()) errs.fullLegalName = required
+    if (!contactNumber.trim()) errs.contactNumber = required
+    if (!email.trim()) errs.email = required
+    else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
+    if (!password) errs.password = required
+    else if (password.length < 8)
+      errs.password = t(
+        {
+          en: "Password must be at least 8 characters.",
+          ar: "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+        },
+        lang
       )
+    if (!confirmPassword) errs.confirmPassword = required
+    else if (password !== confirmPassword)
+      errs.confirmPassword = t(
+        { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
+        lang
+      )
+
+    setFieldErrors(errs)
+    if (Object.keys(errs).length > 0) {
+      setError("")
       return false
     }
-    if (password !== confirmPassword) {
-      setError(
-        t(
-          { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
-          lang
-        )
-      )
-      return false
-    }
-    for (const child of children) {
+
+    for (const [index, child] of children.entries()) {
       if (!hasChildData(child)) continue
+      const childLabel = t(
+        { en: `Child ${index + 1}`, ar: `الطفل ${index + 1}` },
+        lang
+      )
       if (
         !child.name ||
         !child.date_of_birth ||
@@ -146,25 +184,25 @@ export function ParentRegistrationForm({
         !child.relationship
       ) {
         setError(
-          t(
+          `${childLabel}: ${t(
             {
-              en: "Please fill in all required child information including relationship",
+              en: "please fill in all required child information including relationship",
               ar: "يرجى ملء جميع معلومات الطفل المطلوبة بما في ذلك صلة القرابة",
             },
             lang
-          )
+          )}`
         )
         return false
       }
       if (!child.portalService.categoryId || !child.portalService.subCategoryId) {
         setError(
-          t(
+          `${childLabel}: ${t(
             {
-              en: "Please select a portal and service for each child",
-              ar: "يرجى اختيار البوابة والخدمة لكل طفل",
+              en: "please select a service and issue type",
+              ar: "يرجى اختيار نوع الخدمة ونوع المشكلة",
             },
             lang
-          )
+          )}`
         )
         return false
       }
@@ -173,13 +211,13 @@ export function ParentRegistrationForm({
         !child.portalService.customCategory.trim()
       ) {
         setError(
-          t(
+          `${childLabel}: ${t(
             {
-              en: "Please enter a custom portal name for each child",
-              ar: "يرجى إدخال اسم بوابة مخصصة لكل طفل",
+              en: "please enter a custom service name",
+              ar: "يرجى إدخال اسم خدمة مخصصة",
             },
             lang
-          )
+          )}`
         )
         return false
       }
@@ -188,13 +226,13 @@ export function ParentRegistrationForm({
         !child.portalService.customSubCategory.trim()
       ) {
         setError(
-          t(
+          `${childLabel}: ${t(
             {
-              en: "Please enter a custom service name for each child",
-              ar: "يرجى إدخال اسم خدمة مخصصة لكل طفل",
+              en: "please enter a custom issue type name",
+              ar: "يرجى إدخال اسم نوع مشكلة مخصص",
             },
             lang
-          )
+          )}`
         )
         return false
       }
@@ -205,49 +243,54 @@ export function ParentRegistrationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setFieldErrors({})
 
     if (!validate()) return
 
     setIsSubmitting(true)
 
     try {
+      const cleanName = name.trim()
+      const cleanFullLegalName = fullLegalName.trim()
+      const cleanEmail = normalizeEmail(email)
+
       const user = await pb.collection("users").create({
-        email,
+        email: cleanEmail,
         password,
         passwordConfirm: password,
-        name,
-        contact_number: `${countryCode} ${contactNumber}`,
+        name: cleanName,
+        contact_number: `${countryCode} ${contactNumber.trim()}`.trim(),
         role: "parent",
-        is_active:true,
+        is_active: true,
         emailVisibility: true,
       })
 
-      const extra_data = await pb.collection("parent_profiles").create({ 
-        user: user.id, 
-        full_legal_name: fullLegalName,
-        nationality: nationality, 
-        country_of_residence: residence, 
+      await pb.collection("parent_profiles").create({
+        user: user.id,
+        full_legal_name: cleanFullLegalName,
+        nationality: nationality,
+        country_of_residence: residence,
         preferred_languages: preferredLanguages.join(", "),
-        notes: notes,
+        notes: notes.trim(),
       })
 
       for (const child of children) {
         if (!hasChildData(child)) continue
         await pb.collection("cases").create({
           user: user.id,
-          name: child.name,
+          name: child.name.trim(),
           date_of_birth: child.date_of_birth,
           gender: child.gender,
           grade: child.grade,
-          relationship: child.relationship,
+          relationship: child.relationship.trim(),
           portal_type: child.portalService.categoryId,
           service_type: child.portalService.subCategoryId === OTHER_VALUE
-            ? child.portalService.customSubCategory
+            ? child.portalService.customSubCategory.trim()
             : child.portalService.subCategoryId,
-          notes: child.notes,
+          notes: child.notes.trim(),
           status: "pending",
           user_details: {
-            full_legal_name: fullLegalName,
+            full_legal_name: cleanFullLegalName,
             name: user.name,
             email: user.email,
             contact: user.contact_number,
@@ -255,31 +298,43 @@ export function ParentRegistrationForm({
           case_details: {
             custom_category:
               child.portalService.categoryId === OTHER_VALUE
-                ? child.portalService.customCategory
+                ? child.portalService.customCategory.trim()
                 : undefined,
             custom_sub_category:
               child.portalService.subCategoryId === OTHER_VALUE
-                ? child.portalService.customSubCategory
+                ? child.portalService.customSubCategory.trim()
                 : undefined,
           },
         })
       }
 
+      toast.success(
+        t(
+          { en: "Account created successfully.", ar: "تم إنشاء الحساب بنجاح." },
+          lang
+        )
+      )
+
       if (onSuccess) {
         onSuccess()
       } else {
-        await authWithPassword(email, password)
+        await authWithPassword(cleanEmail, password)
         router.push(getDashboardPath("parent"))
       }
     } catch (err) {
-      setError(getErrorMessage(err))
+      const fieldErrs = getFieldErrors(err, lang)
+      if (Object.keys(fieldErrs).length > 0) {
+        setFieldErrors(fieldErrs)
+      } else {
+        setError(getErrorMessage(err, lang))
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <Card>
         <CardHeader>
           <CardTitle>
@@ -302,11 +357,14 @@ export function ParentRegistrationForm({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                aria-invalid={fieldErrors.name ? true : undefined}
                 placeholder={t(
                   { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
                   lang
                 )}
               />
+              {fieldErrorNode("name")}
             </div>
 
             <div className="space-y-2">
@@ -317,11 +375,18 @@ export function ParentRegistrationForm({
               <Input
                 value={fullLegalName}
                 onChange={(e) => setFullLegalName(e.target.value)}
+                autoComplete="name"
+                aria-invalid={
+                  fieldErrors.fullLegalName || fieldErrors.full_legal_name
+                    ? true
+                    : undefined
+                }
                 placeholder={t(
                   { en: "e.g. Mohammed bin Hassan Al-Rashid", ar: "مثال: محمد بن حسن الراشد" },
                   lang
                 )}
               />
+              {fieldErrorNode("fullLegalName", "full_legal_name")}
             </div>
 
             <div className="space-y-2">
@@ -345,6 +410,13 @@ export function ParentRegistrationForm({
                 <Input
                   value={contactNumber}
                   onChange={(e) => setContactNumber(e.target.value)}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  aria-invalid={
+                    fieldErrors.contactNumber || fieldErrors.contact_number
+                      ? true
+                      : undefined
+                  }
                   placeholder={t(
                     { en: "e.g. 50 000 0000", ar: "مثال: 50 000 0000" },
                     lang
@@ -352,6 +424,7 @@ export function ParentRegistrationForm({
                   className="flex-1"
                 />
               </div>
+              {fieldErrorNode("contactNumber", "contact_number")}
             </div>
 
             <div className="space-y-2">
@@ -359,10 +432,10 @@ export function ParentRegistrationForm({
                 {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="email"
+              <EmailInput
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
+                error={fieldErrors.email}
                 placeholder="your@email.com"
               />
             </div>
@@ -372,12 +445,24 @@ export function ParentRegistrationForm({
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={fieldErrors.password ? true : undefined}
                 placeholder="••••••••"
               />
+              {fieldErrorNode("password")}
+              {!fieldErrors.password && passwordTooShort && (
+                <p className="text-xs text-red-500">
+                  {t(
+                    {
+                      en: "Password must be at least 8 characters.",
+                      ar: "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+                    },
+                    lang
+                  )}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2 md:col-span-2">
@@ -388,12 +473,24 @@ export function ParentRegistrationForm({
                 )}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                aria-invalid={fieldErrors.confirmPassword || fieldErrors.passwordConfirm ? true : undefined}
                 placeholder="••••••••"
               />
+              {fieldErrorNode("confirmPassword", "passwordConfirm")}
+              {!fieldErrors.confirmPassword && !fieldErrors.passwordConfirm && passwordsMismatch && (
+                <p className="text-xs text-red-500">
+                  {t(
+                    {
+                      en: "Passwords do not match",
+                      ar: "كلمات المرور غير متطابقة",
+                    },
+                    lang
+                  )}
+                </p>
+              )}
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import PocketBase from "pocketbase"
 import { t } from "@/lib/i18n"
 import { getCurrentLang } from "@/lib/current-lang"
+import { normalizeEmail } from "@/lib/validators"
 import type { BilingualString, Lang } from "@/types/form"
 
 const pb = new PocketBase(
@@ -40,7 +41,7 @@ export function isExpert(): boolean {
 export async function authWithPassword(email: string, password: string) {
   const authData = await pb
     .collection("users")
-    .authWithPassword(email.toLowerCase(), password)
+    .authWithPassword(normalizeEmail(email), password)
   return authData
 }
 
@@ -56,7 +57,7 @@ export async function logout() {
 }
 
 export async function requestPasswordReset(email: string) {
-  await pb.collection("users").requestPasswordReset(email.toLowerCase())
+  await pb.collection("users").requestPasswordReset(normalizeEmail(email))
 }
 
 export async function confirmPasswordReset(token: string, password: string) {
@@ -109,6 +110,10 @@ function minLengthMessage(
   )
 }
 
+/**
+ * PocketBase validation error codes that we can translate cleanly.
+ * Unknown codes fall back to the server message (or a generic translated one).
+ */
 const VALIDATION_CODE_MESSAGES: Record<string, BilingualString> = {
   validation_required: {
     en: "This field is required.",
@@ -130,57 +135,147 @@ const VALIDATION_CODE_MESSAGES: Record<string, BilingualString> = {
     en: "Please enter a valid URL.",
     ar: "يرجى إدخال رابط صحيح.",
   },
+  validation_invalid_format: {
+    en: "The value format is invalid.",
+    ar: "تنسيق القيمة غير صالح.",
+  },
+}
+
+const META_ERROR_KEYS = new Set(["status", "message", "data", "details"])
+
+/**
+ * A "field map" is an object whose values are either strings or per-field
+ * error objects (e.g. `{ email: { code, message } }`). We use it to tell
+ * PocketBase field errors apart from the response envelope.
+ */
+function looksLikeFieldMap(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  const entries = Object.entries(value as Record<string, unknown>)
+  if (entries.length === 0) return false
+  if (entries.some(([key]) => META_ERROR_KEYS.has(key))) return false
+  return entries.every(([, v]) => {
+    if (typeof v === "string") return true
+    return v !== null && typeof v === "object" && !Array.isArray(v)
+  })
 }
 
 /**
- Pocket base error handler
-**/
-
-function getFieldValidationMessage(
-  error: unknown,
-  lang: Lang
-): string | undefined {
+ * Locate the field error map inside a PocketBase error. Depending on the SDK
+ * version the map can live at `error.data` directly, or nested under
+ * `error.data.data` / `error.data.details`.
+ */
+function getFieldErrorMap(error: unknown): Record<string, unknown> | undefined {
   if (!error || typeof error !== "object") return undefined
   const err = error as { data?: unknown; response?: unknown }
   const body = err.data ?? err.response
   if (!body || typeof body !== "object") return undefined
 
-  const maps = [
+  const nested = [
     (body as { data?: unknown }).data,
     (body as { details?: unknown }).details,
   ]
+  for (const candidate of nested) {
+    if (looksLikeFieldMap(candidate)) return candidate
+  }
+  if (looksLikeFieldMap(body)) return body
+  return undefined
+}
 
-  for (const map of maps) {
-    if (!map || typeof map !== "object") continue
-    for (const [field, value] of Object.entries(
-      map as Record<string, unknown>
-    )) {
+function notUniqueMessage(field: string, lang: Lang): string {
+  return t(
+    {
+      en: `This ${fieldLabel(field, "en")} is already in use.`,
+      ar: `${fieldLabel(field, "ar")} مستخدم بالفعل.`,
+    },
+    lang
+  )
+}
 
-      if (typeof value === "string") {
-        const msg = value.trim()
-        if (!msg) continue
-        return minLengthMessage(field, msg, lang) ?? msg
-      }
-      if (!value || typeof value !== "object") continue
-      const v = value as { code?: unknown; message?: unknown }
-      const code = String(v.code ?? "")
-      if (code.includes("not_unique")) {
-        return t(
-          {
-            en: `This ${fieldLabel(field, "en")} is already in use.`,
-            ar: `${fieldLabel(field, "ar")} مستخدم بالفعل.`,
-          },
-          lang
-        )
-      }
-      const minMsg = minLengthMessage(field, v.message, lang)
-      if (minMsg) return minMsg
-      const mapped = VALIDATION_CODE_MESSAGES[code]
-      if (mapped) return t(mapped, lang)
-      if (typeof v.message === "string" && v.message.trim()) return v.message
+function looksEnglish(value: string): boolean {
+  return /^[\x00-\x7F\s]*$/.test(value)
+}
+
+/**
+ * Translate a single field error (string or `{ code, message }` object) into a
+ * friendly bilingual message, without leaking raw English server strings.
+ */
+function fieldErrorMessage(
+  field: string,
+  value: unknown,
+  lang: Lang
+): string | undefined {
+  if (typeof value === "string") {
+    const msg = value.trim()
+    if (!msg) return undefined
+    if (/unique/i.test(msg)) return notUniqueMessage(field, lang)
+    if (field === "email" && /email/i.test(msg)) {
+      return t(VALIDATION_CODE_MESSAGES.validation_email, lang)
     }
+    const minMsg = minLengthMessage(field, msg, lang)
+    if (minMsg) return minMsg
+    if (lang === "ar" && looksEnglish(msg)) {
+      return t(
+        { en: "The value is invalid.", ar: "القيمة غير صالحة." },
+        lang
+      )
+    }
+    return msg
+  }
+
+  if (!value || typeof value !== "object") return undefined
+  const v = value as { code?: unknown; message?: unknown }
+  const code = String(v.code ?? "")
+
+  if (code.includes("not_unique")) return notUniqueMessage(field, lang)
+
+  const minMsg = minLengthMessage(field, v.message, lang)
+  if (minMsg) return minMsg
+
+  const mapped = VALIDATION_CODE_MESSAGES[code]
+  if (mapped) return t(mapped, lang)
+
+  if (typeof v.message === "string" && v.message.trim()) {
+    const msg = v.message.trim()
+    if (/unique/i.test(msg)) return notUniqueMessage(field, lang)
+    if (field === "email" && /email/i.test(msg)) {
+      return t(VALIDATION_CODE_MESSAGES.validation_email, lang)
+    }
+    if (lang === "ar" && looksEnglish(msg)) {
+      return t(
+        { en: "The value is invalid.", ar: "القيمة غير صالحة." },
+        lang
+      )
+    }
+    return msg
   }
   return undefined
+}
+
+/**
+ * Extract every field-level validation error from a PocketBase response as a
+ * `{ field: message }` map. Returns an empty object for non-field errors.
+ */
+export function getFieldErrors(
+  error: unknown,
+  lang: Lang = getCurrentLang()
+): Record<string, string> {
+  const map = getFieldErrorMap(error)
+  if (!map) return {}
+
+  const result: Record<string, string> = {}
+  for (const [field, value] of Object.entries(map)) {
+    const message = fieldErrorMessage(field, value, lang)
+    if (message) result[field] = message
+  }
+  return result
+}
+
+function getFieldValidationMessage(
+  error: unknown,
+  lang: Lang
+): string | undefined {
+  const messages = Object.values(getFieldErrors(error, lang))
+  return messages[0]
 }
 
 export function handlePocketBaseError(
@@ -240,6 +335,15 @@ export function handlePocketBaseError(
       {
         en: "Validation error. Please check your input data.",
         ar: "خطأ في التحقق من البيانات. يرجى مراجعة بيانات الإدخال.",
+      },
+      lang
+    )
+  }
+  if (error?.status === 429) {
+    return t(
+      {
+        en: "Too many attempts. Please try again later.",
+        ar: "محاولات كثيرة. يرجى المحاولة لاحقًا.",
       },
       lang
     )

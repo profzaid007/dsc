@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import pb, { getErrorMessage } from "@/lib/pb"
+import { normalizeEmail } from "@/lib/validators"
 import type { User } from "@/types/user"
 import { toast } from "sonner"
 
@@ -39,6 +40,8 @@ export function useUsers() {
     try {
       const newUser = await pb.collection("users").create({
         ...data,
+        email: normalizeEmail(data.email),
+        name: data.name.trim(),
         emailVisibility: true,
       })
       setUsers((prev) => [newUser as unknown as User, ...prev])

@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { DateInput } from "@/components/ui/date-input"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { COUNTRY_CODES } from "@/lib/country-codes"
@@ -33,6 +34,11 @@ import { formatDate } from "@/lib/format-date"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { getErrorMessage } from "@/lib/pb"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -63,9 +69,14 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError("")
 
+    if (!isValidEmail(email)) {
+      setError(t(EMAIL_INVALID_MESSAGE, lang))
+      return
+    }
+
+    setSubmitting(true)
 
     try {
       const { categoryId, subCategoryId, customCategory, customSubCategory } = portalService
@@ -75,18 +86,21 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
 
       const issueType = customCategory || portal?.title || ""
       const caseType = customSubCategory || service?.name.en || ""
+      const cleanName = name.trim()
+      const cleanEmail = normalizeEmail(email)
+      const cleanContact = `${countryCode} ${contact.trim()}`.trim()
 
       const html = [
         t({ en: "<h2>New Consultation Request</h2>", ar: "<h2>طلب استشارة جديد</h2>" }, lang),
-        `<p><strong>${t({ en: "Name:", ar: "الاسم:" }, lang)}</strong> ${name}</p>`,
-        `<p><strong>${t({ en: "Contact:", ar: "التواصل:" }, lang)}</strong> ${countryCode} ${contact}</p>`,
-        `<p><strong>${t({ en: "Email:", ar: "البريد الإلكتروني:" }, lang)}</strong> ${email}</p>`,
+        `<p><strong>${t({ en: "Name:", ar: "الاسم:" }, lang)}</strong> ${cleanName}</p>`,
+        `<p><strong>${t({ en: "Contact:", ar: "التواصل:" }, lang)}</strong> ${cleanContact}</p>`,
+        `<p><strong>${t({ en: "Email:", ar: "البريد الإلكتروني:" }, lang)}</strong> ${cleanEmail}</p>`,
         issueType ? `<p><strong>${t({ en: "Service Type:", ar: "نوع الخدمة:" }, lang)}</strong> ${issueType}</p>` : "",
         caseType ? `<p><strong>${t({ en: "Issue Type:", ar: "نوع المشكلة:" }, lang)}</strong> ${caseType}</p>` : "",
         consultationType ? `<p><strong>${t({ en: "Consultation Type:", ar: "نوع الاستشارة:" }, lang)}</strong> ${consultationType === "online" ? t({ en: "Online", ar: "أونلاين" }, lang) : t({ en: "Face to Face", ar: "وجهاً لوجه" }, lang)}</p>` : "",
         preferredDate ? `<p><strong>${t({ en: "Preferred Date:", ar: "التاريخ المفضل:" }, lang)}</strong> ${formatDate(preferredDate)}</p>` : "",
         preferredTime ? `<p><strong>${t({ en: "Preferred Time:", ar: "الوقت المفضل:" }, lang)}</strong> ${preferredTime}</p>` : "",
-        description ? `<p><strong>${t({ en: "Description:", ar: "الوصف:" }, lang)}</strong><br/>${description}</p>` : "",
+        description ? `<p><strong>${t({ en: "Description:", ar: "الوصف:" }, lang)}</strong><br/>${description.trim()}</p>` : "",
       ].join("\n")
 
       const response = await fetch("/api/send-email", {
@@ -94,9 +108,9 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "admin@dsc.ac",
-          to: email,
+          to: cleanEmail,
           cc: "consult@dsc.ac",
-          subject: t({ en: `Consultation request from: ${name}`, ar: `طلب استشارة من: ${name}` }, lang),
+          subject: t({ en: `Consultation request from: ${cleanName}`, ar: `طلب استشارة من: ${cleanName}` }, lang),
           html,
         }),
       })
@@ -105,15 +119,15 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: `${name}`,
-          contact: `${countryCode} ${contact}`,
-          email: `${email}`,
+          name: `${cleanName}`,
+          contact: `${cleanContact}`,
+          email: `${cleanEmail}`,
           issueType: `${issueType}`,
           caseType: `${caseType}`,
           consultationType: `${consultationType}`,
           preferredDate: `${formatDate(preferredDate)}`,
           preferredTime: `${preferredTime}`,
-          description: `${description}`,
+          description: `${description.trim()}`,
         }),
       })
 
@@ -126,7 +140,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       router.push("https://wa.me/message/XGN76UVRTVL7C1")
 
     } catch (err) {
-      setError(getErrorMessage(err))
+      setError(getErrorMessage(err, lang))
     } finally {
       setSubmitting(false)
     }
@@ -180,13 +194,14 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
             )}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label className="mb-1 block text-sm font-medium">{t({ en: "Name", ar: "الاسم" }, lang)}</label>
               <Input
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
                 placeholder={t({ en: "Your name", ar: "اسمك" }, lang)}
               />
             </div>
@@ -210,6 +225,8 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                <Input
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
+                autoComplete="tel"
+                inputMode="tel"
                 placeholder={t({ en: "Phone number", ar: "رقم الهاتف" }, lang)}
                 className="flex-1"
               />
@@ -218,11 +235,10 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
 
             <div>
               <label className="mb-1 block text-sm font-medium">{t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}</label>
-              <Input
-                type="email"
+              <EmailInput
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
                 placeholder="your@email.com"
               />
             </div>

@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
+import { EmailInput } from "@/components/ui/email-input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,8 +40,18 @@ import {
   PortalServiceSelector,
   type PortalServiceValue,
 } from "./PortalServiceSelector"
-import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
+import pb, {
+  authWithPassword,
+  getErrorMessage,
+  getFieldErrors,
+} from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
+import {
+  EMAIL_INVALID_MESSAGE,
+  isValidEmail,
+  normalizeEmail,
+} from "@/lib/validators"
+import { toast } from "sonner"
 
 const OTHER_VALUE = "other"
 
@@ -86,35 +98,58 @@ export function OrganizationRegistrationForm({
   const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  const passwordTooShort = password.length > 0 && password.length < 8
+  const passwordsMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword
+
+  const fieldErrorNode = (...keys: string[]) => {
+    const msg = keys.map((k) => fieldErrors[k]).find(Boolean)
+    return msg ? <p className="text-xs text-red-500">{msg}</p> : null
+  }
 
   const validate = (): boolean => {
-    if (!organizationName || !name || !contactNumber || !email || !password) {
-      setError(
-        t(
-          {
-            en: "Please fill in all required fields",
-            ar: "يرجى ملء جميع الحقول المطلوبة",
-          },
-          lang
-        )
+    const errs: Record<string, string> = {}
+    const required = t(
+      { en: "This field is required.", ar: "هذا الحقل مطلوب." },
+      lang
+    )
+
+    if (!name.trim()) errs.name = required
+    if (!organizationName.trim()) errs.organizationName = required
+    if (!fullLegalName.trim()) errs.fullLegalName = required
+    if (!contactNumber.trim()) errs.contactNumber = required
+    if (!email.trim()) errs.email = required
+    else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
+    if (!password) errs.password = required
+    else if (password.length < 8)
+      errs.password = t(
+        {
+          en: "Password must be at least 8 characters.",
+          ar: "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+        },
+        lang
       )
+    if (!confirmPassword) errs.confirmPassword = required
+    else if (password !== confirmPassword)
+      errs.confirmPassword = t(
+        { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
+        lang
+      )
+
+    setFieldErrors(errs)
+    if (Object.keys(errs).length > 0) {
+      setError("")
       return false
     }
-    if (password !== confirmPassword) {
-      setError(
-        t(
-          { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
-          lang
-        )
-      )
-      return false
-    }
+
     if (!portalService.categoryId || !portalService.subCategoryId) {
       setError(
         t(
           {
-            en: "Please select a portal and service",
-            ar: "يرجى اختيار البوابة والخدمة",
+            en: "Please select a service and issue type",
+            ar: "يرجى اختيار نوع الخدمة ونوع المشكلة",
           },
           lang
         )
@@ -128,8 +163,8 @@ export function OrganizationRegistrationForm({
       setError(
         t(
           {
-            en: "Please enter a custom portal name",
-            ar: "يرجى إدخال اسم بوابة مخصصة",
+            en: "Please enter a custom service name",
+            ar: "يرجى إدخال اسم خدمة مخصصة",
           },
           lang
         )
@@ -143,8 +178,8 @@ export function OrganizationRegistrationForm({
       setError(
         t(
           {
-            en: "Please enter a custom service name",
-            ar: "يرجى إدخال اسم خدمة مخصصة",
+            en: "Please enter a custom issue type name",
+            ar: "يرجى إدخال اسم نوع مشكلة مخصص",
           },
           lang
         )
@@ -157,49 +192,55 @@ export function OrganizationRegistrationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setFieldErrors({})
 
     if (!validate()) return
 
     setIsSubmitting(true)
 
     try {
+      const cleanName = name.trim()
+      const cleanFullLegalName = fullLegalName.trim()
+      const cleanOrganizationName = organizationName.trim()
+      const cleanEmail = normalizeEmail(email)
+
       const user = await pb.collection("users").create({
-        email: email.toLowerCase(),
+        email: cleanEmail,
         password,
         passwordConfirm: password,
-        name,
-        contact_number: `${countryCode} ${contactNumber}`,
+        name: cleanName,
+        contact_number: `${countryCode} ${contactNumber.trim()}`.trim(),
         role: "organization",
-        is_active:true,
+        is_active: true,
         emailVisibility: true,
       })
 
-      const extra_data = await pb.collection("organization_profiles").create({ 
-        user: user.id, 
-        full_legal_name: fullLegalName,
-        organization_name: organizationName, 
-        organization_type: organizationType, 
-        country: country, 
-        city: city, 
-        website: website, 
-        responsible_person_name: representativeName, 
-        responsible_person_title: representativeTitle, 
-        responsible_person_phone: representativeNumber, 
+      await pb.collection("organization_profiles").create({
+        user: user.id,
+        full_legal_name: cleanFullLegalName,
+        organization_name: cleanOrganizationName,
+        organization_type: organizationType,
+        country: country,
+        city: city.trim(),
+        website: website.trim(),
+        responsible_person_name: representativeName.trim(),
+        responsible_person_title: representativeTitle.trim(),
+        responsible_person_phone: representativeNumber.trim(),
         preferred_languages: preferredLanguages.join(", "),
-        notes: notes
+        notes: notes.trim(),
       })
 
       await pb.collection("cases").create({
         user: user.id,
-        name: organizationName,
+        name: cleanOrganizationName,
         portal_type: portalService.categoryId,
         service_type: portalService.subCategoryId === OTHER_VALUE
-          ? portalService.customSubCategory
+          ? portalService.customSubCategory.trim()
           : portalService.subCategoryId,
-        notes,
+        notes: notes.trim(),
         status: "pending",
         user_details: {
-          full_legal_name: fullLegalName,
+          full_legal_name: cleanFullLegalName,
           name: user.name,
           email: user.email,
           contact: user.contact_number,
@@ -207,30 +248,42 @@ export function OrganizationRegistrationForm({
         case_details: {
           custom_category:
             portalService.categoryId === OTHER_VALUE
-              ? portalService.customCategory
+              ? portalService.customCategory.trim()
               : undefined,
           custom_sub_category:
             portalService.subCategoryId === OTHER_VALUE
-              ? portalService.customSubCategory
+              ? portalService.customSubCategory.trim()
               : undefined,
         },
       })
 
+      toast.success(
+        t(
+          { en: "Account created successfully.", ar: "تم إنشاء الحساب بنجاح." },
+          lang
+        )
+      )
+
       if (onSuccess) {
         onSuccess()
       } else {
-        await authWithPassword(email.toLowerCase(), password)
+        await authWithPassword(cleanEmail, password)
         router.push(getDashboardPath("organization"))
       }
     } catch (err) {
-      setError(getErrorMessage(err))
+      const fieldErrs = getFieldErrors(err, lang)
+      if (Object.keys(fieldErrs).length > 0) {
+        setFieldErrors(fieldErrs)
+      } else {
+        setError(getErrorMessage(err, lang))
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <Card>
         <CardHeader>
           <CardTitle>
@@ -253,11 +306,14 @@ export function OrganizationRegistrationForm({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                aria-invalid={fieldErrors.name ? true : undefined}
                 placeholder={t(
                   { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
                   lang
                 )}
               />
+              {fieldErrorNode("name")}
             </div>
 
             <div className="space-y-2">
@@ -268,11 +324,18 @@ export function OrganizationRegistrationForm({
               <Input
                 value={organizationName}
                 onChange={(e) => setOrganizationName(e.target.value)}
+                autoComplete="organization"
+                aria-invalid={
+                  fieldErrors.organizationName || fieldErrors.organization_name
+                    ? true
+                    : undefined
+                }
                 placeholder={t(
                   { en: "e.g. ABC Company", ar: "مثال: شركة أبجد" },
                   lang
                 )}
               />
+              {fieldErrorNode("organizationName", "organization_name")}
             </div>
 
             <div className="space-y-2">
@@ -283,11 +346,18 @@ export function OrganizationRegistrationForm({
               <Input
                 value={fullLegalName}
                 onChange={(e) => setFullLegalName(e.target.value)}
+                autoComplete="name"
+                aria-invalid={
+                  fieldErrors.fullLegalName || fieldErrors.full_legal_name
+                    ? true
+                    : undefined
+                }
                 placeholder={t(
                   { en: "e.g. Mohammed bin Hassan Al-Rashid", ar: "مثال: محمد بن حسن الراشد" },
                   lang
                 )}
               />
+              {fieldErrorNode("fullLegalName", "full_legal_name")}
             </div>
 
             <div className="space-y-2">
@@ -311,6 +381,13 @@ export function OrganizationRegistrationForm({
                 <Input
                   value={contactNumber}
                   onChange={(e) => setContactNumber(e.target.value)}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  aria-invalid={
+                    fieldErrors.contactNumber || fieldErrors.contact_number
+                      ? true
+                      : undefined
+                  }
                   placeholder={t(
                     { en: "e.g. 50 000 0000", ar: "مثال: 50 000 0000" },
                     lang
@@ -318,6 +395,7 @@ export function OrganizationRegistrationForm({
                   className="flex-1"
                 />
               </div>
+              {fieldErrorNode("contactNumber", "contact_number")}
             </div>
 
             <div className="space-y-2">
@@ -325,10 +403,10 @@ export function OrganizationRegistrationForm({
                 {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="email"
+              <EmailInput
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={setEmail}
+                error={fieldErrors.email}
                 placeholder="your@email.com"
               />
             </div>
@@ -338,12 +416,24 @@ export function OrganizationRegistrationForm({
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={fieldErrors.password ? true : undefined}
                 placeholder="••••••••"
               />
+              {fieldErrorNode("password")}
+              {!fieldErrors.password && passwordTooShort && (
+                <p className="text-xs text-red-500">
+                  {t(
+                    {
+                      en: "Password must be at least 8 characters.",
+                      ar: "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+                    },
+                    lang
+                  )}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -354,12 +444,24 @@ export function OrganizationRegistrationForm({
                 )}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
-              <Input
-                type="password"
+              <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                aria-invalid={fieldErrors.confirmPassword || fieldErrors.passwordConfirm ? true : undefined}
                 placeholder="••••••••"
               />
+              {fieldErrorNode("confirmPassword", "passwordConfirm")}
+              {!fieldErrors.confirmPassword && !fieldErrors.passwordConfirm && passwordsMismatch && (
+                <p className="text-xs text-red-500">
+                  {t(
+                    {
+                      en: "Passwords do not match",
+                      ar: "كلمات المرور غير متطابقة",
+                    },
+                    lang
+                  )}
+                </p>
+              )}
             </div>
           </div>
 
