@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { getCurrentLang } from "@/lib/current-lang"
+import { t } from "@/lib/i18n"
 import pb, {
   getCurrentUser,
   getErrorMessage,
@@ -59,8 +61,20 @@ export function useAuth() {
           success: false,
           error:
             user.role === "expert"
-              ? "Your account is pending approval. You will be able to log in once approved."
-              : "Your account has been deactivated. Please contact the administrator.",
+              ? t(
+                  {
+                    en: "Your account is pending approval. You will be able to log in once approved.",
+                    ar: "حسابك قيد المراجعة. ستتمكن من تسجيل الدخول بعد الموافقة عليه.",
+                  },
+                  getCurrentLang()
+                )
+              : t(
+                  {
+                    en: "Your account has been deactivated. Please contact the administrator.",
+                    ar: "تم تعطيل حسابك. يرجى التواصل مع المسؤول.",
+                  },
+                  getCurrentLang()
+                ),
         }
       }
       refreshAuth()
@@ -68,7 +82,16 @@ export function useAuth() {
     } catch (error: any) {
       const status = (error as { status?: number } | null)?.status
       if (status === 400 || status === 401) {
-        return { success: false, error: "Incorrect email or password." }
+        return {
+          success: false,
+          error: t(
+            {
+              en: "Incorrect email or password.",
+              ar: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+            },
+            getCurrentLang()
+          ),
+        }
       }
       return { success: false, error: getErrorMessage(error) }
     }

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { setCurrentLang } from "@/lib/current-lang";
 import type { Lang } from "@/types/form";
 
 interface LangContextValue {
@@ -46,6 +47,7 @@ export function LangProvider({
   }, [initialLang]);
 
   useEffect(() => {
+    setCurrentLang(lang);
     setCookie(LANG_COOKIE, lang);
     if (initialized.current) {
       router.refresh();
