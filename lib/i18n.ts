@@ -33,6 +33,14 @@ export const UI_STRINGS: Record<string, BilingualString> = {
     en: "Select an option",
     ar: "اختر خياراً",
   },
+  close: {
+    en: "Close",
+    ar: "إغلاق",
+  },
+  cancel: {
+    en: "Cancel",
+    ar: "إلغاء",
+  },
   language_label: {
     en: "العربية",
     ar: "English",

@@ -51,12 +51,31 @@ export default function ContactPage() {
       const cleanName = name.trim()
       const cleanEmail = normalizeEmail(email)
 
+      const emailLabels =
+        lang === "ar"
+          ? {
+              title: "رسالة تواصل جديدة",
+              name: "الاسم",
+              phone: "الهاتف",
+              email: "البريد الإلكتروني",
+              description: "الوصف",
+              subjectPrefix: "رسالة تواصل من:",
+            }
+          : {
+              title: "New Contact Message",
+              name: "Name",
+              phone: "Phone",
+              email: "Email",
+              description: "Description",
+              subjectPrefix: "Contact message from:",
+            }
+
       const html = [
-        "<h2>New Contact Message</h2>",
-        `<p><strong>Name:</strong> ${cleanName}</p>`,
-        `<p><strong>Phone:</strong> ${countryCode} ${phoneNumber.trim()}</p>`,
-        `<p><strong>Email:</strong> ${cleanEmail}</p>`,
-        description ? `<p><strong>Description:</strong><br/>${description.trim()}</p>` : "",
+        `<h2>${emailLabels.title}</h2>`,
+        `<p><strong>${emailLabels.name}:</strong> ${cleanName}</p>`,
+        `<p><strong>${emailLabels.phone}:</strong> ${countryCode} ${phoneNumber.trim()}</p>`,
+        `<p><strong>${emailLabels.email}:</strong> ${cleanEmail}</p>`,
+        description ? `<p><strong>${emailLabels.description}:</strong><br/>${description.trim()}</p>` : "",
       ].join("\n")
 
       const response = await fetch("/api/send-email", {
@@ -66,7 +85,7 @@ export default function ContactPage() {
           from: "admin@dsc.ac",
           to: cleanEmail,
           cc: "contact@dsc.ac",
-          subject: `Contact message from: ${cleanName}`,
+          subject: `${emailLabels.subjectPrefix} ${cleanName}`,
           html,
         }),
       })

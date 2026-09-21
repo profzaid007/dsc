@@ -69,9 +69,17 @@ export default async function BlogPage() {
 
       {posts.length === 0 ? (
         <div className="rounded-lg border border-dashed p-12 text-center">
-          <p className="text-lg text-muted-foreground">No posts yet.</p>
+          <p className="text-lg text-muted-foreground">
+            {t({ en: "No posts yet.", ar: "لا توجد منشورات بعد." }, lang)}
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Check back later for new articles.
+            {t(
+              {
+                en: "Check back later for new articles.",
+                ar: "تفضل بالعودة لاحقاً للاطلاع على مقالات جديدة.",
+              },
+              lang
+            )}
           </p>
         </div>
       ) : (
@@ -103,7 +111,10 @@ export default async function BlogPage() {
                     {post.author_name && (
                       <>
                         <span>&middot;</span>
-                        <span>By {post.author_name}</span>
+                        <span>
+                          {t({ en: "By", ar: "بقلم" }, lang)}{" "}
+                          {post.author_name}
+                        </span>
                       </>
                     )}
                   </div>

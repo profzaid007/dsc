@@ -84,12 +84,12 @@ export function HeroSection() {
 
         {/* Headline */}
         <h1 className="animate-fade-in-up delay-200 text-3xl font-bold leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
-          {t(SITE_CONTENT.hero.headline, lang)}
+          Development Secrets Consultancy (DSC)
         </h1>
 
         {/* Subheadline */}
         <p className="animate-fade-in-up delay-400 mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/70 md:text-lg lg:text-xl">
-          {t(SITE_CONTENT.hero.subheadline, lang)}
+          From Comprehensive Scientific Diagnosis to Innovation and  Global Leadership in the Age of Artificial Intelligence
         </p>
 
         {/* CTA */}

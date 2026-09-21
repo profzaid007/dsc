@@ -52,6 +52,8 @@ import {
 import type { User } from "@/types/user"
 import { formatDateTime } from "@/lib/format-date"
 import { LANGUAGES } from "@/lib/language-list"
+import { useLang } from "@/lib/lang-context"
+import { t } from "@/lib/i18n"
 
 function humanize(value: string): string {
   return value
@@ -132,6 +134,7 @@ function TagList({ values }: { values: string[] }) {
 
 export default function ExpertApprovalPage() {
   const { users, isLoading, updateUser, refresh } = useUsers()
+  const { lang } = useLang()
   const [approvingId, setApprovingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState("")
   const [fileToken, setFileToken] = useState("")
@@ -194,11 +197,25 @@ export default function ExpertApprovalPage() {
       await updateUser(user.id, { is_active: true })
 
       const loginUrl = `${window.location.origin}/login`
+      const approvalEmailTitle =
+        lang === "ar" ? "تم اعتماد حسابك كخبير" : "Your Expert Account Has Been Approved"
       const html = [
-        "<h2>Your Expert Account Has Been Approved</h2>",
-        `<p>Dear ${user.name},</p>`,
-        `<p>Congratulations! Your expert account at <strong>DSC</strong> has been approved.</p>`,
-        `<p>You can now log in using the email and password you provided at registration:</p>`,
+        `<h2>${approvalEmailTitle}</h2>`,
+        `<p>${
+          lang === "ar"
+            ? `مرحباً ${user.name}،`
+            : `Dear ${user.name},`
+        }</p>`,
+        `<p>${
+          lang === "ar"
+            ? "تهانينا! تم اعتماد حسابك كخبير لدى <strong>DSC</strong>."
+            : "Congratulations! Your expert account at <strong>DSC</strong> has been approved."
+        }</p>`,
+        `<p>${
+          lang === "ar"
+            ? "يمكنك الآن تسجيل الدخول باستخدام البريد الإلكتروني وكلمة المرور اللذين أدخلتهما عند التسجيل:"
+            : "You can now log in using the email and password you provided at registration:"
+        }</p>`,
         `<p><a href="${loginUrl}">${loginUrl}</a></p>`,
       ].join("\n")
 
@@ -208,21 +225,37 @@ export default function ExpertApprovalPage() {
         body: JSON.stringify({
           from: "admin@dsc.ac",
           to: user.email,
-          subject: "Your Expert Account Has Been Approved",
+          subject: approvalEmailTitle,
           html,
         }),
       })
 
       if (!response.ok) {
         const { error: errMsg } = await response.json()
-        throw new Error(errMsg || "Failed to send approval email")
+        throw new Error(
+          errMsg ||
+            t(
+              {
+                en: "Failed to send approval email",
+                ar: "تعذّر إرسال بريد الاعتماد",
+              },
+              lang
+            )
+        )
       }
 
       await refresh()
       setSelectedUser(null)
     } catch (err) {
       setActionError(
-        getErrorMessage(err) || "Failed to approve. Please try again."
+        getErrorMessage(err, lang) ||
+          t(
+            {
+              en: "Failed to approve. Please try again.",
+              ar: "تعذّر الاعتماد. يرجى المحاولة مرة أخرى.",
+            },
+            lang
+          )
       )
       await refresh()
     } finally {

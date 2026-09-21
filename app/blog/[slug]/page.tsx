@@ -68,12 +68,21 @@ export default async function BlogPostPage({
           href="/blog"
           className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
         >
-          &larr; Back
+          {lang === "ar" ? "&rarr;" : "&larr;"}{" "}
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
-        <h1 className="mb-4 text-3xl font-bold">Not found</h1>
+        <h1 className="mb-4 text-3xl font-bold">
+          {t({ en: "Not found", ar: "غير موجود" }, lang)}
+        </h1>
         <div className="rounded-lg border border-dashed p-12 text-center">
           <p className="text-lg text-muted-foreground">
-            This post does not exist or is not published yet.
+            {t(
+              {
+                en: "This post does not exist or is not published yet.",
+                ar: "هذه المشاركة غير موجودة أو لم تُنشر بعد.",
+              },
+              lang
+            )}
           </p>
         </div>
       </div>
@@ -99,7 +108,9 @@ export default async function BlogPostPage({
           {page.author_name && (
             <>
               <span>&middot;</span>
-              <span>By {page.author_name}</span>
+              <span>
+                {t({ en: "By", ar: "بقلم" }, lang)} {page.author_name}
+              </span>
             </>
           )}
         </div>

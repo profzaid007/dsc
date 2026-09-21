@@ -20,21 +20,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { t, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 import type { MediaType, ResponseType } from "@/types/tool"
 
 const MAX_SIZE_MB = 20
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
 
-const MEDIA_TYPES: { value: MediaType; label: string; icon: typeof Image }[] = [
-  { value: "image", label: "Image", icon: Image },
-  { value: "video", label: "Video", icon: Video },
-  { value: "audio", label: "Audio", icon: Music },
+const MEDIA_TYPES: {
+  value: MediaType
+  label: { en: string; ar: string }
+  icon: typeof Image
+}[] = [
+  { value: "image", label: { en: "Image", ar: "صورة" }, icon: Image },
+  { value: "video", label: { en: "Video", ar: "فيديو" }, icon: Video },
+  { value: "audio", label: { en: "Audio", ar: "صوت" }, icon: Music },
 ]
 
-const RESPONSE_TYPES: { value: ResponseType; label: string }[] = [
-  { value: "text", label: "Text Response" },
-  { value: "video", label: "Video Response" },
-  { value: "audio", label: "Audio Response" },
+const RESPONSE_TYPES: { value: ResponseType; label: { en: string; ar: string } }[] = [
+  { value: "text", label: { en: "Text Response", ar: "استجابة نصية" } },
+  { value: "video", label: { en: "Video Response", ar: "استجابة فيديو" } },
+  { value: "audio", label: { en: "Audio Response", ar: "استجابة صوتية" } },
 ]
 
 interface MediaUploadProps {
@@ -52,6 +58,7 @@ export function MediaUpload({
   onOpenChange,
   onUpload,
 }: MediaUploadProps) {
+  const { lang } = useLang()
   const [mediaType, setMediaType] = useState<MediaType>("image")
   const [responseType, setResponseType] = useState<ResponseType>("text")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -67,7 +74,15 @@ export function MediaUpload({
     setError(null)
 
     if (file.size > MAX_SIZE_BYTES) {
-      setError(`File too large. Max size is ${MAX_SIZE_MB}MB`)
+      setError(
+        t(
+          {
+            en: `File too large. Max size is ${MAX_SIZE_MB}MB`,
+            ar: `الملف كبير جداً. الحد الأقصى للحجم ${MAX_SIZE_MB} ميجابايت`,
+          },
+          lang
+        )
+      )
       return
     }
 
@@ -101,7 +116,7 @@ export function MediaUpload({
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
           <img
             src={previewUrl}
-            alt="Preview"
+            alt={t({ en: "Preview", ar: "معاينة" }, lang)}
             className="h-full w-full object-contain"
           />
         </div>
@@ -139,16 +154,24 @@ export function MediaUpload({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Upload Media</DialogTitle>
+          <DialogTitle>
+            {t({ en: "Upload Media", ar: "رفع وسائط" }, lang)}
+          </DialogTitle>
           <DialogDescription>
-            Add image, video, or audio (max {MAX_SIZE_MB}MB)
+            {t(
+              {
+                en: `Add image, video, or audio (max ${MAX_SIZE_MB}MB)`,
+                ar: `أضف صورة أو فيديو أو صوت (بحد أقصى ${MAX_SIZE_MB} ميجابايت)`,
+              },
+              lang
+            )}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Media Type</Label>
+              <Label>{t({ en: "Media Type", ar: "نوع الوسائط" }, lang)}</Label>
               <Select
                 value={mediaType}
                 onValueChange={(v) => setMediaType(v as MediaType)}
@@ -161,7 +184,7 @@ export function MediaUpload({
                     <SelectItem key={type.value} value={type.value}>
                       <div className="flex items-center gap-2">
                         <type.icon className="h-4 w-4" />
-                        {type.label}
+                        {t(type.label, lang)}
                       </div>
                     </SelectItem>
                   ))}
@@ -169,7 +192,9 @@ export function MediaUpload({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Response Type</Label>
+              <Label>
+                {t({ en: "Response Type", ar: "نوع الاستجابة" }, lang)}
+              </Label>
               <Select
                 value={responseType}
                 onValueChange={(v) => setResponseType(v as ResponseType)}
@@ -180,7 +205,7 @@ export function MediaUpload({
                 <SelectContent>
                   {RESPONSE_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      {t(type.label, lang)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -223,7 +248,13 @@ export function MediaUpload({
                 }}
               >
                 <X className="me-2 h-4 w-4" />
-                Remove & Upload Different
+                {t(
+                  {
+                    en: "Remove & Upload Different",
+                    ar: "إزالة ورفع ملف مختلف",
+                  },
+                  lang
+                )}
               </Button>
             </div>
           )}
@@ -231,10 +262,10 @@ export function MediaUpload({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
-            Cancel
+            {t(UI_STRINGS.cancel, lang)}
           </Button>
           <Button onClick={handleSave} disabled={!selectedFile}>
-            Add Media
+            {t({ en: "Add Media", ar: "إضافة وسائط" }, lang)}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/hooks/useAuth"
-import { t } from "@/lib/i18n"
+import { t, UI_STRINGS } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import {
   Card,
@@ -38,18 +38,29 @@ import {
 
 function ExpertPendingNotice() {
   const searchParams = useSearchParams()
+  const { lang } = useLang()
   if (searchParams.get("expert_pending") !== "1") return null
   const emailWarn = searchParams.get("warn") === "1"
   return (
     <>
       <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
-        Your application has been submitted. You will receive an email once your
-        account is approved.
+        {t(
+          {
+            en: "Your application has been submitted. You will receive an email once your account is approved.",
+            ar: "تم تقديم طلبك. ستصلك رسالة بريد إلكتروني بمجرد اعتماد حسابك.",
+          },
+          lang
+        )}
       </div>
       {emailWarn && (
         <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-          Your application was saved, but we couldn&apos;t send the notification
-          email. Our team will still review your application.
+          {t(
+            {
+              en: "Your application was saved, but we couldn't send the notification email. Our team will still review your application.",
+              ar: "تم حفظ طلبك، لكن تعذّر إرسال بريد الإشعار. سيقوم فريقنا بمراجعة طلبك على أي حال.",
+            },
+            lang
+          )}
         </div>
       )}
     </>
@@ -210,7 +221,9 @@ export default function LoginPage() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">
+                    {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
+                  </Label>
                   <EmailInput
                     id="email"
                     placeholder="your@email.com"
@@ -221,7 +234,9 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">
+                      {t({ en: "Password", ar: "كلمة المرور" }, lang)}
+                    </Label>
                     <button
                       type="button"
                       onClick={() => {
@@ -231,7 +246,10 @@ export default function LoginPage() {
                       }}
                       className="text-sm font-medium text-[#c9a227] hover:underline"
                     >
-                      Forgot password?
+                      {t(
+                        { en: "Forgot password?", ar: "هل نسيت كلمة المرور؟" },
+                        lang
+                      )}
                     </button>
                   </div>
                   <PasswordInput
@@ -251,19 +269,27 @@ export default function LoginPage() {
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-[#e6c200] to-[#c9a227] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <span className="relative z-10">
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading
+                      ? t(
+                          { en: "Signing in...", ar: "جارٍ تسجيل الدخول..." },
+                          lang
+                        )
+                      : t({ en: "Sign In", ar: "تسجيل الدخول" }, lang)}
                   </span>
                 </Button>
               </form>
 
               <div className="mt-6 border-t pt-6 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Don&apos;t have an account?{" "}
+                  {t(
+                    { en: "Don't have an account?", ar: "ليس لديك حساب؟" },
+                    lang
+                  )}{" "}
                   <Link
                     href="/register"
                     className="font-medium text-[#c9a227] hover:underline"
                   >
-                    Register
+                    {t({ en: "Register", ar: "التسجيل" }, lang)}
                   </Link>
                 </p>
               </div>
@@ -275,18 +301,35 @@ export default function LoginPage() {
       <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
+            <DialogTitle>
+              {t(
+                { en: "Reset Password", ar: "إعادة تعيين كلمة المرور" },
+                lang
+              )}
+            </DialogTitle>
             <DialogDescription>
               {resetSent
-                ? "If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder)."
-                : "Enter your account email and we will send you a link to reset your password."}
+                ? t(
+                    {
+                      en: "If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder).",
+                      ar: "إذا كان هناك حساب مرتبط بهذا البريد، فقد تم إرسال رابط إعادة التعيين. تحقق من بريدك الوارد (ومجلد البريد غير المرغوب).",
+                    },
+                    lang
+                  )
+                : t(
+                    {
+                      en: "Enter your account email and we will send you a link to reset your password.",
+                      ar: "أدخل بريد حسابك وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
+                    },
+                    lang
+                  )}
             </DialogDescription>
           </DialogHeader>
 
           {resetSent ? (
             <div className="flex justify-end">
               <Button variant="outline" onClick={() => setForgotOpen(false)}>
-                Close
+                {t(UI_STRINGS.close, lang)}
               </Button>
             </div>
           ) : (
@@ -297,7 +340,9 @@ export default function LoginPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
+                <Label htmlFor="reset-email">
+                  {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
+                </Label>
                 <EmailInput
                   id="reset-email"
                   placeholder="your@email.com"
@@ -313,10 +358,18 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setForgotOpen(false)}
                 >
-                  Cancel
+                  {t(UI_STRINGS.cancel, lang)}
                 </Button>
                 <Button type="submit" disabled={resetLoading}>
-                  {resetLoading ? "Sending..." : "Send Reset Link"}
+                  {resetLoading
+                    ? t({ en: "Sending...", ar: "جارٍ الإرسال..." }, lang)
+                    : t(
+                        {
+                          en: "Send Reset Link",
+                          ar: "إرسال رابط إعادة التعيين",
+                        },
+                        lang
+                      )}
                 </Button>
               </div>
             </form>
