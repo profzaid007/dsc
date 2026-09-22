@@ -63,22 +63,8 @@ export function Navbar() {
       <div className="lg:mx-2">
         <header className="w-full">
           <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 px-4 py-4 sm:px-6">
-            {/* Left: Logo + Hamburger (mobile) */}
+            {/* Left: Logo + Title */}
             <div className="col-start-1 flex min-w-0 items-center gap-2">
-              {!isAppRoute && (
-                <button
-                  className="shrink-0 rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  aria-label="Toggle menu"
-                >
-                  {mobileMenuOpen ? (
-                    <X className="h-5 w-5" />
-                  ) : (
-                    <Menu className="h-5 w-5" />
-                  )}
-                </button>
-              )}
-
               <Link href="/" className="flex min-w-0 items-center gap-3">
                 <div className="flex h-[56px] w-[56px] shrink-0 items-center justify-center">
                   <Image
@@ -221,6 +207,20 @@ export function Navbar() {
                 </Button>
               )}
 
+              {!isAppRoute && (
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="shrink-0 rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+                  aria-label="Toggle menu"
+                >
+                  {mobileMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </button>
+              )}
+
               <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
             </div>
           </div>
@@ -332,7 +332,7 @@ export function Navbar() {
               <Button
                 variant="default"
                 size="sm"
-                className="gap-2 justify-start rounded-full py-2.5"
+                className="w-fit gap-2 justify-start rounded-full py-5"
                 onClick={() => {
                   setMobileMenuOpen(false)
                   setConsultOpen(true)
