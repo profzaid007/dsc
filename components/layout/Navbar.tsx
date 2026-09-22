@@ -60,284 +60,291 @@ export function Navbar() {
 
   return (
     <div className="w-full">
-      <header className="border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-10">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 py-4">
-          {/* Left: Logo + Hamburger (mobile) */}
-          <div className="flex items-center gap-3">
+      <div className="lg:mx-2">
+        <header className="w-full">
+          <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 px-4 py-4 sm:px-6">
+            {/* Left: Logo + Hamburger (mobile) */}
+            <div className="col-start-1 flex min-w-0 items-center gap-2">
+              {!isAppRoute && (
+                <button
+                  className="shrink-0 rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  aria-label="Toggle menu"
+                >
+                  {mobileMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </button>
+              )}
+
+              <Link href="/" className="flex min-w-0 items-center gap-3">
+                <div className="flex h-[56px] w-[56px] shrink-0 items-center justify-center">
+                  <Image
+                    src="/logo.svg"
+                    alt="DSC Logo"
+                    width={56}
+                    height={56}
+                    className="object-contain"
+                  />
+                </div>
+                <div className="hidden min-w-0 max-w-[15rem] sm:block">
+                  <h1
+                    className="text-xl font-bold leading-tight"
+                    style={{ color: accentColor }}
+                  >
+                    {headerText}
+                  </h1>
+                  <p className="text-[13px] font-semibold text-[#0076a3] leading-tight">
+                    {subheading}
+                  </p>
+                </div>
+              </Link>
+            </div>
+
+            {/* Center: Nav links (desktop) */}
             {!isAppRoute && (
-              <button
-                className="rounded-md p-1.5 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle menu"
+              <nav
+                className="col-start-2 hidden flex-nowrap items-center gap-0 ltr:-translate-x-8 rtl:translate-x-22 md:flex"
+                aria-label="Main navigation"
               >
-                {mobileMenuOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </button>
+                {NAV_LINKS.map((item, i) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={i}
+                      href={item.href}
+                      className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? "bg-[#0a3d62]/10 text-[#0a3d62]"
+                          : "text-gray-600 hover:bg-[#0a3d62]/5 hover:text-[#0a3d62]"
+                      }`}
+                    >
+                      {t({ en: item.en, ar: item.ar }, lang)}
+                    </Link>
+                  )
+                })}
+              </nav>
             )}
 
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-[56px] w-[56px] items-center justify-center">
-                <Image
-                  src="/logo.svg"
-                  alt="DSC Logo"
-                  width={56}
-                  height={56}
-                  className="object-contain"
-                />
-              </div>
-              <div className="hidden sm:block">
-                <h1
-                  className="text-xl font-bold leading-tight"
-                  style={{ color: accentColor }}
-                >
-                  {headerText}
-                </h1>
-                <p className="text-[13px] font-semibold text-[#0076a3] leading-tight">
-                  {subheading}
-                </p>
-              </div>
-            </Link>
-          </div>
+            {/* Right: Language + Auth + Consult */}
+            <div className="col-start-3 flex min-w-0 flex-nowrap items-center justify-end gap-2">
+              <button
+                onClick={toggleLang}
+                className="rounded-full px-3 py-1.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-[#0a3d62]/5 hover:text-[#0076a3]"
+              >
+                {t({ en: "العربية", ar: "English" }, lang)}
+              </button>
 
-          {/* Center: Nav links (desktop) */}
-          {!isAppRoute && (
-            <nav className="hidden items-center gap-1 md:flex">
+              {!isAuthenticated && (
+                <>
+                  <Link
+                    href="/login"
+                    className="hidden items-center gap-1.5 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:border-[#0a3d62]/30 hover:bg-[#0a3d62]/5 hover:text-[#0a3d62] md:flex"
+                  >
+                    <LogIn className="h-3.5 w-3.5" />
+                    {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="hidden items-center gap-1.5 rounded-full border border-gray-200 px-4 py-1 text-sm font-medium text-gray-700 transition-all hover:border-[#0a3d62]/30 hover:bg-[#0a3d62]/5 hover:text-[#0a3d62] md:flex"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
+                  </Link>
+                </>
+              )}
+
+              {isAuthenticated && (
+                <div className="relative hidden md:block" ref={accountRef}>
+                  <button
+                    onClick={() => setAccountPopoverOpen(!accountPopoverOpen)}
+                    className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-gray-50"
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                      {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                    <span className="font-medium truncate max-w-[120px]">
+                      {currentUser?.name || ""}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  {accountPopoverOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-48 rounded-md border bg-white shadow-lg z-50 py-1">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setAccountPopoverOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          href="/cms"
+                          onClick={() => setAccountPopoverOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors"
+                        >
+                          <FileText className="h-4 w-4" />
+                          {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
+                        </Link>
+                      )}
+                      <div className="my-1 border-t" />
+                      <button
+                        onClick={() => {
+                          setAccountPopoverOpen(false)
+                          logout()
+                          router.push("/")
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors text-left"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!isAuthenticated && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="hidden h-auto max-w-[9.5rem] shrink items-center gap-2 px-5 py-1 whitespace-normal rounded-full md:flex"
+                  onClick={() => setConsultOpen(true)}
+                >
+                  <Calendar className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 leading-snug text-start">
+                    {t(SITE_CONTENT.nav.bookConsultation, lang)}
+                  </span>
+                </Button>
+              )}
+
+              <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
+            </div>
+          </div>
+        </header>
+
+        {/* Mobile menu (dropdown) */}
+        {!isAppRoute && mobileMenuOpen && (
+          <nav className="border-t border-gray-200 md:hidden">
+            <div className="flex flex-col gap-1 px-4 py-3">
               {NAV_LINKS.map((item, i) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
                     key={i}
                     href={item.href}
-                    className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
                       isActive
-                        ? "bg-gray-100 text-[#0a3d62]"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-[#0a3d62]"
+                        ? "bg-[#0a3d62]/10 text-[#0a3d62]"
+                        : "text-gray-600 hover:bg-[#0a3d62]/5"
                     }`}
+                    onClick={() => setMobileMenuOpen(false)}
                   >
                     {t({ en: item.en, ar: item.ar }, lang)}
                   </Link>
                 )
               })}
-            </nav>
-          )}
 
-          {/* Right: Language + Auth + Consult */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleLang}
-              className="rounded-md px-2 py-1.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0076a3]"
-            >
-              {t({ en: "العربية", ar: "English" }, lang)}
-            </button>
+              <div className="my-2 border-t border-gray-100" />
 
-            {!isAuthenticated && (
-              <>
-                <Link
-                  href="/login"
-                  className="hidden items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0a3d62] md:flex"
-                >
-                  <LogIn className="h-3.5 w-3.5" />
-                  {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
-                </Link>
-                <Link
-                  href="/register"
-                  className="hidden items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#0a3d62] md:flex"
-                >
-                  <UserPlus className="h-3.5 w-3.5" />
-                  {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
-                </Link>
-              </>
-            )}
+              {!isAuthenticated && (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-[#0a3d62]/5 transition-colors"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-[#0a3d62]/5 transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
+                  </Link>
+                </>
+              )}
 
-            {isAuthenticated && (
-              <div className="relative hidden md:block" ref={accountRef}>
-                <button
-                  onClick={() => setAccountPopoverOpen(!accountPopoverOpen)}
-                  className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-gray-50"
-                >
+              {isAuthenticated && (
+                <div className="flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
-                  <span className="font-medium truncate max-w-[120px]">
+                  <span className="font-medium truncate">
                     {currentUser?.name || ""}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </button>
-                {accountPopoverOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-48 rounded-md border bg-white shadow-lg z-50 py-1">
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setAccountPopoverOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
-                    </Link>
-                    {isAdmin && (
-                      <Link
-                        href="/cms"
-                        onClick={() => setAccountPopoverOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors"
-                      >
-                        <FileText className="h-4 w-4" />
-                        {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
-                      </Link>
-                    )}
-                    <div className="my-1 border-t" />
-                    <button
-                      onClick={() => {
-                        setAccountPopoverOpen(false)
-                        logout()
-                        router.push("/")
-                      }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent transition-colors text-left"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            {!isAuthenticated && (
+              {isAuthenticated && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 justify-start rounded-full"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/dashboard">
+                    <LayoutDashboard className="h-4 w-4" />
+                    {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
+                  </Link>
+                </Button>
+              )}
+
+              {isAdmin && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 justify-start rounded-full"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/cms">
+                    <FileText className="h-4 w-4" />
+                    {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
+                  </Link>
+                </Button>
+              )}
+
+              {isAuthenticated && (
+                <>
+                  <div className="my-1 border-t" />
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      logout()
+                      router.push("/")
+                    }}
+                    className="flex w-full items-center gap-2 rounded-full px-4 py-2.5 text-sm text-gray-600 hover:bg-[#0a3d62]/5 transition-colors text-left"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
+                  </button>
+                </>
+              )}
+
               <Button
                 variant="default"
                 size="sm"
-                className="hidden gap-2 md:flex"
-                onClick={() => setConsultOpen(true)}
+                className="gap-2 justify-start rounded-full py-2.5"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  setConsultOpen(true)
+                }}
               >
                 <Calendar className="h-4 w-4" />
                 {t(SITE_CONTENT.nav.bookConsultation, lang)}
               </Button>
-            )}
-
-            <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile menu (dropdown) */}
-      {!isAppRoute && mobileMenuOpen && (
-        <nav className="border-b border-gray-200 bg-white md:hidden">
-          <div className="flex flex-col gap-1 px-4 py-3">
-            {NAV_LINKS.map((item, i) => {
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={i}
-                  href={item.href}
-                  className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-gray-100 text-[#0a3d62]"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t({ en: item.en, ar: item.ar }, lang)}
-                </Link>
-              )
-            })}
-
-            <div className="my-2 border-t border-gray-100" />
-
-            {!isAuthenticated && (
-              <>
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  <LogIn className="h-4 w-4" />
-                  {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
-                </Link>
-              </>
-            )}
-
-            {isAuthenticated && (
-              <div className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
-                </div>
-                <span className="font-medium truncate">
-                  {currentUser?.name || ""}
-                </span>
-              </div>
-            )}
-
-            {isAuthenticated && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="gap-2 justify-start"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Link href="/dashboard">
-                  <LayoutDashboard className="h-4 w-4" />
-                  {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
-                </Link>
-              </Button>
-            )}
-
-            {isAdmin && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="gap-2 justify-start"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Link href="/cms">
-                  <FileText className="h-4 w-4" />
-                  {t({ en: "Manage Pages", ar: "إدارة الصفحات" }, lang)}
-                </Link>
-              </Button>
-            )}
-
-            {isAuthenticated && (
-              <>
-                <div className="my-1 border-t" />
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    logout()
-                    router.push("/")
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors text-left"
-                >
-                  <LogOut className="h-4 w-4" />
-                  {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
-                </button>
-              </>
-            )}
-
-            <Button
-              variant="default"
-              size="sm"
-              className="gap-2 justify-start mt-1"
-              onClick={() => {
-                setMobileMenuOpen(false)
-                setConsultOpen(true)
-              }}
-            >
-              <Calendar className="h-4 w-4" />
-              {t(SITE_CONTENT.nav.bookConsultation, lang)}
-            </Button>
-          </div>
-        </nav>
-      )}
+            </div>
+          </nav>
+        )}
+      </div>
     </div>
   )
 }

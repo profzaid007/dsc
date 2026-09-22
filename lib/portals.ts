@@ -194,7 +194,7 @@ export const PORTALS: Portal[] = [
   {
     id: "5",
     title: { en: "Institution", ar: "المؤسسات" },
-    portalName: { en: "Institutional Portal", ar: "بوابة المؤسسات" },
+    portalName: { en: "Institutional Diagnosis & Development Portal", ar: "بوابة التشخيص والتطوير المؤسسي" },
     image: "/portals/portal-5.jpg",
     banner: "/banners/banner-5.png",
     tagline: { en: "Performance Through Strategy", ar: "الأداء من خلال الاستراتيجية" },
