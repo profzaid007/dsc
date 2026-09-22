@@ -12,12 +12,16 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { ArrowLeft, Loader2, Trash2, Copy } from "lucide-react"
+import { ArrowLeft, ArrowRight, Loader2, Trash2, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
+import { t, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 export default function CmsHomePageEditorPage() {
+  const { lang } = useLang()
+  const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const { isSuperAdmin } = useAuth()
   const params = useParams()
   const router = useRouter()
@@ -137,7 +141,18 @@ export default function CmsHomePageEditorPage() {
 
   const handleDelete = useCallback(async () => {
     if (!page) return
-    if (!confirm(`Delete "${page.title_en}"? This cannot be undone.`)) return
+    if (
+      !confirm(
+        t(
+          {
+            en: `Delete "${page.title_en}"? This cannot be undone.`,
+            ar: `حذف "${page.title_en}"؟ لا يمكن التراجع عن هذا.`,
+          },
+          lang
+        )
+      )
+    )
+      return
     setDeleting(true)
     try {
       await homePagesCollection.delete(page.id)
@@ -146,7 +161,7 @@ export default function CmsHomePageEditorPage() {
       toast.error(getErrorMessage(err))
       setDeleting(false)
     }
-  }, [page, router])
+  }, [page, router, lang])
 
   if (loading) {
     return (
@@ -163,10 +178,10 @@ export default function CmsHomePageEditorPage() {
           href="/cms/home-pages"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
-        <p>Page not found.</p>
+        <p>{t({ en: "Page not found.", ar: "الصفحة غير موجودة." }, lang)}</p>
       </div>
     )
   }
@@ -178,8 +193,8 @@ export default function CmsHomePageEditorPage() {
           href="/cms/home-pages"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
       </div>
 
@@ -198,7 +213,7 @@ export default function CmsHomePageEditorPage() {
               disabled={publishing}
             />
             <Label htmlFor="publish" className="font-medium">
-              {page.is_published ? "Published" : "Draft"}
+              {page.is_published ? t(UI_STRINGS.published, lang) : t(UI_STRINGS.draft, lang)}
             </Label>
           </div>
         </div>
@@ -208,24 +223,28 @@ export default function CmsHomePageEditorPage() {
         <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
           <TabsList>
             <TabsTrigger value="en">English</TabsTrigger>
-            <TabsTrigger value="ar">Arabic</TabsTrigger>
+            <TabsTrigger value="ar">العربية</TabsTrigger>
           </TabsList>
 
           <TabsContent value="en" className="mt-4 space-y-4">
             {isSuperAdmin && (
               <div className="space-y-2">
-                <Label htmlFor="en-title">Title (English)</Label>
+                <Label htmlFor="en-title">
+                  {t({ en: "Title (English)", ar: "العنوان (إنجليزي)" }, lang)}
+                </Label>
                 <Input
                   id="en-title"
                   value={enTitle}
                   onChange={(e) => setEnTitle(e.target.value)}
-                  placeholder="Page title"
+                  placeholder={t({ en: "Page title", ar: "عنوان الصفحة" }, lang)}
                 />
               </div>
             )}
             {isSuperAdmin && (
               <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug</Label>
+                <Label htmlFor="slug">
+                  {t({ en: "URL Slug", ar: "معرف الرابط (Slug)" }, lang)}
+                </Label>
                 <Input
                   id="slug"
                   value={slugValue}
@@ -236,7 +255,7 @@ export default function CmsHomePageEditorPage() {
             )}
             <RichTextEditor
               key={`${resetKey}-en`}
-              title="English Content"
+              title={t({ en: "English Content", ar: "المحتوى (إنجليزي)" }, lang)}
               initialContent={page.content_en}
               onSave={handleSave}
               isSaving={saving}
@@ -247,15 +266,19 @@ export default function CmsHomePageEditorPage() {
 
           <TabsContent value="ar" className="mt-4 space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="ar-title">Title (Arabic)</Label>
+              <Label htmlFor="ar-title">
+                {t({ en: "Title (Arabic)", ar: "العنوان (عربي)" }, lang)}
+              </Label>
               <Button variant="outline" size="sm" onClick={copyFromEnglish}>
                 <Copy className="mr-2 h-4 w-4" />
-                Copy from English
+                {t({ en: "Copy from English", ar: "نسخ من الإنجليزية" }, lang)}
               </Button>
             </div>
             {isSuperAdmin && (
               <div className="space-y-2">
-                <Label htmlFor="ar-title">Title (Arabic)</Label>
+                <Label htmlFor="ar-title">
+                  {t({ en: "Title (Arabic)", ar: "العنوان (عربي)" }, lang)}
+                </Label>
                 <Input
                   id="ar-title"
                   value={arTitle}
@@ -266,7 +289,7 @@ export default function CmsHomePageEditorPage() {
             )}
             <RichTextEditor
               key={`${resetKey}-ar`}
-              title="Arabic Content"
+              title={t({ en: "Arabic Content", ar: "المحتوى (عربي)" }, lang)}
               initialContent={page.content_ar || ""}
               onSave={handleSave}
               isSaving={saving}
@@ -290,7 +313,7 @@ export default function CmsHomePageEditorPage() {
             ) : (
               <Trash2 className="mr-2 h-4 w-4" />
             )}
-            Delete
+            {t({ en: "Delete", ar: "حذف" }, lang)}
           </Button>
         )}
       </div>

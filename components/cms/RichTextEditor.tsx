@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Loader2, Save, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"
+import { UI_STRINGS, t } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 import "suneditor/css/editor"
 import "suneditor/css/contents"
@@ -31,6 +33,7 @@ export function RichTextEditor({
   onChange,
   direction = "ltr",
 }: RichTextEditorProps) {
+  const { lang } = useLang()
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<any>(null)
   const onImageUploadRef = useRef(onImageUpload)
@@ -230,7 +233,7 @@ export function RichTextEditor({
             {onDiscard && (
               <Button variant="outline" onClick={onDiscard}>
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Discard Changes
+                {t(UI_STRINGS.discard_changes, lang)}
               </Button>
             )}
             <Button onClick={handleSave} disabled={isSaving}>
@@ -239,7 +242,7 @@ export function RichTextEditor({
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? t(UI_STRINGS.saving, lang) : t(UI_STRINGS.save, lang)}
             </Button>
           </div>
         </div>
@@ -250,7 +253,7 @@ export function RichTextEditor({
           {onDiscard && (
             <Button variant="outline" onClick={onDiscard}>
               <RotateCcw className="mr-2 h-4 w-4" />
-              Discard Changes
+              {t(UI_STRINGS.discard_changes, lang)}
             </Button>
           )}
           <Button onClick={handleSave} disabled={isSaving}>
@@ -259,7 +262,7 @@ export function RichTextEditor({
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? t(UI_STRINGS.saving, lang) : t(UI_STRINGS.save, lang)}
           </Button>
         </div>
       )}

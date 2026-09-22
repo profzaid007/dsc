@@ -19,8 +19,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Eye, Loader2, Plus, Pencil, Trash2, Settings } from "lucide-react"
+import { t, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 export default function CmsBlogListPage() {
+  const { lang } = useLang()
   const [posts, setPosts] = useState<BlogPage[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -54,7 +57,18 @@ export default function CmsBlogListPage() {
   }
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return
+    if (
+      !confirm(
+        t(
+          {
+            en: `Delete "${title}"? This cannot be undone.`,
+            ar: `حذف "${title}"؟ لا يمكن التراجع عن هذا.`,
+          },
+          lang
+        )
+      )
+    )
+      return
     await blogPagesCollection.delete(id)
     setPosts((prev) => prev.filter((p) => p.id !== id))
   }
@@ -63,16 +77,21 @@ export default function CmsBlogListPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Blog</h1>
+          <h1 className="text-2xl font-bold">
+            {t({ en: "Blog", ar: "المدونة" }, lang)}
+          </h1>
           <p className="text-muted-foreground">
-            Create and manage blog posts
+            {t(
+              { en: "Create and manage blog posts", ar: "إنشاء وإدارة منشورات المدونة" },
+              lang
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/cms/blog/categories">
             <Button variant="outline">
               <Settings className="mr-2 h-4 w-4" />
-              Categories
+              {t({ en: "Categories", ar: "التصنيفات" }, lang)}
             </Button>
           </Link>
           <Button onClick={handleNewPost} disabled={creating}>
@@ -81,7 +100,7 @@ export default function CmsBlogListPage() {
             ) : (
               <Plus className="mr-2 h-4 w-4" />
             )}
-            New Post
+            {t({ en: "New Post", ar: "منشور جديد" }, lang)}
           </Button>
         </div>
       </div>
@@ -94,14 +113,16 @@ export default function CmsBlogListPage() {
         </div>
       ) : posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-muted-foreground">No posts yet.</p>
+          <p className="text-muted-foreground">
+            {t({ en: "No posts yet.", ar: "لا توجد منشورات بعد." }, lang)}
+          </p>
           <Button onClick={handleNewPost} className="mt-4" disabled={creating}>
             {creating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Plus className="mr-2 h-4 w-4" />
             )}
-            Create your first post
+            {t({ en: "Create your first post", ar: "أنشئ أول منشور" }, lang)}
           </Button>
         </div>
       ) : (
@@ -109,11 +130,13 @@ export default function CmsBlogListPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
+                <TableHead>{t({ en: "Title", ar: "العنوان" }, lang)}</TableHead>
+                <TableHead>{t({ en: "Author", ar: "المؤلف" }, lang)}</TableHead>
+                <TableHead>{t({ en: "Date", ar: "التاريخ" }, lang)}</TableHead>
+                <TableHead>{t({ en: "Status", ar: "الحالة" }, lang)}</TableHead>
+                <TableHead className="w-24">
+                  {t({ en: "Actions", ar: "إجراءات" }, lang)}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,10 +166,12 @@ export default function CmsBlogListPage() {
                         >
                           <Eye className="mr-1 h-3 w-3" />
                         </Link>
-                        Published
+                        {t(UI_STRINGS.published, lang)}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary">Draft</Badge>
+                      <Badge variant="secondary">
+                        {t(UI_STRINGS.draft, lang)}
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell>

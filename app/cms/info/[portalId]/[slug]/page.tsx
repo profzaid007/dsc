@@ -15,8 +15,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Loader2, Copy, Trash2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, Loader2, Copy, Trash2 } from "lucide-react"
 import { toast } from "sonner"
+import { t, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 function extractIcon(record: Record<string, unknown>): string {
   const icon = record.icon
@@ -73,10 +75,13 @@ async function resizeIconToSquare(file: File, size = 256): Promise<File> {
 }
 
 export default function CmsServiceEditorPage() {
+  const { lang } = useLang()
+  const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const params = useParams()
   const router = useRouter()
   const portalId = params.portalId as string
   const slug = params.slug as string
+  const portal = getPortalById(portalId)
   const [activeLang, setActiveLang] = useState<Lang>("en")
 
   const [page, setPage] = useState<InfoPage | null>(null)
@@ -162,7 +167,13 @@ export default function CmsServiceEditorPage() {
           router.push(`/cms/info/${portalId}/${updated.slug}`)
         }
       } catch (err) {
-        toast.error("Failed to save. Make sure the slug is unique.", { description: getErrorMessage(err) })
+        toast.error(
+          t(
+            { en: "Failed to save. Make sure the slug is unique.", ar: "فشل الحفظ. تأكد من أن المعرف (slug) فريد." },
+            lang
+          ),
+          { description: getErrorMessage(err) }
+        )
       } finally {
         setSaving(false)
       }
@@ -178,6 +189,7 @@ export default function CmsServiceEditorPage() {
       activeLang,
       portalId,
       router,
+      lang,
     ]
   )
 
@@ -267,13 +279,19 @@ export default function CmsServiceEditorPage() {
           iconFile ? pb.files.getUrl(pageRecordRef.current, iconFile) : null
         )
       } catch (err) {
-        toast.error("Please upload a valid image.", { description: getErrorMessage(err) })
+        toast.error(
+          t(
+            { en: "Please upload a valid image.", ar: "يرجى رفع صورة صالحة." },
+            lang
+          ),
+          { description: getErrorMessage(err) }
+        )
       } finally {
         e.target.value = ""
         setUploadingIcon(false)
       }
     },
-    [page]
+    [page, lang]
   )
 
   const handleRemoveIcon = useCallback(async () => {
@@ -284,13 +302,30 @@ export default function CmsServiceEditorPage() {
       pageRecordRef.current = updated as unknown as Record<string, unknown>
       setIconUrl(null)
     } catch (err) {
-      toast.error("Failed to remove icon.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to remove icon.", ar: "فشل إزالة الأيقونة." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     }
-  }, [page])
+  }, [page, lang])
 
   const handleDelete = useCallback(async () => {
     if (!page) return
-    if (!confirm(`Delete "${page.title_en}"? This cannot be undone.`)) return
+    if (
+      !confirm(
+        t(
+          {
+            en: `Delete "${page.title_en}"? This cannot be undone.`,
+            ar: `حذف "${page.title_en}"؟ لا يمكن التراجع عن هذا.`,
+          },
+          lang
+        )
+      )
+    )
+      return
     setDeleting(true)
     try {
       await infoPagesCollection.delete(page.id)
@@ -299,7 +334,7 @@ export default function CmsServiceEditorPage() {
       toast.error(getErrorMessage(err))
       setDeleting(false)
     }
-  }, [page, portalId, router])
+  }, [page, portalId, router, lang])
 
   if (loading) {
     return (
@@ -316,10 +351,10 @@ export default function CmsServiceEditorPage() {
           href={`/cms/info/${portalId}`}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
-        <p>Page not found.</p>
+        <p>{t({ en: "Page not found.", ar: "الصفحة غير موجودة." }, lang)}</p>
       </div>
     )
   }
@@ -331,15 +366,19 @@ export default function CmsServiceEditorPage() {
           href={`/cms/info/${portalId}`}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
       </div>
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Edit Page</h1>
-          <p className="text-muted-foreground">Manage info page details</p>
+          <h1 className="text-2xl font-bold">
+            {t({ en: "Edit Page", ar: "تعديل الصفحة" }, lang)}
+          </h1>
+          <p className="text-muted-foreground">
+            {t({ en: "Manage info page details", ar: "إدارة تفاصيل صفحة المعلومات" }, lang)}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -359,7 +398,7 @@ export default function CmsServiceEditorPage() {
               disabled={publishing}
             />
             <Label htmlFor="publish" className="font-medium">
-              {isPublished ? "Published" : "Draft"}
+              {isPublished ? t(UI_STRINGS.published, lang) : t(UI_STRINGS.draft, lang)}
             </Label>
           </div>
         </div>
@@ -367,9 +406,9 @@ export default function CmsServiceEditorPage() {
 
       <Card className="space-y-4 p-4">
         <div className="space-y-2">
-          <Label>Portal</Label>
+          <Label>{t({ en: "Portal", ar: "البوابة" }, lang)}</Label>
           <p className="text-sm text-muted-foreground">
-            {getPortalById(portalId)?.title.en || portalId}
+            {portal ? t(portal.title, lang) : portalId}
           </p>
         </div>
 
@@ -385,13 +424,13 @@ export default function CmsServiceEditorPage() {
         </div> */}
 
         <div className="space-y-2">
-          <Label>Icon</Label>
+          <Label>{t({ en: "Icon", ar: "الأيقونة" }, lang)}</Label>
           {iconUrl && (
             <div className="relative mb-2 w-24 overflow-hidden rounded-lg border">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={iconUrl}
-                alt="Icon"
+                alt={t({ en: "Icon", ar: "الأيقونة" }, lang)}
                 className="h-auto w-full object-contain"
               />
               <Button
@@ -420,24 +459,26 @@ export default function CmsServiceEditorPage() {
       <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
         <TabsList>
           <TabsTrigger value="en">English</TabsTrigger>
-          <TabsTrigger value="ar">Arabic</TabsTrigger>
+          <TabsTrigger value="ar">العربية</TabsTrigger>
         </TabsList>
       </Tabs>
 
       {activeLang === "en" ? (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="en-title">Title (English)</Label>
+            <Label htmlFor="en-title">
+              {t({ en: "Title (English)", ar: "العنوان (إنجليزي)" }, lang)}
+            </Label>
             <Input
               id="en-title"
               value={enTitle}
               onChange={(e) => setEnTitle(e.target.value)}
-              placeholder="Page title"
+              placeholder={t({ en: "Page title", ar: "عنوان الصفحة" }, lang)}
             />
           </div>
           <RichTextEditor
             key={`${resetKey}-en`}
-            title="English Content"
+            title={t({ en: "English Content", ar: "المحتوى (إنجليزي)" }, lang)}
             initialContent={enContent}
             onSave={handleContentSave}
             isSaving={saving}
@@ -449,10 +490,12 @@ export default function CmsServiceEditorPage() {
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="ar-title">Title (Arabic)</Label>
+            <Label htmlFor="ar-title">
+              {t({ en: "Title (Arabic)", ar: "العنوان (عربي)" }, lang)}
+            </Label>
             <Button variant="outline" size="sm" onClick={copyFromEnglish}>
               <Copy className="mr-2 h-4 w-4" />
-              Copy from English
+              {t({ en: "Copy from English", ar: "نسخ من الإنجليزية" }, lang)}
             </Button>
           </div>
           <Input
@@ -463,7 +506,7 @@ export default function CmsServiceEditorPage() {
           />
           <RichTextEditor
             key={`${resetKey}-ar`}
-            title="Arabic Content"
+            title={t({ en: "Arabic Content", ar: "المحتوى (عربي)" }, lang)}
             initialContent={arContent}
             onSave={handleContentSave}
             isSaving={saving}

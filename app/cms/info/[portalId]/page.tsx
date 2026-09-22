@@ -13,12 +13,15 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   ArrowLeft,
+  ArrowRight,
   Loader2,
   Plus,
   FileText,
   Trash2,
   Pencil,
 } from "lucide-react"
+import { t, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 interface InfoPageRecord {
   id: string
@@ -30,6 +33,8 @@ interface InfoPageRecord {
 }
 
 export default function CmsPortalServicesPage() {
+  const { lang } = useLang()
+  const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const params = useParams()
   const router = useRouter()
   const portalId = params.portalId as string
@@ -70,7 +75,18 @@ export default function CmsPortalServicesPage() {
   }
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return
+    if (
+      !confirm(
+        t(
+          {
+            en: `Delete "${title}"? This cannot be undone.`,
+            ar: `حذف "${title}"؟ لا يمكن التراجع عن هذا.`,
+          },
+          lang
+        )
+      )
+    )
+      return
     setDeleting(id)
     try {
       await infoPagesCollection.delete(id)
@@ -92,13 +108,19 @@ export default function CmsPortalServicesPage() {
     } 
 
     catch (err) {
-      toast.error("Failed to save order.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to save order.", ar: "فشل حفظ الترتيب." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     } 
 
     finally {
       setSavingOrder(false)
     }
-  }, [])
+  }, [lang])
 
   if (!portal) {
     return (
@@ -107,10 +129,10 @@ export default function CmsPortalServicesPage() {
           href="/cms/info"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
-        <p>Portal not found</p>
+        <p>{t({ en: "Portal not found", ar: "البوابة غير موجودة" }, lang)}</p>
       </div>
     )
   }
@@ -122,16 +144,19 @@ export default function CmsPortalServicesPage() {
           href="/cms/info"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
       </div>
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{portal.title.en}</h1>
+          <h1 className="text-2xl font-bold">{t(portal.title, lang)}</h1>
           <p className="text-muted-foreground">
-            Manage info pages for this portal
+            {t(
+              { en: "Manage info pages for this portal", ar: "إدارة صفحات المعلومات لهذه البوابة" },
+              lang
+            )}
           </p>
         </div>
 
@@ -153,14 +178,16 @@ export default function CmsPortalServicesPage() {
         </div>
       ) : pages.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-          <p className="text-muted-foreground">No pages yet.</p>
+          <p className="text-muted-foreground">
+            {t({ en: "No pages yet.", ar: "لا توجد صفحات بعد." }, lang)}
+          </p>
           <Button onClick={handleNewPage} className="mt-4" disabled={creating}>
             {creating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Plus className="mr-2 h-4 w-4" />
             )}
-            Create your first page
+            {t({ en: "Create your first page", ar: "أنشئ صفحتك الأولى" }, lang)}
           </Button>
         </div>
         ) : (
@@ -189,10 +216,10 @@ export default function CmsPortalServicesPage() {
                     <div className="mt-1 flex items-center gap-2">
                       {p.is_published ? (
                         <Badge variant="default" className="text-xs" style={{ backgroundColor: portal.accent, color: "#fff" }}>
-                          Published
+                          {t(UI_STRINGS.published, lang)}
                         </Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-xs">Draft</Badge>
+                        <Badge variant="secondary" className="text-xs">{t(UI_STRINGS.draft, lang)}</Badge>
                       )}
                     </div>
                   </div>

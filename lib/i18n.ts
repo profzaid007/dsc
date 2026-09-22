@@ -41,6 +41,26 @@ export const UI_STRINGS: Record<string, BilingualString> = {
     en: "Cancel",
     ar: "إلغاء",
   },
+  save: {
+    en: "Save",
+    ar: "حفظ",
+  },
+  saving: {
+    en: "Saving...",
+    ar: "جارٍ الحفظ...",
+  },
+  discard_changes: {
+    en: "Discard Changes",
+    ar: "تجاهل التغييرات",
+  },
+  published: {
+    en: "Published",
+    ar: "منشور",
+  },
+  draft: {
+    en: "Draft",
+    ar: "مسودة",
+  },
   language_label: {
     en: "العربية",
     ar: "English",

@@ -21,8 +21,11 @@ import { Eye, Loader2, Plus, Pencil, Lock, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
+import { t, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 export default function CmsHomePagesListPage() {
+  const { lang } = useLang()
   const { isSuperAdmin } = useAuth()
   const [pages, setPages] = useState<HomePage[]>([])
   const [loading, setLoading] = useState(true)
@@ -60,7 +63,13 @@ export default function CmsHomePagesListPage() {
       setShowCreate(false)
       loadPages()
     } catch (err) {
-      toast.error("Failed to create page. Slug must be unique.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to create page. Slug must be unique.", ar: "فشل إنشاء الصفحة. يجب أن يكون المعرف (slug) فريداً." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     } finally {
       setCreatingPage(false)
     }
@@ -73,17 +82,40 @@ export default function CmsHomePagesListPage() {
       })
       setPages((prev) => prev.map((p) => (p.id === page.id ? updated : p)))
     } catch (err) {
-      toast.error("Failed to update status.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to update status.", ar: "فشل تحديث الحالة." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     }
   }
 
   const handleDelete = async (page: HomePage) => {
-    if (!confirm(`Delete "${page.title_en}"? This cannot be undone.`)) return
+    if (
+      !confirm(
+        t(
+          {
+            en: `Delete "${page.title_en}"? This cannot be undone.`,
+            ar: `حذف "${page.title_en}"؟ لا يمكن التراجع عن هذا.`,
+          },
+          lang
+        )
+      )
+    )
+      return
     try {
       await homePagesCollection.delete(page.id)
       setPages((prev) => prev.filter((p) => p.id !== page.id))
     } catch (err) {
-      toast.error("Failed to delete page.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to delete page.", ar: "فشل حذف الصفحة." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     }
   }
 
@@ -91,16 +123,24 @@ export default function CmsHomePagesListPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Home Pages</h1>
+          <h1 className="text-2xl font-bold">
+            {t({ en: "Home Pages", ar: "صفحات رئيسية" }, lang)}
+          </h1>
           <p className="text-muted-foreground">
-            Manage About Us, Contact Us, and other site pages
+            {t(
+              {
+                en: "Manage About Us, Contact Us, and other site pages",
+                ar: "إدارة صفحات من نحن وتواصل معنا وصفحات الموقع الأخرى",
+              },
+              lang
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {isSuperAdmin && (
             <Button variant="outline" onClick={() => setShowCreate(!showCreate)}>
               <Plus className="mr-2 h-4 w-4" />
-              New Page
+              {t({ en: "New Page", ar: "صفحة جديدة" }, lang)}
             </Button>
           )}
         </div>
@@ -110,34 +150,42 @@ export default function CmsHomePagesListPage() {
         <div className="rounded-md border bg-gray-50 p-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="slug">URL Slug</Label>
+              <Label htmlFor="slug">
+                {t({ en: "URL Slug", ar: "معرف الرابط (Slug)" }, lang)}
+              </Label>
               <Input
                 id="slug"
                 value={newSlug}
                 onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
-                placeholder="e.g., about, contact, privacy"
+                placeholder={t({ en: "e.g., about, contact, privacy", ar: "مثال: about، contact، privacy" }, lang)}
               />
               <p className="text-xs text-muted-foreground">
-                This will be the URL: /{newSlug || "slug"}
+                {t(
+                  { en: "This will be the URL: /", ar: "سيكون الرابط: /" },
+                  lang
+                )}
+                {newSlug || "slug"}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="title">Page Title</Label>
+              <Label htmlFor="title">
+                {t({ en: "Page Title", ar: "عنوان الصفحة" }, lang)}
+              </Label>
               <Input
                 id="title"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="e.g., About Us"
+                placeholder={t({ en: "e.g., About Us", ar: "مثال: من نحن" }, lang)}
               />
             </div>
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <Button variant="outline" onClick={() => setShowCreate(false)}>
-              Cancel
+              {t(UI_STRINGS.cancel, lang)}
             </Button>
             <Button onClick={handleCreate} disabled={creatingPage || !newSlug.trim() || !newTitle.trim()}>
               {creatingPage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Create Page
+              {t({ en: "Create Page", ar: "إنشاء الصفحة" }, lang)}
             </Button>
           </div>
         </div>
@@ -149,10 +197,12 @@ export default function CmsHomePagesListPage() {
         </div>
       ) : pages.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-muted-foreground">No pages yet.</p>
+          <p className="text-muted-foreground">
+            {t({ en: "No pages yet.", ar: "لا توجد صفحات بعد." }, lang)}
+          </p>
           {isSuperAdmin && (
             <Button onClick={() => setShowCreate(true)} className="mt-4">
-              Create your first page
+              {t({ en: "Create your first page", ar: "أنشئ صفحتك الأولى" }, lang)}
             </Button>
           )}
         </div>
@@ -161,10 +211,12 @@ export default function CmsHomePagesListPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Last Updated</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
+                <TableHead>{t({ en: "Title", ar: "العنوان" }, lang)}</TableHead>
+                <TableHead>{t({ en: "Last Updated", ar: "آخر تحديث" }, lang)}</TableHead>
+                <TableHead>{t({ en: "Status", ar: "الحالة" }, lang)}</TableHead>
+                <TableHead className="w-24">
+                  {t({ en: "Actions", ar: "إجراءات" }, lang)}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -180,12 +232,12 @@ export default function CmsHomePagesListPage() {
                       {page.is_published ? (
                         <Badge className="bg-green-600 text-white">
                           <Eye className="mr-1 h-3 w-3" />
-                          Published
+                          {t(UI_STRINGS.published, lang)}
                         </Badge>
                       ) : (
                         <Badge variant="secondary">
                           <Lock className="mr-1 h-3 w-3" />
-                          Draft
+                          {t(UI_STRINGS.draft, lang)}
                         </Badge>
                       )}
                     </button>

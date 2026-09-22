@@ -6,8 +6,11 @@ import { PORTALS } from "@/lib/portals"
 import { infoPagesCollection } from "@/lib/pb-collections"
 import type { InfoPage } from "@/types/cms"
 import { Card } from "@/components/ui/card"
+import { t } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 export default function CmsInfoPage() {
+  const { lang } = useLang()
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
 
@@ -28,9 +31,14 @@ export default function CmsInfoPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Info Pages</h1>
+        <h1 className="text-2xl font-bold">
+          {t({ en: "Info Pages", ar: "صفحات المعلومات" }, lang)}
+        </h1>
         <p className="text-muted-foreground">
-          Select a portal to manage its info pages
+          {t(
+            { en: "Select a portal to manage its info pages", ar: "اختر بوابة لإدارة صفحات المعلومات الخاصة بها" },
+            lang
+          )}
         </p>
       </div>
 
@@ -43,11 +51,17 @@ export default function CmsInfoPage() {
                 style={{ backgroundColor: portal.accent }}
               />
               <div className="p-4">
-                <h3 className="font-semibold">{portal.title.en}</h3>
+                <h3 className="font-semibold">{t(portal.title, lang)}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {loading
                     ? "..."
-                    : `${counts[portal.id] || 0} page${counts[portal.id] === 1 ? "" : "s"}`}
+                    : t(
+                        {
+                          en: `${counts[portal.id] || 0} ${counts[portal.id] === 1 ? "page" : "pages"}`,
+                          ar: `${counts[portal.id] || 0} ${counts[portal.id] === 1 ? "صفحة" : "صفحات"}`,
+                        },
+                        lang
+                      )}
                 </p>
               </div>
             </Card>

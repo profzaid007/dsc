@@ -16,9 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Loader2, ArrowLeft, Plus, Trash2, Pencil, X, Check } from "lucide-react"
+import { Loader2, ArrowLeft, ArrowRight, Plus, Trash2, Pencil, X, Check } from "lucide-react"
+import { t } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 export default function BlogCategoriesPage() {
+  const { lang } = useLang()
+  const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const [categories, setCategories] = useState<BlogCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [newKey, setNewKey] = useState("")
@@ -50,7 +54,12 @@ export default function BlogCategoriesPage() {
     const trimmedKey = newKey.trim()
     const trimmedLabelEn = newLabelEn.trim()
     if (!trimmedKey || !trimmedLabelEn) {
-      alert("Key and Label (EN) are required.")
+      alert(
+        t(
+          { en: "Key and Label (EN) are required.", ar: "المفتاح والتسمية (إنجليزي) مطلوبان." },
+          lang
+        )
+      )
       return
     }
     setAdding(true)
@@ -65,20 +74,32 @@ export default function BlogCategoriesPage() {
       setNewLabelAr("")
       load()
     } catch (err) {
-      toast.error("Failed to add category. The key may already exist.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to add category. The key may already exist.", ar: "فشل إضافة التصنيف. قد يكون المفتاح موجوداً بالفعل." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     } finally {
       setAdding(false)
     }
   }
 
   const handleDelete = async (id: string, label: string) => {
-    if (!confirm(`Delete "${label}"?`)) return
+    if (!confirm(t({ en: `Delete "${label}"?`, ar: `حذف "${label}"؟` }, lang))) return
     setDeletingId(id)
     try {
       await blogCategoriesCollection.delete(id)
       setCategories((prev) => prev.filter((c) => c.id !== id))
     } catch (err) {
-      toast.error("Failed to delete category. It may be in use.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to delete category. It may be in use.", ar: "فشل حذف التصنيف. ربما يكون قيد الاستخدام." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     } finally {
       setDeletingId(null)
     }
@@ -112,7 +133,13 @@ export default function BlogCategoriesPage() {
       setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)))
       cancelEdit()
     } catch (err) {
-      toast.error("Failed to update category.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to update category.", ar: "فشل تحديث التصنيف." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     } finally {
       setSavingEdit(false)
     }
@@ -125,20 +152,24 @@ export default function BlogCategoriesPage() {
           href="/cms/blog"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
       </div>
 
       <div>
-        <h1 className="text-2xl font-bold">Categories</h1>
-        <p className="text-muted-foreground">Manage blog categories</p>
+        <h1 className="text-2xl font-bold">
+          {t({ en: "Categories", ar: "التصنيفات" }, lang)}
+        </h1>
+        <p className="text-muted-foreground">
+          {t({ en: "Manage blog categories", ar: "إدارة تصنيفات المدونة" }, lang)}
+        </p>
       </div>
 
       <div className="flex items-start gap-2">
         <div className="flex flex-1 flex-wrap items-center gap-2">
           <Input
-            placeholder="Key"
+            placeholder={t({ en: "Key", ar: "المفتاح" }, lang)}
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
@@ -146,7 +177,7 @@ export default function BlogCategoriesPage() {
             className="w-36"
           />
           <Input
-            placeholder="Label (EN)"
+            placeholder={t({ en: "Label (EN)", ar: "التسمية (إنجليزي)" }, lang)}
             value={newLabelEn}
             onChange={(e) => setNewLabelEn(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
@@ -154,7 +185,7 @@ export default function BlogCategoriesPage() {
             className="w-48"
           />
           <Input
-            placeholder="Label (AR)"
+            placeholder={t({ en: "Label (AR)", ar: "التسمية (عربي)" }, lang)}
             value={newLabelAr}
             onChange={(e) => setNewLabelAr(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
@@ -168,7 +199,7 @@ export default function BlogCategoriesPage() {
           ) : (
             <Plus className="mr-2 h-4 w-4" />
           )}
-          Add
+          {t({ en: "Add", ar: "إضافة" }, lang)}
         </Button>
       </div>
 
@@ -179,16 +210,18 @@ export default function BlogCategoriesPage() {
           ))}
         </div>
       ) : categories.length === 0 ? (
-        <p className="text-muted-foreground">No categories yet.</p>
+        <p className="text-muted-foreground">
+          {t({ en: "No categories yet.", ar: "لا توجد تصنيفات بعد." }, lang)}
+        </p>
       ) : (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Key</TableHead>
-                <TableHead>Label (EN)</TableHead>
-                <TableHead>Label (AR)</TableHead>
-                <TableHead className="w-32">Actions</TableHead>
+                <TableHead>{t({ en: "Key", ar: "المفتاح" }, lang)}</TableHead>
+                <TableHead>{t({ en: "Label (EN)", ar: "التسمية (إنجليزي)" }, lang)}</TableHead>
+                <TableHead>{t({ en: "Label (AR)", ar: "التسمية (عربي)" }, lang)}</TableHead>
+                <TableHead className="w-32">{t({ en: "Actions", ar: "إجراءات" }, lang)}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

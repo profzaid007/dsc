@@ -21,9 +21,11 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
-import { Loader2, ArrowLeft, Trash2, Copy } from "lucide-react"
+import { Loader2, ArrowLeft, ArrowRight, Trash2, Copy } from "lucide-react"
 import { toast } from "sonner"
 import pb, { getErrorMessage } from "@/lib/pb"
+import { t, UI_STRINGS } from "@/lib/i18n"
+import { useLang } from "@/lib/lang-context"
 
 function extractThumbnail(record: Record<string, unknown>): string {
   const t = record.thumbnail
@@ -42,10 +44,12 @@ function slugify(text: string): string {
 }
 
 export default function CmsBlogEditorPage() {
+  const { lang } = useLang()
   const params = useParams()
   const router = useRouter()
   const slug = params.slug as string
   const [activeLang, setActiveLang] = useState<Lang>("en")
+  const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
 
   const [page, setPage] = useState<BlogPage | null>(null)
   const [loading, setLoading] = useState(true)
@@ -154,12 +158,18 @@ export default function CmsBlogEditorPage() {
           router.push(`/cms/blog/${updated.slug}`)
         }
       } catch (err) {
-        toast.error("Failed to save. Make sure the slug is unique.", { description: getErrorMessage(err) })
+        toast.error(
+          t(
+            { en: "Failed to save. Make sure the slug is unique.", ar: "فشل الحفظ. تأكد من أن المعرف (slug) فريد." },
+            lang
+          ),
+          { description: getErrorMessage(err) }
+        )
       } finally {
         setSaving(false)
       }
     },
-    [page, enTitle, arTitle, postSlug, category, authorName, enContent, arContent, slug, router, activeLang]
+    [page, enTitle, arTitle, postSlug, category, authorName, enContent, arContent, slug, router, activeLang, lang]
   )
 
   const handleContentChange = useCallback(
@@ -250,12 +260,18 @@ export default function CmsBlogEditorPage() {
         pageRecordRef.current = updated as unknown as Record<string, unknown>
         setThumbnailUrl(pb.files.getUrl(updated as never, updated.thumbnail))
       } catch (err) {
-        toast.error("Failed to upload thumbnail.", { description: getErrorMessage(err) })
+        toast.error(
+          t(
+            { en: "Failed to upload thumbnail.", ar: "فشل رفع الصورة المصغرة." },
+            lang
+          ),
+          { description: getErrorMessage(err) }
+        )
       } finally {
         setUploadingThumbnail(false)
       }
     },
-    [page]
+    [page, lang]
   )
 
   const handleRemoveThumbnail = useCallback(async () => {
@@ -266,13 +282,30 @@ export default function CmsBlogEditorPage() {
       pageRecordRef.current = updated as unknown as Record<string, unknown>
       setThumbnailUrl(null)
     } catch (err) {
-      toast.error("Failed to remove thumbnail.", { description: getErrorMessage(err) })
+      toast.error(
+        t(
+          { en: "Failed to remove thumbnail.", ar: "فشل إزالة الصورة المصغرة." },
+          lang
+        ),
+        { description: getErrorMessage(err) }
+      )
     }
-  }, [page])
+  }, [page, lang])
 
   const handleDelete = useCallback(async () => {
     if (!page) return
-    if (!confirm(`Delete "${page.title_en}"? This cannot be undone.`)) return
+    if (
+      !confirm(
+        t(
+          {
+            en: `Delete "${page.title_en}"? This cannot be undone.`,
+            ar: `حذف "${page.title_en}"؟ لا يمكن التراجع عن هذا.`,
+          },
+          lang
+        )
+      )
+    )
+      return
     setDeleting(true)
     try {
       await blogPagesCollection.delete(page.id)
@@ -281,7 +314,7 @@ export default function CmsBlogEditorPage() {
       toast.error(getErrorMessage(err))
       setDeleting(false)
     }
-  }, [page, router])
+  }, [page, router, lang])
 
   if (loading) {
     return (
@@ -298,10 +331,10 @@ export default function CmsBlogEditorPage() {
           href="/cms/blog"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
-        <p>Post not found.</p>
+        <p>{t({ en: "Post not found.", ar: "المنشور غير موجود." }, lang)}</p>
       </div>
     )
   }
@@ -313,15 +346,19 @@ export default function CmsBlogEditorPage() {
           href="/cms/blog"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+          <BackIcon className="h-4 w-4" />
+          {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
       </div>
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Edit Post</h1>
-          <p className="text-muted-foreground">Manage blog post details</p>
+          <h1 className="text-2xl font-bold">
+            {t({ en: "Edit Post", ar: "تعديل المنشور" }, lang)}
+          </h1>
+          <p className="text-muted-foreground">
+            {t({ en: "Manage blog post details", ar: "إدارة تفاصيل منشور المدونة" }, lang)}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -333,7 +370,7 @@ export default function CmsBlogEditorPage() {
               disabled={publishing}
             />
             <Label htmlFor="publish" className="font-medium">
-              {isPublished ? "Published" : "Draft"}
+              {isPublished ? t(UI_STRINGS.published, lang) : t(UI_STRINGS.draft, lang)}
             </Label>
           </div>
         </div>
@@ -341,10 +378,12 @@ export default function CmsBlogEditorPage() {
 
       <Card className="space-y-4 p-4">
         <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
+          <Label htmlFor="category">
+            {t({ en: "Category", ar: "التصنيف" }, lang)}
+          </Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger id="category" className="w-72">
-              <SelectValue placeholder="Select category" />
+              <SelectValue placeholder={t({ en: "Select category", ar: "اختر التصنيف" }, lang)} />
             </SelectTrigger>
             <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)] min-w-[160px]">
               {categories.map((cat) => (
@@ -357,23 +396,25 @@ export default function CmsBlogEditorPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="author">Author</Label>
+          <Label htmlFor="author">
+            {t({ en: "Author", ar: "المؤلف" }, lang)}
+          </Label>
           <Input
             id="author"
             value={authorName}
             onChange={(e) => setAuthorName(e.target.value)}
-            placeholder="Author name"
+            placeholder={t({ en: "Author name", ar: "اسم المؤلف" }, lang)}
             className="max-w-xs w-72"
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Thumbnail</Label>
+          <Label>{t({ en: "Thumbnail", ar: "الصورة المصغرة" }, lang)}</Label>
           {thumbnailUrl && (
             <div className="relative mb-2 w-48 overflow-hidden rounded-lg border">
               <Image
                 src={thumbnailUrl}
-                alt="Thumbnail"
+                alt={t({ en: "Thumbnail", ar: "الصورة المصغرة" }, lang)}
                 width={192}
                 height={108}
                 className="h-auto w-full object-cover"
@@ -404,24 +445,26 @@ export default function CmsBlogEditorPage() {
       <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
         <TabsList>
           <TabsTrigger value="en">English</TabsTrigger>
-          <TabsTrigger value="ar">Arabic</TabsTrigger>
+          <TabsTrigger value="ar">العربية</TabsTrigger>
         </TabsList>
       </Tabs>
 
       {activeLang === "en" ? (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="en-title">Title (English)</Label>
+            <Label htmlFor="en-title">
+              {t({ en: "Title (English)", ar: "العنوان (إنجليزي)" }, lang)}
+            </Label>
             <Input
               id="en-title"
               value={enTitle}
               onChange={(e) => setEnTitle(e.target.value)}
-              placeholder="Post title"
+              placeholder={t({ en: "Post title", ar: "عنوان المنشور" }, lang)}
             />
           </div>
           <RichTextEditor
             key={`${resetKey}-en`}
-            title="English Content"
+            title={t({ en: "English Content", ar: "المحتوى (إنجليزي)" }, lang)}
             initialContent={enContent}
             onSave={handleContentSave}
             isSaving={saving}
@@ -433,10 +476,12 @@ export default function CmsBlogEditorPage() {
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="ar-title">Title (Arabic)</Label>
+            <Label htmlFor="ar-title">
+              {t({ en: "Title (Arabic)", ar: "العنوان (عربي)" }, lang)}
+            </Label>
             <Button variant="outline" size="sm" onClick={copyFromEnglish}>
               <Copy className="mr-2 h-4 w-4" />
-              Copy from English
+              {t({ en: "Copy from English", ar: "نسخ من الإنجليزية" }, lang)}
             </Button>
           </div>
           <Input
@@ -447,7 +492,7 @@ export default function CmsBlogEditorPage() {
           />
           <RichTextEditor
             key={`${resetKey}-ar`}
-            title="Arabic Content"
+            title={t({ en: "Arabic Content", ar: "المحتوى (عربي)" }, lang)}
             initialContent={arContent}
             onSave={handleContentSave}
             isSaving={saving}
