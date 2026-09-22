@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { cookies } from "next/headers"
+import { notFound } from "next/navigation"
 import pb from "@/lib/pb"
 import { localizedField, t } from "@/lib/i18n"
 import { PAGE_TITLES } from "@/lib/site-content"
@@ -32,27 +33,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
   }
 
   if (!page) {
-    return (
-      <div className="mx-auto max-w-4xl px-6 py-12">
-        <Link
-          href="/"
-          className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
-        >
-          &larr; {lang === "ar" ? "الرئيسية" : "Home"}
-        </Link>
-        <h1 className="mb-4 text-3xl font-bold capitalize">
-          {pageTitle ? t(pageTitle, lang) : slug.replace(/-/g, " ")}
-        </h1>
-        <div className="rounded-lg border border-dashed p-12 text-center">
-          <p className="text-lg text-muted-foreground">
-            {lang === "ar" ? "الصفحة غير موجودة" : "Page not found."}
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {lang === "ar" ? "هذه الصفحة غير موجودة أو لم يتم نشرها بعد." : "This page does not exist or is not published yet."}
-          </p>
-        </div>
-      </div>
-    )
+    notFound()
   }
 
   return (
@@ -71,8 +52,13 @@ export default async function SlugPage({ params }: SlugPageProps) {
       </h1>
 
       <div
-        className="cms-rendered sun-editor-editable space-y-4 text-gray-700 leading-relaxed [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:my-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:my-4 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:my-3 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic"
-        dangerouslySetInnerHTML={{ __html: sanitizeCmsContent(localizedField(page, lang, "content"), lang) }}
+        className="cms-rendered sun-editor-editable space-y-4 leading-relaxed text-gray-700 [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h1]:my-6 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:my-3 [&_h3]:text-xl [&_h3]:font-semibold [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5"
+        dangerouslySetInnerHTML={{
+          __html: sanitizeCmsContent(
+            localizedField(page, lang, "content"),
+            lang
+          ),
+        }}
       />
     </div>
   )

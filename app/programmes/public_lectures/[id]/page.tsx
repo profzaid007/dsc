@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useLang } from "@/lib/lang-context"
 import { formatDate } from "@/lib/format-date"
+import { PageNotFound } from "@/components/PageNotFound"
 import { publicLecturesPublicCollection } from "@/lib/pb-lectures"
 import type { Lecture } from "@/types/lecture"
 import {
@@ -70,21 +71,7 @@ export default function PublicLectureDetailPage({
   }
 
   if (!lecture) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="py-12 text-center">
-          <h2 className="text-xl font-semibold">
-            {lang === "ar" ? "المحاضرة غير موجودة" : "Lecture not found"}
-          </h2>
-          <Button
-            variant="link"
-            onClick={() => router.push("/programmes")}
-          >
-            {lang === "ar" ? "العودة إلى المحاضرات" : "Back to lectures"}
-          </Button>
-        </div>
-      </div>
-    )
+    return <PageNotFound lang={lang} />
   }
 
   const isPast = new Date(lecture.schedule.dateTime) < new Date()
@@ -110,7 +97,7 @@ export default function PublicLectureDetailPage({
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <div className="absolute right-0 bottom-0 left-0 p-6 text-white">
             <h1 className="mb-2 text-3xl font-bold">{lecture.title[lang]}</h1>
             <p className="text-lg text-white/90">
               {lecture.speaker.name[lang]}
@@ -147,9 +134,7 @@ export default function PublicLectureDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>
-                {lang === "ar" ? "المتحدث" : "Speaker"}
-              </CardTitle>
+              <CardTitle>{lang === "ar" ? "المتحدث" : "Speaker"}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-4">
@@ -251,8 +236,13 @@ export default function PublicLectureDetailPage({
           {isPast && (
             <Card>
               <CardContent className="pt-6">
-                <Badge variant="secondary" className="w-full justify-center py-2">
-                  {lang === "ar" ? "انتهت هذه المحاضرة" : "This lecture has ended"}
+                <Badge
+                  variant="secondary"
+                  className="w-full justify-center py-2"
+                >
+                  {lang === "ar"
+                    ? "انتهت هذه المحاضرة"
+                    : "This lecture has ended"}
                 </Badge>
               </CardContent>
             </Card>

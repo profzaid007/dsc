@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLang } from "@/lib/lang-context"
 import { formatDate } from "@/lib/format-date"
+import { PageNotFound } from "@/components/PageNotFound"
 import { trainingProgramsCollection } from "@/lib/pb-training"
 import { casesCollection } from "@/lib/pb-collections"
 import pb, { authWithPassword, getErrorMessage } from "@/lib/pb"
@@ -121,8 +122,7 @@ export default function TrainingProgrammeDetailPage({
       try {
         const mine = await casesCollection.getByUser(currentUser.id)
         const existing = mine.find(
-          (c) =>
-            c.program_id === id && c.portal_type === "Attending Training"
+          (c) => c.program_id === id && c.portal_type === "Attending Training"
         )
         if (existing) {
           setEnrolledCaseId(existing.id)
@@ -270,21 +270,7 @@ export default function TrainingProgrammeDetailPage({
   }
 
   if (!program) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="py-12 text-center">
-          <h2 className="text-xl font-semibold">
-            {lang === "ar" ? "البرنامج غير موجود" : "Programme not found"}
-          </h2>
-          <Button
-            variant="link"
-            onClick={() => router.push("/programmes/training_programmes")}
-          >
-            {lang === "ar" ? "العودة إلى البرامج التدريبية" : "Back to training programmes"}
-          </Button>
-        </div>
-      </div>
-    )
+    return <PageNotFound lang={lang} />
   }
 
   const isPast = new Date(program.schedule.endDate) < new Date()
@@ -312,9 +298,7 @@ export default function TrainingProgrammeDetailPage({
       return (
         <Card>
           <CardHeader>
-            <CardTitle>
-              {lang === "ar" ? "التسجيل" : "Enrollment"}
-            </CardTitle>
+            <CardTitle>{lang === "ar" ? "التسجيل" : "Enrollment"}</CardTitle>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
@@ -370,7 +354,9 @@ export default function TrainingProgrammeDetailPage({
         <Card>
           <CardHeader>
             <CardTitle>
-              {lang === "ar" ? "التسجيل في البرنامج" : "Enroll in this programme"}
+              {lang === "ar"
+                ? "التسجيل في البرنامج"
+                : "Enroll in this programme"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -407,9 +393,7 @@ export default function TrainingProgrammeDetailPage({
       <Card>
         <CardHeader>
           <CardTitle>
-            {lang === "ar"
-              ? "التسجيل في البرنامج"
-              : "Enroll in this programme"}
+            {lang === "ar" ? "التسجيل في البرنامج" : "Enroll in this programme"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -527,7 +511,9 @@ export default function TrainingProgrammeDetailPage({
         onClick={() => router.push("/programmes/training_programmes")}
       >
         <ArrowLeft className="me-2 h-4 w-4" />
-        {lang === "ar" ? "العودة إلى البرامج التدريبية" : "Back to training programmes"}
+        {lang === "ar"
+          ? "العودة إلى البرامج التدريبية"
+          : "Back to training programmes"}
       </Button>
 
       {program.thumbnail && (
@@ -540,7 +526,7 @@ export default function TrainingProgrammeDetailPage({
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <div className="absolute right-0 bottom-0 left-0 p-6 text-white">
             <h1 className="mb-2 text-3xl font-bold">{program.title[lang]}</h1>
             <p className="text-lg text-white/90">
               {program.trainer.name[lang]}
@@ -580,9 +566,7 @@ export default function TrainingProgrammeDetailPage({
           {program.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {lang === "ar" ? "ملاحظات" : "Notes"}
-                </CardTitle>
+                <CardTitle>{lang === "ar" ? "ملاحظات" : "Notes"}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="leading-relaxed text-muted-foreground">
@@ -603,7 +587,9 @@ export default function TrainingProgrammeDetailPage({
                 {program.schedule.sessions.map((session, idx) => (
                   <div key={idx} className="rounded-lg border p-4">
                     <p className="mb-2 font-medium">
-                      {lang === "ar" ? `الجلسة ${idx + 1}` : `Session ${idx + 1}`}
+                      {lang === "ar"
+                        ? `الجلسة ${idx + 1}`
+                        : `Session ${idx + 1}`}
                     </p>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
@@ -629,9 +615,7 @@ export default function TrainingProgrammeDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>
-                {lang === "ar" ? "المدرب" : "Trainer"}
-              </CardTitle>
+              <CardTitle>{lang === "ar" ? "المدرب" : "Trainer"}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-4">
@@ -665,7 +649,8 @@ export default function TrainingProgrammeDetailPage({
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">
-                    {formatDate(program.schedule.startDate)} - {formatDate(program.schedule.endDate)}
+                    {formatDate(program.schedule.startDate)} -{" "}
+                    {formatDate(program.schedule.endDate)}
                   </p>
                 </div>
               </div>
@@ -726,8 +711,8 @@ export default function TrainingProgrammeDetailPage({
                     <div>
                       <p className="font-medium">
                         {lang === "ar" ? "المتبقي:" : "Spots left:"}{" "}
-                        {program.maxParticipants - program.currentRegistrations} /{" "}
-                        {program.maxParticipants}
+                        {program.maxParticipants - program.currentRegistrations}{" "}
+                        / {program.maxParticipants}
                       </p>
                     </div>
                   </div>

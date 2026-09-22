@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { cookies } from "next/headers"
+import { notFound } from "next/navigation"
 import pb from "@/lib/pb"
 import { localizedField, t } from "@/lib/i18n"
 import { formatDate } from "@/lib/format-date"
@@ -13,9 +14,7 @@ interface BlogPostPageProps {
   params: Promise<{ slug: string }>
 }
 
-export default async function BlogPostPage({
-  params,
-}: BlogPostPageProps) {
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params
   const cookieStore = await cookies()
   const lang = (cookieStore.get("lang")?.value as Lang) || "en"
@@ -26,7 +25,9 @@ export default async function BlogPostPage({
   try {
     const [catRecords, record] = await Promise.all([
       pb.collection("blog_categories").getFullList(),
-      pb.collection("blog_pages").getFirstListItem(`slug = "${slug}" && is_published = true`),
+      pb
+        .collection("blog_pages")
+        .getFirstListItem(`slug = "${slug}" && is_published = true`),
     ])
     const catMap = new Map<string, BlogCategory>()
     for (const c of catRecords) {
@@ -40,7 +41,9 @@ export default async function BlogPostPage({
     const rawCategory = record.category as string
     const matched = catMap.get(rawCategory)
     categoryLabel = matched
-      ? (lang === "ar" && matched.label_ar ? matched.label_ar : matched.label_en)
+      ? lang === "ar" && matched.label_ar
+        ? matched.label_ar
+        : matched.label_en
       : rawCategory
     page = {
       id: record.id as string,
@@ -62,35 +65,13 @@ export default async function BlogPostPage({
   }
 
   if (!page) {
-    return (
-      <div className={`mx-auto ${lang === "ar" ? "mr-60" : "ml-60"} max-w-4xl px-6 py-12`}>
-        <Link
-          href="/blog"
-          className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
-        >
-          {lang === "ar" ? "&rarr;" : "&larr;"}{" "}
-          {t({ en: "Back", ar: "رجوع" }, lang)}
-        </Link>
-        <h1 className="mb-4 text-3xl font-bold">
-          {t({ en: "Not found", ar: "غير موجود" }, lang)}
-        </h1>
-        <div className="rounded-lg border border-dashed p-12 text-center">
-          <p className="text-lg text-muted-foreground">
-            {t(
-              {
-                en: "This post does not exist or is not published yet.",
-                ar: "هذه المشاركة غير موجودة أو لم تُنشر بعد.",
-              },
-              lang
-            )}
-          </p>
-        </div>
-      </div>
-    )
+    notFound()
   }
 
   return (
-    <div className={`mx-auto ${lang === "ar" ? "mr-60" : "ml-60"} max-w-4xl px-6 py-12`}>
+    <div
+      className={`mx-auto ${lang === "ar" ? "mr-60" : "ml-60"} max-w-4xl px-6 py-12`}
+    >
       <Link
         href="/blog"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
@@ -114,12 +95,19 @@ export default async function BlogPostPage({
             </>
           )}
         </div>
-        <h1 className="text-3xl font-bold">{localizedField(page, lang, "title")}</h1>
+        <h1 className="text-3xl font-bold">
+          {localizedField(page, lang, "title")}
+        </h1>
       </div>
 
       <div
-        className="cms-rendered sun-editor-editable space-y-4 text-gray-700 leading-relaxed [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:my-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:my-4 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:my-3 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic"
-        dangerouslySetInnerHTML={{ __html: sanitizeCmsContent(localizedField(page, lang, "content"), lang) }}
+        className="cms-rendered sun-editor-editable space-y-4 leading-relaxed text-gray-700 [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h1]:my-6 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:my-3 [&_h3]:text-xl [&_h3]:font-semibold [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5"
+        dangerouslySetInnerHTML={{
+          __html: sanitizeCmsContent(
+            localizedField(page, lang, "content"),
+            lang
+          ),
+        }}
       />
     </div>
   )
