@@ -16,26 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
-import { Check, ChevronsUpDown, X } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
-import { LANGUAGES } from "@/lib/language-list"
 import {
   PortalServiceSelector,
   type PortalServiceValue,
@@ -94,8 +77,6 @@ export function OrganizationRegistrationForm({
   const [website, setWebsite] = useState("")
   const [representativeNumber, setRepresentativeNumber] = useState("")
   const [representativeTitle, setRepresentativeTitle] = useState("")
-  const [fullLegalName, setFullLegalName] = useState("")
-  const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -118,7 +99,6 @@ export function OrganizationRegistrationForm({
 
     if (!name.trim()) errs.name = required
     if (!organizationName.trim()) errs.organizationName = required
-    if (!fullLegalName.trim()) errs.fullLegalName = required
     if (!contactNumber.trim()) errs.contactNumber = required
     if (!email.trim()) errs.email = required
     else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
@@ -200,7 +180,6 @@ export function OrganizationRegistrationForm({
 
     try {
       const cleanName = name.trim()
-      const cleanFullLegalName = fullLegalName.trim()
       const cleanOrganizationName = organizationName.trim()
       const cleanEmail = normalizeEmail(email)
 
@@ -217,7 +196,6 @@ export function OrganizationRegistrationForm({
 
       await pb.collection("organization_profiles").create({
         user: user.id,
-        full_legal_name: cleanFullLegalName,
         organization_name: cleanOrganizationName,
         organization_type: organizationType,
         country: country,
@@ -226,7 +204,6 @@ export function OrganizationRegistrationForm({
         responsible_person_name: representativeName.trim(),
         responsible_person_title: representativeTitle.trim(),
         responsible_person_phone: representativeNumber.trim(),
-        preferred_languages: preferredLanguages.join(", "),
         notes: notes.trim(),
       })
 
@@ -240,7 +217,6 @@ export function OrganizationRegistrationForm({
         notes: notes.trim(),
         status: "pending",
         user_details: {
-          full_legal_name: cleanFullLegalName,
           name: user.name,
           email: user.email,
           contact: user.contact_number,
@@ -336,28 +312,6 @@ export function OrganizationRegistrationForm({
                 )}
               />
               {fieldErrorNode("organizationName", "organization_name")}
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                {t({ en: "Full Legal Name", ar: "الاسم الكامل القانوني" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                value={fullLegalName}
-                onChange={(e) => setFullLegalName(e.target.value)}
-                autoComplete="name"
-                aria-invalid={
-                  fieldErrors.fullLegalName || fieldErrors.full_legal_name
-                    ? true
-                    : undefined
-                }
-                placeholder={t(
-                  { en: "e.g. Mohammed bin Hassan Al-Rashid", ar: "مثال: محمد بن حسن الراشد" },
-                  lang
-                )}
-              />
-              {fieldErrorNode("fullLegalName", "full_legal_name")}
             </div>
 
             <div className="space-y-2">
@@ -570,90 +524,6 @@ export function OrganizationRegistrationForm({
                 )}
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>
-              {t({ en: "Preferred Languages", ar: "اللغات المفضلة" }, lang)}
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className="w-full justify-between h-auto min-h-10"
-                >
-                  <div className="flex flex-wrap gap-1">
-                    {preferredLanguages.length > 0 ? (
-                      preferredLanguages.map((langValue) => {
-                        const langOption = LANGUAGES.find((l) => l.value === langValue)
-                        return (
-                          <Badge
-                            key={langValue}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {langOption ? t(langOption.label, lang) : langValue}
-                            <X
-                              className="h-3 w-3 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setPreferredLanguages(
-                                  preferredLanguages.filter((l) => l !== langValue)
-                                )
-                              }}
-                            />
-                          </Badge>
-                        )
-                      })
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t(
-                          { en: "Select languages...", ar: "اختر اللغات..." },
-                          lang
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder={t({ en: "Search languages...", ar: "البحث عن اللغات..." }, lang)} />
-                  <CommandList>
-                    <CommandEmpty>
-                      {t({ en: "No language found.", ar: "لم يتم العثور على لغة." }, lang)}
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {LANGUAGES.map((langOption) => (
-                        <CommandItem
-                          key={langOption.value}
-                          value={langOption.value}
-                          onSelect={() => {
-                            setPreferredLanguages(
-                              preferredLanguages.includes(langOption.value)
-                                ? preferredLanguages.filter((l) => l !== langOption.value)
-                                : [...preferredLanguages, langOption.value]
-                            )
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              preferredLanguages.includes(langOption.value)
-                                ? "opacity-100"
-                                : "opacity-0"
-                            )}
-                          />
-                          {t(langOption.label, lang)}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
           </div>
 
           <PortalServiceSelector

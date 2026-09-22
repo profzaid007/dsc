@@ -17,26 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
-import { Check, ChevronsUpDown, X } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
-import { LANGUAGES } from "@/lib/language-list"
 import pb, {
   authWithPassword,
   getErrorMessage,
@@ -72,14 +55,11 @@ export function IndividualRegistrationForm({
   const [confirmPassword, setConfirmPassword] = useState("")
 
   // Extra fields
-  const [fullLegalName, setFullLegalName] = useState("")
   const [gender, setGender] = useState("")
   const [dateOfBirth, setDateOfBirth] = useState("")
-  const [nationality, setNationality] = useState("")
   const [residence, setResidence] = useState("")
   const [emContactName, setEmContactName] = useState("")
   const [emContactNumber, setEmContactNumber] = useState("")
-  const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [notes, setNotes] = useState("")
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -103,7 +83,6 @@ export function IndividualRegistrationForm({
     )
 
     if (!name.trim()) errs.name = required
-    if (!fullLegalName.trim()) errs.fullLegalName = required
     if (!contactNumber.trim()) errs.contactNumber = required
     if (!email.trim()) errs.email = required
     else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
@@ -143,7 +122,6 @@ export function IndividualRegistrationForm({
 
     try {
       const cleanName = name.trim()
-      const cleanFullLegalName = fullLegalName.trim()
       const cleanEmail = normalizeEmail(email)
 
       const user = await pb.collection("users").create({
@@ -159,14 +137,11 @@ export function IndividualRegistrationForm({
 
       await pb.collection("individual_profiles").create({
         user: user.id,
-        full_legal_name: cleanFullLegalName,
         gender: gender,
         date_of_birth: dateOfBirth,
-        nationality: nationality,
         country_of_residence: residence,
         emergency_contact_name: emContactName.trim(),
         emergency_contact_phone: emContactNumber.trim(),
-        preferred_languages: preferredLanguages.join(", "),
         notes: notes.trim(),
       })
 
@@ -227,28 +202,6 @@ export function IndividualRegistrationForm({
                 )}
               />
               {fieldErrorNode("name")}
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                {t({ en: "Full Legal Name", ar: "الاسم الكامل القانوني" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                value={fullLegalName}
-                onChange={(e) => setFullLegalName(e.target.value)}
-                autoComplete="name"
-                aria-invalid={
-                  fieldErrors.fullLegalName || fieldErrors.full_legal_name
-                    ? true
-                    : undefined
-                }
-                placeholder={t(
-                  { en: "e.g. Ahmed bin Hassan Al-Rashid", ar: "مثال: أحمد بن حسن الراشد" },
-                  lang
-                )}
-              />
-              {fieldErrorNode("fullLegalName", "full_legal_name")}
             </div>
 
             <div className="space-y-2">
@@ -392,24 +345,6 @@ export function IndividualRegistrationForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>
-                {t({ en: "Nationality", ar: "الجنسية" }, lang)}
-              </Label>
-              <Select value={nationality} onValueChange={setNationality}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t({ en: "Select nationality...", ar: "اختر الجنسية..." }, lang)} />
-                </SelectTrigger>
-                <SelectContent position="popper" className="max-h-60!">
-                  {COUNTRY_CODES.map((c) => (
-                    <SelectItem key={c.value} value={c.label.en}>
-                      {t(c.label, lang)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>
                 {t({ en: "Country of Residence", ar: "بلد الإقامة" }, lang)}
               </Label>
               <Select value={residence} onValueChange={setResidence}>
@@ -456,90 +391,6 @@ export function IndividualRegistrationForm({
                 )}
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>
-              {t({ en: "Preferred Languages", ar: "اللغات المفضلة" }, lang)}
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className="w-full justify-between h-auto min-h-10"
-                >
-                  <div className="flex flex-wrap gap-1">
-                    {preferredLanguages.length > 0 ? (
-                      preferredLanguages.map((langValue) => {
-                        const langOption = LANGUAGES.find((l) => l.value === langValue)
-                        return (
-                          <Badge
-                            key={langValue}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {langOption ? t(langOption.label, lang) : langValue}
-                            <X
-                              className="h-3 w-3 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setPreferredLanguages(
-                                  preferredLanguages.filter((l) => l !== langValue)
-                                )
-                              }}
-                            />
-                          </Badge>
-                        )
-                      })
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t(
-                          { en: "Select languages...", ar: "اختر اللغات..." },
-                          lang
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder={t({ en: "Search languages...", ar: "البحث عن اللغات..." }, lang)} />
-                  <CommandList>
-                    <CommandEmpty>
-                      {t({ en: "No language found.", ar: "لم يتم العثور على لغة." }, lang)}
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {LANGUAGES.map((langOption) => (
-                        <CommandItem
-                          key={langOption.value}
-                          value={langOption.value}
-                          onSelect={() => {
-                            setPreferredLanguages(
-                              preferredLanguages.includes(langOption.value)
-                                ? preferredLanguages.filter((l) => l !== langOption.value)
-                                : [...preferredLanguages, langOption.value]
-                            )
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              preferredLanguages.includes(langOption.value)
-                                ? "opacity-100"
-                                : "opacity-0"
-                            )}
-                          />
-                          {t(langOption.label, lang)}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
           </div>
 
           <div className="space-y-2">

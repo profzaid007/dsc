@@ -34,7 +34,6 @@ import { cn } from "@/lib/utils"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
-import { LANGUAGES } from "@/lib/language-list"
 import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { Check, ChevronsUpDown, Paperclip, X } from "lucide-react"
 import {
@@ -135,7 +134,6 @@ export function ExpertApplicationForm({
 
   // user fields
   const [name, setName] = useState("")
-  const [fullLegalName, setFullLegalName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirm, setPasswordConfirm] = useState("")
@@ -143,7 +141,6 @@ export function ExpertApplicationForm({
   const [contactNumber, setContactNumber] = useState("")
 
   // Extra fields
-  const [nationality, setNationality] = useState("")
   const [residence, setResidence] = useState("")
   const [city, setCity] = useState("")
   const [highestAcademicDegree, setHighestAcademicDegree] = useState("")
@@ -151,7 +148,6 @@ export function ExpertApplicationForm({
   const [fieldOfStudy, setFieldOfStudy] = useState("")
   const [whatsappCountryCode, setWhatsappCountryCode] = useState("")
   const [whatsappNumber, setWhatsappNumber] = useState("")
-  const [preferredLanguages, setPreferredLanguages] = useState<string[]>([])
   const [ageGroup, setAgeGroup] = useState<string[]>([])
   const [specialization, setSpecialization] = useState<string[]>([])
   const [clientType, setClientType] = useState<string[]>([])
@@ -279,7 +275,6 @@ export function ExpertApplicationForm({
 
     try {
       const cleanName = name.trim()
-      const cleanFullLegalName = fullLegalName.trim()
       const cleanEmail = normalizeEmail(email)
       const cleanContact = `${countryCode} ${contactNumber.trim()}`.trim()
 
@@ -290,15 +285,12 @@ export function ExpertApplicationForm({
               name: "الاسم",
               contactNumber: "رقم التواصل",
               email: "البريد الإلكتروني",
-              nationality: "الجنسية",
               residence: "بلد الإقامة",
               city: "المدينة",
-              fullLegalName: "الاسم القانوني الكامل",
               highestDegree: "أعلى درجة أكاديمية",
               degreeTitle: "عنوان الدرجة",
               fieldOfStudy: "مجال الدراسة",
               whatsapp: "رقم واتساب",
-              preferredLanguages: "اللغات المفضلة",
               ageGroup: "الفئة العمرية",
               specialization: "التخصص",
               clientType: "نوع العميل",
@@ -315,15 +307,12 @@ export function ExpertApplicationForm({
               name: "Name",
               contactNumber: "Contact Number",
               email: "Email",
-              nationality: "Nationality",
               residence: "Country of Residence",
               city: "City",
-              fullLegalName: "Full Legal Name",
               highestDegree: "Highest Academic Degree",
               degreeTitle: "Degree Title",
               fieldOfStudy: "Field of Study",
               whatsapp: "WhatsApp Number",
-              preferredLanguages: "Preferred Languages",
               ageGroup: "Age Group",
               specialization: "Specialization",
               clientType: "Client Type",
@@ -341,15 +330,12 @@ export function ExpertApplicationForm({
         `<p><strong>${emailLabels.name}:</strong> ${cleanName}</p>`,
         `<p><strong>${emailLabels.contactNumber}:</strong> ${cleanContact}</p>`,
         `<p><strong>${emailLabels.email}:</strong> ${cleanEmail}</p>`,
-        nationality ? `<p><strong>${emailLabels.nationality}:</strong> ${nationality}</p>` : "",
         residence ? `<p><strong>${emailLabels.residence}:</strong> ${residence}</p>` : "",
         city ? `<p><strong>${emailLabels.city}:</strong> ${city}</p>` : "",
-        fullLegalName ? `<p><strong>${emailLabels.fullLegalName}:</strong> ${cleanFullLegalName}</p>` : "",
         highestAcademicDegree ? `<p><strong>${emailLabels.highestDegree}:</strong> ${ACADEMIC_DEGREES.find((o) => o.value === highestAcademicDegree)?.label ?? highestAcademicDegree}</p>` : "",
         degreeTitle ? `<p><strong>${emailLabels.degreeTitle}:</strong> ${degreeTitle}</p>` : "",
         fieldOfStudy ? `<p><strong>${emailLabels.fieldOfStudy}:</strong> ${fieldOfStudy}</p>` : "",
         whatsappNumber ? `<p><strong>${emailLabels.whatsapp}:</strong> ${whatsappCountryCode} ${whatsappNumber}</p>` : "",
-        preferredLanguages.length ? `<p><strong>${emailLabels.preferredLanguages}:</strong> ${preferredLanguages.join(", ")}</p>` : "",
         ageGroup.length ? `<p><strong>${emailLabels.ageGroup}:</strong> ${AGE_GROUPS.filter((o) => ageGroup.includes(o.value)).map((o) => o.label).join(", ")}</p>` : "",
         specialization.length ? `<p><strong>${emailLabels.specialization}:</strong> ${SPECIALIZATIONS.filter((o) => specialization.includes(o.value)).map((o) => o.label).join(", ")}</p>` : "",
         clientType.length ? `<p><strong>${emailLabels.clientType}:</strong> ${CLIENT_TYPES.filter((o) => clientType.includes(o.value)).map((o) => o.label).join(", ")}</p>` : "",
@@ -379,10 +365,8 @@ export function ExpertApplicationForm({
 
       // Extra fields
       extraFormData.set("user", user.id)
-      extraFormData.set("full_legal_name", cleanFullLegalName)
       if (profilePhoto) extraFormData.append("profile_photo", profilePhoto)
 
-      extraFormData.set("nationality", nationality)
       extraFormData.set("country_of_residence", residence)
       extraFormData.set("city", city)
       extraFormData.set("whatsapp_country_code", whatsappCountryCode)
@@ -395,7 +379,6 @@ export function ExpertApplicationForm({
       specialization.forEach((v) => extraFormData.append("specialization_type", v))
       clientType.forEach((v) => extraFormData.append("client_type", v))
       extraFormData.set("consultation_mode", consultationMode)
-      extraFormData.set("preferred_languages", preferredLanguages.join(", "))
 
       files.forEach((file) => extraFormData.append("cv", file))
 
@@ -503,24 +486,6 @@ export function ExpertApplicationForm({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>
-                {t({ en: "Nationality", ar: "الجنسية" }, lang)}
-              </Label>
-              <Select value={nationality} onValueChange={setNationality}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t({ en: "Select nationality...", ar: "اختر الجنسية..." }, lang)} />
-                </SelectTrigger>
-                <SelectContent position="popper" className="max-h-60!">
-                  {COUNTRY_CODES.map((c) => (
-                    <SelectItem key={c.value} value={c.label.en}>
-                      {t(c.label, lang)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="space-y-2">
               <Label>
                 {t({ en: "Country of Residence", ar: "بلد الإقامة" }, lang)}
@@ -758,90 +723,6 @@ export function ExpertApplicationForm({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>
-              {t({ en: "Preferred Languages", ar: "اللغات المفضلة" }, lang)}
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className="w-full justify-between h-auto min-h-10"
-                >
-                  <div className="flex flex-wrap gap-1">
-                    {preferredLanguages.length > 0 ? (
-                      preferredLanguages.map((langValue) => {
-                        const langOption = LANGUAGES.find((l) => l.value === langValue)
-                        return (
-                          <Badge
-                            key={langValue}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {langOption ? t(langOption.label, lang) : langValue}
-                            <X
-                              className="h-3 w-3 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setPreferredLanguages(
-                                  preferredLanguages.filter((l) => l !== langValue)
-                                )
-                              }}
-                            />
-                          </Badge>
-                        )
-                      })
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t(
-                          { en: "Select languages...", ar: "اختر اللغات..." },
-                          lang
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder={t({ en: "Search languages...", ar: "البحث عن اللغات..." }, lang)} />
-                  <CommandList>
-                    <CommandEmpty>
-                      {t({ en: "No language found.", ar: "لم يتم العثور على لغة." }, lang)}
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {LANGUAGES.map((langOption) => (
-                        <CommandItem
-                          key={langOption.value}
-                          value={langOption.value}
-                          onSelect={() => {
-                            setPreferredLanguages(
-                              preferredLanguages.includes(langOption.value)
-                                ? preferredLanguages.filter((l) => l !== langOption.value)
-                                : [...preferredLanguages, langOption.value]
-                            )
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              preferredLanguages.includes(langOption.value)
-                                ? "opacity-100"
-                                : "opacity-0"
-                            )}
-                          />
-                          {t(langOption.label, lang)}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
           <Button type="button" className="p-4 w-full" onClick={handleNext}>
             {t({ en: "Next", ar: "التالي" }, lang)}
           </Button>
@@ -850,20 +731,6 @@ export function ExpertApplicationForm({
 
           {step === 2 && (
             <>
-          <div className="space-y-2">
-            <Label>
-              {t({ en: "Full Legal Name", ar: "الاسم القانوني الكامل" }, lang)}
-            </Label>
-            <Input
-              value={fullLegalName}
-              onChange={(e) => setFullLegalName(e.target.value)}
-              placeholder={t(
-                { en: "e.g. Mohammed Abdullah Al-Rashid", ar: "مثال: محمد عبدالله الراشد" },
-                lang
-              )}
-            />
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>
