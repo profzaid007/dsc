@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { t, localizedField } from "@/lib/i18n"
 import { getPortalById, PORTALS } from "@/lib/portals"
 import { Button } from "@/components/ui/button"
+import { PhilosophyButton } from "@/components/portal/PhilosophyButton"
 import { FileText } from "lucide-react"
 import pb from "@/lib/pb"
 import Image from "next/image"
@@ -42,12 +43,15 @@ export default async function PortalPage({ params }: PortalPageProps) {
             <p className="mb-8 text-sm lg:text-xl text-white/80">
               {t(portal.heroText, lang)}
             </p>
-            <a href={portal.ctaHref}>
-              <Button size="lg" className="px-4 py-3 text-xs lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg"
-                      style={{ backgroundColor: "white", color: portal.accent }}>
-                {t(portal.ctaLabel, lang)}
-              </Button>
-            </a>
+            <div className="flex flex-col items-start gap-3">
+              <a href={portal.ctaHref}>
+                <Button size="lg" className="px-4 py-3 text-xs lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg"
+                        style={{ backgroundColor: "white", color: portal.accent }}>
+                  {t(portal.ctaLabel, lang)}
+                </Button>
+              </a>
+              <PhilosophyButton philosophy={portal.philosophy} />
+            </div>
           </div>
         </div>
         <div className="relative overflow-hidden">
