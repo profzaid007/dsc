@@ -154,7 +154,7 @@ export function PortalDiscovery() {
           </div>
         </div>
 
-        <div className="mt-8 text-center">
+        {/* <div className="mt-8 text-center">
           <Link
             href="/programmes"
             className="inline-block text-sm font-bold text-[#17639c] transition-colors hover:text-[#0a3d62]"
@@ -162,7 +162,7 @@ export function PortalDiscovery() {
             {t({ en: "View All Services", ar: "عرض جميع الخدمات" }, lang)}
             <span className="ml-1 text-base">→</span>
           </Link>
-        </div>
+        </div> */}
       </div>
     </section>
   )
