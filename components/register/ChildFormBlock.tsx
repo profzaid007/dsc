@@ -99,6 +99,7 @@ export function ChildFormBlock({
             <DateInput
               value={data.date_of_birth}
               onChange={(v) => updateField("date_of_birth", v)}
+              maxDate={new Date()}
             />
           </div>
 

@@ -543,6 +543,7 @@ export default function AdminUserDetailPage({
                           date_of_birth: v,
                         })
                       }
+                      maxDate={new Date()}
                     />
                   </div>
                   <div className="space-y-2">

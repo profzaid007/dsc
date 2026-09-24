@@ -284,6 +284,7 @@ export default function NewProfilePage() {
                     onChange={(v) =>
                       setFormData({ ...formData, date_of_birth: v })
                     }
+                    maxDate={new Date()}
                     required
                   />
                 </div>

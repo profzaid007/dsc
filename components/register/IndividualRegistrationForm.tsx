@@ -338,6 +338,7 @@ export function IndividualRegistrationForm({
                 value={dateOfBirth}
                 onChange={setDateOfBirth}
                 className="w-full"
+                maxDate={new Date()}
               />
             </div>
           </div>

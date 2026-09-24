@@ -287,6 +287,7 @@ export default function AdminNewCasePage() {
                   onChange={(v) =>
                     setFormData({ ...formData, date_of_birth: v })
                   }
+                  maxDate={new Date()}
                 />
               </div>
               <div className="space-y-2">

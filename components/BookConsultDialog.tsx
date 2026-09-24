@@ -278,6 +278,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                   value={preferredDate}
                   onChange={setPreferredDate}
                   className="w-full"
+                  minDate={new Date()}
                 />
               </div>
               <div>

@@ -15,6 +15,16 @@ interface DateInputProps {
   required?: boolean
   disabled?: boolean
   readOnly?: boolean
+  /** Earliest selectable date (inclusive). Accepts "YYYY-MM-DD" or a Date. */
+  minDate?: string | Date
+  /** Latest selectable date (inclusive). Accepts "YYYY-MM-DD" or a Date. */
+  maxDate?: string | Date
+}
+
+function toPickerDate(value?: string | Date): Date | undefined {
+  if (value === undefined || value === null) return undefined
+  if (value instanceof Date) return value
+  return parseISODate(value) ?? undefined
 }
 
 export function DateInput({
@@ -26,6 +36,8 @@ export function DateInput({
   required,
   disabled,
   readOnly,
+  minDate,
+  maxDate,
 }: DateInputProps) {
   if (readOnly) {
     return (
@@ -49,6 +61,12 @@ export function DateInput({
       dateFormat="dd-MM-yyyy"
       placeholderText={placeholder}
       showPopperArrow={false}
+      showYearDropdown
+      showMonthDropdown
+      scrollableYearDropdown
+      yearDropdownItemNumber={120}
+      minDate={toPickerDate(minDate)}
+      maxDate={toPickerDate(maxDate)}
       customInput={<Input className={cn("cursor-pointer", className)} />}
     />
   )
