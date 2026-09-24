@@ -212,7 +212,7 @@ export default function CmsPortalServicesPage() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-medium">{p.title_en}</h3>
+                    <h3 className="font-medium">{p.title_en}</h3>
                     <div className="mt-1 flex items-center gap-2">
                       {p.is_published ? (
                         <Badge variant="default" className="text-xs" style={{ backgroundColor: portal.accent, color: "#fff" }}>
