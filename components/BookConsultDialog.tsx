@@ -79,13 +79,12 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
     setSubmitting(true)
 
     try {
-      const { categoryId, subCategoryId, customCategory, customSubCategory } = portalService
+      const { categoryId, subCategoryId, customCategory } = portalService
 
       const portal = getPortalById(categoryId)
-      const service = portal?.services.find((s) => s.id === subCategoryId)
 
-      const issueType = customCategory || portal?.title || ""
-      const caseType = customSubCategory || service?.name.en || ""
+      const caseType = customCategory || portal?.title?.[lang] || ""
+      const issueType = subCategoryId.trim()
       const cleanName = name.trim()
       const cleanEmail = normalizeEmail(email)
       const cleanContact = `${countryCode} ${contact.trim()}`.trim()
@@ -95,8 +94,8 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
         `<p><strong>${t({ en: "Name:", ar: "الاسم:" }, lang)}</strong> ${cleanName}</p>`,
         `<p><strong>${t({ en: "Contact:", ar: "التواصل:" }, lang)}</strong> ${cleanContact}</p>`,
         `<p><strong>${t({ en: "Email:", ar: "البريد الإلكتروني:" }, lang)}</strong> ${cleanEmail}</p>`,
-        issueType ? `<p><strong>${t({ en: "Service Type:", ar: "نوع الخدمة:" }, lang)}</strong> ${issueType}</p>` : "",
         caseType ? `<p><strong>${t({ en: "Issue Type:", ar: "نوع المشكلة:" }, lang)}</strong> ${caseType}</p>` : "",
+        issueType ? `<p><strong>${t({ en: "Service Type:", ar: "نوع الخدمة:" }, lang)}</strong> ${issueType}</p>` : "",
         consultationType ? `<p><strong>${t({ en: "Consultation Type:", ar: "نوع الاستشارة:" }, lang)}</strong> ${consultationType === "online" ? t({ en: "Online", ar: "أونلاين" }, lang) : t({ en: "Face to Face", ar: "وجهاً لوجه" }, lang)}</p>` : "",
         preferredDate ? `<p><strong>${t({ en: "Preferred Date:", ar: "التاريخ المفضل:" }, lang)}</strong> ${formatDate(preferredDate)}</p>` : "",
         preferredTime ? `<p><strong>${t({ en: "Preferred Time:", ar: "الوقت المفضل:" }, lang)}</strong> ${preferredTime}</p>` : "",
@@ -132,8 +131,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
       })
 
       if (!response.ok || !message_response.ok) {
-        const { error: errMsg } = await response.json()
-        throw new Error(errMsg || t({ en: "Failed to send request", ar: "فشل إرسال الطلب" }, lang))
+        throw new Error(t({ en: "Failed to send request", ar: "فشل إرسال الطلب" }, lang))
       }
 
       setDone(true)
@@ -247,6 +245,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
               value={portalService}
               onChange={setPortalService}
               required
+              issueTypeMode="text"
             />
 
             <div className="space-y-3">
