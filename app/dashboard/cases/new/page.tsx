@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select"
 import { useLang } from "@/lib/lang-context"
 import { t } from "@/lib/i18n"
-import { PORTALS, getPortalById } from "@/lib/portals"
+import { PORTALS } from "@/lib/portals"
 import { trainingProgramsCollection } from "@/lib/pb-training"
 import type { TrainingProgram } from "@/types/training"
 import { type PortalServiceValue } from "@/components/register/PortalServiceSelector"
@@ -173,7 +173,7 @@ export default function NewProfilePage() {
         portal_type: isTraining ? "Attending Training" : undefined,
         service_type: isTraining
           ? selectedProgram?.title[lang]
-          : undefined,
+          : portalService.subCategoryId.trim() || undefined,
         program_id: isTraining ? selectedProgramId : undefined,
         training_link: isTraining
           ? selectedProgram?.meetingLink ||
@@ -196,9 +196,7 @@ export default function NewProfilePage() {
                   ? portalService.customCategory
                   : undefined,
               custom_sub_category:
-                portalService.subCategoryId === OTHER_VALUE
-                  ? portalService.customSubCategory
-                  : undefined,
+                portalService.subCategoryId.trim() || undefined,
             },
       })
 
@@ -481,60 +479,13 @@ export default function NewProfilePage() {
                       {t({ en: "Issue Type", ar: "نوع المشكلة" }, lang)}
                       <span className="text-red-500 ms-1">*</span>
                     </Label>
-                    <Select
-                      value={portalService.subCategoryId}
-                      onValueChange={(value) =>
-                        setPortalService({
-                          ...portalService,
-                          subCategoryId: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t(
-                            {
-                              en: "Select issue type",
-                              ar: "اختر نوع المشكلة",
-                            },
-                            lang
-                          )}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getPortalById(portalService.categoryId)?.services.map(
-                          (s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {t(s.name, lang)}
-                            </SelectItem>
-                          )
-                        )}
-                        <SelectItem value={OTHER_VALUE}>
-                          {t({ en: "Other", ar: "أخرى" }, lang)}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {portalService.subCategoryId === OTHER_VALUE && (
-                  <div className="space-y-2">
-                    <Label>
-                      {t(
-                        {
-                          en: "Custom issue type",
-                          ar: "اسم نوع المشكلة المخصص",
-                        },
-                        lang
-                      )}
-                      <span className="text-red-500 ms-1">*</span>
-                    </Label>
                     <Input
-                      value={portalService.customSubCategory}
+                      value={portalService.subCategoryId}
                       onChange={(e) =>
                         setPortalService({
                           ...portalService,
-                          customSubCategory: e.target.value,
+                          subCategoryId: e.target.value,
+                          customSubCategory: "",
                         })
                       }
                       placeholder={t(

@@ -6,7 +6,7 @@ import { useProfiles } from "@/hooks/useProfiles"
 import { useUsers } from "@/hooks/useUsers"
 import { useLang } from "@/lib/lang-context"
 import { t } from "@/lib/i18n"
-import { PORTALS, getPortalById } from "@/lib/portals"
+import { PORTALS } from "@/lib/portals"
 import { getErrorMessage } from "@/lib/pb"
 import {
   Card,
@@ -111,15 +111,9 @@ export default function AdminNewCasePage() {
       )
       return
     }
-    if (portalService.categoryId !== OTHER_VALUE && !portalService.subCategoryId) {
+    if (portalService.categoryId !== OTHER_VALUE && !portalService.subCategoryId.trim()) {
       setFormError(
         t({ en: "Case type is required.", ar: "نوع الحالة مطلوب." }, lang)
-      )
-      return
-    }
-    if (portalService.subCategoryId === OTHER_VALUE && !portalService.customSubCategory) {
-      setFormError(
-        t({ en: "Custom case type is required.", ar: "اسم نوع الحالة المخصص مطلوب." }, lang)
       )
       return
     }
@@ -143,10 +137,7 @@ export default function AdminNewCasePage() {
           grade: formData.grade,
           notes: formData.notes,
           portal_type: portalService.categoryId,
-          service_type:
-            portalService.subCategoryId === OTHER_VALUE
-              ? portalService.customSubCategory
-              : portalService.subCategoryId,
+          service_type: portalService.subCategoryId.trim(),
           status: hasAmount ? "awaiting_payment" : "pending",
           payment_amount: amount,
           case_details: {
@@ -155,9 +146,7 @@ export default function AdminNewCasePage() {
                 ? portalService.customCategory
                 : undefined,
             custom_sub_category:
-              portalService.subCategoryId === OTHER_VALUE
-                ? portalService.customSubCategory
-                : undefined,
+              portalService.subCategoryId.trim() || undefined,
           },
         },
         userId
@@ -457,63 +446,22 @@ export default function AdminNewCasePage() {
                     {t({ en: "Issue Type", ar: "نوع المشكلة" }, lang)}
                     <span className="text-red-500 ms-1">*</span>
                   </Label>
-                  <Select
+                  <Input
                     value={portalService.subCategoryId}
-                    onValueChange={(value) =>
+                    onChange={(e) =>
                       setPortalService({
                         ...portalService,
-                        subCategoryId: value,
+                        subCategoryId: e.target.value,
+                        customSubCategory: "",
                       })
                     }
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t(
-                          { en: "Select issue type", ar: "اختر نوع المشكلة" },
-                          lang
-                        )}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getPortalById(portalService.categoryId)?.services.map(
-                        (s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {t(s.name, lang)}
-                          </SelectItem>
-                        )
-                      )}
-                      <SelectItem value={OTHER_VALUE}>
-                        {t({ en: "Other", ar: "أخرى" }, lang)}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                    placeholder={t(
+                      { en: "Enter issue type", ar: "أدخل اسم نوع المشكلة" },
+                      lang
+                    )}
+                  />
                 </div>
               )}
-
-            {portalService.subCategoryId === OTHER_VALUE && (
-              <div className="space-y-2">
-                <Label>
-                  {t(
-                    { en: "Custom issue type", ar: "اسم نوع المشكلة المخصص" },
-                    lang
-                  )}
-                  <span className="text-red-500 ms-1">*</span>
-                </Label>
-                <Input
-                  value={portalService.customSubCategory}
-                  onChange={(e) =>
-                    setPortalService({
-                      ...portalService,
-                      customSubCategory: e.target.value,
-                    })
-                  }
-                  placeholder={t(
-                    { en: "Enter issue type", ar: "أدخل اسم نوع المشكلة" },
-                    lang
-                  )}
-                />
-              </div>
-            )}
           </CardContent>
         </Card>
 

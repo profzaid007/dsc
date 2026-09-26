@@ -124,7 +124,7 @@ export function OrganizationRegistrationForm({
       return false
     }
 
-    if (!portalService.categoryId || !portalService.subCategoryId) {
+    if (!portalService.categoryId || !portalService.subCategoryId.trim()) {
       setError(
         t(
           {
@@ -145,21 +145,6 @@ export function OrganizationRegistrationForm({
           {
             en: "Please enter a custom service name",
             ar: "يرجى إدخال اسم خدمة مخصصة",
-          },
-          lang
-        )
-      )
-      return false
-    }
-    if (
-      portalService.subCategoryId === OTHER_VALUE &&
-      !portalService.customSubCategory.trim()
-    ) {
-      setError(
-        t(
-          {
-            en: "Please enter a custom issue type name",
-            ar: "يرجى إدخال اسم نوع مشكلة مخصص",
           },
           lang
         )
@@ -211,9 +196,7 @@ export function OrganizationRegistrationForm({
         user: user.id,
         name: cleanOrganizationName,
         portal_type: portalService.categoryId,
-        service_type: portalService.subCategoryId === OTHER_VALUE
-          ? portalService.customSubCategory.trim()
-          : portalService.subCategoryId,
+        service_type: portalService.subCategoryId.trim(),
         notes: notes.trim(),
         status: "pending",
         user_details: {
@@ -226,10 +209,7 @@ export function OrganizationRegistrationForm({
             portalService.categoryId === OTHER_VALUE
               ? portalService.customCategory.trim()
               : undefined,
-          custom_sub_category:
-            portalService.subCategoryId === OTHER_VALUE
-              ? portalService.customSubCategory.trim()
-              : undefined,
+          custom_sub_category: portalService.subCategoryId.trim() || undefined,
         },
       })
 

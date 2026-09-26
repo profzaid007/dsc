@@ -174,7 +174,10 @@ export function ParentRegistrationForm({
         )
         return false
       }
-      if (!child.portalService.categoryId || !child.portalService.subCategoryId) {
+      if (
+        !child.portalService.categoryId ||
+        !child.portalService.subCategoryId.trim()
+      ) {
         setError(
           `${childLabel}: ${t(
             {
@@ -195,21 +198,6 @@ export function ParentRegistrationForm({
             {
               en: "please enter a custom service name",
               ar: "يرجى إدخال اسم خدمة مخصصة",
-            },
-            lang
-          )}`
-        )
-        return false
-      }
-      if (
-        child.portalService.subCategoryId === OTHER_VALUE &&
-        !child.portalService.customSubCategory.trim()
-      ) {
-        setError(
-          `${childLabel}: ${t(
-            {
-              en: "please enter a custom issue type name",
-              ar: "يرجى إدخال اسم نوع مشكلة مخصص",
             },
             lang
           )}`
@@ -260,9 +248,7 @@ export function ParentRegistrationForm({
           grade: child.grade,
           relationship: child.relationship.trim(),
           portal_type: child.portalService.categoryId,
-          service_type: child.portalService.subCategoryId === OTHER_VALUE
-            ? child.portalService.customSubCategory.trim()
-            : child.portalService.subCategoryId,
+          service_type: child.portalService.subCategoryId.trim(),
           notes: child.notes.trim(),
           status: "pending",
           user_details: {
@@ -276,9 +262,7 @@ export function ParentRegistrationForm({
                 ? child.portalService.customCategory.trim()
                 : undefined,
             custom_sub_category:
-              child.portalService.subCategoryId === OTHER_VALUE
-                ? child.portalService.customSubCategory.trim()
-                : undefined,
+              child.portalService.subCategoryId.trim() || undefined,
           },
         })
       }

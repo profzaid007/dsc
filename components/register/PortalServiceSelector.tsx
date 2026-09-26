@@ -33,7 +33,7 @@ interface PortalServiceSelectorProps {
   value?: PortalServiceValue
   onChange: (value: PortalServiceValue) => void
   required?: boolean
-  /** "select" renders a portal-service dropdown, "text" a free-text input. */
+  /** "text" (default) renders a free-text input, "select" a portal-service dropdown. */
   issueTypeMode?: "select" | "text"
 }
 
@@ -41,7 +41,7 @@ export function PortalServiceSelector({
   value = { categoryId: "", subCategoryId: "", customCategory: "", customSubCategory: "" },
   onChange,
   required = false,
-  issueTypeMode = "select",
+  issueTypeMode = "text",
 }: PortalServiceSelectorProps) {
   const { lang } = useLang()
 
