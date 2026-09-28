@@ -1,5 +1,3 @@
-import { sanitizeCmsContent } from "@/lib/sanitize"
-
 import Link from "next/link"
 import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
@@ -10,6 +8,8 @@ import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
 import { getPortalById } from "@/lib/portals"
 import { Button } from "@/components/ui/button"
+import { CmsContent } from "@/components/cms/CmsContent"
+
 interface InfoPageProps {
   params: Promise<{ id: string }>
 }
@@ -59,14 +59,9 @@ export default async function InfoPage({ params }: InfoPageProps) {
           />
         )}
         <h1 className="mb-8 text-3xl font-bold capitalize">{displayTitle}</h1>
-        <div
-          className="cms-rendered sun-editor-editable space-y-4 leading-relaxed text-gray-700 [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h1]:my-6 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:my-3 [&_h3]:text-xl [&_h3]:font-semibold [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5"
-          dangerouslySetInnerHTML={{
-            __html: sanitizeCmsContent(
-              localizedField(page, lang, "content"),
-              lang
-            ),
-          }}
+        <CmsContent
+          html={localizedField(page, lang, "content")}
+          lang={lang}
         />
 
         <div className="tet">

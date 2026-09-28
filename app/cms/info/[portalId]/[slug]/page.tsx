@@ -9,13 +9,14 @@ import pb, { getErrorMessage } from "@/lib/pb"
 import type { InfoPage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
+import { CmsPreviewDialog } from "@/components/cms/CmsPreviewDialog"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, ArrowRight, Loader2, Copy, Trash2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, Eye, Loader2, Copy, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { t, UI_STRINGS } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
@@ -90,6 +91,7 @@ export default function CmsServiceEditorPage() {
   const [publishing, setPublishing] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [uploadingIcon, setUploadingIcon] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const [pageSlug, setPageSlug] = useState(slug)
   const [enTitle, setEnTitle] = useState("")
@@ -390,6 +392,14 @@ export default function CmsServiceEditorPage() {
             )}
             Delete
           </Button> */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPreviewOpen(true)}
+          >
+            <Eye className="me-2 h-4 w-4" />
+            {t(UI_STRINGS.preview, lang)}
+          </Button>
           <div className="flex items-center gap-2">
             <Switch
               id="publish"
@@ -517,6 +527,24 @@ export default function CmsServiceEditorPage() {
           />
         </div>
       )}
+
+      <CmsPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        title={activeLang === "ar" && arTitle ? arTitle : enTitle}
+        html={activeLang === "en" ? enContent : arContent}
+        lang={activeLang}
+        path={`/info/${pageSlug}`}
+      >
+        {iconUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={iconUrl}
+            alt=""
+            className="mb-6 h-16 w-16 rounded-xl object-contain"
+          />
+        )}
+      </CmsPreviewDialog>
     </div>
   )
 }

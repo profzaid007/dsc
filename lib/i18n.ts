@@ -61,6 +61,10 @@ export const UI_STRINGS: Record<string, BilingualString> = {
     en: "Draft",
     ar: "مسودة",
   },
+  preview: {
+    en: "Preview",
+    ar: "معاينة",
+  },
   language_label: {
     en: "العربية",
     ar: "English",

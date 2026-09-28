@@ -8,6 +8,7 @@ import { blogPagesCollection, blogCategoriesCollection } from "@/lib/pb-collecti
 import { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
+import { CmsPreviewDialog } from "@/components/cms/CmsPreviewDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,10 +22,11 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
-import { Loader2, ArrowLeft, ArrowRight, Trash2, Copy } from "lucide-react"
+import { Loader2, ArrowLeft, ArrowRight, Eye, Trash2, Copy } from "lucide-react"
 import { toast } from "sonner"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { t, UI_STRINGS } from "@/lib/i18n"
+import { formatDate } from "@/lib/format-date"
 import { useLang } from "@/lib/lang-context"
 
 function extractThumbnail(record: Record<string, unknown>): string {
@@ -65,6 +67,7 @@ export default function CmsBlogEditorPage() {
   const [enContent, setEnContent] = useState("")
   const [arContent, setArContent] = useState("")
   const [isPublished, setIsPublished] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const [authorName, setAuthorName] = useState("")
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
@@ -316,6 +319,14 @@ export default function CmsBlogEditorPage() {
     }
   }, [page, router, lang])
 
+  // Category label for the preview, resolved the same way the public
+  // /blog/[slug] page resolves it.
+  const previewCategoryLabel = (() => {
+    const matched = categories.find((c) => c.key === category)
+    if (!matched) return category
+    return activeLang === "ar" && matched.label_ar ? matched.label_ar : matched.label_en
+  })()
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -362,6 +373,14 @@ export default function CmsBlogEditorPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPreviewOpen(true)}
+          >
+            <Eye className="me-2 h-4 w-4" />
+            {t(UI_STRINGS.preview, lang)}
+          </Button>
           <div className="flex items-center gap-2">
             <Switch
               id="publish"
@@ -503,6 +522,37 @@ export default function CmsBlogEditorPage() {
           />
         </div>
       )}
+
+      <CmsPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        title={activeLang === "ar" && arTitle ? arTitle : enTitle}
+        html={activeLang === "en" ? enContent : arContent}
+        lang={activeLang}
+        path={`/blog/${postSlug}`}
+      >
+        <div className="mb-8 space-y-2">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            {previewCategoryLabel && (
+              <>
+                <span className="rounded-md bg-gray-100 px-2 py-0.5 capitalize">
+                  {previewCategoryLabel}
+                </span>
+                <span>&middot;</span>
+              </>
+            )}
+            {page.created && <span>{formatDate(page.created)}</span>}
+            {authorName && (
+              <>
+                <span>&middot;</span>
+                <span>
+                  {t({ en: "By", ar: "بقلم" }, lang)} {authorName}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </CmsPreviewDialog>
     </div>
   )
 }

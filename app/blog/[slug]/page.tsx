@@ -8,7 +8,7 @@ import type { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
 
-import { sanitizeCmsContent } from "@/lib/sanitize"
+import { CmsContent } from "@/components/cms/CmsContent"
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>
@@ -100,14 +100,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </h1>
       </div>
 
-      <div
-        className="cms-rendered sun-editor-editable space-y-4 leading-relaxed text-gray-700 [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h1]:my-6 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:my-3 [&_h3]:text-xl [&_h3]:font-semibold [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5"
-        dangerouslySetInnerHTML={{
-          __html: sanitizeCmsContent(
-            localizedField(page, lang, "content"),
-            lang
-          ),
-        }}
+      <CmsContent
+        html={localizedField(page, lang, "content")}
+        lang={lang}
       />
     </div>
   )

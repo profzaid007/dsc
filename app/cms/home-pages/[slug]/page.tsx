@@ -8,11 +8,12 @@ import pb, { getErrorMessage } from "@/lib/pb"
 import type { HomePage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
+import { CmsPreviewDialog } from "@/components/cms/CmsPreviewDialog"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { ArrowLeft, ArrowRight, Loader2, Trash2, Copy } from "lucide-react"
+import { ArrowLeft, ArrowRight, Eye, Loader2, Trash2, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
@@ -35,8 +36,11 @@ export default function CmsHomePageEditorPage() {
   const [deleting, setDeleting] = useState(false)
   const [enTitle, setEnTitle] = useState("")
   const [arTitle, setArTitle] = useState("")
+  const [enContent, setEnContent] = useState("")
+  const [arContent, setArContent] = useState("")
   const [slugValue, setSlugValue] = useState("")
   const [resetKey, setResetKey] = useState(0)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -58,6 +62,8 @@ export default function CmsHomePageEditorPage() {
       if (existingPage) {
         setEnTitle(existingPage.title_en)
         setArTitle(existingPage.title_ar || "")
+        setEnContent(existingPage.content_en || "")
+        setArContent(existingPage.content_ar || "")
         setSlugValue(existingPage.slug)
       }
       setLoading(false)
@@ -86,11 +92,29 @@ export default function CmsHomePageEditorPage() {
         setEnTitle(updated.title_en)
         setArTitle(updated.title_ar || "")
         setSlugValue(updated.slug)
+        // Content state is intentionally not re-seeded from the response here.
+        // RichTextEditor's onChange already keeps it in sync with the editor
+        // buffer, and writing the server's copy back would retrigger its
+        // initialContent sync effect and move the cursor after every save.
+        // This matches the blog + info editors.
       } finally {
         setSaving(false)
       }
     },
     [page, enTitle, arTitle, slugValue, isSuperAdmin, activeLang]
+  )
+
+  // Mirrors the blog + info editors: keeps the current editor buffer in state
+  // so the preview dialog can render unsaved content.
+  const handleContentChange = useCallback(
+    (html: string) => {
+      if (activeLang === "en") {
+        setEnContent(html)
+      } else {
+        setArContent(html)
+      }
+    },
+    [activeLang]
   )
 
   const handleDiscard = useCallback(async () => {
@@ -101,6 +125,8 @@ export default function CmsHomePageEditorPage() {
       setPage(original)
       setEnTitle(original.title_en)
       setArTitle(original.title_ar || "")
+      setEnContent(original.content_en || "")
+      setArContent(original.content_ar || "")
       setSlugValue(original.slug)
     }
 
@@ -110,9 +136,10 @@ export default function CmsHomePageEditorPage() {
   const copyFromEnglish = useCallback(() => {
     if (!page) return
     setArTitle(enTitle)
+    setArContent(enContent)
     setPage(prev => prev ? { ...prev, content_ar: prev.content_en, title_ar: prev.title_en } : null)
     setResetKey(t => t + 1)
-  }, [page, enTitle])
+  }, [page, enTitle, enContent])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -205,6 +232,14 @@ export default function CmsHomePageEditorPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPreviewOpen(true)}
+          >
+            <Eye className="me-2 h-4 w-4" />
+            {t(UI_STRINGS.preview, lang)}
+          </Button>
           <div className="flex items-center gap-2">
             <Switch
               id="publish"
@@ -256,7 +291,8 @@ export default function CmsHomePageEditorPage() {
             <RichTextEditor
               key={`${resetKey}-en`}
               title={t({ en: "English Content", ar: "المحتوى (إنجليزي)" }, lang)}
-              initialContent={page.content_en}
+              initialContent={enContent}
+              onChange={handleContentChange}
               onSave={handleSave}
               isSaving={saving}
               onImageUpload={handleImageUpload}
@@ -290,7 +326,8 @@ export default function CmsHomePageEditorPage() {
             <RichTextEditor
               key={`${resetKey}-ar`}
               title={t({ en: "Arabic Content", ar: "المحتوى (عربي)" }, lang)}
-              initialContent={page.content_ar || ""}
+              initialContent={arContent}
+              onChange={handleContentChange}
               onSave={handleSave}
               isSaving={saving}
               onImageUpload={handleImageUpload}
@@ -317,6 +354,19 @@ export default function CmsHomePageEditorPage() {
           </Button>
         )}
       </div>
+
+      <CmsPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        title={
+          activeLang === "ar" && arTitle
+            ? arTitle
+            : enTitle || page.title_en
+        }
+        html={activeLang === "en" ? enContent : arContent}
+        lang={activeLang}
+        path={`/${slugValue}`}
+      />
     </div>
   )
 }
