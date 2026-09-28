@@ -40,6 +40,8 @@ const typeLabels = {
   hybrid: { en: "Hybrid", ar: "مختلط" },
 }
 
+const upcomingColor = "bg-emerald-100 text-emerald-800"
+
 export function ProgramCard({
   program,
   onRegister,
@@ -51,6 +53,21 @@ export function ProgramCard({
   const { lang } = useLang()
 
   const isPast = new Date(program.schedule.endDate) < new Date()
+  // "Upcoming" means not yet started. A programme that has started but not yet
+  // finished is in progress: neither upcoming nor past, so it gets no tag.
+  const isUpcoming = !isPast && new Date(program.schedule.startDate) >= new Date()
+
+  // A single corner badge, highest priority first. Upcoming and Past are
+  // mutually exclusive, so they never need to share the corner.
+  const cornerBadge = showStatus ? (
+    <Badge className={statusColors[program.status]}>
+      {statusLabels[program.status][lang]}
+    </Badge>
+  ) : isUpcoming ? (
+    <Badge className={upcomingColor}>{lang === "ar" ? "قادم" : "Upcoming"}</Badge>
+  ) : isPast ? (
+    <Badge variant="secondary">{lang === "ar" ? "انتهى" : "Past"}</Badge>
+  ) : null
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -63,19 +80,8 @@ export function ProgramCard({
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          {showStatus && (
-            <div className="absolute right-2 top-2">
-              <Badge className={statusColors[program.status]}>
-                {statusLabels[program.status][lang]}
-              </Badge>
-            </div>
-          )}
-          {isPast && !showStatus && (
-            <div className="absolute right-2 top-2">
-              <Badge variant="secondary">
-                {lang === "ar" ? "انتهى" : "Past"}
-              </Badge>
-            </div>
+          {cornerBadge && (
+            <div className="absolute right-2 top-2">{cornerBadge}</div>
           )}
         </div>
       )}
@@ -85,11 +91,16 @@ export function ProgramCard({
           <h3 className="line-clamp-2 text-lg font-semibold">
             {program.title[lang]}
           </h3>
-          {!showStatus && (
-            <Badge variant="outline" className="shrink-0">
-              {typeLabels[program.type][lang]}
-            </Badge>
-          )}
+          <div className="flex shrink-0 items-center gap-1.5">
+            {!showStatus && (
+              <Badge variant="outline">
+                {typeLabels[program.type][lang]}
+              </Badge>
+            )}
+            {/* Without a thumbnail there is no image to overlay, so the
+                status/upcoming tag sits inline beside the type badge. */}
+            {!program.thumbnail && cornerBadge}
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           {lang === "ar" ? "المدرب:" : "Trainer:" } {program.trainer.name[lang]}

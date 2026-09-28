@@ -238,6 +238,21 @@ export const trainingProgramsCollection = {
     return data.map((item) => programFromDB(item as unknown as Record<string, unknown>))
   },
 
+  /**
+   * Every programme a public visitor is allowed to see, including finished
+   * ones. Deliberately separate from getPublished(), which hides completed
+   * programmes and is still what the /programmes/training_programmes list
+   * page uses.
+   */
+  async getPubliclyVisible(): Promise<TrainingProgram[]> {
+    const data = await pb.collection(PROGRAMS_COLLECTION).getFullList({
+      filter:
+        'status = "published" || status = "in_progress" || status = "completed"',
+      sort: "schedule.startDate",
+    })
+    return data.map((item) => programFromDB(item as unknown as Record<string, unknown>))
+  },
+
   async getById(id: string): Promise<TrainingProgram> {
     const data = await pb.collection(PROGRAMS_COLLECTION).getOne(id)
     return programFromDB(data as unknown as Record<string, unknown>)

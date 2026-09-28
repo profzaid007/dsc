@@ -31,6 +31,8 @@ const statusColors = {
   completed: "bg-blue-100 text-blue-800",
 }
 
+const upcomingColor = "bg-emerald-100 text-emerald-800"
+
 export function LectureCard({
   lecture,
   onRegister,
@@ -49,6 +51,22 @@ export function LectureCard({
   }
 
   const isPast = new Date(lecture.schedule.dateTime) < new Date()
+  const isUpcoming = !isPast
+
+  // A single corner badge, highest priority first. Upcoming and Past are
+  // mutually exclusive (a date is either side of now or the other), so they
+  // never need to share the corner.
+  const cornerBadge = showStatus ? (
+    <Badge className={statusColors[lecture.status]}>
+      {statusLabels[lecture.status][lang]}
+    </Badge>
+  ) : isUpcoming ? (
+    <Badge className={upcomingColor}>
+      {lang === "ar" ? "قادم" : "Upcoming"}
+    </Badge>
+  ) : (
+    <Badge variant="secondary">{lang === "ar" ? "انتهى" : "Past"}</Badge>
+  )
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -61,27 +79,23 @@ export function LectureCard({
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          {showStatus && (
-            <div className="absolute right-2 top-2">
-              <Badge className={statusColors[lecture.status]}>
-                {statusLabels[lecture.status][lang]}
-              </Badge>
-            </div>
-          )}
-          {isPast && !showStatus && (
-            <div className="absolute right-2 top-2">
-              <Badge variant="secondary">
-                {lang === "ar" ? "انتهى" : "Past"}
-              </Badge>
-            </div>
+          {cornerBadge && (
+            <div className="absolute right-2 top-2">{cornerBadge}</div>
           )}
         </div>
       )}
 
       <CardHeader className="pb-2">
-        <h3 className="line-clamp-2 text-lg font-semibold">
-          {lecture.title[lang]}
-        </h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="line-clamp-2 text-lg font-semibold">
+            {lecture.title[lang]}
+          </h3>
+          {/* Without a thumbnail there is no image to overlay, so the tag
+              sits inline beside the title instead. */}
+          {!lecture.thumbnail && (
+            <div className="shrink-0">{cornerBadge}</div>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">
           {lecture.speaker.name[lang]}
         </p>

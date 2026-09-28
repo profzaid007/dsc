@@ -14,6 +14,25 @@ import { BookOpen, GraduationCap, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"
 
+/**
+ * Orders sessions so the ones a visitor can still act on come first, soonest
+ * at the very top, with the most recent past ones at the bottom.
+ *
+ * Negative = a is sooner (or more recently past) than b, so the leading sign
+ * keeps the array ascending.
+ */
+function sortByUpcoming(a: string, b: string, now: number): number {
+  const aUpcoming = new Date(a).getTime() >= now
+  const bUpcoming = new Date(b).getTime() >= now
+
+  // Upcoming always sorts ahead of past.
+  if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1
+
+  // Within upcoming, soonest first. Within past, most recent first.
+  const delta = new Date(a).getTime() - new Date(b).getTime()
+  return aUpcoming ? delta : -delta
+}
+
 export default function ProgrammesPage() {
   const router = useRouter()
   const { lang } = useLang()
@@ -26,19 +45,27 @@ export default function ProgrammesPage() {
       try {
         const [lecturesData, programsData] = await Promise.all([
           publicLecturesPublicCollection.getAll(),
-          trainingProgramsCollection.getPublished(),
+          trainingProgramsCollection.getPubliclyVisible(),
         ])
 
-        const now = new Date()
-        const nowISO = now.toISOString()
-        const upcomingLectures = lecturesData.filter(
-          (l) => l.schedule.dateTime >= nowISO
+        // The public_lectures_public PocketBase view decides which records it
+        // exposes, so we can't rely on it to drop unpublished ones. Filter here
+        // to be certain nothing draft or cancelled reaches the public page.
+        const now = Date.now()
+
+        const visibleLectures = lecturesData
+          .filter((l) => l.status !== "draft" && l.status !== "cancelled")
+          .sort(
+            (a, b) => sortByUpcoming(a.schedule.dateTime, b.schedule.dateTime, now)
+          )
+
+        const visiblePrograms = programsData.sort(
+          (a, b) =>
+            sortByUpcoming(a.schedule.startDate, b.schedule.startDate, now)
         )
-        const upcomingPrograms = programsData.filter(
-          (p) => new Date(p.schedule.startDate) >= now
-        )
-        setLectures(upcomingLectures)
-        setPrograms(upcomingPrograms)
+
+        setLectures(visibleLectures)
+        setPrograms(visiblePrograms)
       } catch (err) {
         console.error("Failed to load programmes:", err)
         toast.error(getErrorMessage(err))
@@ -86,26 +113,25 @@ export default function ProgrammesPage() {
             onClick={() => router.push("/programmes/public_lectures")}
             className="gap-1"
           >
-            {lang === "ar" ? "عرض الكل" : "View Past Lectures"}
+            {lang === "ar" ? "عرض الكل" : "View All Lectures"}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
         {lectures.length === 0 ? (
-          <div className="py-8 text-center">
+          <div className="py-18 text-center">
             <BookOpen className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
             <p className="text-muted-foreground">
-              {lang === "ar" ? "توجد محاضرات قادمة" : "No upcoming lectures available"}
+              {lang === "ar" ? "لا توجد محاضرات" : "No lectures available yet"}
             </p>
           </div>
         ) : (
-          <div className="scrollbar-thin flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {lectures.map((lecture) => (
-              <div key={lecture.id} className="shrink-0 snap-start w-80">
-                <LectureCard
-                  lecture={lecture}
-                  onView={() => router.push(`/programmes/public_lectures/${lecture.id}`)}
-                />
-              </div>
+              <LectureCard
+                key={lecture.id}
+                lecture={lecture}
+                onView={() => router.push(`/programmes/public_lectures/${lecture.id}`)}
+              />
             ))}
           </div>
         )}
@@ -125,7 +151,7 @@ export default function ProgrammesPage() {
             onClick={() => router.push("/programmes/training_programmes")}
             className="gap-1"
           >
-            {lang === "ar" ? "عرض البرامج السابقة" : "View Past Programmes"}
+            {lang === "ar" ? "عرض البرامج السابقة" : "View All Programmes"}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -133,18 +159,17 @@ export default function ProgrammesPage() {
           <div className="py-8 text-center">
             <GraduationCap className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
             <p className="text-muted-foreground">
-              {lang === "ar" ? "لا توجد برامج تدريبية متاحة" : "No upcoming training programmes available"}
+              {lang === "ar" ? "لا توجد برامج تدريبية" : "No training programmes available yet"}
             </p>
           </div>
         ) : (
-          <div className="scrollbar-thin flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {programs.map((program) => (
-              <div key={program.id} className="shrink-0 snap-start w-80">
-                <ProgramCard
-                  program={program}
-                  onView={() => router.push(`/programmes/training_programmes/${program.id}`)}
-                />
-              </div>
+              <ProgramCard
+                key={program.id}
+                program={program}
+                onView={() => router.push(`/programmes/training_programmes/${program.id}`)}
+              />
             ))}
           </div>
         )}
