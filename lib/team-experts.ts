@@ -6,13 +6,26 @@ interface ExpertProfileRecord {
   user?: string;
   full_legal_name?: string;
   profile_photo?: string;
-  specialization_type?: string[];
+  specialization_type?: unknown;
   highest_academic_degree?: string;
   field_of_study?: string;
   bio?: string;
 }
 
 const MAX_EXPERTS = 6;
+
+/** Normalizes a PocketBase JSON field that may hold an array or a single value. */
+function toList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter(
+      (v): v is string => typeof v === "string" && v.length > 0
+    );
+  }
+  if (typeof value === "string" && value.trim()) {
+    return [value.trim()];
+  }
+  return [];
+}
 
 export async function getTeamExperts(): Promise<TeamExpert[]> {
   try {
@@ -41,7 +54,7 @@ export async function getTeamExperts(): Promise<TeamExpert[]> {
             record.full_legal_name ||
             "",
           photoUrl: filename ? pb.files.getUrl(record as never, filename) : null,
-          roles: record.specialization_type || [],
+          roles: toList(record.specialization_type),
           degree: record.highest_academic_degree || null,
           fieldOfStudy: record.field_of_study || null,
           bio: record.bio || "",
