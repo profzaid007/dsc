@@ -38,9 +38,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { formatDate } from "@/lib/format-date"
+import { formatDate, formatDateTime } from "@/lib/format-date"
 import { CaseStatusBadge } from "@/components/cases/status-badge"
 import type { Profile } from "@/types/profile"
+
+type CaseSortField = "name" | "date_of_birth" | "gender" | "grade" | "created"
+
+const DATE_SORT_FIELDS: ReadonlySet<CaseSortField> = new Set([
+  "date_of_birth",
+  "created",
+])
 
 interface AssignmentCount {
   total: number
@@ -60,7 +67,7 @@ export default function AdminCasesPage() {
   >({})
 
   const [searchQuery, setSearchQuery] = useState("")
-  const [sortField, setSortField] = useState<string>("name")
+  const [sortField, setSortField] = useState<CaseSortField>("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
   useEffect(() => {
@@ -97,13 +104,36 @@ export default function AdminCasesPage() {
   })
 
   const sortedProfiles = [...filteredProfiles].sort((a, b) => {
-    const getVal = (p: Profile) => {
-      const v = p[sortField as keyof Profile]
-      return (v?.toString() || "").toLowerCase()
+    const getVal = (p: Profile) => String(p[sortField] ?? "")
+
+    if (DATE_SORT_FIELDS.has(sortField)) {
+      const timeA = Date.parse(getVal(a))
+      const timeB = Date.parse(getVal(b))
+      const invalidA = Number.isNaN(timeA)
+      const invalidB = Number.isNaN(timeB)
+      // Keep records with missing/invalid dates at the end in both directions
+      if (invalidA || invalidB) {
+        if (invalidA && invalidB) return 0
+        return invalidA ? 1 : -1
+      }
+      const cmp = timeA - timeB
+      return sortDirection === "asc" ? cmp : -cmp
     }
-    const cmp = getVal(a).localeCompare(getVal(b))
+
+    const cmp = getVal(a)
+      .toLowerCase()
+      .localeCompare(getVal(b).toLowerCase())
     return sortDirection === "asc" ? cmp : -cmp
   })
+
+  const handleSortFieldChange = (value: string) => {
+    const next = value as CaseSortField
+    setSortField(next)
+    // Newest (or latest) first is the useful default for date fields
+    if (DATE_SORT_FIELDS.has(next)) {
+      setSortDirection("desc")
+    }
+  }
 
   if (isLoading) {
     return (
@@ -167,10 +197,7 @@ export default function AdminCasesPage() {
           <span className="whitespace-nowrap text-sm text-muted-foreground">
             {lang === "ar" ? "ترتيب حسب" : "Sort by"}
           </span>
-          <Select
-            value={sortField}
-            onValueChange={(value) => setSortField(value)}
-          >
+          <Select value={sortField} onValueChange={handleSortFieldChange}>
             <SelectTrigger className="w-[160px]">
               <SelectValue />
             </SelectTrigger>
@@ -180,6 +207,9 @@ export default function AdminCasesPage() {
               </SelectItem>
               <SelectItem value="date_of_birth">
                 {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+              </SelectItem>
+              <SelectItem value="created">
+                {lang === "ar" ? "تاريخ الإضافة" : "Date Added"}
               </SelectItem>
               <SelectItem value="gender">
                 {lang === "ar" ? "الجنس" : "Gender"}
@@ -257,6 +287,9 @@ export default function AdminCasesPage() {
                   <TableHead>
                     {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
                   </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    {lang === "ar" ? "تاريخ الإضافة" : "Date Added"}
+                  </TableHead>
                   <TableHead>{lang === "ar" ? "الجنس" : "Gender"}</TableHead>
                   <TableHead>{lang === "ar" ? "الصف الدراسي" : "Grade"}</TableHead>
                   <TableHead>{lang === "ar" ? "المستخدم" : "User"}</TableHead>
@@ -289,6 +322,9 @@ export default function AdminCasesPage() {
                         </div>
                       </TableCell>
                       <TableCell>{formatDate(profile.date_of_birth || "")}</TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {formatDateTime(profile.created)}
+                      </TableCell>
                       <TableCell className="capitalize">
                         {profile.gender === "male"
                           ? lang === "ar"
