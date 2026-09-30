@@ -1,7 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { rolesManagementCollection } from "@/lib/pb-collections"
+import {
+  rolesManagementCollection,
+  renameRoleInAllocations,
+} from "@/lib/pb-collections"
 import type { RolesManagement } from "@/types/expert-role"
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"
@@ -38,6 +41,28 @@ export function useRolesManagement() {
     []
   )
 
+  const updateRole = useCallback(
+    async (
+      id: string,
+      roleNameEn: string,
+      roleNameAr: string,
+      previousRoleNameEn?: string
+    ) => {
+      const updated = await rolesManagementCollection.update(id, {
+        role_name_en: roleNameEn,
+        role_name_ar: roleNameAr,
+      })
+      if (previousRoleNameEn && previousRoleNameEn !== roleNameEn) {
+        await renameRoleInAllocations(previousRoleNameEn, roleNameEn)
+      }
+      setRoles((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, ...updated } : r))
+      )
+      return updated
+    },
+    []
+  )
+
   const addRole = useCallback(
     async (roleNameEn: string, roleNameAr: string) => {
       const created = await rolesManagementCollection.create({
@@ -59,6 +84,7 @@ export function useRolesManagement() {
     roles,
     isLoading,
     updateRoleToolTypes,
+    updateRole,
     addRole,
     removeRole,
     refresh: fetchRoles,

@@ -32,6 +32,7 @@ import {
   ArrowLeft,
   Plus,
   Trash2,
+  Pencil,
   Save,
   UserCheck,
   Users,
@@ -174,6 +175,7 @@ export default function AllocationsPage() {
     roles: roleMgmtRoles,
     isLoading: isRolesLoading,
     updateRoleToolTypes,
+    updateRole,
     addRole,
     removeRole,
   } = useRolesManagement()
@@ -185,6 +187,12 @@ export default function AllocationsPage() {
   const [newRoleNameEn, setNewRoleNameEn] = useState("")
   const [newRoleNameAr, setNewRoleNameAr] = useState("")
   const [isAddingRole, setIsAddingRole] = useState(false)
+
+  const [editRoleDialogOpen, setEditRoleDialogOpen] = useState(false)
+  const [editingRole, setEditingRole] = useState<RolesManagement | null>(null)
+  const [editRoleNameEn, setEditRoleNameEn] = useState("")
+  const [editRoleNameAr, setEditRoleNameAr] = useState("")
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false)
 
   useEffect(() => {
     fetchToolTypes()
@@ -261,6 +269,43 @@ export default function AllocationsPage() {
       )
     } finally {
       setIsAddingRole(false)
+    }
+  }
+
+  const openEditRole = (role: RolesManagement) => {
+    setEditingRole(role)
+    setEditRoleNameEn(role.role_name_en)
+    setEditRoleNameAr(role.role_name_ar)
+    setEditRoleDialogOpen(true)
+  }
+
+  const handleUpdateRole = async () => {
+    if (!editingRole) return
+    const roleNameEn = editRoleNameEn.trim()
+    const roleNameAr = editRoleNameAr.trim()
+    if (!roleNameEn || !roleNameAr) return
+
+    setIsUpdatingRole(true)
+    try {
+      await updateRole(
+        editingRole.id,
+        roleNameEn,
+        roleNameAr,
+        editingRole.role_name_en
+      )
+      await refreshAllocations()
+      setEditRoleDialogOpen(false)
+      setEditingRole(null)
+    } catch (error) {
+      console.error("Failed to update role:", error)
+      toast.error(
+        lang === "ar"
+          ? "فشل تحديث الدور. يرجى المحاولة مرة أخرى."
+          : "Failed to update role. Please try again.",
+        { description: getErrorMessage(error) }
+      )
+    } finally {
+      setIsUpdatingRole(false)
     }
   }
 
@@ -732,23 +777,37 @@ export default function AllocationsPage() {
                             />
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled={hasAssignments || isSavingAll}
-                              onClick={() =>
-                                handleDeleteRole(role.id, getRoleLabel(role))
-                              }
-                              title={
-                                hasAssignments
-                                  ? lang === "ar"
-                                    ? "لا يمكن حذف دور معين لخبراء"
-                                    : "Cannot delete a role assigned to experts"
-                                  : undefined
-                              }
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditRole(role)}
+                                title={
+                                  lang === "ar"
+                                    ? "تعديل اسم الدور"
+                                    : "Edit role name"
+                                }
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={hasAssignments || isSavingAll}
+                                onClick={() =>
+                                  handleDeleteRole(role.id, getRoleLabel(role))
+                                }
+                                title={
+                                  hasAssignments
+                                    ? lang === "ar"
+                                      ? "لا يمكن حذف دور معين لخبراء"
+                                      : "Cannot delete a role assigned to experts"
+                                    : undefined
+                                }
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       )
@@ -837,6 +896,80 @@ export default function AllocationsPage() {
                 : lang === "ar"
                   ? "إضافة"
                   : "Add"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={editRoleDialogOpen}
+        onOpenChange={(open) => {
+          setEditRoleDialogOpen(open)
+          if (!open) setEditingRole(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {lang === "ar" ? "تعديل الدور" : "Edit Role"}
+            </DialogTitle>
+            <DialogDescription>
+              {lang === "ar"
+                ? "تعديل اسم الدور (بالإنجليزية والعربية). تحديث الاسم الإنجليزي سيحدّثه أيضاً في توزيعات الخبراء."
+                : "Edit the role name in English and Arabic. Changing the English name also updates it in existing expert allocations."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  {lang === "ar" ? "اسم الدور (إنجليزي)" : "Role Name (EN)"}
+                </label>
+                <Input
+                  value={editRoleNameEn}
+                  onChange={(e) => setEditRoleNameEn(e.target.value)}
+                  placeholder="e.g., Lawyer"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  {lang === "ar" ? "اسم الدور (عربي)" : "Role Name (AR)"}
+                </label>
+                <Input
+                  dir="rtl"
+                  value={editRoleNameAr}
+                  onChange={(e) => setEditRoleNameAr(e.target.value)}
+                  placeholder="مثال: محامٍ"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditRoleDialogOpen(false)
+                setEditingRole(null)
+              }}
+              disabled={isUpdatingRole}
+            >
+              {lang === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              onClick={handleUpdateRole}
+              disabled={
+                isUpdatingRole ||
+                !editRoleNameEn.trim() ||
+                !editRoleNameAr.trim()
+              }
+            >
+              {isUpdatingRole
+                ? lang === "ar"
+                  ? "جارٍ الحفظ..."
+                  : "Saving..."
+                : lang === "ar"
+                  ? "حفظ"
+                  : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

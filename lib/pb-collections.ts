@@ -987,6 +987,22 @@ export const rolesManagementCollection = {
   },
 }
 
+// Rename the role stored on existing case allocations when a role's English name changes
+export async function renameRoleInAllocations(
+  oldNameEn: string,
+  newNameEn: string
+): Promise<void> {
+  if (!oldNameEn || !newNameEn || oldNameEn === newNameEn) return
+  const records = await pb.collection("case_experts").getFullList({
+    filter: `role = "${oldNameEn.replace(/"/g, '\\"')}"`,
+  })
+  await Promise.all(
+    records.map((record) =>
+      pb.collection("case_experts").update(record.id, { role: newNameEn })
+    )
+  )
+}
+
 // Get allowed tool type IDs for a given expert role (matched by role_name_en)
 export async function getAllowedToolTypesForRole(
   roleNameEn: string
