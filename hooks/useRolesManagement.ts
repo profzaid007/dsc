@@ -38,11 +38,17 @@ export function useRolesManagement() {
     []
   )
 
-  const addRole = useCallback(async (name: string) => {
-    const created = await rolesManagementCollection.create({ name })
-    setRoles((prev) => [...prev, created])
-    return created
-  }, [])
+  const addRole = useCallback(
+    async (roleNameEn: string, roleNameAr: string) => {
+      const created = await rolesManagementCollection.create({
+        role_name_en: roleNameEn,
+        role_name_ar: roleNameAr,
+      })
+      setRoles((prev) => [...prev, created])
+      return created
+    },
+    []
+  )
 
   const removeRole = useCallback(async (id: string) => {
     await rolesManagementCollection.delete(id)

@@ -960,7 +960,8 @@ export const rolesManagementCollection = {
   },
 
   async create(data: {
-    name: string
+    role_name_en: string
+    role_name_ar: string
     tool_types?: string[]
   }): Promise<import("@/types/expert-role").RolesManagement> {
     return pb.collection("roles_management").create(data)
@@ -971,12 +972,14 @@ export const rolesManagementCollection = {
   },
 
   async getByName(
-    name: string
+    roleNameEn: string
   ): Promise<import("@/types/expert-role").RolesManagement | null> {
     try {
       const record = await pb
         .collection("roles_management")
-        .getFirstListItem(`name = "${name}"`, { expand: "tool_types" })
+        .getFirstListItem(`role_name_en = "${roleNameEn}"`, {
+          expand: "tool_types",
+        })
       return record as unknown as import("@/types/expert-role").RolesManagement
     } catch {
       return null
@@ -984,11 +987,11 @@ export const rolesManagementCollection = {
   },
 }
 
-// Get allowed tool type IDs for a given expert role name
+// Get allowed tool type IDs for a given expert role (matched by role_name_en)
 export async function getAllowedToolTypesForRole(
-  roleName: string
+  roleNameEn: string
 ): Promise<string[]> {
-  const role = await rolesManagementCollection.getByName(roleName)
+  const role = await rolesManagementCollection.getByName(roleNameEn)
   return role?.tool_types || []
 }
 
@@ -997,11 +1000,11 @@ export async function getAllowedToolTypesForExpert(
   expertId: string
 ): Promise<string[]> {
   const caseExperts = await caseExpertsCollection.getByExpert(expertId)
-  const roleNames = [
+  const roleNamesEn = [
     ...new Set(caseExperts.map((ce) => ce.role).filter(Boolean)),
   ]
   const allowedSets = await Promise.all(
-    roleNames.map((roleName) => getAllowedToolTypesForRole(roleName as string))
+    roleNamesEn.map((roleName) => getAllowedToolTypesForRole(roleName as string))
   )
   return [...new Set(allowedSets.flat())]
 }
@@ -1011,10 +1014,12 @@ export async function getAllowedToolTypesForCase(
   caseId: string
 ): Promise<string[]> {
   const caseExperts = await caseExpertsCollection.getByCase(caseId)
-  const roleNames = [...new Set(caseExperts.map((ce) => ce.role).filter(Boolean))]
+  const roleNamesEn = [
+    ...new Set(caseExperts.map((ce) => ce.role).filter(Boolean)),
+  ]
 
   const allowedSets = await Promise.all(
-    roleNames.map((roleName) => getAllowedToolTypesForRole(roleName as string))
+    roleNamesEn.map((roleName) => getAllowedToolTypesForRole(roleName as string))
   )
 
   return [...new Set(allowedSets.flat())]

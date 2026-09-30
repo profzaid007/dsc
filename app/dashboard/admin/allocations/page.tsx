@@ -43,8 +43,7 @@ import { useRouter } from "next/navigation"
 import { useLang } from "@/lib/lang-context"
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"
-import type { ExpertRole } from "@/types/allocation"
-import { EXPERT_ROLES } from "@/types/allocation"
+import type { RolesManagement } from "@/types/expert-role"
 import {
   Popover,
   PopoverContent,
@@ -58,7 +57,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { cn, formatExpertRole } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRolesManagement } from "@/hooks/useRolesManagement"
 import { useToolTypes } from "@/hooks/useToolTypes"
@@ -76,7 +75,8 @@ import { Input } from "@/components/ui/input"
 interface AllocationRow {
   id?: string
   expert_id: string
-  role: ExpertRole
+  /** Matches `role_name_en` of a roles_management record */
+  role: string
 }
 
 function ExpertCombobox({
@@ -182,7 +182,8 @@ export default function AllocationsPage() {
   const [roleToolTypesMap, setRoleToolTypesMap] = useState<Record<string, string[]>>({})
   const [isSavingAll, setIsSavingAll] = useState(false)
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
-  const [newRoleName, setNewRoleName] = useState("")
+  const [newRoleNameEn, setNewRoleNameEn] = useState("")
+  const [newRoleNameAr, setNewRoleNameAr] = useState("")
   const [isAddingRole, setIsAddingRole] = useState(false)
 
   useEffect(() => {
@@ -202,6 +203,12 @@ export default function AllocationsPage() {
   const handleRoleToolTypesChange = (roleId: string, toolTypeIds: string[]) => {
     setRoleToolTypesMap((prev) => ({ ...prev, [roleId]: toolTypeIds }))
   }
+
+  /** Localized role label, falling back to the other language when empty. */
+  const getRoleLabel = (role: RolesManagement) =>
+    (lang === "ar" ? role.role_name_ar : role.role_name_en) ||
+    (lang === "ar" ? role.role_name_en : role.role_name_ar) ||
+    ""
 
   const handleSaveAllRoles = async () => {
     const changed = roleMgmtRoles.filter(
@@ -230,18 +237,20 @@ export default function AllocationsPage() {
   }
 
   const handleAddRole = async () => {
-    const roleName = newRoleName.trim()
-    if (!roleName) return
+    const roleNameEn = newRoleNameEn.trim()
+    const roleNameAr = newRoleNameAr.trim()
+    if (!roleNameEn || !roleNameAr) return
 
     setIsAddingRole(true)
     try {
-      const created = await addRole(roleName)
+      const created = await addRole(roleNameEn, roleNameAr)
       setRoleToolTypesMap((prev) => ({
         ...prev,
         [created.id]: created.tool_types || [],
       }))
       setRoleDialogOpen(false)
-      setNewRoleName("")
+      setNewRoleNameEn("")
+      setNewRoleNameAr("")
     } catch (error) {
       console.error("Failed to add role:", error)
       toast.error(
@@ -300,7 +309,7 @@ export default function AllocationsPage() {
       const loadedRows: AllocationRow[] = caseAllocations.map((a) => ({
         id: a.id,
         expert_id: a.expert_id,
-        role: a.role as ExpertRole,
+        role: a.role,
       }))
       setRows(loadedRows)
       setOriginalRows(loadedRows)
@@ -320,7 +329,7 @@ export default function AllocationsPage() {
   const addRow = () => {
     setRows((prev) => [
       ...prev,
-      { expert_id: "", role: EXPERT_ROLES[0] },
+      { expert_id: "", role: roleMgmtRoles[0]?.role_name_en ?? "" },
     ])
   }
 
@@ -611,18 +620,25 @@ export default function AllocationsPage() {
                           <Select
                             value={row.role}
                             onValueChange={(value) =>
-                              updateRow(index, {
-                                role: value as ExpertRole,
-                              })
+                              updateRow(index, { role: value })
                             }
                           >
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue
+                                placeholder={
+                                  lang === "ar"
+                                    ? "اختر دوراً..."
+                                    : "Select role..."
+                                }
+                              />
                             </SelectTrigger>
                             <SelectContent>
-                              {EXPERT_ROLES.map((role) => (
-                                <SelectItem key={role} value={role}>
-                                  {formatExpertRole(role)}
+                              {roleMgmtRoles.map((role) => (
+                                <SelectItem
+                                  key={role.id}
+                                  value={role.role_name_en}
+                                >
+                                  {getRoleLabel(role)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -688,12 +704,12 @@ export default function AllocationsPage() {
                   <TableBody>
                     {roleMgmtRoles.map((role) => {
                       const hasAssignments = allocations.some(
-                        (a) => a.role === role.name
+                        (a) => a.role === role.role_name_en
                       )
                       return (
                         <TableRow key={role.id}>
-                          <TableCell className="font-medium capitalize">
-                            {role.name}
+                          <TableCell className="font-medium">
+                            {getRoleLabel(role)}
                           </TableCell>
                           <TableCell>
                             <ToolTypeMultiSelect
@@ -720,7 +736,9 @@ export default function AllocationsPage() {
                               variant="ghost"
                               size="sm"
                               disabled={hasAssignments || isSavingAll}
-                              onClick={() => handleDeleteRole(role.id, role.name)}
+                              onClick={() =>
+                                handleDeleteRole(role.id, getRoleLabel(role))
+                              }
                               title={
                                 hasAssignments
                                   ? lang === "ar"
@@ -765,20 +783,33 @@ export default function AllocationsPage() {
             </DialogTitle>
             <DialogDescription>
               {lang === "ar"
-                ? "أدخل اسم الدور الجديد ثم قم بتحديد أنواع الأدوات المتاحة له"
-                : "Enter a name for the new role, then assign the tool types it can access"}
+                ? "أدخل اسمي الدور الجديد (بالإنجليزية والعربية) ثم قم بتحديد أنواع الأدوات المتاحة له"
+                : "Enter the new role name in English and Arabic, then assign the tool types it can access"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                {lang === "ar" ? "اسم الدور" : "Role Name"}
-              </label>
-              <Input
-                value={newRoleName}
-                onChange={(e) => setNewRoleName(e.target.value)}
-                placeholder={lang === "ar" ? "مثال: محامي" : "e.g., lawyer"}
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  {lang === "ar" ? "اسم الدور (إنجليزي)" : "Role Name (EN)"}
+                </label>
+                <Input
+                  value={newRoleNameEn}
+                  onChange={(e) => setNewRoleNameEn(e.target.value)}
+                  placeholder="e.g., Lawyer"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  {lang === "ar" ? "اسم الدور (عربي)" : "Role Name (AR)"}
+                </label>
+                <Input
+                  dir="rtl"
+                  value={newRoleNameAr}
+                  onChange={(e) => setNewRoleNameAr(e.target.value)}
+                  placeholder="مثال: محامٍ"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -786,7 +817,8 @@ export default function AllocationsPage() {
               variant="outline"
               onClick={() => {
                 setRoleDialogOpen(false)
-                setNewRoleName("")
+                setNewRoleNameEn("")
+                setNewRoleNameAr("")
               }}
               disabled={isAddingRole}
             >
@@ -794,7 +826,9 @@ export default function AllocationsPage() {
             </Button>
             <Button
               onClick={handleAddRole}
-              disabled={isAddingRole || !newRoleName.trim()}
+              disabled={
+                isAddingRole || !newRoleNameEn.trim() || !newRoleNameAr.trim()
+              }
             >
               {isAddingRole
                 ? lang === "ar"

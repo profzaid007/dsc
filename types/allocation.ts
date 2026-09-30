@@ -1,17 +1,9 @@
-export const EXPERT_ROLES = [
-  "physician",
-  "social",
-  "teacher",
-  "trainer",
-] as const
-
-export type ExpertRole = (typeof EXPERT_ROLES)[number]
-
 export interface CaseExpert {
   id: string
   case_id: string
   expert_id: string
-  role: ExpertRole
+  /** Matches `role_name_en` of a roles_management record */
+  role: string
   created: string
   updated: string
   expand?: {
