@@ -17,6 +17,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"
+import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton"
+import { UserProfileView } from "@/components/profile/UserProfileView"
+import { ExpertProfileView } from "@/components/expert/ExpertProfileView"
+import { useUserProfileRecord } from "@/hooks/useUserProfileRecord"
+import type { ExpertProfile } from "@/types/expert"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -43,10 +48,6 @@ import {
 } from "@/components/ui/dialog"
 import {
   ArrowLeft,
-  Users,
-  Mail,
-  Phone,
-  Calendar,
   FolderKanban,
   Plus,
   Eye,
@@ -74,15 +75,6 @@ const GRADES = [
   { value: "university", label: { en: "University", ar: "الجامعة" } },
 ]
 
-const roleLabels: Record<string, { en: string; ar: string }> = {
-  admin: { en: "Admin", ar: "مشرف" },
-  individual: { en: "Individual", ar: "فرد" },
-  parent: { en: "Parent", ar: "ولي أمر" },
-  organization: { en: "Organization", ar: "منظمة" },
-  expert: { en: "Expert", ar: "خبير" },
-  super_admin: { en: "Super Admin", ar: "مشرف عام" },
-}
-
 export default function AdminUserDetailPage({
   params,
 }: {
@@ -91,7 +83,12 @@ export default function AdminUserDetailPage({
   const { id: userId } = use(params)
   const router = useRouter()
   const { lang } = useLang()
-  const { users, deleteUser, getDeletionBlockers } = useUsers()
+  const {
+    users,
+    isLoading: isUsersLoading,
+    deleteUser,
+    getDeletionBlockers,
+  } = useUsers()
   const { profiles, isLoading: isProfilesLoading, refresh: refreshProfiles } = useProfiles()
 
   const [activeTab, setActiveTab] = useState("overview")
@@ -116,6 +113,19 @@ export default function AdminUserDetailPage({
   const [deleteError, setDeleteError] = useState("")
 
   const user = users.find((u) => u.id === userId)
+
+  // Experts have a much richer application, so they get their own view.
+  const {
+    profile: roleProfile,
+    fileToken: roleFileToken,
+    isLoading: isRoleProfileLoading,
+    loadError: roleLoadError,
+  } = useUserProfileRecord(userId, user?.role)
+
+  const expertProfile =
+    user?.role === "expert"
+      ? (roleProfile as unknown as ExpertProfile | null)
+      : null
 
   const userCases = profiles.filter((p) => p.user === userId)
 
@@ -205,6 +215,12 @@ export default function AdminUserDetailPage({
     }
   }
 
+  // The users list has to resolve before the role is known, so hold the
+  // skeleton rather than reporting a missing user mid-fetch.
+  if (isUsersLoading || (!user && isRoleProfileLoading)) {
+    return <ProfileSkeleton expert={false} />
+  }
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -272,120 +288,26 @@ export default function AdminUserDetailPage({
         </TabsList>
 
         <TabsContent value="overview">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  {lang === "ar" ? "معلومات المستخدم" : "User Information"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "البريد الإلكتروني" : "Email"}
-                  </span>
-                  <span className="font-medium flex items-center gap-1">
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                    {user.email}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "الدور" : "Role"}
-                  </span>
-                  <span className="font-medium capitalize">
-                    {roleLabels[user.role]?.[lang] || user.role}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "الحالة" : "Status"}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className={
-                      user.is_active
-                        ? "bg-green-50 text-green-700"
-                        : "bg-red-50 text-red-700"
-                    }
-                  >
-                    {user.is_active
-                      ? lang === "ar"
-                        ? "نشط"
-                        : "Active"
-                      : lang === "ar"
-                        ? "غير نشط"
-                        : "Inactive"}
-                  </Badge>
-                </div>
-                {user.contact_number && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {lang === "ar" ? "الاتصال" : "Contact"}
-                    </span>
-                    <span className="font-medium flex items-center gap-1">
-                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                      {user.contact_number}
-                    </span>
-                  </div>
-                )}
-                {user.organization_name && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {lang === "ar" ? "المنظمة" : "Organization"}
-                    </span>
-                    <span className="font-medium">{user.organization_name}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "تاريخ الإنشاء" : "Created"}
-                  </span>
-                  <span className="font-medium flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                    {formatDate(user.created)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FolderKanban className="h-5 w-5" />
-                  {lang === "ar" ? "ملخص الحالات" : "Cases Summary"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "إجمالي الحالات" : "Total Cases"}
-                  </span>
-                  <span className="font-medium">{userCases.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "أحدث حالة" : "Latest Case"}
-                  </span>
-                  <span className="font-medium">
-                    {userCases.length > 0
-                      ? userCases[userCases.length - 1].name
-                      : "—"}
-                  </span>
-                </div>
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setActiveTab("cases")}
-                  >
-                    {lang === "ar" ? "عرض جميع الحالات" : "View All Cases"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {isRoleProfileLoading ? (
+            <ProfileSkeleton expert={user.role === "expert"} />
+          ) : roleLoadError ? (
+            <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+              {roleLoadError}
+            </div>
+          ) : user.role === "expert" ? (
+            <ExpertProfileView
+              name={user.name}
+              email={user.email}
+              profile={expertProfile}
+              fileToken={roleFileToken}
+              hideHeading
+              memberSinceLabel={
+                lang === "ar" ? "مقدم الطلب منذ" : "Applied"
+              }
+            />
+          ) : (
+            <UserProfileView user={user} profile={roleProfile} />
+          )}
         </TabsContent>
 
         <TabsContent value="cases">

@@ -12,10 +12,10 @@ function initials(name: string): string {
 }
 
 /**
- * Circular expert portrait with a gradient ring and an initials fallback, so
- * it renders identically in the profile hero and in the edit form.
+ * Circular portrait with a gradient ring and an initials fallback, so every
+ * profile renders the same way whether or not a photo was uploaded.
  */
-export function ExpertAvatar({
+export function ProfileAvatar({
   photoUrl,
   name,
   className,

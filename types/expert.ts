@@ -10,7 +10,7 @@ export interface ExpertProfile {
   degree_title?: string;
   field_of_study?: string;
   age_group?: string[] | string;
-  /** Free text as entered by the expert, though older rows store enum keys. */
+  /** Multi-select values; older rows may hold a single free-text entry. */
   specialization_type?: string[] | string;
   consultation_mode?: string;
   fee?: string | number;

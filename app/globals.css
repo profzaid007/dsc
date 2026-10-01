@@ -382,6 +382,12 @@ img[data-align] {
   100% { background-position: 200% center; }
 }
 
+/* Slides a highlight across a block, for skeleton placeholders. */
+@keyframes shimmer-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
 /* Animation utility classes */
 .animate-hero-gradient {
   background-size: 200% 200%;
@@ -427,6 +433,10 @@ img[data-align] {
 
 .animate-float {
   animation: float 4s ease-in-out infinite;
+}
+
+.animate-shimmer-sweep {
+  animation: shimmer-sweep 1.6s ease-in-out infinite;
 }
 
 /* Staggered entrance delays */

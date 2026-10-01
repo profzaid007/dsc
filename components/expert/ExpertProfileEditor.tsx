@@ -59,7 +59,7 @@ import {
   MAX_ATTACHMENT_BYTES,
   MAX_ATTACHMENT_MB,
 } from "@/lib/expert-options"
-import { ExpertAvatar } from "@/components/expert/ExpertAvatar"
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar"
 import {
   SPECIALIZATION_OPTIONS,
   specializationLabel,
@@ -184,7 +184,7 @@ export function ExpertProfileEditor({
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4 sm:flex-row">
           <div className="group relative shrink-0">
-            <ExpertAvatar
+            <ProfileAvatar
               photoUrl={previewUrl || (draft.removePhoto ? "" : photoUrl)}
               name={draft.name}
               className="h-24 w-24"

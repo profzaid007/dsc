@@ -19,6 +19,7 @@ import {
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
+import { ORGANIZATION_TYPES } from "@/lib/organization-types"
 import {
   PortalServiceSelector,
   type PortalServiceValue,
@@ -38,15 +39,7 @@ import { toast } from "sonner"
 
 const OTHER_VALUE = "other"
 
-const ORGANIZATION_TYPES = [
-  { label: { en: "School", ar: "مدرسة" }, value: "school" },
-  { label: { en: "NGO", ar: "منظمة غير ربحية" }, value: "ngo" },
-  { label: { en: "Corporate", ar: "شركة" }, value: "corporate" },
-  { label: { en: "Government", ar: "جهة حكومية" }, value: "government" },
-  { label: { en: "Clinic", ar: "عيادة" }, value: "clinic" },
-  { label: { en: "Hospital", ar: "مستشفى" }, value: "hospital" },
-  { label: { en: "Other", ar: "أخرى" }, value: "other" },
-]
+
 
 export function OrganizationRegistrationForm({
   onSuccess,
