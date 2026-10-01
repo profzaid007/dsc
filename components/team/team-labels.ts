@@ -79,8 +79,27 @@ export const DEGREE_LABELS: Record<string, BilingualString> = {
   other: { en: "Other", ar: "أخرى" },
 };
 
-export function specializationLabel(key: string, lang: "en" | "ar"): string {
-  return SPECIALIZATION_LABELS[key]?.[lang] || key.replace(/_/g, " ");
+/**
+ * The selectable options for the `specialization_type` PocketBase select
+ * field, in display order. Keys must stay in sync with the field's allowed
+ * values on the backend, since a value outside that list is rejected on save.
+ */
+export const SPECIALIZATION_OPTIONS: {
+  value: string;
+  label: BilingualString;
+}[] = Object.entries(SPECIALIZATION_LABELS).map(([value, label]) => ({
+  value,
+  label,
+}));
+
+export function specializationLabel(rawKey: string, lang: "en" | "ar"): string {
+  const key = rawKey.trim();
+  const known = SPECIALIZATION_LABELS[key];
+  if (known) return known[lang];
+  // Older rows store free text typed into what is now a free-text field, so
+  // fall back to just uncapping an enum-looking value and leave prose alone.
+  if (!key.includes("_")) return key;
+  return key.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
 
 export function degreeLabel(key: string | null, lang: "en" | "ar"): string {

@@ -35,6 +35,16 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
+import {
+  ACADEMIC_DEGREES,
+  AGE_GROUPS,
+  CONSULTATION_MODES,
+  MAX_ATTACHMENT_BYTES,
+} from "@/lib/expert-options"
+import {
+  SPECIALIZATION_OPTIONS,
+  specializationLabel,
+} from "@/components/team/team-labels"
 import { Check, ChevronsUpDown, Paperclip, X } from "lucide-react"
 import {
   EMAIL_INVALID_MESSAGE,
@@ -42,46 +52,6 @@ import {
   normalizeEmail,
 } from "@/lib/validators"
 import { toast } from "sonner"
-
-function humanize(value: string): string {
-  return value
-    .replace(/_/g, " ")
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
-}
-
-const AGE_GROUPS = [
-  "0-3",
-  "4-6",
-  "7-12",
-  "13-17",
-  "18-25",
-  "26-40",
-  "41-60",
-  "60+",
-  "all_ages",
-].map((value) => ({ value, label: humanize(value) }))
-
-const CONSULTATION_MODES = [
-  "online",
-  "at_dsc",
-  "home_visit",
-  "client_institution",
-  "hybrid",
-].map((value) => ({ value, label: humanize(value) }))
-
-const ACADEMIC_DEGREES = [
-  { value: "high_school_secondary", label: "High School / Secondary" },
-  { value: "diploma", label: "Diploma" },
-  { value: "associate_degree", label: "Associate Degree" },
-  { value: "bachelors_degree", label: "Bachelor's Degree" },
-  { value: "masters_degree", label: "Master's Degree" },
-  { value: "doctorate_phd", label: "Doctorate (PhD)" },
-  { value: "professional_degree", label: "Professional Degree" },
-  { value: "postdoctoral_fellowship", label: "Postdoctoral / Fellowship" },
-  { value: "other", label: "Other" },
-]
 
 export function ExpertApplicationForm({
   onSuccess,
@@ -108,7 +78,7 @@ export function ExpertApplicationForm({
   const [whatsappCountryCode, setWhatsappCountryCode] = useState("")
   const [whatsappNumber, setWhatsappNumber] = useState("")
   const [ageGroup, setAgeGroup] = useState<string[]>([])
-  const [specialization, setSpecialization] = useState("")
+  const [specialization, setSpecialization] = useState<string[]>([])
   const [consultationMode, setConsultationMode] = useState("")
   const [fee, setFee] = useState("")
   const [availability, setAvailability] = useState("")
@@ -215,7 +185,7 @@ export function ExpertApplicationForm({
 
     const totalSize =
       files.reduce((sum, f) => sum + f.size, 0) + (profilePhoto?.size ?? 0)
-    if (totalSize > 35 * 1024 * 1024) {
+    if (totalSize > MAX_ATTACHMENT_BYTES) {
       setError(
         t(
           {
@@ -288,7 +258,7 @@ export function ExpertApplicationForm({
         fieldOfStudy ? `<p><strong>${emailLabels.fieldOfStudy}:</strong> ${fieldOfStudy}</p>` : "",
         whatsappNumber ? `<p><strong>${emailLabels.whatsapp}:</strong> ${whatsappCountryCode} ${whatsappNumber}</p>` : "",
         ageGroup.length ? `<p><strong>${emailLabels.ageGroup}:</strong> ${AGE_GROUPS.filter((o) => ageGroup.includes(o.value)).map((o) => o.label).join(", ")}</p>` : "",
-        specialization.length ? `<p><strong>${emailLabels.specialization}:</strong> ${specialization}}</p>` : "",
+        specialization.length ? `<p><strong>${emailLabels.specialization}:</strong> ${specialization.map((v) => specializationLabel(v, lang)).join(", ")}}</p>` : "",
         consultationMode ? `<p><strong>${emailLabels.consultationMode}:</strong> ${CONSULTATION_MODES.find((o) => o.value === consultationMode)?.label ?? consultationMode}</p>` : "",
         fee ? `<p><strong>${emailLabels.fee}:</strong> ${fee}</p>` : "",
         availability ? `<p><strong>${emailLabels.availability}:</strong> ${availability}</p>` : "",
@@ -325,7 +295,9 @@ export function ExpertApplicationForm({
       extraFormData.set("field_of_study", fieldOfStudy)
 
       ageGroup.forEach((v) => extraFormData.append("age_group", v))
-      extraFormData.append("specialization_type", specialization)
+      specialization.forEach((v) =>
+        extraFormData.append("specialization_type", v)
+      )
       extraFormData.set("consultation_mode", consultationMode)
 
       files.forEach((file) => extraFormData.append("cv", file))
@@ -740,14 +712,95 @@ export function ExpertApplicationForm({
             <Label>
               {t({ en: "Field of Service Provision", ar: "مجال تقديم الخدمات" }, lang)}
             </Label>
-            <Input
-              value={specialization}
-              onChange={(e) => setSpecialization(e.target.value)}
-              placeholder={t(
-                { en: "e.g Assessment & Diagnosis", ar: "التقييم والتشخيص" },
-                lang
-              )}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  className="h-auto min-h-10 w-full justify-between"
+                >
+                  <div className="flex flex-wrap gap-1">
+                    {specialization.length > 0 ? (
+                      specialization.map((value) => (
+                        <Badge
+                          key={value}
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          {specializationLabel(value, lang)}
+                          <X
+                            className="h-3 w-3 cursor-pointer"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setSpecialization(
+                                specialization.filter((item) => item !== value)
+                              )
+                            }}
+                          />
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t(
+                          {
+                            en: "Select the services you provide...",
+                            ar: "اختر الخدمات التي تقدمها...",
+                          },
+                          lang
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="start">
+                <Command>
+                  <CommandInput
+                    placeholder={t(
+                      { en: "Search services...", ar: "البحث عن الخدمات..." },
+                      lang
+                    )}
+                  />
+                  <CommandList>
+                    <CommandEmpty>
+                      {t(
+                        { en: "No service found.", ar: "لم يتم العثور على خدمة." },
+                        lang
+                      )}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {SPECIALIZATION_OPTIONS.map((option) => (
+                        <CommandItem
+                          key={option.value}
+                          value={option.label.en}
+                          onSelect={() =>
+                            setSpecialization(
+                              specialization.includes(option.value)
+                                ? specialization.filter(
+                                    (item) => item !== option.value
+                                  )
+                                : [...specialization, option.value]
+                            )
+                          }
+                        >
+                          <Check
+                            className={cn(
+                              "me-2 h-4 w-4",
+                              specialization.includes(option.value)
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {t(option.label, lang)}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">
