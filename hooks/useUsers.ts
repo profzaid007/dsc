@@ -64,6 +64,26 @@ export function useUsers() {
     }
   }
 
+  /**
+   * Sets a new password on a user's auth record. PocketBase stores only the
+   * hash, so the admin has to communicate the plaintext out of band. Note this
+   * does not revoke the user's existing sessions.
+   */
+  const resetPassword = async (id: string, password: string) => {
+    try {
+      const updated = await pb.collection("users").update(id, {
+        password,
+        passwordConfirm: password,
+      })
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? (updated as unknown as User) : u))
+      )
+    } catch (error) {
+      console.error("Failed to reset password:", error)
+      throw error
+    }
+  }
+
   const getDeletionBlockers = async (id: string) => {
     const [userCases, expertAssignments] = await Promise.all([
       pb.collection("cases").getFullList({ filter: `user = "${id}"` }),
@@ -116,6 +136,7 @@ export function useUsers() {
     isLoading,
     addUser,
     updateUser,
+    resetPassword,
     deleteUser,
     getDeletionBlockers,
     refresh,

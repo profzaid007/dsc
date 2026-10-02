@@ -3,6 +3,7 @@
 import { use, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useUsers } from "@/hooks/useUsers"
+import { useAuth } from "@/hooks/useAuth"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
 import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"
+import { ResetPasswordDialog } from "@/components/admin/ResetPasswordDialog"
 import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton"
 import { UserProfileView } from "@/components/profile/UserProfileView"
 import { UserProfileEditor } from "@/components/profile/UserProfileEditor"
@@ -63,6 +65,7 @@ import {
 import {
   ArrowLeft,
   FolderKanban,
+  KeyRound,
   Plus,
   Eye,
   Trash2,
@@ -100,6 +103,7 @@ export default function AdminUserDetailPage({
   const {
     users,
     isLoading: isUsersLoading,
+    resetPassword,
     deleteUser,
     getDeletionBlockers,
     refresh,
@@ -122,6 +126,9 @@ export default function AdminUserDetailPage({
     grade: "",
     notes: "",
   })
+
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteBlockers, setDeleteBlockers] = useState<{
@@ -155,6 +162,14 @@ export default function AdminUserDetailPage({
     : ""
 
   const userCases = profiles.filter((p) => p.user === userId)
+
+  // An admin cannot reset a super admin's password, and neither should anyone
+  // reset their own here — the self-serve reset flow covers that.
+  const { currentUser, isSuperAdmin } = useAuth()
+  const canResetPassword =
+    Boolean(user) &&
+    user!.id !== currentUser?.id &&
+    (isSuperAdmin || user!.role !== "super_admin")
 
   const startEditing = () => {
     if (!user) return
@@ -226,6 +241,25 @@ export default function AdminUserDetailPage({
       }
     } finally {
       setIsExpertSaving(false)
+    }
+  }
+
+  const handleResetPassword = async (password: string) => {
+    setIsResettingPassword(true)
+    try {
+      await resetPassword(userId, password)
+      toast.success(
+        t(
+          {
+            en: "Password reset. Share the new password with the user directly.",
+            ar: "تم تغيير كلمة المرور. شارك الكلمة الجديدة مع المستخدم مباشرة.",
+          },
+          lang
+        )
+      )
+      setShowResetPasswordDialog(false)
+    } finally {
+      setIsResettingPassword(false)
     }
   }
 
@@ -346,6 +380,16 @@ export default function AdminUserDetailPage({
           <h1 className="text-2xl font-bold text-primary">{user.name}</h1>
           <p className="text-muted-foreground">{user.email}</p>
         </div>
+        {canResetPassword && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowResetPasswordDialog(true)}
+          >
+            <KeyRound className="me-1 h-4 w-4" />
+            {t({ en: "Reset Password", ar: "تغيير كلمة المرور" }, lang)}
+          </Button>
+        )}
         {user.role !== "super_admin" && (
           <Button
             variant="destructive"
@@ -693,6 +737,14 @@ export default function AdminUserDetailPage({
           </Card>
         </div>
       )}
+
+      <ResetPasswordDialog
+        user={user}
+        open={showResetPasswordDialog}
+        isSaving={isResettingPassword}
+        onClose={() => setShowResetPasswordDialog(false)}
+        onSubmit={handleResetPassword}
+      />
 
       {/* Delete User Dialog */}
       <Dialog
