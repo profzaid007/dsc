@@ -78,6 +78,9 @@ interface ExpertProfileEditorProps {
   isSaving: boolean
   onCancel: () => void
   onSubmit: () => void
+  /** Overrides the heading when an admin edits someone else's profile. */
+  title?: string
+  subtitle?: string
 }
 
 export function ExpertProfileEditor({
@@ -89,6 +92,8 @@ export function ExpertProfileEditor({
   isSaving,
   onCancel,
   onSubmit,
+  title,
+  subtitle,
 }: ExpertProfileEditorProps) {
   const { lang } = useLang()
   const photoInputRef = useRef<HTMLInputElement>(null)
@@ -153,16 +158,17 @@ export function ExpertProfileEditor({
     >
       <div>
         <h1 className="text-2xl font-bold text-primary">
-          {t({ en: "Edit Profile", ar: "تعديل الملف الشخصي" }, lang)}
+          {title ?? t({ en: "Edit Profile", ar: "تعديل الملف الشخصي" }, lang)}
         </h1>
         <p className="text-muted-foreground">
-          {t(
-            {
-              en: "Update the details you submitted when you applied.",
-              ar: "حدّث البيانات التي أدخلتها عند التقديم.",
-            },
-            lang
-          )}
+          {subtitle ??
+            t(
+              {
+                en: "Update the details you submitted when you applied.",
+                ar: "حدّث البيانات التي أدخلتها عند التقديم.",
+              },
+              lang
+            )}
         </p>
       </div>
 

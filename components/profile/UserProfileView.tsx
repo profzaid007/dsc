@@ -1,6 +1,7 @@
 "use client"
 
-import { FileText, Mail, MapPin, UserRound } from "lucide-react"
+import { FileText, Mail, MapPin, Pencil, UserRound } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { t } from "@/lib/i18n"
@@ -37,9 +38,12 @@ function linkHref(value: string): string {
 export function UserProfileView({
   user,
   profile,
+  onEdit,
 }: {
   user: User
   profile: AnyUserProfile | null
+  /** Renders an edit control in the hero; omitted when the view is read-only. */
+  onEdit?: () => void
 }) {
   const { lang } = useLang()
 
@@ -83,6 +87,17 @@ export function UserProfileView({
     <div className="space-y-6">
       <ProfileHero
         name={user.name}
+        action={
+          onEdit ? (
+            <Button
+              onClick={onEdit}
+              className="bg-white text-primary hover:bg-white/90"
+            >
+              <Pencil className="me-2 h-4 w-4" />
+              {t({ en: "Edit Profile", ar: "تعديل الملف" }, lang)}
+            </Button>
+          ) : undefined
+        }
         meta={
           <>
             <span className="inline-flex items-center gap-1.5">

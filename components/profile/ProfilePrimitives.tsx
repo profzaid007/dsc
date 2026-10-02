@@ -104,6 +104,8 @@ export interface ProfileHeroProps {
   badges?: ProfileHeroBadge[]
   /** Muted line at the bottom, e.g. a creation date. */
   footer?: React.ReactNode
+  /** Top-right control, e.g. an edit button when the view is embedded. */
+  action?: React.ReactNode
 }
 
 /**
@@ -117,6 +119,7 @@ export function ProfileHero({
   chip,
   badges,
   footer,
+  action,
 }: ProfileHeroProps) {
   const badgeList = badges ?? []
 
@@ -172,6 +175,8 @@ export function ProfileHero({
 
           {footer && <div className="mt-3">{footer}</div>}
         </div>
+
+        {action && <div className="shrink-0">{action}</div>}
       </div>
     </div>
   )

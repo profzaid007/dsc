@@ -114,7 +114,7 @@ export function ExpertProfileView({
                 )}
             </p>
           </div>
-          {onEdit && (
+          {onEdit && !hideHeading && (
             <Button onClick={onEdit}>
               <Pencil className="me-2 h-4 w-4" />
               {t({ en: "Edit Profile", ar: "تعديل الملف" }, lang)}
@@ -127,6 +127,17 @@ export function ExpertProfileView({
       <ProfileHero
         name={name}
         photoUrl={photoUrl}
+        action={
+          onEdit && hideHeading ? (
+            <Button
+              onClick={onEdit}
+              className="bg-white text-primary hover:bg-white/90"
+            >
+              <Pencil className="me-2 h-4 w-4" />
+              {t({ en: "Edit Profile", ar: "تعديل الملف" }, lang)}
+            </Button>
+          ) : undefined
+        }
         meta={
           <>
             <span className="inline-flex items-center gap-1.5">

@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
-import pb, { getErrorMessage } from "@/lib/pb"
+import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
+import { t } from "@/lib/i18n"
+import { toast } from "sonner"
 import {
   Card,
   CardContent,
@@ -19,9 +21,21 @@ import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"
 import { ProfileSkeleton } from "@/components/profile/ProfileSkeleton"
 import { UserProfileView } from "@/components/profile/UserProfileView"
+import { UserProfileEditor } from "@/components/profile/UserProfileEditor"
 import { ExpertProfileView } from "@/components/expert/ExpertProfileView"
-import { useUserProfileRecord } from "@/hooks/useUserProfileRecord"
-import type { ExpertProfile } from "@/types/expert"
+import { ExpertProfileEditor } from "@/components/expert/ExpertProfileEditor"
+import {
+  draftFromUserProfile,
+  useUserProfileRecord,
+  type UserProfileDraft,
+} from "@/hooks/useUserProfileRecord"
+import {
+  draftFromProfile,
+  profileFileUrl,
+  profilePhotoName,
+  saveExpertProfileFor,
+} from "@/hooks/useExpertProfile"
+import type { ExpertProfile, ExpertProfileDraft } from "@/types/expert"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -88,10 +102,16 @@ export default function AdminUserDetailPage({
     isLoading: isUsersLoading,
     deleteUser,
     getDeletionBlockers,
+    refresh,
   } = useUsers()
   const { profiles, isLoading: isProfilesLoading, refresh: refreshProfiles } = useProfiles()
 
   const [activeTab, setActiveTab] = useState("overview")
+  const [isEditing, setIsEditing] = useState(false)
+  const [draft, setDraft] = useState<UserProfileDraft | null>(null)
+  const [expertDraft, setExpertDraft] = useState<ExpertProfileDraft | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [isExpertSaving, setIsExpertSaving] = useState(false)
   const [showAddCaseModal, setShowAddCaseModal] = useState(false)
   const [isSubmittingCase, setIsSubmittingCase] = useState(false)
   const [caseFormError, setCaseFormError] = useState<string | null>(null)
@@ -119,7 +139,10 @@ export default function AdminUserDetailPage({
     profile: roleProfile,
     fileToken: roleFileToken,
     isLoading: isRoleProfileLoading,
+    isSaving: isRoleSaving,
     loadError: roleLoadError,
+    reload: reloadRoleProfile,
+    save: saveRoleProfile,
   } = useUserProfileRecord(userId, user?.role)
 
   const expertProfile =
@@ -127,7 +150,84 @@ export default function AdminUserDetailPage({
       ? (roleProfile as unknown as ExpertProfile | null)
       : null
 
+  const expertPhotoUrl = expertProfile
+    ? profileFileUrl(expertProfile, profilePhotoName(expertProfile), roleFileToken)
+    : ""
+
   const userCases = profiles.filter((p) => p.user === userId)
+
+  const startEditing = () => {
+    if (!user) return
+    setFieldErrors({})
+    if (user.role === "expert") {
+      setExpertDraft(draftFromProfile(expertProfile, user.name))
+    } else {
+      setDraft(draftFromUserProfile(user, roleProfile))
+    }
+    setIsEditing(true)
+  }
+
+  const cancelEditing = () => {
+    setDraft(null)
+    setExpertDraft(null)
+    setFieldErrors({})
+    setIsEditing(false)
+  }
+
+  const handleSubmit = async () => {
+    if (!user) return
+
+    setFieldErrors({})
+    const isExpert = user.role === "expert"
+    try {
+      if (isExpert && expertDraft) {
+        if (!expertDraft.name.trim()) {
+          setFieldErrors({
+            name: t({ en: "This field is required.", ar: "هذا الحقل مطلوب." }, lang),
+          })
+          return
+        }
+        // The expert editor writes expert_profiles itself, so the saving flag
+        // is tracked here rather than by useUserProfileRecord.
+        setIsExpertSaving(true)
+        await saveExpertProfileFor(expertDraft, user.id, expertProfile?.id)
+      } else if (draft) {
+        if (!draft.name.trim()) {
+          setFieldErrors({
+            name: t({ en: "This field is required.", ar: "هذا الحقل مطلوب." }, lang),
+          })
+          return
+        }
+        await saveRoleProfile(draft)
+      }
+      toast.success(
+        t({ en: "Profile updated successfully.", ar: "تم تحديث الملف بنجاح." }, lang)
+      )
+      cancelEditing()
+      // Both writers return the saved row, but refreshing keeps the view honest
+      // about generated values (updated timestamps, stored filenames).
+      await reloadRoleProfile()
+      refresh()
+    } catch (error) {
+      const errors = getFieldErrors(error, lang)
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors)
+      } else {
+        toast.error(
+          getErrorMessage(error) ||
+            t(
+              {
+                en: "Failed to save the profile. Please try again.",
+                ar: "تعذّر حفظ الملف. يرجى المحاولة مرة أخرى.",
+              },
+              lang
+            )
+        )
+      }
+    } finally {
+      setIsExpertSaving(false)
+    }
+  }
 
   const handleDeleteClick = async () => {
     setShowDeleteDialog(true)
@@ -294,6 +394,36 @@ export default function AdminUserDetailPage({
             <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
               {roleLoadError}
             </div>
+          ) : isEditing && user.role === "expert" && expertDraft ? (
+            <ExpertProfileEditor
+              draft={expertDraft}
+              onChange={setExpertDraft}
+              email={user.email}
+              photoUrl={expertPhotoUrl}
+              fieldErrors={fieldErrors}
+              isSaving={isExpertSaving}
+              title={t({ en: "Edit Expert Profile", ar: "تعديل ملف الخبير" }, lang)}
+              subtitle={t(
+                {
+                  en: `Update the details ${user.name} submitted when they applied.`,
+                  ar: `حدّث البيانات التي أدخلها ${user.name} عند التقديم.`,
+                },
+                lang
+              )}
+              onCancel={cancelEditing}
+              onSubmit={handleSubmit}
+            />
+          ) : isEditing && draft ? (
+            <UserProfileEditor
+              user={user}
+              profile={roleProfile}
+              draft={draft}
+              onChange={setDraft}
+              fieldErrors={fieldErrors}
+              isSaving={isRoleSaving}
+              onCancel={cancelEditing}
+              onSubmit={handleSubmit}
+            />
           ) : user.role === "expert" ? (
             <ExpertProfileView
               name={user.name}
@@ -304,9 +434,10 @@ export default function AdminUserDetailPage({
               memberSinceLabel={
                 lang === "ar" ? "مقدم الطلب منذ" : "Applied"
               }
+              onEdit={startEditing}
             />
           ) : (
-            <UserProfileView user={user} profile={roleProfile} />
+            <UserProfileView user={user} profile={roleProfile} onEdit={startEditing} />
           )}
         </TabsContent>
 

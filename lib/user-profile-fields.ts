@@ -15,7 +15,11 @@ import {
 } from "lucide-react"
 import type { BilingualString, Lang } from "@/types/form"
 import { formatDate } from "@/lib/format-date"
-import { organizationTypeLabel } from "@/lib/organization-types"
+import {
+  ORGANIZATION_TYPES,
+  organizationTypeLabel,
+} from "@/lib/organization-types"
+import { COUNTRY_CODES } from "@/lib/country-codes"
 import type { UserRole } from "@/types/user"
 
 /** How a stored value should be rendered in a profile row. */
@@ -26,6 +30,14 @@ export type FieldFormat =
   | "organizationType"
   | "url"
 
+/** Which control the editor should render for a field. */
+export type FieldInput =
+  | "text"
+  | "textarea"
+  | "date"
+  | "select"
+  | "url"
+
 export interface ProfileField {
   /** Key on the stored profile record. */
   field: string
@@ -34,6 +46,10 @@ export interface ProfileField {
   format?: FieldFormat
   /** Rendered in a full-width block instead of a grid row. */
   block?: boolean
+  /** Editor control. Defaults to a plain text input. */
+  input?: FieldInput
+  /** Choices for a select control. */
+  options?: SelectOption[]
 }
 
 export interface ProfileSection {
@@ -43,10 +59,21 @@ export interface ProfileSection {
   fields: ProfileField[]
 }
 
-const GENDERS: Record<string, BilingualString> = {
-  male: { en: "Male", ar: "ذكر" },
-  female: { en: "Female", ar: "أنثى" },
+/** Selectable values, keyed by the string stored in PocketBase. */
+export interface SelectOption {
+  value: string
+  label: BilingualString
 }
+
+export const GENDER_OPTIONS: SelectOption[] = [
+  { value: "male", label: { en: "Male", ar: "ذكر" } },
+  { value: "female", label: { en: "Female", ar: "نث" } },
+  { value: "other", label: { en: "Other", ar: "آخر" } },
+]
+
+const GENDER_LABELS: Record<string, BilingualString> = Object.fromEntries(
+  GENDER_OPTIONS.map((option) => [option.value, option.label])
+)
 
 /** Applies a field's formatter to a raw stored value. */
 export function formatFieldValue(
@@ -60,7 +87,7 @@ export function formatFieldValue(
     case "date":
       return formatDate(trimmed)
     case "gender":
-      return GENDERS[trimmed]?.[lang] ?? trimmed
+      return GENDER_LABELS[trimmed]?.[lang] ?? trimmed
     case "organizationType":
       return organizationTypeLabel(trimmed, lang)
     default:
@@ -74,8 +101,18 @@ export const ACCOUNT_SECTION: ProfileSection = {
   title: { en: "Account", ar: "الحساب" },
   description: { en: "Sign-in and access details", ar: "بيانات الدخول والوصول" },
   fields: [
-    { field: "name", label: { en: "Name", ar: "الاسم" }, icon: UserIcon },
-    { field: "email", label: { en: "Email", ar: "البريد الإلكتروني" }, icon: Mail },
+    {
+      field: "name",
+      label: { en: "Name", ar: "الاسم" },
+      icon: UserIcon,
+      block: true,
+    },
+    {
+      field: "email",
+      label: { en: "Email", ar: "البريد الإلكتروني" },
+      icon: Mail,
+      block: true,
+    },
     {
       field: "contact_number",
       label: { en: "Contact Number", ar: "رقم الاتصال" },
@@ -105,14 +142,29 @@ const ORGANIZATION_SECTION: ProfileSection = {
       label: { en: "Organization Type", ar: "نوع المنشأة" },
       icon: Sparkles,
       format: "organizationType",
+      input: "select",
+      options: ORGANIZATION_TYPES.map((type) => ({
+        value: type.value,
+        label: type.label,
+      })),
     },
     { field: "city", label: { en: "City", ar: "المدينة" }, icon: MapPin },
-    { field: "country", label: { en: "Country", ar: "الدولة" }, icon: Globe },
+    {
+      field: "country",
+      label: { en: "Country", ar: "الدولة" },
+      icon: Globe,
+      input: "select",
+      options: COUNTRY_CODES.map((country) => ({
+        value: country.label.en,
+        label: country.label,
+      })),
+    },
     {
       field: "website",
       label: { en: "Website", ar: "الموقع الإلكتروني" },
       icon: Globe,
       format: "url",
+      input: "url",
     },
   ],
 }
@@ -156,17 +208,25 @@ const INDIVIDUAL_SECTION: ProfileSection = {
       label: { en: "Gender", ar: "الجنس" },
       icon: UserIcon,
       format: "gender",
+      input: "select",
+      options: GENDER_OPTIONS,
     },
     {
       field: "date_of_birth",
       label: { en: "Date of Birth", ar: "تاريخ الميلاد" },
       icon: Baby,
       format: "date",
+      input: "date",
     },
     {
       field: "country_of_residence",
       label: { en: "Country of Residence", ar: "بلد الإقامة" },
       icon: Globe,
+      input: "select",
+      options: COUNTRY_CODES.map((country) => ({
+        value: country.label.en,
+        label: country.label,
+      })),
     },
   ],
 }

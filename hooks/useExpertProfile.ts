@@ -104,6 +104,73 @@ export function profilePhotoName(profile: ExpertProfile | null): string {
   return toText(profile?.profile_photo);
 }
 
+/**
+ * Builds the expert_profiles payload for a draft. Shared by the expert's own
+ * save and the admin's editor so the two cannot drift on field names or the
+ * multi-select encoding.
+ */
+function expertProfileFormData(
+  draft: ExpertProfileDraft,
+  userId: string,
+  profileId?: string
+): FormData {
+  const formData = new FormData();
+  formData.set("country_of_residence", draft.countryOfResidence.trim());
+  formData.set("city", draft.city.trim());
+  formData.set("whatsapp_country_code", draft.whatsappCountryCode.trim());
+  formData.set("whatsapp_number", draft.whatsappNumber.trim());
+  formData.set("highest_academic_degree", draft.highestAcademicDegree);
+  formData.set("degree_title", draft.degreeTitle.trim());
+  formData.set("field_of_study", draft.fieldOfStudy.trim());
+
+  // Both are multi-select fields, so each value is appended separately. A
+  // comma-joined string would be rejected by the server.
+  draft.ageGroup.forEach((value) => formData.append("age_group", value));
+  draft.specialization.forEach((value) =>
+    formData.append("specialization_type", value)
+  );
+
+  formData.set("consultation_mode", draft.consultationMode);
+  formData.set("fee", draft.fee.trim());
+  formData.set("availability", draft.availability.trim());
+  formData.set("bio", draft.bio.trim());
+
+  // An empty string clears a single-file field in PocketBase.
+  if (draft.removePhoto) {
+    formData.set("profile_photo", "");
+  } else if (draft.newPhoto) {
+    formData.append("profile_photo", draft.newPhoto);
+  }
+
+  // Re-sending stored filenames preserves the documents on the record;
+  // anything removed is simply left out.
+  draft.keptCv.forEach((filename) => formData.append("cv", filename));
+  draft.newCv.forEach((file) => formData.append("cv", file));
+
+  if (!profileId) {
+    formData.set("user", userId);
+  }
+  return formData;
+}
+
+/**
+ * Writes an expert profile on behalf of a user. Works for the signed-in expert
+ * and for an admin editing someone else's application.
+ */
+export async function saveExpertProfileFor(
+  draft: ExpertProfileDraft,
+  userId: string,
+  profileId?: string
+): Promise<ExpertProfile> {
+  await pb.collection("users").update(userId, { name: draft.name.trim() });
+  const formData = expertProfileFormData(draft, userId, profileId);
+  const collection = pb.collection("expert_profiles");
+  const saved = profileId
+    ? await collection.update(profileId, formData)
+    : await collection.create(formData);
+  return saved as unknown as ExpertProfile;
+}
+
 export function useExpertProfile(userId?: string) {
   const [profile, setProfile] = useState<ExpertProfile | null>(null);
   const [fileToken, setFileToken] = useState("");
@@ -161,62 +228,11 @@ export function useExpertProfile(userId?: string) {
       if (!userId) throw new Error("No signed-in expert");
       setIsSaving(true);
       try {
-        // The users row is updated first on purpose: PocketBase syncs the
-        // auth store on a self-update, which keeps the sidebar name in sync.
-        await pb.collection("users").update(userId, {
-          name: draft.name.trim(),
-        });
-
-        const formData = new FormData();
-        formData.set(
-          "country_of_residence",
-          draft.countryOfResidence.trim()
-        );
-        formData.set("city", draft.city.trim());
-        formData.set(
-          "whatsapp_country_code",
-          draft.whatsappCountryCode.trim()
-        );
-        formData.set("whatsapp_number", draft.whatsappNumber.trim());
-        formData.set(
-          "highest_academic_degree",
-          draft.highestAcademicDegree
-        );
-        formData.set("degree_title", draft.degreeTitle.trim());
-        formData.set("field_of_study", draft.fieldOfStudy.trim());
-        draft.ageGroup.forEach((value) => formData.append("age_group", value));
-        // The field is a multi-select, so each value is appended separately the same
-    // way age_group is. A comma-joined string would be rejected by the server.
-    draft.specialization.forEach((value) =>
-      formData.append("specialization_type", value)
-    );
-        formData.set("consultation_mode", draft.consultationMode);
-        formData.set("fee", draft.fee.trim());
-        formData.set("availability", draft.availability.trim());
-        formData.set("bio", draft.bio.trim());
-
-        // An empty string clears a single-file field in PocketBase.
-        if (draft.removePhoto) {
-          formData.set("profile_photo", "");
-        } else if (draft.newPhoto) {
-          formData.append("profile_photo", draft.newPhoto);
-        }
-
-        // Re-sending stored filenames preserves the documents on the record;
-        // anything the expert removed is simply left out.
-        draft.keptCv.forEach((filename) => formData.append("cv", filename));
-        draft.newCv.forEach((file) => formData.append("cv", file));
-
-        const collection = pb.collection("expert_profiles");
-        if (!profile?.id) {
-          formData.set("user", userId);
-        }
-        const saved = profile?.id
-          ? await collection.update(profile.id, formData)
-          : await collection.create(formData);
-
-        setProfile(saved as unknown as ExpertProfile);
-        return saved as unknown as ExpertProfile;
+        // Updating users first syncs the PocketBase auth store on a self-update,
+        // which keeps the sidebar name in step with the profile.
+        const saved = await saveExpertProfileFor(draft, userId, profile?.id);
+        setProfile(saved);
+        return saved;
       } finally {
         setIsSaving(false);
       }
