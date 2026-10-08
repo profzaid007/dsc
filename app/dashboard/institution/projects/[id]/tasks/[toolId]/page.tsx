@@ -226,7 +226,7 @@ export default function TakeSurveyToolPage({
   }
 
   if (profile.status && profile.status !== "active" && !isAdminOrExpert) {
-    return <PaymentGate profile={profile} />
+    return <PaymentGate profile={profile} noun="project" />
   }
 
   const handleAnswer = (questionId: string, value: unknown) => {

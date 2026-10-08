@@ -55,9 +55,11 @@ function Panel({
 
 export function PaymentGate({
   profile,
+  noun = "case",
   children,
 }: {
   profile: Profile
+  noun?: "case" | "project"
   children?: React.ReactNode
 }) {
   const { lang } = useLang()
@@ -115,12 +117,18 @@ export function PaymentGate({
       <Panel
         icon={<Clock className="h-6 w-6 text-primary" />}
         title={
-          lang === "ar" ? "حالتك قيد المراجعة" : "Your case is being reviewed"
+          lang === "ar"
+            ? noun === "project" ? "مشروعك قيد المراجعة" : "حالتك قيد المراجعة"
+            : noun === "project" ? "Your project is being reviewed" : "Your case is being reviewed"
         }
         description={
           lang === "ar"
-            ? "نحن نجهز تفاصيل الدفع لحالتك. ستصلك رسالة عند توفرها."
-            : "We are preparing the payment details for your case. You will be notified once they are ready."
+            ? noun === "project"
+              ? "نحن نجهز تفاصيل الدفع لمشروعك. ستصلك رسالة عند توفرها."
+              : "نحن نجهز تفاصيل الدفع لحالتك. ستصلك رسالة عند توفرها."
+            : noun === "project"
+              ? "We are preparing the payment details for your project. You will be notified once they are ready."
+              : "We are preparing the payment details for your case. You will be notified once they are ready."
         }
       />
     )
@@ -132,8 +140,8 @@ export function PaymentGate({
         icon={<ReceiptText className="h-6 w-6 text-primary" />}
         title={
           lang === "ar"
-            ? "مطلوب الدفع لإتمام الحالة"
-            : "Payment required to activate your case"
+            ? noun === "project" ? "مطلوب الدفع لإتمام المشروع" : "مطلوب الدفع لإتمام الحالة"
+            : noun === "project" ? "Payment required to activate your project" : "Payment required to activate your case"
         }
         description={
           lang === "ar"
@@ -280,8 +288,12 @@ export function PaymentGate({
         }
         description={
           lang === "ar"
-            ? "تم استلام إيصالك ونحن نتحقق منه. سيتم تفعيل حالتك فور التأكيد."
-            : "We received your receipt and are verifying it. Your case will be activated once confirmed."
+            ? noun === "project"
+              ? "تم استلام إيصالك ونحن نتحقق منه. سيتم تفعيل مشروعك فور التأكيد."
+              : "تم استلام إيصالك ونحن نتحقق منه. سيتم تفعيل حالتك فور التأكيد."
+            : noun === "project"
+              ? "We received your receipt and are verifying it. Your project will be activated once confirmed."
+              : "We received your receipt and are verifying it. Your case will be activated once confirmed."
         }
       >
         {slipUrl && (

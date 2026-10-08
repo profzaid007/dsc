@@ -28,7 +28,9 @@ export function ProfileCard({ profile, hrefPrefix = "/dashboard/cases" }: Profil
             <span>{profile.date_of_birth ? formatDate(profile.date_of_birth) : "—"}</span>
           </div>
           <div className="mt-2 text-sm text-muted-foreground capitalize">
-            {profile.gender} | {profile.grade}
+            {profile.gender
+              ? `${profile.gender} | ${profile.grade}`
+              : profile.grade}
           </div>
         </CardContent>
       </Card>

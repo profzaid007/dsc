@@ -113,7 +113,7 @@ export default function ProfileDetailPage({
   }
 
   return (
-    <PaymentGate profile={profile}>
+    <PaymentGate profile={profile} noun="project">
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -223,7 +223,7 @@ export default function ProfileDetailPage({
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+                        {lang === "ar" ? "تاريخ البدء" : "Start Date"}
                       </span>
                       <span className="font-medium">
                         {profile.date_of_birth
@@ -233,23 +233,18 @@ export default function ProfileDetailPage({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        {lang === "ar" ? "الجنس" : "Gender"}
+                        {lang === "ar" ? "تاريخ الانتهاء" : "End Date"}
                       </span>
-                      <span className="font-medium capitalize">
-                        {profile.gender === "male"
-                          ? lang === "ar"
-                            ? "ذكر"
-                            : "male"
-                          : profile.gender === "female"
-                            ? lang === "ar"
-                              ? "أنثى"
-                              : "female"
-                            : "—"}
+                      <span className="font-medium">
+                        {(() => {
+                          const endDate = (profile.case_details as Record<string, unknown>)?.end_date
+                          return endDate ? formatDate(endDate as string) : "—"
+                        })()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        {lang === "ar" ? "الصف الدراسي" : "Grade"}
+                        {lang === "ar" ? "نوع المشروع" : "Project Type"}
                       </span>
                       <span className="font-medium capitalize">
                         {profile.grade || "—"}
@@ -261,7 +256,7 @@ export default function ProfileDetailPage({
                 {profile.notes && (
                   <Card className="lg:col-span-2">
                     <CardHeader>
-                      <CardTitle>{lang === "ar" ? "ملاحظات" : "Notes"}</CardTitle>
+                      <CardTitle>{lang === "ar" ? "الوصف" : "Description"}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground">{profile.notes}</p>
