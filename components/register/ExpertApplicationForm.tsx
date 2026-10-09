@@ -295,9 +295,9 @@ export function ExpertApplicationForm({
       extraFormData.set("field_of_study", fieldOfStudy)
 
       ageGroup.forEach((v) => extraFormData.append("age_group", v))
-      specialization.forEach((v) =>
-        extraFormData.append("specialization_type", v)
-      )
+      // specialization_type is a single text field now: store the selected
+      // option keys comma-separated (readers split on commas).
+      extraFormData.set("specialization_type", specialization.join(", "))
       extraFormData.set("consultation_mode", consultationMode)
 
       files.forEach((file) => extraFormData.append("cv", file))

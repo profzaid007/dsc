@@ -123,12 +123,12 @@ function expertProfileFormData(
   formData.set("degree_title", draft.degreeTitle.trim());
   formData.set("field_of_study", draft.fieldOfStudy.trim());
 
-  // Both are multi-select fields, so each value is appended separately. A
-  // comma-joined string would be rejected by the server.
+  // `age_group` is still a multi-select field, so each value is appended
+  // separately. `specialization_type` became a single text field: the chosen
+  // option keys are stored as one comma-separated string, which every reader
+  // (`toStringList`, team/approval `toList`) splits back into a list.
   draft.ageGroup.forEach((value) => formData.append("age_group", value));
-  draft.specialization.forEach((value) =>
-    formData.append("specialization_type", value)
-  );
+  formData.set("specialization_type", draft.specialization.join(", "));
 
   formData.set("consultation_mode", draft.consultationMode);
   formData.set("fee", draft.fee.trim());

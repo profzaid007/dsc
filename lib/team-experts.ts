@@ -22,7 +22,11 @@ function toList(value: unknown): string[] {
     );
   }
   if (typeof value === "string" && value.trim()) {
-    return [value.trim()];
+    // Text fields store arrays as comma-separated values.
+    return value
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
   }
   return [];
 }

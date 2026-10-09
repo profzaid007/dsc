@@ -10,7 +10,7 @@ export interface ExpertProfile {
   degree_title?: string;
   field_of_study?: string;
   age_group?: string[] | string;
-  /** Multi-select values; older rows may hold a single free-text entry. */
+  /** Stored as one comma-separated string of option keys (single text field). */
   specialization_type?: string[] | string;
   consultation_mode?: string;
   fee?: string | number;
@@ -36,7 +36,7 @@ export interface ExpertProfileDraft {
   degreeTitle: string;
   fieldOfStudy: string;
   ageGroup: string[];
-  /** Values for the `specialization_type` multi-select field. */
+  /** Option keys for `specialization_type`, stored comma-separated on save. */
   specialization: string[];
   consultationMode: string;
   fee: string;
