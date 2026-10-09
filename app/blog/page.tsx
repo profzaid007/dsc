@@ -86,9 +86,9 @@ export default async function BlogPage() {
         <div className="space-y-4">
           {posts.map((post, i) => (
             <Link key={post.id} href={`/blog/${post.slug}`}>
-              <Card className="group flex flex-row gap-5 p-4 mb-4 transition-all hover:shadow-md hover:-translate-y-0.5">
+              <Card className="group flex flex-col gap-5 p-4 mb-4 transition-all hover:shadow-md hover:-translate-y-0.5 sm:flex-row">
                 {thumbnailUrls[i] && (
-                  <div className="relative h-32 w-48 shrink-0 overflow-hidden rounded-lg">
+                  <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-lg sm:h-32 sm:w-48">
                     <Image
                       src={thumbnailUrls[i]!}
                       alt={localizedField(post, lang, "title")}
@@ -97,8 +97,8 @@ export default async function BlogPage() {
                     />
                   </div>
                 )}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex min-w-0 flex-col gap-2">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                     <Badge variant="secondary" className="capitalize">
                       {(() => {
                         const c = catMap.get(post.category)
