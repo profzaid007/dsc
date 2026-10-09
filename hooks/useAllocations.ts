@@ -34,7 +34,7 @@ export function useAllocations(caseId?: string) {
   const addAllocation = async (data: {
     case_id: string
     expert_id: string
-    role: CaseExpert["role"]
+    role_id: CaseExpert["role_id"]
   }) => {
     try {
       const newAllocation = await caseExpertsCollection.create(data)

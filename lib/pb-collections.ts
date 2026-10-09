@@ -884,21 +884,21 @@ export const blogCategoriesCollection = {
 export const caseExpertsCollection = {
   async getAll(): Promise<import("@/types/allocation").CaseExpert[]> {
     return pb.collection("case_experts").getFullList({
-      expand: "expert_id",
+      expand: "expert_id,role_id",
     })
   },
 
   async getByCase(caseId: string): Promise<import("@/types/allocation").CaseExpert[]> {
     return pb.collection("case_experts").getFullList({
       filter: `case_id = "${caseId}"`,
-      expand: "expert_id",
+      expand: "expert_id,role_id",
     })
   },
 
   async getByExpert(expertId: string): Promise<import("@/types/allocation").CaseExpert[]> {
     return pb.collection("case_experts").getFullList({
       filter: `expert_id = "${expertId}"`,
-      expand: "case_id",
+      expand: "case_id,role_id",
     })
   },
 
@@ -911,7 +911,7 @@ export const caseExpertsCollection = {
         .collection("case_experts")
         .getFirstListItem(
           `case_id = "${caseId}" && expert_id = "${expertId}"`,
-          { expand: "expert_id" }
+          { expand: "expert_id,role_id" }
         )
       return record as unknown as import("@/types/allocation").CaseExpert
     } catch {
@@ -970,44 +970,14 @@ export const rolesManagementCollection = {
   async delete(id: string): Promise<void> {
     await pb.collection("roles_management").delete(id)
   },
-
-  async getByName(
-    roleNameEn: string
-  ): Promise<import("@/types/expert-role").RolesManagement | null> {
-    try {
-      const record = await pb
-        .collection("roles_management")
-        .getFirstListItem(`role_name_en = "${roleNameEn}"`, {
-          expand: "tool_types",
-        })
-      return record as unknown as import("@/types/expert-role").RolesManagement
-    } catch {
-      return null
-    }
-  },
 }
 
-// Rename the role stored on existing case allocations when a role's English name changes
-export async function renameRoleInAllocations(
-  oldNameEn: string,
-  newNameEn: string
-): Promise<void> {
-  if (!oldNameEn || !newNameEn || oldNameEn === newNameEn) return
-  const records = await pb.collection("case_experts").getFullList({
-    filter: `role = "${oldNameEn.replace(/"/g, '\\"')}"`,
-  })
-  await Promise.all(
-    records.map((record) =>
-      pb.collection("case_experts").update(record.id, { role: newNameEn })
-    )
-  )
-}
-
-// Get allowed tool type IDs for a given expert role (matched by role_name_en)
-export async function getAllowedToolTypesForRole(
-  roleNameEn: string
+// Get allowed tool type IDs for a given expert role (matched by role record id)
+export async function getAllowedToolTypesForRoleId(
+  roleId: string
 ): Promise<string[]> {
-  const role = await rolesManagementCollection.getByName(roleNameEn)
+  if (!roleId) return []
+  const role = await rolesManagementCollection.getById(roleId)
   return role?.tool_types || []
 }
 
@@ -1016,11 +986,9 @@ export async function getAllowedToolTypesForExpert(
   expertId: string
 ): Promise<string[]> {
   const caseExperts = await caseExpertsCollection.getByExpert(expertId)
-  const roleNamesEn = [
-    ...new Set(caseExperts.map((ce) => ce.role).filter(Boolean)),
-  ]
+  const roleIds = [...new Set(caseExperts.map((ce) => ce.role_id).filter(Boolean))]
   const allowedSets = await Promise.all(
-    roleNamesEn.map((roleName) => getAllowedToolTypesForRole(roleName as string))
+    roleIds.map((roleId) => getAllowedToolTypesForRoleId(roleId as string))
   )
   return [...new Set(allowedSets.flat())]
 }
@@ -1030,12 +998,10 @@ export async function getAllowedToolTypesForCase(
   caseId: string
 ): Promise<string[]> {
   const caseExperts = await caseExpertsCollection.getByCase(caseId)
-  const roleNamesEn = [
-    ...new Set(caseExperts.map((ce) => ce.role).filter(Boolean)),
-  ]
+  const roleIds = [...new Set(caseExperts.map((ce) => ce.role_id).filter(Boolean))]
 
   const allowedSets = await Promise.all(
-    roleNamesEn.map((roleName) => getAllowedToolTypesForRole(roleName as string))
+    roleIds.map((roleId) => getAllowedToolTypesForRoleId(roleId as string))
   )
 
   return [...new Set(allowedSets.flat())]

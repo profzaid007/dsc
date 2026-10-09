@@ -139,6 +139,10 @@ const VALIDATION_CODE_MESSAGES: Record<string, BilingualString> = {
     en: "The value format is invalid.",
     ar: "تنسيق القيمة غير صالح.",
   },
+  validation_invalid_value: {
+    en: "The selected value is not valid.",
+    ar: "القيمة المحددة غير صالحة.",
+  },
 }
 
 const META_ERROR_KEYS = new Set(["status", "message", "data", "details"])

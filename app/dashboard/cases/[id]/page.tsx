@@ -10,7 +10,7 @@ import { useLang } from "@/lib/lang-context"
 import { getToolTypeLabel } from "@/lib/tool-types"
 import { formatDate } from "@/lib/format-date"
 import { caseExpertsCollection } from "@/lib/pb-collections"
-import { getAllowedToolTypesForRole } from "@/lib/pb-collections"
+import { getAllowedToolTypesForRoleId } from "@/lib/pb-collections"
 import { PaymentGate } from "@/components/cases/PaymentGate"
 import {
   Card,
@@ -86,9 +86,9 @@ export default function ProfileDetailPage({
           id,
           currentUser.id
         )
-        if (caseExpert?.role) {
-          setExpertRole(caseExpert.role)
-          const allowed = await getAllowedToolTypesForRole(caseExpert.role)
+        if (caseExpert?.role_id) {
+          setExpertRole(caseExpert.role_id)
+          const allowed = await getAllowedToolTypesForRoleId(caseExpert.role_id)
           setAllowedToolTypeIds(allowed)
         }
       } catch (error) {

@@ -76,8 +76,8 @@ import { Input } from "@/components/ui/input"
 interface AllocationRow {
   id?: string
   expert_id: string
-  /** Matches `role_name_en` of a roles_management record */
-  role: string
+  /** Relation to the `roles_management` record assigned to the expert */
+  role_id: string
 }
 
 function ExpertCombobox({
@@ -290,8 +290,7 @@ export default function AllocationsPage() {
       await updateRole(
         editingRole.id,
         roleNameEn,
-        roleNameAr,
-        editingRole.role_name_en
+        roleNameAr
       )
       await refreshAllocations()
       setEditRoleDialogOpen(false)
@@ -354,7 +353,7 @@ export default function AllocationsPage() {
       const loadedRows: AllocationRow[] = caseAllocations.map((a) => ({
         id: a.id,
         expert_id: a.expert_id,
-        role: a.role,
+        role_id: a.role_id,
       }))
       setRows(loadedRows)
       setOriginalRows(loadedRows)
@@ -374,7 +373,7 @@ export default function AllocationsPage() {
   const addRow = () => {
     setRows((prev) => [
       ...prev,
-      { expert_id: "", role: roleMgmtRoles[0]?.role_name_en ?? "" },
+      { expert_id: "", role_id: roleMgmtRoles[0]?.id ?? "" },
     ])
   }
 
@@ -396,7 +395,7 @@ export default function AllocationsPage() {
 
     // Validate rows
     const invalidRows = rows.filter(
-      (r) => !r.expert_id || !r.role
+      (r) => !r.expert_id || !r.role_id
     )
     if (invalidRows.length > 0) {
       alert(
@@ -422,7 +421,7 @@ export default function AllocationsPage() {
         const original = originalRows.find((o) => o.id === row.id)
         if (!original) return false
         return (
-          original.expert_id !== row.expert_id || original.role !== row.role
+          original.expert_id !== row.expert_id || original.role_id !== row.role_id
         )
       })
 
@@ -439,7 +438,7 @@ export default function AllocationsPage() {
             addAllocation({
               case_id: selectedCase,
               expert_id: row.expert_id,
-              role: row.role,
+              role_id: row.role_id,
             })
           )
         ),
@@ -448,7 +447,7 @@ export default function AllocationsPage() {
           addAllocation({
             case_id: selectedCase,
             expert_id: row.expert_id,
-            role: row.role,
+            role_id: row.role_id,
           })
         ),
       ])
@@ -663,9 +662,9 @@ export default function AllocationsPage() {
                         </TableCell>
                         <TableCell>
                           <Select
-                            value={row.role}
+                            value={row.role_id}
                             onValueChange={(value) =>
-                              updateRow(index, { role: value })
+                              updateRow(index, { role_id: value })
                             }
                           >
                             <SelectTrigger>
@@ -681,7 +680,7 @@ export default function AllocationsPage() {
                               {roleMgmtRoles.map((role) => (
                                 <SelectItem
                                   key={role.id}
-                                  value={role.role_name_en}
+                                  value={role.id}
                                 >
                                   {getRoleLabel(role)}
                                 </SelectItem>
@@ -749,7 +748,7 @@ export default function AllocationsPage() {
                   <TableBody>
                     {roleMgmtRoles.map((role) => {
                       const hasAssignments = allocations.some(
-                        (a) => a.role === role.role_name_en
+                        (a) => a.role_id === role.id
                       )
                       return (
                         <TableRow key={role.id}>
