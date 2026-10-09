@@ -33,19 +33,19 @@ export default async function PortalPage({ params }: PortalPageProps) {
 
   return (
     <div className="min-h-screen">
-      <section className="grid w-full min-h-[300px] lg:min-h-[600px] grid-cols-2">
-        <div className="flex items-center px-4 lg:px-12"
+      <section className="grid w-full min-h-[300px] grid-cols-1 lg:min-h-[600px] lg:grid-cols-2">
+        <div className="flex items-center px-5 py-8 sm:px-8 lg:px-12 lg:py-0"
              style={{ backgroundColor: portal.accent }}>
           <div className="max-w-lg">
-            <h2 className="mb-4 text-1xl lg:text-4xl font-bold tracking-tight text-white">
+            <h2 className="mb-4 text-center text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
               {t(portal.heroTitle, lang)}
             </h2>
-            <p className="mb-8 text-sm lg:text-xl text-white/80">
+            <p className="mb-6 text-center text-sm sm:text-base lg:mb-8 lg:text-xl text-white/80">
               {t(portal.heroText, lang)}
             </p>
-            <div className="flex flex-col items-start gap-3">
-              <a href={portal.ctaHref}>
-                <Button size="lg" className="px-4 py-3 text-xs lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg"
+            <div className="flex flex-col gap-4 text-center items-center justify-center">
+              <a href={portal.ctaHref} className="w-full sm:w-auto">
+                <Button size="lg" className="w-fit h-11 px-4 text-sm sm:w-auto lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg"
                         style={{ backgroundColor: "white", color: portal.accent }}>
                   {t(portal.ctaLabel, lang)}
                 </Button>
@@ -54,7 +54,7 @@ export default async function PortalPage({ params }: PortalPageProps) {
             </div>
           </div>
         </div>
-        <div className="relative overflow-hidden">
+        <div className="relative hidden overflow-hidden lg:block">
           <Image
             src={portal.banner}
             alt={t(portal.portalName, lang)}

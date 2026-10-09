@@ -25,7 +25,7 @@ export function PhilosophyButton({ philosophy }: PhilosophyButtonProps) {
       <DialogTrigger asChild>
         <Button
           size="lg"
-          className="px-4 py-3 text-xs font-semibold shadow-lg hover:bg-white/20 lg:px-15 lg:py-6 lg:text-base"
+          className="w-fit h-11 px-4 text-sm lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg"
           style={{
             backgroundColor: "rgba(255,255,255,0.15)",
             color: "white",
