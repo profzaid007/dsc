@@ -199,6 +199,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                maxLength={100}
                 autoComplete="name"
                 placeholder={t({ en: "Your name", ar: "اسمك" }, lang)}
               />
@@ -223,6 +224,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                <Input
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
+                maxLength={20}
                 autoComplete="tel"
                 inputMode="tel"
                 placeholder={t({ en: "Phone number", ar: "رقم الهاتف" }, lang)}
@@ -237,6 +239,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                 required
                 value={email}
                 onChange={setEmail}
+                maxLength={254}
                 placeholder="your@email.com"
               />
             </div>
@@ -300,6 +303,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                maxLength={2000}
                 placeholder={t(
                   { en: "Briefly describe what you need help with", ar: "صف بإيجاز ما تحتاج مساعدة فيه" },
                   lang

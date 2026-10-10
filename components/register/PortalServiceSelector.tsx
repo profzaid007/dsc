@@ -113,6 +113,7 @@ export function PortalServiceSelector({
             onChange={(e) =>
               onChange({ ...value, customCategory: e.target.value })
             }
+            maxLength={100}
             placeholder={t(
               { en: "Enter service type", ar: "أدخل اسم نوع الخدمة" },
               lang
@@ -137,6 +138,7 @@ export function PortalServiceSelector({
                   customSubCategory: "",
                 })
               }
+              maxLength={100}
               placeholder={t(
                 { en: "Enter issue type", ar: "أدخل اسم نوع المشكلة" },
                 lang
@@ -181,6 +183,7 @@ export function PortalServiceSelector({
             onChange={(e) =>
               onChange({ ...value, customSubCategory: e.target.value })
             }
+            maxLength={100}
             placeholder={t(
               { en: "Enter issue type", ar: "أدخل اسم نوع المشكلة" },
               lang
