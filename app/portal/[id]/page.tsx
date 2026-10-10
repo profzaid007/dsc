@@ -54,7 +54,7 @@ export default async function PortalPage({ params }: PortalPageProps) {
             </div>
           </div>
         </div>
-        <div className="relative hidden overflow-hidden lg:block">
+        <div className="relative order-first h-80 overflow-hidden sm:h-56 lg:order-none lg:h-auto">
           <Image
             src={portal.banner}
             alt={t(portal.portalName, lang)}
@@ -62,8 +62,12 @@ export default async function PortalPage({ params }: PortalPageProps) {
             className="object-cover object-[20%_center] lg:object-center"
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
-          <div className="absolute inset-0"
-               style={{ background: `linear-gradient(90deg, ${portal.accent}FF 0%, transparent 50%)` }} />
+          <div
+            className="absolute inset-0
+                       bg-[linear-gradient(0deg,var(--accent)_0%,transparent_50%)]
+                       lg:bg-[linear-gradient(90deg,var(--accent)_0%,transparent_50%)]"
+            style={{ "--accent": `${portal.accent}FF` } as React.CSSProperties}
+          />
         </div>
       </section>
 
