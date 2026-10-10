@@ -344,6 +344,7 @@ export default function ContactPage() {
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        maxLength={100}
                         autoComplete="name"
                         placeholder={t(
                           { en: "Your full name", ar: "اسمك الكامل" },
@@ -375,6 +376,7 @@ export default function ContactPage() {
                           required
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
+                          maxLength={20}
                           autoComplete="tel"
                           inputMode="tel"
                           placeholder={t(
@@ -397,6 +399,7 @@ export default function ContactPage() {
                         value={email}
                         onChange={setEmail}
                         required
+                        maxLength={254}
                         placeholder={t(
                           {
                             en: "your@email.com",
@@ -417,6 +420,7 @@ export default function ContactPage() {
                       <Textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
+                        maxLength={2000}
                         placeholder={t(
                           {
                             en: "How can we help you?",
