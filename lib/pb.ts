@@ -361,16 +361,22 @@ export function handlePocketBaseError(
       lang
     )
   }
-  return (
-    error?.message ||
-    t(
-      {
-        en: "An unexpected error occurred. Please try again.",
-        ar: "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
-      },
-      lang
-    )
-  )
+
+  const rawMessage = typeof error?.message === "string" ? error.message.trim() : ""
+  const isMeaningfulMessage =
+    rawMessage.length > 0 &&
+    rawMessage !== "[object Object]" &&
+    rawMessage !== "undefined" &&
+    rawMessage !== "null"
+  return isMeaningfulMessage
+    ? rawMessage
+    : t(
+        {
+          en: "An unexpected error occurred. Please try again.",
+          ar: "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+        },
+        lang
+      )
 }
 
 export function getErrorMessage(error: unknown, lang?: Lang): string {
