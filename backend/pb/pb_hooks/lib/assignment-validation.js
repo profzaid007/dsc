@@ -7,23 +7,19 @@ module.exports = (e) => {
     )
     if (expert.getString("role") !== "expert" || !expert.getBool("is_active"))
       throw new BadRequestError("Only active experts can be assigned.")
-    const role = e.record.getString("role").trim()
-    if (!role) throw new BadRequestError("Select an expert role.")
-    e.app.findFirstRecordByFilter(
-      "roles_management",
-      "role_name_en = {:role}",
-      { role }
-    )
+    const roleId = e.record.getString("role_id").trim()
+    if (!roleId) throw new BadRequestError("Select an expert role.")
+    e.app.findRecordById("roles_management", roleId)
     const duplicates = e.app.findRecordsByFilter(
       "case_experts",
-      "case_id = {:caseId} && expert_id = {:expert} && role = {:role} && id != {:id}",
+      "case_id = {:caseId} && expert_id = {:expert} && role_id = {:role} && id != {:id}",
       "",
       1,
       0,
       {
         caseId: e.record.getString("case_id"),
         expert: expert.id,
-        role,
+        role: roleId,
         id: e.record.id,
       }
     )

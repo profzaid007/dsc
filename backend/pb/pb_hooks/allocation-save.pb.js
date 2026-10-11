@@ -19,18 +19,14 @@ routerAdd(
       if (
         !row ||
         typeof row.expert_id !== "string" ||
-        typeof row.role !== "string"
+        typeof row.role_id !== "string"
       )
         throw new BadRequestError("Select an expert and role.")
       const expert = e.app.findRecordById("users", row.expert_id)
       if (expert.getString("role") !== "expert" || !expert.getBool("is_active"))
         throw new BadRequestError("Select active experts.")
-      e.app.findFirstRecordByFilter(
-        "roles_management",
-        "role_name_en = {:role}",
-        { role: row.role }
-      )
-      const key = row.expert_id + ":" + row.role
+      e.app.findRecordById("roles_management", row.role_id)
+      const key = row.expert_id + ":" + row.role_id
       if (seen[key]) throw new BadRequestError("Duplicate expert and role.")
       seen[key] = true
     }
@@ -55,7 +51,7 @@ routerAdd(
           : new Record(collection)
         record.set("case_id", caseId)
         record.set("expert_id", row.expert_id)
-        record.set("role", row.role)
+        record.set("role_id", row.role_id)
         app.save(record)
       }
     })
