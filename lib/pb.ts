@@ -1,3 +1,4 @@
+import type { User } from "@/types/user"
 import PocketBase from "pocketbase"
 import { t } from "@/lib/i18n"
 import { getCurrentLang } from "@/lib/current-lang"
@@ -16,7 +17,7 @@ export function getCurrentUser() {
   if (!pb.authStore.isValid || !pb.authStore.model) {
     return null
   }
-  return pb.authStore.model as any
+  return pb.authStore.model as unknown as User
 }
 
 export function isAuthenticated(): boolean {
@@ -283,10 +284,11 @@ function getFieldValidationMessage(
 }
 
 export function handlePocketBaseError(
-  error: any,
+  error: unknown,
   lang: Lang = getCurrentLang()
 ): string {
-  if (error?.message?.includes("fetch")) {
+  const details = error as { message?: string; status?: number } | null
+  if (details?.message?.includes("fetch")) {
     return t(
       {
         en: "PocketBase server is not accessible. Please check if the server is running.",
@@ -295,7 +297,7 @@ export function handlePocketBaseError(
       lang
     )
   }
-  if (error?.status === 400) {
+  if (details?.status === 400) {
     return (
       getFieldValidationMessage(error, lang) ??
       t(
@@ -307,7 +309,7 @@ export function handlePocketBaseError(
       )
     )
   }
-  if (error?.status === 401) {
+  if (details?.status === 401) {
     return t(
       {
         en: "Authentication required. Please log in.",
@@ -316,7 +318,7 @@ export function handlePocketBaseError(
       lang
     )
   }
-  if (error?.status === 403) {
+  if (details?.status === 403) {
     return t(
       {
         en: "Access denied. You do not have permission to perform this action.",
@@ -325,7 +327,7 @@ export function handlePocketBaseError(
       lang
     )
   }
-  if (error?.status === 404) {
+  if (details?.status === 404) {
     return t(
       {
         en: "Resource not found. The requested item may have been deleted.",
@@ -334,7 +336,7 @@ export function handlePocketBaseError(
       lang
     )
   }
-  if (error?.status === 422) {
+  if (details?.status === 422) {
     return t(
       {
         en: "Validation error. Please check your input data.",
@@ -343,7 +345,7 @@ export function handlePocketBaseError(
       lang
     )
   }
-  if (error?.status === 429) {
+  if (details?.status === 429) {
     return t(
       {
         en: "Too many attempts. Please try again later.",
@@ -352,7 +354,7 @@ export function handlePocketBaseError(
       lang
     )
   }
-  if (error?.status >= 500) {
+  if ((details?.status ?? 0) >= 500) {
     return t(
       {
         en: "Server error. Please try again later.",
@@ -362,7 +364,7 @@ export function handlePocketBaseError(
     )
   }
 
-  const rawMessage = typeof error?.message === "string" ? error.message.trim() : ""
+  const rawMessage = typeof details?.message === "string" ? details.message.trim() : ""
   const isMeaningfulMessage =
     rawMessage.length > 0 &&
     rawMessage !== "[object Object]" &&
