@@ -4,12 +4,12 @@
   --muted: #57698c;
   background: #f4f8fa;
   color: var(--navy);
-  font-family: Arial, Tahoma, sans-serif;
+  font-family: "Mohammad Bold Art", Arial, Tahoma, sans-serif;
   min-height: 75vh;
   padding-bottom: 44px;
 }
 .page[dir="rtl"] {
-  font-family: Tahoma, Arial, sans-serif;
+  font-family: "Mohammad Bold Art", Tahoma, Arial, sans-serif;
 }
 .page button,
 .page select {
@@ -757,6 +757,18 @@
   }
 }
 @media (max-width: 440px) {
+  .sectionHeader {
+    flex-wrap: wrap;
+  }
+  .page input,
+  .page select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .filterToggle,
+  .searchPanel button {
+    min-height: 44px;
+  }
   .sidebar {
     display: flex;
     flex-direction: column;
