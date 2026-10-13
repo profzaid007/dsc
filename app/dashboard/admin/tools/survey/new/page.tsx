@@ -98,16 +98,16 @@ export default function SurveyBuilderPage({
     {
       id: generateId(),
       value: "very_satisfied",
-      label: "Very Satisfied",
+      label: "Very Satisfied", labelAr: "راضٍ جدًا",
       order: 0,
     },
-    { id: generateId(), value: "satisfied", label: "Satisfied", order: 1 },
-    { id: generateId(), value: "neutral", label: "Neutral", order: 2 },
-    { id: generateId(), value: "unsatisfied", label: "Unsatisfied", order: 3 },
+    { id: generateId(), value: "satisfied", label: "Satisfied", labelAr: "راضٍ", order: 1 },
+    { id: generateId(), value: "neutral", label: "Neutral", labelAr: "محايد", order: 2 },
+    { id: generateId(), value: "unsatisfied", label: "Unsatisfied", labelAr: "غير راضٍ", order: 3 },
     {
       id: generateId(),
       value: "very_unsatisfied",
-      label: "Very Unsatisfied",
+      label: "Very Unsatisfied", labelAr: "غير راضٍ جدًا",
       order: 4,
     },
   ])
@@ -141,13 +141,14 @@ export default function SurveyBuilderPage({
       id: generateId(),
       value: `option_${options.length + 1}`,
       label: `Option ${options.length + 1}`,
+      labelAr: `خيار ${options.length + 1}`,
       order: options.length,
     }
     setOptions([...options, newOption])
   }
 
-  const updateOption = (id: string, label: string) => {
-    setOptions(options.map((o) => (o.id === id ? { ...o, label } : o)))
+  const updateOption = (id: string, field: "label" | "labelAr", value: string) => {
+    setOptions(options.map((o) => (o.id === id ? { ...o, [field]: value } : o)))
   }
 
   const removeOption = (id: string) => {
@@ -278,12 +279,20 @@ export default function SurveyBuilderPage({
   const renderOptionItem = (option: SurveyOption, index: number) => {
     return (
       <div key={option.id} className="flex items-center gap-2">
-        <Input
-          placeholder={lang === "ar" ? "نص الخيار" : "Option label"}
-          value={option.label}
-          onChange={(e) => updateOption(option.id, e.target.value)}
-          className="flex-1"
-        />
+        <div className="grid flex-1 gap-2 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor={`option-${option.id}-en`}>Option (EN)</Label>
+            <Input id={`option-${option.id}-en`} dir="ltr"
+              placeholder="English option" value={option.label}
+              onChange={(e) => updateOption(option.id, "label", e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor={`option-${option.id}-ar`}>الخيار (AR)</Label>
+            <Input id={`option-${option.id}-ar`} dir="rtl"
+              placeholder="نص الخيار بالعربية" value={option.labelAr || ""}
+              onChange={(e) => updateOption(option.id, "labelAr", e.target.value)} />
+          </div>
+        </div>
         <Button
           variant="ghost"
           size="icon-xs"

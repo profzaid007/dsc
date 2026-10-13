@@ -359,7 +359,7 @@ export default function AssignmentsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[assignment.status]}>
-                          {statusLabels[assignment.status][lang]}
+                          {statusLabels[assignment.status]?.[lang] || (lang === "ar" ? "حالة غير معروفة" : "Unknown status")}
                         </Badge>
                       </TableCell>
                       <TableCell>

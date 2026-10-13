@@ -1,4 +1,5 @@
 "use client"
+import { surveyOptionLabel } from "@/lib/survey-options"
 
 import { use, useState, useEffect, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -568,7 +569,7 @@ export default function TakeSurveyToolPage({
                     }
                   }}
                 />
-                <Label htmlFor={`${question.id}-${opt.id}`}>{opt.label}</Label>
+                <Label htmlFor={`${question.id}-${opt.id}`}>{surveyOptionLabel(opt, lang)}</Label>
               </div>
             ))}
           </div>
@@ -583,7 +584,7 @@ export default function TakeSurveyToolPage({
                   value={opt.value}
                   id={`${question.id}-${opt.id}`}
                 />
-                <Label htmlFor={`${question.id}-${opt.id}`}>{opt.label}</Label>
+                <Label htmlFor={`${question.id}-${opt.id}`}>{surveyOptionLabel(opt, lang)}</Label>
               </div>
             ))}
           </RadioGroup>
@@ -666,7 +667,7 @@ export default function TakeSurveyToolPage({
                   id={`mc-${question.id}-${opt.value}`}
                 />
                 <Label htmlFor={`mc-${question.id}-${opt.value}`}>
-                  {opt.label}
+                  {surveyOptionLabel(opt, lang)}
                 </Label>
               </div>
             ))}
@@ -696,7 +697,7 @@ export default function TakeSurveyToolPage({
                   }}
                 />
                 <Label htmlFor={`mc-${question.id}-${opt.value}`}>
-                  {opt.label}
+                  {surveyOptionLabel(opt, lang)}
                 </Label>
               </div>
             ))}
@@ -1279,7 +1280,7 @@ export default function TakeSurveyToolPage({
                               key={opt.id}
                               className="px-2 pb-2 text-center font-medium whitespace-nowrap"
                             >
-                              {opt.label}
+                              {surveyOptionLabel(opt, lang)}
                             </th>
                           ))}
                         </tr>
@@ -1765,7 +1766,7 @@ export default function TakeSurveyToolPage({
                             key={opt.id}
                             className="px-2 pb-2 text-center font-medium whitespace-nowrap"
                           >
-                            {opt.label}
+                            {surveyOptionLabel(opt, lang)}
                           </th>
                         ))}
                       </tr>

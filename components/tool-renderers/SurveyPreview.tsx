@@ -1,4 +1,5 @@
 "use client"
+import { surveyOptionLabel } from "@/lib/survey-options"
 
 import { useState } from "react"
 import { useLang } from "@/lib/lang-context"
@@ -83,7 +84,7 @@ export function SurveyPreview({ config, responses = {}, readOnly = false }: Surv
                   key={opt.id}
                   className="min-w-[100px] border-b-2 border-border bg-muted/30 p-2 text-center text-sm font-semibold"
                 >
-                  {opt.label}
+                  {surveyOptionLabel(opt, lang)}
                 </th>
               ))}
             </tr>
