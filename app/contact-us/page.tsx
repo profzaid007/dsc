@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState, type FormEvent } from "react"
 import { useLang } from "@/lib/lang-context"
@@ -33,7 +34,7 @@ import styles from "./contact.module.css"
 export default function ContactPage() {
   const { lang } = useLang()
   const [name, setName] = useState("")
-  const [countryCode, setCountryCode] = useState("")
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [phoneNumber, setPhoneNumber] = useState("")
   const [email, setEmail] = useState("")
   const [description, setDescription] = useState("")
@@ -267,7 +268,7 @@ export default function ContactPage() {
                     onClick={() => {
                       setDone(false)
                       setName("")
-                      setCountryCode("")
+                      setCountryCode(DEFAULT_COUNTRY_CODE)
                       setPhoneNumber("")
                       setEmail("")
                       setDescription("")

@@ -30,7 +30,7 @@ export const FORM_STEPS: FormStep[] = [
         id: "phone",
         type: "text",
         label: { en: "Phone Number", ar: "رقم الهاتف" },
-        placeholder: { en: "e.g. +966 50 000 0000", ar: "مثال: 0050 966+" },
+        placeholder: { en: "e.g. +962 79 000 0000", ar: "مثال: +962 79 000 0000" },
         required: true,
         validation: [
           {

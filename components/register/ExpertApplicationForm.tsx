@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -84,7 +85,7 @@ export function ExpertApplicationForm({
   const [highestAcademicDegree, setHighestAcademicDegree] = useState("")
   const [degreeTitle, setDegreeTitle] = useState("")
   const [fieldOfStudy, setFieldOfStudy] = useState("")
-  const [whatsappCountryCode, setWhatsappCountryCode] = useState("")
+  const [whatsappCountryCode, setWhatsappCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [whatsappNumber, setWhatsappNumber] = useState("")
   const [ageGroup, setAgeGroup] = useState<string[]>([])
   const [specialization, setSpecialization] = useState<string[]>([])
@@ -522,7 +523,7 @@ export function ExpertApplicationForm({
                       onValueChange={setWhatsappCountryCode}
                     >
                       <SelectTrigger className="w-30">
-                        <SelectValue placeholder="+966" />
+                        <SelectValue placeholder="+962" />
                       </SelectTrigger>
                       <SelectContent
                         position="popper"

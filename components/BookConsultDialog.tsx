@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState, type FormEvent } from "react"
 import styles from "@/components/internal/internal-theme.module.css"
@@ -47,7 +48,7 @@ interface Props {
 
 export function BookConsultDialog({ open, onOpenChange }: Props) {
   const [name, setName] = useState("")
-  const [countryCode, setCountryCode] = useState("")
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [contact, setContact] = useState("")
   const [email, setEmail] = useState("")
   const [description, setDescription] = useState("")
@@ -130,7 +131,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
     // reset after dialog closes
     setTimeout(() => {
       setName("")
-      setCountryCode("")
+      setCountryCode(DEFAULT_COUNTRY_CODE)
       setContact("")
       setEmail("")
       setDescription("")
@@ -222,7 +223,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                     )}
                     className={`w-40 ${styles.phoneCode}`}
                   >
-                    <SelectValue placeholder="+966" />
+                    <SelectValue placeholder="+962" />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"

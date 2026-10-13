@@ -380,7 +380,7 @@ export function ExpertProfileEditor({
                 onValueChange={(value) => patch({ whatsappCountryCode: value })}
               >
                 <SelectTrigger className="w-32 shrink-0">
-                  <SelectValue placeholder="+966" />
+                  <SelectValue placeholder="+962" />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-60! max-w-32">
                   {COUNTRY_CODES.map((country) => (

@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -84,7 +85,7 @@ export function ParentRegistrationForm({
   const router = useRouter()
 
   const [name, setName] = useState("")
-  const [countryCode, setCountryCode] = useState("")
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [contactNumber, setContactNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -334,7 +335,7 @@ export function ParentRegistrationForm({
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger className="w-30">
-                    <SelectValue placeholder="+966" />
+                    <SelectValue placeholder="+962" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-60! max-w-30">
                     {COUNTRY_CODES.map((c) => (

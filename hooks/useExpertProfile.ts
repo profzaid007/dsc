@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useCallback, useEffect, useState } from "react"
 import pb, { getErrorMessage } from "@/lib/pb"
@@ -33,7 +34,7 @@ export function emptyDraft(name = ""): ExpertProfileDraft {
     name,
     countryOfResidence: "",
     city: "",
-    whatsappCountryCode: "",
+    whatsappCountryCode: DEFAULT_COUNTRY_CODE,
     whatsappNumber: "",
     highestAcademicDegree: "",
     degreeTitle: "",
@@ -72,7 +73,7 @@ export function draftFromProfile(
     name,
     countryOfResidence: toText(profile.country_of_residence),
     city: toText(profile.city),
-    whatsappCountryCode: toText(profile.whatsapp_country_code),
+    whatsappCountryCode: toText(profile.whatsapp_country_code) || DEFAULT_COUNTRY_CODE,
     whatsappNumber: toText(profile.whatsapp_number),
     highestAcademicDegree: toText(profile.highest_academic_degree),
     degreeTitle: toText(profile.degree_title),

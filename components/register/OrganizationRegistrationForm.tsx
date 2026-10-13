@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -52,7 +53,7 @@ export function OrganizationRegistrationForm({
   const [name, setName] = useState("")
   const [organizationName, setOrganizationName] = useState("")
   const [representativeName, setRepresentativeName] = useState("")
-  const [countryCode, setCountryCode] = useState("")
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [contactNumber, setContactNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -295,7 +296,7 @@ export function OrganizationRegistrationForm({
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger className="w-28">
-                    <SelectValue placeholder="+966" />
+                    <SelectValue placeholder="+962" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-60! max-w-30!">
                     {COUNTRY_CODES.map((c) => (
