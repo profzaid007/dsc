@@ -13,7 +13,7 @@ export interface Portal {
   picture?: string;
   isDeleted?: boolean;
   order?: number;
-  registrationType?: "parent" | "individual" | "organization" | "expert";
+  registrationType?: "parent" | "individual" | "organization" | "expert" | "all";
   title: BilingualString; 
   portalName: BilingualString;
   tagline: BilingualString;

@@ -36,8 +36,7 @@ import { toast } from "sonner"
 
 const GENDERS = [
   { label: { en: "Male", ar: "ذكر" }, value: "male" },
-  { label: { en: "Female", ar: "نث" }, value: "female" },
-  { label: { en: "Other", ar: "آخر" }, value: "other" },
+  { label: { en: "Female", ar: "أنثى" }, value: "female" },
 ]
 
 export function IndividualRegistrationForm({

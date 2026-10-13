@@ -67,8 +67,7 @@ export interface SelectOption {
 
 export const GENDER_OPTIONS: SelectOption[] = [
   { value: "male", label: { en: "Male", ar: "ذكر" } },
-  { value: "female", label: { en: "Female", ar: "نث" } },
-  { value: "other", label: { en: "Other", ar: "آخر" } },
+  { value: "female", label: { en: "Female", ar: "أنثى" } },
 ]
 
 const GENDER_LABELS: Record<string, BilingualString> = Object.fromEntries(

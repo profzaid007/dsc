@@ -412,6 +412,7 @@ export default function CmsPortalsPage() {
                   onChange={(e) => update("registration", e.target.value)}
                 >
                   {[
+                    ["all", "All", "الكل"],
                     ["parent", "Parent", "ولي أمر"],
                     ["individual", "Individual", "فرد"],
                     ["organization", "Organization", "مؤسسة"],
