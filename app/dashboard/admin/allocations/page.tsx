@@ -1,4 +1,5 @@
 "use client"
+import { SpecialistSelector } from "@/components/specialists/SpecialistSelector"
 
 
 import { boundedFullList } from "@/lib/bounded-records"
@@ -84,6 +85,7 @@ interface AllocationRow {
   expert_id: string
   /** Relation to the `roles_management` record assigned to the expert */
   role_id: string
+  role_ids: string[]
 }
 
 function ExpertCombobox({
@@ -401,11 +403,13 @@ export default function AllocationsPage() {
   const loadAllocationsForCase = useCallback(
     (caseId: string) => {
       const caseAllocations = allocations.filter((a) => a.case_id === caseId)
-      const loadedRows: AllocationRow[] = caseAllocations.map((a) => ({
-        id: a.id,
-        expert_id: a.expert_id,
-        role_id: a.role_id,
-      }))
+      const grouped = new Map<string, AllocationRow>()
+      for (const a of caseAllocations) {
+        const row = grouped.get(a.expert_id)
+        if (row) { if (a.role_id && !row.role_ids.includes(a.role_id)) row.role_ids.push(a.role_id) }
+        else grouped.set(a.expert_id, { id: a.id, expert_id: a.expert_id, role_id: a.role_id, role_ids: a.role_id ? [a.role_id] : [] })
+      }
+      const loadedRows = Array.from(grouped.values())
       setRows(loadedRows)
       setOriginalRows(loadedRows)
     },
@@ -427,7 +431,7 @@ export default function AllocationsPage() {
   const addRow = () => {
     setRows((prev) => [
       ...prev,
-      { expert_id: "", role_id: roleMgmtRoles[0]?.id ?? "" },
+      { expert_id: "", role_id: "", role_ids: [] },
     ])
   }
 
@@ -446,7 +450,7 @@ export default function AllocationsPage() {
 
     // Validate rows
     const invalidRows = rows.filter(
-      (r) => !r.expert_id || !r.role_id
+      (r) => !r.expert_id || !r.role_ids.length
     )
     if (invalidRows.length > 0) {
       toast.error(
@@ -459,49 +463,16 @@ export default function AllocationsPage() {
 
     setIsSaving(true)
     try {
-      // Find removed rows
-      const removedIds = originalRows
-        .filter(
-          (orig) => !rows.some((r) => r.id && r.id === orig.id)
-        )
-        .map((r) => r.id!)
-
-      // Find updated rows (existing with changes)
-      const updatedRows = rows.filter((row) => {
-        if (!row.id) return false
-        const original = originalRows.find((o) => o.id === row.id)
-        if (!original) return false
-        return (
-          original.expert_id !== row.expert_id || original.role_id !== row.role_id
-        )
-      })
-
-      // Find new rows
-      const newRows = rows.filter((row) => !row.id)
-
-      // Execute changes
-      await Promise.all([
-        // Delete removed
-        ...removedIds.map((id) => removeAllocation(id)),
-        // Update existing
-        ...updatedRows.map((row) =>
-          removeAllocation(row.id!).then(() =>
-            addAllocation({
-              case_id: selectedCase,
-              expert_id: row.expert_id,
-              role_id: row.role_id,
-            })
-          )
-        ),
-        // Create new
-        ...newRows.map((row) =>
-          addAllocation({
-            case_id: selectedCase,
-            expert_id: row.expert_id,
-            role_id: row.role_id,
-          })
-        ),
-      ])
+      const desired = new Map<string, { expert_id: string; role_id: string }>()
+      for (const row of rows) for (const role_id of row.role_ids) desired.set(`${row.expert_id}:${role_id}`, { expert_id: row.expert_id, role_id })
+      const existing = allocations.filter(a => a.case_id === selectedCase)
+      // Create additions first; retain existing record IDs for unchanged roles.
+      for (const [key, item] of desired) {
+        if (!existing.some(a => `${a.expert_id}:${a.role_id}` === key)) await addAllocation({ case_id: selectedCase, ...item })
+      }
+      for (const item of existing) {
+        if (!desired.has(`${item.expert_id}:${item.role_id}`)) await removeAllocation(item.id)
+      }
 
       // Refresh and update original rows
       await refreshAllocations()
@@ -513,6 +484,7 @@ export default function AllocationsPage() {
           : "Failed to save allocations. Please try again.",
         { description: getErrorMessage(error) }
       )
+      await refreshAllocations()
     } finally {
       setIsSaving(false)
     }
@@ -748,32 +720,8 @@ export default function AllocationsPage() {
                           />
                         </TableCell>
                         <TableCell>
-                          <Select
-                            value={row.role_id}
-                            onValueChange={(value) =>
-                              updateRow(index, { role_id: value })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  lang === "ar"
-                                    ? "اختر دوراً..."
-                                    : "Select role..."
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {roleMgmtRoles.map((role) => (
-                                <SelectItem
-                                  key={role.id}
-                                  value={role.id}
-                                >
-                                  {getRoleLabel(role)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <SpecialistSelector value={row.role_ids} disabled={isSaving}
+                            onChange={(ids) => updateRow(index, { role_ids: ids, role_id: ids[0] || "" })} />
                         </TableCell>
                         <TableCell className="text-right">
                           <Button

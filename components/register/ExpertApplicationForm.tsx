@@ -1,4 +1,5 @@
 "use client"
+import { SpecialistSelector } from "@/components/specialists/SpecialistSelector"
 import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState, useRef } from "react"
@@ -89,6 +90,7 @@ export function ExpertApplicationForm({
   const [whatsappNumber, setWhatsappNumber] = useState("")
   const [ageGroup, setAgeGroup] = useState<string[]>([])
   const [specialization, setSpecialization] = useState<string[]>([])
+  const [specialistRoles, setSpecialistRoles] = useState<string[]>([])
   const [consultationMode, setConsultationMode] = useState("")
   const [fee, setFee] = useState("")
   const [iban, setIban] = useState("")
@@ -280,6 +282,7 @@ export function ExpertApplicationForm({
       // specialization_type is a single text field now: store the selected
       // option keys comma-separated (readers split on commas).
       extraFormData.set("specialization_type", specialization.join(", "))
+      extraFormData.set("specialist_roles", JSON.stringify(specialistRoles))
       extraFormData.set("consultation_mode", consultationMode)
 
       files.forEach((file) => extraFormData.append("cv", file))
@@ -760,6 +763,8 @@ export function ExpertApplicationForm({
                   </Select>
                 </div>
               </div>
+
+              <SpecialistSelector value={specialistRoles} onChange={setSpecialistRoles} />
 
               <div className="space-y-2">
                 <Label>

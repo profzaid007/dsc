@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 const settingsCards = [
+  { title: { en: "Specialist categories and roles", ar: "فئات وأدوار التخصص" }, description: { en: "Manage bilingual specialist categories and roles", ar: "إدارة فئات وأدوار التخصص بالعربية والإنجليزية" }, href: "/dashboard/admin/settings/specialists", icon: List },
   {
     title: { en: "Lookups", ar: "القوائم المرجعية" },
     description: {
@@ -38,14 +39,14 @@ const settingsCards = [
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { isSuperAdmin, isLoading } = useAuth()
+  const { isAdmin, isSuperAdmin, isLoading } = useAuth()
   const { lang } = useLang()
 
   useEffect(() => {
-    if (!isLoading && !isSuperAdmin) {
+    if (!isLoading && !isAdmin && !isSuperAdmin) {
       router.push("/dashboard")
     }
-  }, [isLoading, isSuperAdmin, router])
+  }, [isLoading, isAdmin, isSuperAdmin, router])
 
   if (isLoading) {
     return (
@@ -57,7 +58,7 @@ export default function SettingsPage() {
     )
   }
 
-  if (!isSuperAdmin) {
+  if (!isAdmin && !isSuperAdmin) {
     return null
   }
 
@@ -80,7 +81,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {settingsCards.map((card) => (
+        {settingsCards.filter(card => isSuperAdmin || card.href.endsWith("/specialists")).map((card) => (
           <Link key={card.href} href={card.href}>
             <Card className="cursor-pointer transition-all hover:shadow-md">
               <CardHeader>

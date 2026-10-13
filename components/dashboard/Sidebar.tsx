@@ -95,7 +95,6 @@ const adminNavigation: NavItem[] = [
     name: { en: "Settings", ar: "الإعدادات" },
     href: "/dashboard/admin/settings",
     icon: Settings,
-    superAdminOnly: true,
   },
 ]
 

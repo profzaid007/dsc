@@ -1,6 +1,7 @@
 export interface ExpertProfile {
   id: string
   user: string
+  specialist_roles?: string[]
   profile_photo?: string
   country_of_residence?: string
   city?: string
