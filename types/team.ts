@@ -3,6 +3,7 @@ export interface TeamExpert {
   name: string
   photoUrl: string | null
   roles: string[]
+  specialistCategoryIds?: string[]
   degree: string | null
   fieldOfStudy: string | null
   bio: string

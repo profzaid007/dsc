@@ -13,6 +13,7 @@ import { useLang } from "@/lib/lang-context"
 import { SITE_CONTENT } from "@/lib/site-content"
 import { FOUNDER } from "@/components/team/TeamData"
 import { specializationLabel } from "@/components/team/team-labels"
+import type { SpecialistCategory } from "@/lib/specialist-types"
 import type { TeamExpert } from "@/types/team"
 import styles from "./home.module.css"
 
@@ -49,7 +50,9 @@ function ExpertPortrait({ expert }: { expert: TeamExpert }) {
   )
 }
 
-export function HeroSection({ experts }: { experts: TeamExpert[] }) {
+export function HeroSection({ experts: allExperts, categories = [] }: { experts: TeamExpert[]; categories?: SpecialistCategory[] }) {
+  const [category, setCategory] = useState("all")
+  const experts = category === "all" ? allExperts : allExperts.filter(expert => expert.specialistCategoryIds?.includes(category))
   const { lang } = useLang()
   const ar = lang === "ar"
   const [index, setIndex] = useState(0)
@@ -182,6 +185,15 @@ export function HeroSection({ experts }: { experts: TeamExpert[] }) {
             </div>
             <UsersRound size={25} aria-hidden="true" />
           </div>
+          {categories.length > 0 && <div className="px-4 pb-3">
+            <label htmlFor="expert-category" className="mb-1 block text-sm font-medium">{ar ? "فئة التخصص" : "Specialist category"}</label>
+            <select id="expert-category" value={category} onChange={event => {
+              setCategory(event.target.value); setIndex(0); setCycle(value => value + 1)
+            }} className="min-h-11 w-full rounded-md border bg-white px-3 text-sm text-slate-900">
+              <option value="all">{ar ? "جميع الفئات" : "All categories"}</option>
+              {categories.map(item => <option key={item.id} value={item.id}>{ar ? item.name_ar : item.name_en}</option>)}
+            </select>
+          </div>}
           <div
             className={styles.slide}
             aria-live={rotating ? "off" : "polite"}
@@ -223,8 +235,8 @@ export function HeroSection({ experts }: { experts: TeamExpert[] }) {
                 </h3>
                 <p>
                   {ar
-                    ? "فريق الخبراء قيد الاستكمال. يرجى العودة لاحقاً."
-                    : "Our team of experts is being finalised. Please check back soon."}
+                    ? (category === "all" ? "فريق الخبراء قيد الاستكمال. يرجى العودة لاحقاً." : "لا يوجد خبراء في هذه الفئة حالياً.")
+                    : (category === "all" ? "Our team of experts is being finalised. Please check back soon." : "No experts in this category yet.")}
                 </p>
               </div>
             )}

@@ -216,6 +216,22 @@ export default function ContactPage() {
                 </span>
               </div>
             </div>
+            <div className={styles.locationMap}>
+              <h3>{lang === "ar" ? "موقع الأكاديمية على الخريطة" : "Find the academy"}</h3>
+              <iframe
+                title={lang === "ar" ? "موقع الأكاديمية على خرائط Google" : "Academy location on Google Maps"}
+                src={`https://maps.google.com/maps?q=31.9877435,35.9278453&z=16&output=embed&hl=${lang}`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+              <a href="https://www.google.com/maps/dir/?api=1&destination=31.9877435%2C35.9278453"
+                target="_blank" rel="noopener noreferrer" className={styles.directionsLink}>
+                <MapPin size={18} aria-hidden="true" />
+                {lang === "ar" ? "الحصول على الاتجاهات" : "Get directions"}
+                <ArrowUpRight size={17} aria-hidden="true" />
+              </a>
+            </div>
           </section>
           <section
             className={styles.formColumn}
