@@ -38,6 +38,12 @@ module.exports = {
       "media_only": false
     },
     {
+      "key": "other",
+      "en": "Other",
+      "ar": "أخرى",
+      "media_only": false
+    },
+    {
       "key": "dsc-news",
       "en": "DSC News & Success Stories",
       "ar": "أخبار DSC وقصص النجاح",

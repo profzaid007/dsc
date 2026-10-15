@@ -2,7 +2,7 @@ import { EXPERT_CLASSIFICATIONS, mainCategoryKey } from "./classification"
 import catalog from "./allocation-role-catalog.json"
 import type { RolesManagement } from "@/types/expert-role"
 
-// Uses the same six professional categories as articles, events and the landing page.
+// Uses the same professional categories as articles, events and the landing page.
 export const ALLOCATION_ROLE_GROUPS = EXPERT_CLASSIFICATIONS.map(c => ({ id: c.key, en: c.en, ar: c.ar }))
 
 const legacyGroups: Record<string, string> = {

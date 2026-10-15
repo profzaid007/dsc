@@ -1,6 +1,6 @@
 # Unified classifications
 
-The seven main categories and the legacy subcategory mapping are defined once in `lib/classification-catalog.json`. Six categories accept specialist roles; `dsc-news` is reserved for authored content. Main categories are fixed; administrators can manage subcategory labels and assign unused subcategories to a parent in CMS → Blog → Categories. Subcategories are shared by articles, training, and public lectures.
+The shared main categories and the legacy subcategory mapping are defined once in `lib/classification-catalog.json`. Seven professional categories (including Research and Other) accept specialist roles; `dsc-news` is reserved for authored content. Main categories are fixed; administrators can manage subcategory labels and assign unused subcategories to a parent in CMS → Blog → Categories. Subcategories are shared by articles, training, and public lectures.
 
 The landing-page expert selector, allocation role groups, article filters/editor, program editor, lecture editor and public event category filters use this catalog. Existing specialist-role IDs, tool permissions and expert selections remain intact. Legacy `psychology` becomes `mental-health` while retaining its database ID. Unknown historical categories are preserved and archived from new main-category selections. Existing program labels are backfilled only on an exact match; unmatched labels remain visible in the editor until an administrator classifies them.
 
@@ -8,7 +8,7 @@ Run `node tools/build-classification-artifacts.cjs` after changing the canonical
 
 ## Backend deployment is separate from Netlify
 
-Apply `1793200000_unified_classification.js` and deploy these hooks before using the new classification forms:
+Apply `1793200000_unified_classification.js` followed by `1793300000_research_and_other_categories.js` and deploy these hooks before using the new classification forms:
 
 - `classification.pb.js`
 - `lib/classification-catalog.js`
@@ -21,3 +21,5 @@ Backend validation rejects a specialist role in the media category and rejects m
 ## Verification
 
 `tests/classification-integration.test.mjs` runs a disposable PocketBase 0.31 database and localhost API. It verifies seven active main categories, preserved roles/tool permissions, preserved article content and subcategory IDs, exact legacy-training matching, retained unmatched labels, public lecture projection fields, idempotence, parent-child validation, and media-only role rejection. Existing allocation and public-expert filter tests cover original role IDs and expert selections.
+
+The additive research/other migration reuses an existing Other category (including a legacy custom key) by its bilingual label and retains its ID and linked roles. `dsc-news` remains a separate content-only category and is hidden from the specialist-category table. Historical migration files are not regenerated when the catalog changes.

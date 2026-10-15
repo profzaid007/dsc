@@ -229,7 +229,7 @@ export default function SpecialistsSettings() {
     values.some((value) =>
       value.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
     )
-  const filteredCategories = categories.filter(c => MAIN_CLASSIFICATIONS.some(main => main.key === mainCategoryKey(c.key))).filter((c) =>
+  const filteredCategories = categories.filter(c => EXPERT_CLASSIFICATIONS.some(main => main.key === mainCategoryKey(c.key))).filter((c) =>
     matches(categorySearch, c.name_en, c.name_ar)
   )
   const filteredRoles = roles.filter(
@@ -389,7 +389,7 @@ export default function SpecialistsSettings() {
               onClick={() => add("category")}
             >
               <Plus size={17} />
-              {ar ? "٧ تصنيفات موحّدة" : "7 unified categories"}
+              {ar ? `${EXPERT_CLASSIFICATIONS.length} فئات تخصص موحّدة` : `${EXPERT_CLASSIFICATIONS.length} specialist categories`}
             </button>
           </div>
         </div>

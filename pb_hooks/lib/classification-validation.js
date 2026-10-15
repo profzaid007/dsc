@@ -5,7 +5,7 @@ module.exports = (e) => {
   const collection = record.collection().name
   if (collection === "specialist_role_categories") {
     const main = catalog.main.find(c => c.key === record.getString("key"))
-    if (!main) throw new BadRequestError("The unified catalog has exactly seven main categories; add a subcategory instead")
+    if (!main) throw new BadRequestError("Choose a main category from the unified catalog; add a subcategory for a new topic")
     record.set("name_en", main.en)
     record.set("name_ar", main.ar)
     record.set("media_only", main.media_only)
