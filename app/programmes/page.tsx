@@ -450,6 +450,8 @@ export default function ProgrammesPage() {
         <label className={styles.filterInput}>
           <span className={styles.srOnly}>{title}</span>
           <select
+            dir={ar ? "rtl" : "ltr"}
+            style={{ textAlign: ar ? "right" : "left" }}
             value={filters[key]}
             disabled={options.length === 0}
             onChange={(e) =>
@@ -458,9 +460,9 @@ export default function ProgrammesPage() {
                 : setFilters((f) => ({ ...f, [key]: e.target.value }))
             }
           >
-            <option value="">{t("All", "الكل")}</option>
+            <option value="" dir={ar ? "rtl" : "ltr"}>{t("All", "الكل")}</option>
             {options.map((o) => (
-              <option value={o.value} key={o.value}>
+              <option value={o.value} key={o.value} dir={ar ? "rtl" : "ltr"}>
                 {o.label}
               </option>
             ))}
