@@ -1,5 +1,19 @@
 "use client"
 import { useState } from "react"
+import {
+  UsersRound,
+  HandHeart,
+  Brain,
+  Stethoscope,
+  GraduationCap,
+  Landmark,
+  LayoutGrid,
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+} from "lucide-react"
+import styles from "./specialists.module.css"
 import { toast } from "sonner"
 import {
   deleteSpecialistItem,
@@ -25,6 +39,11 @@ export default function SpecialistsSettings() {
   const { lang } = useLang()
   const ar = lang === "ar"
   const { categories, roles, loading, error, refresh } = useSpecialists()
+  const [formOpen, setFormOpen] = useState(false)
+  const [categorySearch, setCategorySearch] = useState("")
+  const [roleSearch, setRoleSearch] = useState("")
+  const [roleFilter, setRoleFilter] = useState("")
+  const [formError, setFormError] = useState("")
   const [kind, setKind] = useState<"category" | "role">("category")
   const [id, setId] = useState("")
   const [en, setEn] = useState("")
@@ -59,9 +78,20 @@ export default function SpecialistsSettings() {
     setArabic("name_ar" in r ? r.name_ar : r.role_name_ar)
     setCategory("category" in r ? r.category : "")
     setNotice("")
+    setFormError("")
+    setFormOpen(true)
   }
   async function save(e: React.FormEvent) {
     e.preventDefault()
+    if (!en.trim() || !arabic.trim() || (kind === "role" && !category)) {
+      setFormError(
+        ar
+          ? "يرجى تعبئة جميع الحقول المطلوبة"
+          : "Please complete all required fields."
+      )
+      return
+    }
+    setFormError("")
     setSaving(true)
     setNotice("")
     try {
@@ -90,10 +120,12 @@ export default function SpecialistsSettings() {
       if (id) await col.update(id, data)
       else await col.create(data)
       reset()
+      setFormOpen(false)
       await refresh()
       setNotice(ar ? "تم الحفظ" : "Saved")
     } catch (e) {
       setNotice(getErrorMessage(e))
+      setFormError(getErrorMessage(e))
     } finally {
       setSaving(false)
     }
@@ -159,201 +191,425 @@ export default function SpecialistsSettings() {
       setSaving(false)
     }
   }
-  return (
-    <div className="space-y-6" dir={ar ? "rtl" : "ltr"}>
-      <h1 className="text-2xl font-bold">
-        {ar ? "فئات وأدوار التخصص" : "Specialist categories and roles"}
-      </h1>
-      {(error || notice) && <p role="status">{error || notice}</p>}
-      {error && (
-        <button onClick={() => void refresh()}>
-          {ar ? "إعادة المحاولة" : "Retry"}
-        </button>
-      )}
-      <form
-        onSubmit={save}
-        className="grid gap-3 rounded border p-4 sm:grid-cols-2"
+  const icons = [
+    HandHeart,
+    Brain,
+    Stethoscope,
+    GraduationCap,
+    Landmark,
+    LayoutGrid,
+  ]
+  const categoryIcon = (cid: string, small = false) => {
+    const index = categories.findIndex((c) => c.id === cid)
+    const safeIndex = index < 0 ? 5 : index % icons.length
+    const Icon = icons[safeIndex]
+    return (
+      <span
+        className={`${styles.categoryIcon} ${styles[`tone${safeIndex}`]} ${small ? styles.smallIcon : ""}`}
       >
-        <label>
-          {ar ? "الجدول" : "Table"}
-          <select
-            disabled={saving}
-            value={kind}
-            onChange={(e) => {
-              reset()
-              setKind(e.target.value as "category" | "role")
-            }}
-            className="block w-full rounded border p-2"
-          >
-            <option value="category">{ar ? "الفئات" : "Categories"}</option>
-            <option value="role">{ar ? "الأدوار" : "Roles"}</option>
-          </select>
-        </label>
-        {kind === "role" && (
-          <label>
-            {ar ? "الفئة" : "Category"}
-            <select
-              required
-              value={category}
-              disabled={saving}
-              onChange={(e) => setCategory(e.target.value)}
-              className="block w-full rounded border p-2"
+        <Icon size={small ? 14 : 19} aria-hidden="true" />
+      </span>
+    )
+  }
+  const matches = (query: string, ...values: string[]) =>
+    values.some((value) =>
+      value.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
+    )
+  const filteredCategories = categories.filter((c) =>
+    matches(categorySearch, c.name_en, c.name_ar)
+  )
+  const filteredRoles = roles.filter(
+    (r) =>
+      (!roleFilter || r.category === roleFilter) &&
+      matches(roleSearch, r.role_name_en, r.role_name_ar)
+  )
+  const add = (k: "category" | "role") => {
+    reset()
+    setKind(k)
+    setFormError("")
+    setFormOpen(true)
+  }
+  const status = (
+    k: "category" | "role",
+    item: SpecialistCategory | SpecialistRole
+  ) => (
+    <button
+      type="button"
+      disabled={saving}
+      className={`${styles.status} ${item.is_active ? styles.active : styles.inactive}`}
+      title={
+        item.is_active
+          ? ar
+            ? "تعطيل"
+            : "Deactivate"
+          : ar
+            ? "تفعيل"
+            : "Activate"
+      }
+      aria-label={`${item.is_active ? (ar ? "تعطيل" : "Deactivate") : ar ? "تفعيل" : "Activate"} ${"name_en" in item ? item.name_en : item.role_name_en}`}
+      onClick={() => void toggleAvailability(k, item.id)}
+    >
+      <span />
+      {item.is_active ? (ar ? "نشط" : "Active") : ar ? "غير نشط" : "Inactive"}
+    </button>
+  )
+  const actions = (
+    k: "category" | "role",
+    item: SpecialistCategory | SpecialistRole
+  ) => (
+    <div className={styles.actions}>
+      <button
+        type="button"
+        disabled={saving}
+        className={styles.edit}
+        onClick={() => edit(k, item)}
+      >
+        <Pencil size={14} aria-hidden="true" />
+        {ar ? "تعديل" : "Edit"}
+      </button>
+      <button
+        type="button"
+        disabled={saving}
+        className={styles.delete}
+        onClick={() =>
+          openDeleteDialog({
+            kind: k,
+            id: item.id,
+            name:
+              "name_en" in item
+                ? ar
+                  ? item.name_ar
+                  : item.name_en
+                : ar
+                  ? item.role_name_ar
+                  : item.role_name_en,
+          })
+        }
+      >
+        <Trash2 size={14} aria-hidden="true" />
+        {ar ? "حذف" : "Delete"}
+      </button>
+    </div>
+  )
+  const empty = (span: number) => (
+    <tr>
+      <td colSpan={span} className={styles.empty}>
+        {loading
+          ? ar
+            ? "جارٍ التحميل…"
+            : "Loading…"
+          : error
+            ? ar
+              ? "تعذر تحميل البيانات"
+              : "Unable to load records."
+            : ar
+              ? "لا توجد نتائج مطابقة"
+              : "No matching records found."}
+      </td>
+    </tr>
+  )
+  return (
+    <div className={styles.page} dir={ar ? "rtl" : "ltr"}>
+      <header className={styles.pageHeader}>
+        <span className={styles.heroIcon}>
+          <UsersRound size={27} aria-hidden="true" />
+        </span>
+        <div>
+          <h1>
+            {ar ? "فئات وأدوار التخصص" : "Specialist categories and roles"}
+          </h1>
+          <p>
+            {ar
+              ? "إدارة فئات التخصص وأدوارها باللغتين"
+              : "Manage the specialist categories and their roles in both languages"}
+          </p>
+        </div>
+      </header>
+      {(error || notice) && (
+        <div className={styles.notice} role="status">
+          {error || notice}
+          {error && (
+            <button type="button" onClick={() => void refresh()}>
+              {ar ? "إعادة المحاولة" : "Retry"}
+            </button>
+          )}
+        </div>
+      )}
+      <section className={styles.card} aria-labelledby="categories-heading">
+        <div className={styles.toolbar}>
+          <div className={styles.sectionHeading}>
+            <span className={`${styles.sectionIcon} ${styles.mint}`}>
+              <UsersRound size={23} aria-hidden="true" />
+            </span>
+            <div>
+              <h2 id="categories-heading">
+                {ar ? "فئات التخصص" : "Specialist role categories"}
+              </h2>
+              <p>
+                {ar
+                  ? "الفئات الرئيسية لأدوار المتخصصين"
+                  : "Main categories for specialist roles"}
+              </p>
+            </div>
+          </div>
+          <div className={styles.controls}>
+            <label className={styles.search}>
+              <Search size={16} aria-hidden="true" />
+              <input
+                aria-label={ar ? "البحث في الفئات" : "Search categories"}
+                placeholder={ar ? "البحث في الفئات…" : "Search in categories…"}
+                value={categorySearch}
+                onChange={(e) => setCategorySearch(e.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              className={styles.add}
+              disabled={saving || loading || !!error}
+              onClick={() => add("category")}
             >
-              <option value="">{ar ? "اختر فئة" : "Select category"}</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {ar ? c.name_ar : c.name_en}
+              <Plus size={17} />
+              {ar ? "إضافة فئة" : "Add category"}
+            </button>
+          </div>
+        </div>
+        <div className={styles.tableWrap}>
+          <table className={`${styles.table} ${styles.categoryTable}`}>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">
+                  <span className="sr-only">{ar ? "أيقونة" : "Icon"}</span>
+                </th>
+                <th scope="col">Name (English)</th>
+                <th scope="col">الاسم (العربية)</th>
+                <th scope="col">{ar ? "الأدوار" : "Roles"}</th>
+                <th scope="col">{ar ? "الحالة" : "Status"}</th>
+                <th scope="col">{ar ? "الإجراءات" : "Actions"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!loading &&
+                !error &&
+                filteredCategories.map((c, i) => (
+                  <tr key={c.id}>
+                    <td>{i + 1}</td>
+                    <td>{categoryIcon(c.id)}</td>
+                    <td>{c.name_en}</td>
+                    <td dir="rtl">{c.name_ar || "—"}</td>
+                    <td>
+                      <span className={styles.count}>
+                        {roles.filter((r) => r.category === c.id).length}
+                      </span>
+                    </td>
+                    <td>{status("category", c)}</td>
+                    <td>{actions("category", c)}</td>
+                  </tr>
+                ))}
+              {(loading || error || !filteredCategories.length) && empty(7)}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section className={styles.card} aria-labelledby="roles-heading">
+        <div className={styles.toolbar}>
+          <div className={styles.sectionHeading}>
+            <span className={`${styles.sectionIcon} ${styles.blue}`}>
+              <UsersRound size={23} aria-hidden="true" />
+            </span>
+            <div>
+              <h2 id="roles-heading">
+                {ar ? "أدوار التخصص" : "Specialist roles"}
+              </h2>
+              <p>{ar ? "الأدوار ضمن كل فئة" : "Roles within each category"}</p>
+            </div>
+          </div>
+          <div className={styles.controls}>
+            <label className={styles.filter}>
+              {ar ? "الفئة" : "Category"}
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+              >
+                <option value="">
+                  {ar ? "جميع الفئات" : "All categories"}
                 </option>
-              ))}
-            </select>
-          </label>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {ar ? c.name_ar : c.name_en}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.search}>
+              <Search size={16} aria-hidden="true" />
+              <input
+                aria-label={ar ? "البحث في الأدوار" : "Search roles"}
+                placeholder={ar ? "البحث في الأدوار…" : "Search in roles…"}
+                value={roleSearch}
+                onChange={(e) => setRoleSearch(e.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              className={styles.add}
+              disabled={saving || loading || !!error}
+              onClick={() => add("role")}
+            >
+              <Plus size={17} />
+              {ar ? "إضافة دور" : "Add role"}
+            </button>
+          </div>
+        </div>
+        <div className={styles.tableWrap}>
+          <table className={`${styles.table} ${styles.roleTable}`}>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">{ar ? "الفئة" : "Category"}</th>
+                <th scope="col">Name (English)</th>
+                <th scope="col">الاسم (العربية)</th>
+                <th scope="col">{ar ? "الحالة" : "Status"}</th>
+                <th scope="col">{ar ? "الإجراءات" : "Actions"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!loading &&
+                !error &&
+                filteredRoles.map((r, i) => (
+                  <tr key={r.id}>
+                    <td>{i + 1}</td>
+                    <td>
+                      <div className={styles.categoryLabel}>
+                        {categoryIcon(r.category, true)}
+                        <span>
+                          {categories.find((c) => c.id === r.category)?.[
+                            ar ? "name_ar" : "name_en"
+                          ] || (ar ? "بدون فئة" : "Uncategorized")}
+                        </span>
+                      </div>
+                    </td>
+                    <td>{r.role_name_en}</td>
+                    <td dir="rtl">{r.role_name_ar || "—"}</td>
+                    <td>{status("role", r)}</td>
+                    <td>{actions("role", r)}</td>
+                  </tr>
+                ))}
+              {(loading || error || !filteredRoles.length) && empty(6)}
+            </tbody>
+          </table>
+        </div>
+        {!loading && !error && (
+          <p className={styles.summary}>
+            {ar
+              ? `عرض ${filteredRoles.length} من ${roles.length} دور`
+              : `Showing ${filteredRoles.length} of ${roles.length} roles`}
+          </p>
         )}
-        <label>
-          Name (English)
-          <input
-            dir="ltr"
-            required
-            value={en}
-            disabled={saving}
-            onChange={(e) => setEn(e.target.value)}
-            className="block w-full rounded border p-2"
-          />
-        </label>
-        <label>
-          الاسم (العربية)
-          <input
-            dir="rtl"
-            required
-            value={arabic}
-            disabled={saving}
-            onChange={(e) => setArabic(e.target.value)}
-            className="block w-full rounded border p-2"
-          />
-        </label>
-        <button
-          disabled={saving || loading || !!error}
-          className="rounded bg-primary p-2 text-white"
-        >
-          {id ? (ar ? "حفظ التعديل" : "Save changes") : ar ? "إضافة" : "Add"}
-        </button>
-        <button type="button" onClick={reset}>
-          {ar ? "إلغاء" : "Cancel"}
-        </button>
-      </form>
-      <h2 className="text-xl font-bold">
-        {ar ? "فئات التخصص" : "Specialist role categories"}
-      </h2>
-      <div className="overflow-x-auto">
-        <table className="w-full text-start">
-          <thead>
-            <tr>
-              <th>English</th>
-              <th>العربية</th>
-              <th>{ar ? "إجراءات" : "Actions"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((c) => (
-              <tr key={c.id} className="border-b">
-                <td className="p-2">{c.name_en}</td>
-                <td className="p-2">{c.name_ar}</td>
-                <td>
-                  <button disabled={saving} onClick={() => edit("category", c)}>
-                    {ar ? "تعديل" : "Edit"}
-                  </button>{" "}
-                  ·{" "}
-                  <button
-                    disabled={saving}
-                    onClick={() => void toggleAvailability("category", c.id)}
-                  >
-                    {c.is_active
-                      ? ar
-                        ? "تعطيل"
-                        : "Deactivate"
-                      : ar
-                        ? "تفعيل"
-                        : "Activate"}
-                  </button>{" "}
-                  ·{" "}
-                  <button
-                    className="text-destructive"
-                    disabled={saving}
-                    onClick={() =>
-                      openDeleteDialog({
-                        kind: "category",
-                        id: c.id,
-                        name: ar ? c.name_ar : c.name_en,
-                      })
-                    }
-                  >
-                    {ar ? "حذف" : "Delete"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <h2 className="text-xl font-bold">
-        {ar ? "أدوار التخصص" : "Specialist roles"}
-      </h2>
-      <div className="overflow-x-auto">
-        <table className="w-full text-start">
-          <thead>
-            <tr>
-              <th>{ar ? "الفئة" : "Category"}</th>
-              <th>English</th>
-              <th>العربية</th>
-              <th>{ar ? "إجراءات" : "Actions"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {roles.map((r) => (
-              <tr key={r.id} className="border-b">
-                <td className="p-2">
-                  {categories.find((c) => c.id === r.category)?.[
-                    ar ? "name_ar" : "name_en"
-                  ] || "—"}
-                </td>
-                <td className="p-2">{r.role_name_en}</td>
-                <td className="p-2">{r.role_name_ar}</td>
-                <td>
-                  <button disabled={saving} onClick={() => edit("role", r)}>
-                    {ar ? "تعديل" : "Edit"}
-                  </button>{" "}
-                  ·{" "}
-                  <button
-                    disabled={saving}
-                    onClick={() => void toggleAvailability("role", r.id)}
-                  >
-                    {r.is_active
-                      ? ar
-                        ? "تعطيل"
-                        : "Deactivate"
-                      : ar
-                        ? "تفعيل"
-                        : "Activate"}
-                  </button>{" "}
-                  ·{" "}
-                  <button
-                    className="text-destructive"
-                    disabled={saving}
-                    onClick={() =>
-                      openDeleteDialog({
-                        kind: "role",
-                        id: r.id,
-                        name: ar ? r.role_name_ar : r.role_name_en,
-                      })
-                    }
-                  >
-                    {ar ? "حذف" : "Delete"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      </section>
+      <Dialog
+        open={formOpen}
+        onOpenChange={(open) => {
+          if (!saving) setFormOpen(open)
+        }}
+      >
+        <DialogContent showCloseButton={!saving} dir={ar ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle>
+              {kind === "category"
+                ? id
+                  ? ar
+                    ? "تعديل الفئة"
+                    : "Edit category"
+                  : ar
+                    ? "إضافة فئة"
+                    : "Add category"
+                : id
+                  ? ar
+                    ? "تعديل الدور"
+                    : "Edit role"
+                  : ar
+                    ? "إضافة دور"
+                    : "Add role"}
+            </DialogTitle>
+            <DialogDescription>
+              {ar
+                ? "أدخل الاسم باللغتين الإنجليزية والعربية."
+                : "Enter the name in both English and Arabic."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={save} className={styles.form}>
+            {kind === "role" && (
+              <label>
+                {ar ? "الفئة" : "Category"}
+                <select
+                  required
+                  value={category}
+                  disabled={saving}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  <option value="">
+                    {ar ? "اختر فئة" : "Select category"}
+                  </option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {ar ? c.name_ar : c.name_en}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label>
+              Name (English)
+              <input
+                dir="ltr"
+                required
+                value={en}
+                disabled={saving}
+                onChange={(e) => setEn(e.target.value)}
+              />
+            </label>
+            <label>
+              الاسم (العربية)
+              <input
+                dir="rtl"
+                required
+                value={arabic}
+                disabled={saving}
+                onChange={(e) => setArabic(e.target.value)}
+              />
+            </label>
+            {formError && (
+              <p role="alert" className={styles.formError}>
+                {formError}
+              </p>
+            )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={saving}
+                onClick={() => setFormOpen(false)}
+              >
+                {ar ? "إلغاء" : "Cancel"}
+              </Button>
+              <Button type="submit" disabled={saving || loading || !!error}>
+                {saving
+                  ? ar
+                    ? "جارٍ الحفظ…"
+                    : "Saving…"
+                  : id
+                    ? ar
+                      ? "حفظ التعديل"
+                      : "Save changes"
+                    : ar
+                      ? "إضافة"
+                      : "Add"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={!!deleteTarget}
         onOpenChange={(open) => {

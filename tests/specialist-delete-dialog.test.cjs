@@ -14,6 +14,8 @@ function screen(deleteItem) {
   const jsx = (type, props) => ({ type, props })
   const mocks = {
     "react/jsx-runtime": { jsx, jsxs: jsx },
+    "lucide-react": new Proxy({}, { get: (_, key) => String(key) }),
+    "./specialists.module.css": { __esModule: true, default: new Proxy({}, { get: (_, key) => String(key) }) },
     react: { useState: initial => {
       const key = index++
       if (!(key in state)) state[key] = initial
@@ -43,23 +45,23 @@ function screen(deleteItem) {
 test("failed deletion leaves its error visible inside the confirmation dialog", async () => {
   const message = "This role is used by experts or case assignments. Deactivate it instead."
   const ui = screen(async () => { throw new Error(message) })
-  const deleteAction = ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "text-destructive")
+  const deleteAction = ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "delete")
   deleteAction.props.onClick()
   const confirm = ui.nodes(ui.render()).find(node => node.type === "Button" && node.props.variant === "destructive")
   confirm.props.onClick()
   await new Promise(setImmediate)
   const nodes = ui.nodes(ui.render())
-  assert.equal(nodes.find(node => node.type === "Dialog").props.open, true)
+  assert.equal(nodes.find(node => node.type === "Dialog" && node.props.open).props.open, true)
   assert.equal(nodes.find(node => node.props?.role === "alert").props.children, message)
   assert.deepEqual(ui.notices, [message])
 })
 test("successful confirmed deletion closes the dialog and reports success", async () => {
   const calls = []
   const ui = screen(async (...args) => { calls.push(args) })
-  ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "text-destructive").props.onClick()
+  ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "delete").props.onClick()
   ui.nodes(ui.render()).find(node => node.type === "Button" && node.props.variant === "destructive").props.onClick()
   await new Promise(setImmediate)
-  assert.equal(ui.nodes(ui.render()).find(node => node.type === "Dialog").props.open, false)
+  assert.equal(ui.nodes(ui.render()).some(node => node.type === "Dialog" && node.props.open), false)
   assert.deepEqual(calls, [["role", "physician", false]])
   assert.deepEqual(ui.notices, ["Deleted"])
 })
@@ -69,7 +71,7 @@ test("successful confirmed deletion closes the dialog and reports success", asyn
     { id: "assignment", label: "Case: Autism & ADHD", detail: "Assigned expert: Hala aref", href: "/dashboard/admin/cases/653xglz46cjoevs" },
     { id: "profile", label: "Expert profile: Ahmed", href: "/dashboard/admin/experts/expert" },
   ], 2) })
-  ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "text-destructive").props.onClick()
+  ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "delete").props.onClick()
   ui.nodes(ui.render()).find(node => node.type === "Button" && node.props.variant === "destructive").props.onClick()
   await new Promise(setImmediate)
   const nodes = ui.nodes(ui.render())
