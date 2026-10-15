@@ -1,5 +1,7 @@
 import { boundedFullList } from "@/lib/bounded-records"
 import pb from "@/lib/pb"
+import { normalizeAllocationRole } from "./allocation-role-groups"
+import type { RolesManagement } from "@/types/expert-role"
 import type { TeamExpert } from "@/types/team"
 import { applyExpertOrder, readExpertOrder } from "./expert-display-order"
 
@@ -55,8 +57,10 @@ export async function getTeamExperts({
     const [records, order, specialistRoles] = await Promise.all([
       boundedFullList(pb.collection("experts_public"), { sort: "name" }),
       readExpertOrder().catch(() => []),
-      boundedFullList(pb.collection("roles_management"), { fields: "id,category" }).catch(() => []),
+      boundedFullList<RolesManagement>(pb.collection("expert_roles_public")),
     ])
+
+    const roleGroups = new Map(specialistRoles.map(role => [role.id, normalizeAllocationRole(role).role_group]))
 
     return applyExpertOrder(records as unknown as ExpertProfileRecord[], order)
       .slice(0, all ? undefined : MAX_EXPERTS)
@@ -69,7 +73,7 @@ export async function getTeamExperts({
             ? `${pb.baseURL}/api/files/expert_profiles/${record.id}/${encodeURIComponent(filename)}`
             : null,
           roles: toList(record.specialization_type),
-          specialistCategoryIds: Array.from(new Set(toList(record.specialist_roles).map(id => specialistRoles.find(role => role.id === id)?.category).filter((id): id is string => typeof id === "string" && !!id))),
+          specialistCategoryIds: Array.from(new Set(toList(record.specialist_roles).map(id => roleGroups.get(id)).filter((id): id is string => typeof id === "string" && !!id))),
           degree: record.highest_academic_degree || null,
           fieldOfStudy: record.degree_title || null,
           bio: "",

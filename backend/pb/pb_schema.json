@@ -2421,11 +2421,24 @@
         "required": false,
         "system": false,
         "type": "text"
+      },
+      {
+        "hidden": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "id": "relation_public_roles",
+        "name": "specialist_roles",
+        "type": "relation",
+        "collectionId": "pbc_1493570882",
+        "cascadeDelete": false,
+        "minSelect": 0,
+        "maxSelect": 100
       }
     ],
     "indexes": [],
     "system": false,
-    "viewQuery": "SELECT expert_profiles.id, users.name, expert_profiles.profile_photo, expert_profiles.degree_title, expert_profiles.specialization_type, expert_profiles.short_bio_en, expert_profiles.short_bio_ar, expert_profiles.public_name_en, expert_profiles.public_name_ar, expert_profiles.public_qualification_en, expert_profiles.public_qualification_ar, expert_profiles.public_specialty_en, expert_profiles.public_specialty_ar FROM expert_profiles JOIN users ON expert_profiles.user = users.id WHERE users.role = 'expert' AND users.is_active = true"
+    "viewQuery": "SELECT expert_profiles.id, expert_profiles.specialist_roles, users.name, expert_profiles.profile_photo, expert_profiles.degree_title, expert_profiles.specialization_type, expert_profiles.short_bio_en, expert_profiles.short_bio_ar, expert_profiles.public_name_en, expert_profiles.public_name_ar, expert_profiles.public_qualification_en, expert_profiles.public_qualification_ar, expert_profiles.public_specialty_en, expert_profiles.public_specialty_ar FROM expert_profiles JOIN users ON expert_profiles.user = users.id WHERE users.role = 'expert' AND users.is_active = true"
   },
   {
     "id": "pbc_169352518",

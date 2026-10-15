@@ -1,16 +1,19 @@
-import pb from "@/lib/pb"
-import { boundedFullList } from "@/lib/bounded-records"
+import { ALLOCATION_ROLE_GROUPS } from "@/lib/allocation-role-groups"
 import type { SpecialistCategory } from "@/lib/specialist-types"
 import { HeroSection } from "@/components/landing/HeroSection"
 import { PortalDiscovery } from "@/components/landing/PortalDiscovery"
 import { getTeamExperts } from "@/lib/team-experts"
 
 export default async function HomePage() {
-  const [experts, categoryRecords] = await Promise.all([
-    getTeamExperts({ all: true }),
-    boundedFullList(pb.collection("specialist_role_categories"), { sort: "order,name_en", filter: "is_active = true" }).catch(() => []),
-  ])
-  const categories = categoryRecords as unknown as SpecialistCategory[]
+  const experts = await getTeamExperts({ all: true })
+  const categories: SpecialistCategory[] = ALLOCATION_ROLE_GROUPS.map((group, order) => ({
+    id: group.id,
+    key: group.id,
+    name_en: group.en,
+    name_ar: group.ar,
+    order,
+    is_active: true,
+  }))
   return (
     <div className="flex min-h-screen flex-col">
       {/* 1. Hero Section */}

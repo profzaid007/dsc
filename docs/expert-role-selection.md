@@ -14,3 +14,11 @@ includes the same fields and view for fresh installations.
 
 The selector can also read an existing role catalog when its API rules permit
 access, so authenticated installations remain usable while deploying the view.
+
+The homepage's Specialist category filter uses these same Role Groups and the
+expert's saved role IDs. Apply
+`pb_migrations/1792800100_public_expert_role_filter.js` after the role-selection
+migration to include `specialist_roles` in `experts_public`. The homepage reads
+role grouping from `expert_roles_public`, so visitors do not need access to
+private roles or expert profiles. Experts with several roles appear under each
+matching group; All categories retains experts with no roles selected.
