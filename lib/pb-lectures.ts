@@ -27,6 +27,8 @@ function getThumbnailUrl(record: Record<string, unknown>): string | undefined {
 export function lectureFromDB(record: Record<string, unknown>): Lecture {
   return {
     id: record.id as string,
+    main_category: (record.main_category as string) || "",
+    subcategory: (record.subcategory as string) || "",
     title: record.title as Lecture["title"],
     description: record.description as Lecture["description"],
     speaker: record.speaker as Lecture["speaker"],
@@ -48,6 +50,8 @@ function lectureToDB(
 ): Record<string, unknown> {
   const dbData: Record<string, unknown> = {}
 
+  if (data.main_category !== undefined) dbData.main_category = data.main_category
+  if (data.subcategory !== undefined) dbData.subcategory = data.subcategory
   if (data.title !== undefined) dbData.title = data.title
   if (data.description !== undefined) dbData.description = data.description
   if (data.speaker !== undefined) dbData.speaker = data.speaker

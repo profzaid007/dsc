@@ -29,8 +29,8 @@ const settingsCards = [
   {
     title: { en: "Lookups", ar: "القوائم المرجعية" },
     description: {
-      en: "Manage tool types, case types, and user types",
-      ar: "إدارة أنواع الأدوات وأنواع الحالات وأنواع المستخدمين",
+      en: "Manage tool types and user types",
+      ar: "إدارة أنواع الأدوات وأنواع المستخدمين",
     },
     href: "/dashboard/admin/settings/lookups",
     icon: List,

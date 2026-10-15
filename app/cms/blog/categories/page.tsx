@@ -1,4 +1,5 @@
 "use client"
+import { MAIN_CLASSIFICATIONS, classificationParent } from "@/lib/classification"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState, useCallback } from "react"
@@ -36,6 +37,8 @@ export default function BlogCategoriesPage() {
   const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const [categories, setCategories] = useState<BlogCategory[]>([])
   const [loading, setLoading] = useState(true)
+  const [newMain, setNewMain] = useState("")
+  const [editMain, setEditMain] = useState("")
   const [newKey, setNewKey] = useState("")
   const [newLabelEn, setNewLabelEn] = useState("")
   const [newLabelAr, setNewLabelAr] = useState("")
@@ -64,7 +67,7 @@ export default function BlogCategoriesPage() {
   const handleAdd = async () => {
     const trimmedKey = newKey.trim()
     const trimmedLabelEn = newLabelEn.trim()
-    if (!trimmedKey || !trimmedLabelEn) {
+    if (!trimmedKey || !trimmedLabelEn || !newMain) {
       alert(
         t(
           {
@@ -79,6 +82,7 @@ export default function BlogCategoriesPage() {
     setAdding(true)
     try {
       await blogCategoriesCollection.create({
+        main_category: newMain,
         key: trimmedKey,
         label_en: trimmedLabelEn,
         label_ar: newLabelAr.trim() || undefined,
@@ -127,6 +131,7 @@ export default function BlogCategoriesPage() {
   }
 
   const startEdit = (cat: BlogCategory) => {
+    setEditMain(cat.main_category || classificationParent(cat.key))
     setEditingId(cat.id)
     setEditKey(cat.key)
     setEditLabelEn(cat.label_en)
@@ -147,6 +152,7 @@ export default function BlogCategoriesPage() {
     setSavingEdit(true)
     try {
       const updated = await blogCategoriesCollection.update(id, {
+        main_category: editMain,
         key: trimmedKey,
         label_en: trimmedLabelEn,
         label_ar: editLabelAr.trim() || undefined,
@@ -187,6 +193,18 @@ export default function BlogCategoriesPage() {
         </p>
       </div>
 
+      <section className="rounded-md border p-4 space-y-3">
+        <h2 className="font-semibold">{lang === "ar" ? "التصنيفات الرئيسية الموحّدة" : "Unified main categories"}</h2>
+        <ul className="grid gap-2 sm:grid-cols-2">{MAIN_CLASSIFICATIONS.map(c => <li key={c.key}>{c[lang]}{c.media_only ? (lang === "ar" ? " — محتوى إعلامي فقط" : " — media content only") : ""}</li>)}</ul>
+      </section>
+      <h2 className="font-semibold">{lang === "ar" ? "التصنيفات الفرعية" : "Subcategories"}</h2>
+      <label className="block space-y-2 text-sm">
+        <span>{lang === "ar" ? "التصنيف الرئيسي للتصنيف الفرعي الجديد" : "Parent for new subcategory"}</span>
+        <select className="h-10 rounded-md border bg-background px-3" value={newMain} onChange={e => setNewMain(e.target.value)}>
+          <option value="">{lang === "ar" ? "اختر التصنيف الرئيسي" : "Choose main category"}</option>
+          {MAIN_CLASSIFICATIONS.map(c => <option key={c.key} value={c.key}>{c[lang]}</option>)}
+        </select>
+      </label>
       <div className="flex items-start gap-2">
         <div className="flex flex-1 flex-wrap items-center gap-2">
           <Input
@@ -251,7 +269,7 @@ export default function BlogCategoriesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t({ en: "Key", ar: "المفتاح" }, lang)}</TableHead>
+                <TableHead>{lang === "ar" ? "التصنيف الرئيسي / المفتاح" : "Main category / key"}</TableHead>
                 <TableHead>
                   {t({ en: "Label (EN)", ar: "التسمية (إنجليزي)" }, lang)}
                 </TableHead>
@@ -269,8 +287,12 @@ export default function BlogCategoriesPage() {
                   {editingId === cat.id ? (
                     <>
                       <TableCell>
+                        <select aria-label={lang === "ar" ? "التصنيف الرئيسي" : "Main category"} value={editMain} onChange={e => setEditMain(e.target.value)} className="h-8 w-full border rounded bg-background">
+                          {MAIN_CLASSIFICATIONS.map(c => <option key={c.key} value={c.key}>{c[lang]}</option>)}
+                        </select>
                         <Input
                           value={editKey}
+                          disabled
                           onChange={(e) => setEditKey(e.target.value)}
                           className="h-8 w-28"
                         />
@@ -319,7 +341,7 @@ export default function BlogCategoriesPage() {
                     </>
                   ) : (
                     <>
-                      <TableCell className="font-medium">{cat.key}</TableCell>
+                      <TableCell className="font-medium"><div>{MAIN_CLASSIFICATIONS.find(c => c.key === (cat.main_category || classificationParent(cat.key)))?.[lang] || (lang === "ar" ? "غير مرتبط" : "Unmapped")}</div><code className="text-xs text-muted-foreground">{cat.key}</code></TableCell>
                       <TableCell>{cat.label_en}</TableCell>
                       <TableCell dir="rtl">{cat.label_ar || "—"}</TableCell>
                       <TableCell>

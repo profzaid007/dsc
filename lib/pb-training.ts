@@ -49,6 +49,8 @@ function getFileUrl(record: Record<string, unknown>, fieldName: string): string 
 export function programFromDB(record: Record<string, unknown>): TrainingProgram {
   return {
     id: record.id as string,
+    main_category: (record.main_category as string) || "",
+    subcategory: (record.subcategory as string) || "",
     title: record.name as TrainingProgram["title"],
     category: record.category as TrainingProgram["category"],
     trainer: record.trainer_name as TrainerInfo,
@@ -84,6 +86,8 @@ function programToDB(
 ): Record<string, unknown> {
   const dbData: Record<string, unknown> = {}
 
+  if (data.main_category !== undefined) dbData.main_category = data.main_category
+  if (data.subcategory !== undefined) dbData.subcategory = data.subcategory
   if (data.title !== undefined) dbData.name = data.title
   if (data.category !== undefined) dbData.category = data.category
   if (data.trainer !== undefined) dbData.trainer_name = data.trainer

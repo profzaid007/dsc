@@ -1,4 +1,5 @@
 "use client"
+import { blogField } from "@/lib/blog-content"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState } from "react"
@@ -48,7 +49,7 @@ export default function CmsBlogListPage() {
     try {
       const newPost = await blogPagesCollection.create({
         slug,
-        title: "New Post",
+        title: t({ en: "New Post", ar: "منشور جديد" }, lang),
         category: "",
       })
       router.push(`/cms/blog/${newPost.slug}`)
@@ -162,7 +163,7 @@ export default function CmsBlogListPage() {
                       href={`/cms/blog/${post.slug}`}
                       className="hover:underline"
                     >
-                      {post.title_en}
+                      {blogField(post, "title")}
                     </Link>
                   </TableCell>
                   <TableCell>{post.author_name || "—"}</TableCell>
@@ -198,7 +199,7 @@ export default function CmsBlogListPage() {
                         variant="ghost"
                         size="icon"
                         disabled={!access.can("cms.delete")}
-                        onClick={() => handleDelete(post.id, post.title_en)}
+                        onClick={() => handleDelete(post.id, blogField(post, "title"))}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>

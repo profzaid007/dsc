@@ -15,6 +15,7 @@ export interface InfoPage {
 }
 
 export interface BlogPage {
+  main_category?: string
   id: string
   slug: string
   title_en: string
@@ -31,6 +32,7 @@ export interface BlogPage {
 }
 
 export interface BlogCategory {
+  main_category?: string
   id: string
   key: string
   label_en: string

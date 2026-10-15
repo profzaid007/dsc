@@ -1,6 +1,7 @@
 "use client"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 
+import { ClassificationFields } from "@/components/form/ClassificationFields"
 import { useLang } from "@/lib/lang-context"
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -126,6 +127,8 @@ export function LectureForm({
           <CardTitle>{ui("Basic Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <ClassificationFields required={!initialData} main={formData.main_category || ""} sub={formData.subcategory || ""} disabled={isSubmitting}
+            onChange={(main, sub) => setFormData({ ...formData, main_category: main, subcategory: sub })} />
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="titleEn">{ui("Title (English) *")}</Label>

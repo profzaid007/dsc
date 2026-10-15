@@ -1,4 +1,5 @@
 "use client"
+import { EXPERT_CLASSIFICATIONS, MAIN_CLASSIFICATIONS, mainCategoryKey } from "@/lib/classification"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useState } from "react"
@@ -43,7 +44,8 @@ export default function SpecialistsSettings() {
   const { isAdmin, isSuperAdmin, isLoading } = useAuth()
   const { lang } = useLang()
   const ar = lang === "ar"
-  const { categories, roles, loading, error, refresh } = useSpecialists()
+  const { categories: storedCategories, roles, loading, error, refresh } = useSpecialists()
+  const categories = storedCategories.map(c => { const main = MAIN_CLASSIFICATIONS.find(m => m.key === mainCategoryKey(c.key)); return main ? { ...c, name_en: main.en, name_ar: main.ar } : c })
   const [formOpen, setFormOpen] = useState(false)
   const [categorySearch, setCategorySearch] = useState("")
   const [roleSearch, setRoleSearch] = useState("")
@@ -97,6 +99,10 @@ export default function SpecialistsSettings() {
       )
       return
     }
+    if (kind === "role" && !EXPERT_CLASSIFICATIONS.some(c => c.key === mainCategoryKey(categories.find(x => x.id === category)?.key || ""))) {
+      setFormError(ar ? "اختر تصنيفًا مهنيًا؛ التصنيف الإعلامي لا يقبل أدوار تخصص." : "Choose a professional category; media does not accept specialist roles.")
+      return
+    }
     setFormError("")
     setSaving(true)
     setNotice("")
@@ -121,6 +127,7 @@ export default function SpecialistsSettings() {
               role_name_en: en.trim(),
               role_name_ar: arabic.trim(),
               category,
+              role_group: mainCategoryKey(categories.find(c => c.id === category)?.key || ""),
               ...(id ? {} : { order: roles.length + 1, is_active: true }),
             }
       if (id) await col.update(id, data)
@@ -222,7 +229,7 @@ export default function SpecialistsSettings() {
     values.some((value) =>
       value.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
     )
-  const filteredCategories = categories.filter((c) =>
+  const filteredCategories = categories.filter(c => MAIN_CLASSIFICATIONS.some(main => main.key === mainCategoryKey(c.key))).filter((c) =>
     matches(categorySearch, c.name_en, c.name_ar)
   )
   const filteredRoles = roles.filter(
@@ -242,7 +249,7 @@ export default function SpecialistsSettings() {
   ) => (
     <button
       type="button"
-      disabled={saving}
+      disabled={saving || k === "category"}
       className={`${styles.status} ${item.is_active ? styles.active : styles.inactive}`}
       title={
         item.is_active
@@ -269,7 +276,7 @@ export default function SpecialistsSettings() {
     <div className={styles.actions}>
       <button
         type="button"
-        disabled={saving || !access.can("settings.update")}
+        disabled={saving || k === "category" || !access.can("settings.update")}
         className={styles.edit}
         onClick={() => {
           if (access.can("settings.update")) edit(k, item)
@@ -280,7 +287,7 @@ export default function SpecialistsSettings() {
       </button>
       <button
         type="button"
-        disabled={saving || !access.can("settings.delete")}
+        disabled={saving || k === "category" || !access.can("settings.delete")}
         className={styles.delete}
         onClick={() =>
           openDeleteDialog({
@@ -377,15 +384,16 @@ export default function SpecialistsSettings() {
               type="button"
               className={styles.add}
               disabled={
-                saving || loading || !!error || !access.can("settings.create")
+                true
               }
               onClick={() => add("category")}
             >
               <Plus size={17} />
-              {ar ? "إضافة فئة" : "Add category"}
+              {ar ? "٧ تصنيفات موحّدة" : "7 unified categories"}
             </button>
           </div>
         </div>
+        <p className="px-4 pb-3 text-sm text-muted-foreground">{ar ? "التصنيفات الرئيسية موحّدة وثابتة. تُدار التصنيفات الفرعية من إدارة تصنيفات المدونة، ويُستخدم التصنيف الإعلامي للمحتوى فقط." : "Main categories are shared and fixed. Manage subcategories in Blog Categories. The media category is for content only."}</p>
         <div className={styles.tableWrap}>
           <table className={`${styles.table} ${styles.categoryTable}`}>
             <thead>
@@ -566,7 +574,7 @@ export default function SpecialistsSettings() {
                   <option value="">
                     {ar ? "اختر فئة" : "Select category"}
                   </option>
-                  {categories.map((c) => (
+                  {categories.filter(c => EXPERT_CLASSIFICATIONS.some(main => main.key === mainCategoryKey(c.key))).map((c) => (
                     <option key={c.id} value={c.id}>
                       {ar ? c.name_ar : c.name_en}
                     </option>

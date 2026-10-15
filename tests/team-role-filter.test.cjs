@@ -13,7 +13,11 @@ function load(file, mocks) {
   })
   return exports
 }
+const classification = load("lib/classification.ts", {
+  "./classification-catalog.json": JSON.parse(fs.readFileSync("lib/classification-catalog.json", "utf8")),
+})
 const groups = load("lib/allocation-role-groups.ts", {
+  "./classification": classification,
   "./allocation-role-catalog.json": JSON.parse(fs.readFileSync("lib/allocation-role-catalog.json", "utf8")),
 })
 

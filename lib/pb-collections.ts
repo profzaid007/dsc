@@ -654,6 +654,7 @@ export const blogPagesCollection = {
         slug: item.slug as string,
         title_en: item.title_en as string,
         title_ar: item.title_ar as string | undefined,
+        main_category: (item.main_category as string) || "",
         category: item.category as string,
         content_en: item.content_en as string,
         content_ar: item.content_ar as string | undefined,
@@ -678,6 +679,7 @@ export const blogPagesCollection = {
         slug: data.slug as string,
         title_en: data.title_en as string,
         title_ar: data.title_ar as string | undefined,
+        main_category: (data.main_category as string) || "",
         category: data.category as string,
         content_en: data.content_en as string,
         content_ar: data.content_ar as string | undefined,
@@ -704,6 +706,7 @@ export const blogPagesCollection = {
         slug: data.slug as string,
         title_en: data.title_en as string,
         title_ar: data.title_ar as string | undefined,
+        main_category: (data.main_category as string) || "",
         category: data.category as string,
         content_en: data.content_en as string,
         content_ar: data.content_ar as string | undefined,
@@ -742,6 +745,7 @@ export const blogPagesCollection = {
       slug: result.slug as string,
       title_en: result.title_en as string,
       title_ar: result.title_ar as string | undefined,
+      main_category: (result.main_category as string) || "",
       category: result.category as string,
       content_en: result.content_en as string,
       content_ar: result.content_ar as string | undefined,
@@ -762,6 +766,7 @@ export const blogPagesCollection = {
       slug: result.slug as string,
       title_en: result.title_en as string,
       title_ar: result.title_ar as string | undefined,
+      main_category: (result.main_category as string) || "",
       category: result.category as string,
       content_en: result.content_en as string,
       content_ar: result.content_ar as string | undefined,
@@ -795,6 +800,7 @@ export const blogPagesCollection = {
     if (data.title_en !== undefined) formData.append("title_en", data.title_en)
     if (data.title_ar !== undefined) formData.append("title_ar", data.title_ar)
     if (data.slug !== undefined) formData.append("slug", data.slug)
+    if (data.main_category !== undefined) formData.append("main_category", data.main_category)
     if (data.category !== undefined) formData.append("category", data.category)
     if (data.content_en !== undefined)
       formData.append("content_en", data.content_en)
@@ -846,6 +852,7 @@ export const blogCategoriesCollection = {
     })
     return data.map((item) => ({
       id: item.id as string,
+      main_category: (item.main_category as string) || "",
       key: item.key as string,
       label_en: item.label_en as string,
       label_ar: item.label_ar as string | undefined,
@@ -853,6 +860,7 @@ export const blogCategoriesCollection = {
   },
 
   async create(data: {
+    main_category?: string
     key: string
     label_en: string
     label_ar?: string
@@ -860,6 +868,7 @@ export const blogCategoriesCollection = {
     const result = await pb.collection("blog_categories").create(data)
     return {
       id: result.id as string,
+      main_category: (result.main_category as string) || "",
       key: result.key as string,
       label_en: result.label_en as string,
       label_ar: result.label_ar as string | undefined,
@@ -868,11 +877,12 @@ export const blogCategoriesCollection = {
 
   async update(
     id: string,
-    data: { key?: string; label_en?: string; label_ar?: string }
+    data: { key?: string; label_en?: string; label_ar?: string; main_category?: string }
   ): Promise<BlogCategory> {
     const result = await pb.collection("blog_categories").update(id, data)
     return {
       id: result.id as string,
+      main_category: (result.main_category as string) || "",
       key: result.key as string,
       label_en: result.label_en as string,
       label_ar: result.label_ar as string | undefined,

@@ -1,4 +1,6 @@
 "use client"
+import { MAIN_CLASSIFICATIONS, classificationParent, classificationLabel } from "@/lib/classification"
+import { blogField } from "@/lib/blog-content"
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
@@ -56,6 +58,7 @@ export function BlogListing({
   const copy = (en: string, ar: string) => (arabic ? ar : en)
   const [query, setQuery] = useState("")
   const [search, setSearch] = useState("")
+  const [mainCategory, setMainCategory] = useState("")
   const [category, setCategory] = useState("")
   const [slide, setSlide] = useState(0)
   const [showAll, setShowAll] = useState(false)
@@ -63,12 +66,13 @@ export function BlogListing({
     () =>
       posts.filter(
         (post) =>
+          (!mainCategory || (post.main_category || classificationParent(post.category)) === mainCategory) &&
           (!category || post.category === category) &&
-          `${localizedField(post, lang, "title")} ${excerpt(localizedField(post, lang, "content"))}`
+          `${blogField(post, "title")} ${excerpt(blogField(post, "content"))}`
             .toLocaleLowerCase()
             .includes(search.toLocaleLowerCase().trim())
       ),
-    [posts, category, search, lang]
+    [posts, category, search, mainCategory]
   )
   const featuredPosts = filtered.slice(0, 4)
   const featured = featuredPosts[slide % Math.max(featuredPosts.length, 1)]
@@ -76,7 +80,7 @@ export function BlogListing({
   const Chevron = arabic ? ChevronLeft : ChevronRight
   const label = (post: ListingPost) => {
     const found = categories.find((item) => item.key === post.category)
-    return found ? localizedField(found, lang, "label") : post.category
+    return found ? localizedField(found, lang, "label") : classificationLabel(post.main_category || post.category, lang)
   }
   const colorIndex = (post: ListingPost) =>
     Math.max(
@@ -87,7 +91,7 @@ export function BlogListing({
     Math.max(
       1,
       Math.ceil(
-        excerpt(localizedField(post, lang, "content")).split(/\s+/).length / 180
+        excerpt(blogField(post, "content")).split(/\s+/).length / 180
       )
     )
   const date = (post: ListingPost) => {
@@ -108,7 +112,7 @@ export function BlogListing({
         width={900}
         height={600}
         src={post.thumbnailUrl || "/blog/books-hero.jpg"}
-        alt={post.thumbnailUrl ? localizedField(post, lang, "title") : ""}
+        alt={post.thumbnailUrl ? blogField(post, "title") : ""}
         loading="lazy"
       />
     </div>
@@ -134,6 +138,7 @@ export function BlogListing({
   const reset = () => {
     setQuery("")
     setSearch("")
+    setMainCategory("")
     setCategory("")
     setSlide(0)
     setShowAll(true)
@@ -165,12 +170,12 @@ export function BlogListing({
                 </span>
                 <h2>
                   <Link href={`/blog/${featured.slug}`}>
-                    {localizedField(featured, lang, "title")}
+                    {blogField(featured, "title")}
                   </Link>
                 </h2>
                 {metadata(featured, true)}
                 <p className={styles.featuredExcerpt}>
-                  {excerpt(localizedField(featured, lang, "content"))}
+                  {excerpt(blogField(featured, "content"))}
                 </p>
                 <Link
                   className={styles.readButton}
@@ -272,7 +277,7 @@ export function BlogListing({
                   <article key={post.id} className={styles.card}>
                     <Link
                       href={`/blog/${post.slug}`}
-                      aria-label={localizedField(post, lang, "title")}
+                      aria-label={blogField(post, "title")}
                     >
                       {photo(post, styles.cardPhoto)}
                     </Link>
@@ -285,10 +290,10 @@ export function BlogListing({
                       </span>
                       <h3>
                         <Link href={`/blog/${post.slug}`}>
-                          {localizedField(post, lang, "title")}
+                          {blogField(post, "title")}
                         </Link>
                       </h3>
-                      <p>{excerpt(localizedField(post, lang, "content"))}</p>
+                      <p>{excerpt(blogField(post, "content"))}</p>
                       {metadata(post)}
                       <Link
                         className={styles.textLink}
@@ -341,9 +346,16 @@ export function BlogListing({
           </section>
           <section className={styles.panel}>
             <h2>{copy("Categories", "التصنيفات")}</h2>
+            <label className="mb-4 block space-y-2 text-sm font-medium">
+              <span>{copy("Main category", "التصنيف الرئيسي")}</span>
+              <select className="h-10 w-full rounded-md border bg-background px-3" value={mainCategory} onChange={e => { setMainCategory(e.target.value); setCategory(""); setSlide(0); setShowAll(true) }}>
+                <option value="">{copy("All categories", "جميع التصنيفات")}</option>
+                {MAIN_CLASSIFICATIONS.map(c => <option key={c.key} value={c.key}>{c[lang]}</option>)}
+              </select>
+            </label>
             <div className={styles.categories}>
               {categories.length ? (
-                categories.map((item, index) => {
+                categories.filter(item => !mainCategory || (item.main_category || classificationParent(item.key)) === mainCategory).map((item, index) => {
                   const Icon = categoryIcons[index % 6]
                   return (
                     <button
@@ -392,7 +404,7 @@ export function BlogListing({
               {posts.slice(0, 3).map((post) => (
                 <Link key={post.id} href={`/blog/${post.slug}`}>
                   <div>
-                    <h3>{localizedField(post, lang, "title")}</h3>
+                    <h3>{blogField(post, "title")}</h3>
                     <span>
                       <CalendarDays size={12} />
                       {date(post)}

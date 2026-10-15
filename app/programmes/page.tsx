@@ -1,5 +1,6 @@
 "use client"
 
+import { classificationLabel } from "@/lib/classification"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import {
@@ -34,6 +35,7 @@ type Event = {
   presenter: string
   description: string
   category: string
+  subcategory: string
   categoryKey: string
   presenterKey: string
   location: string
@@ -116,8 +118,9 @@ export default function ProgrammesPage() {
         title: text(l.title),
         presenter: text(l.speaker.name),
         description: text(l.description),
-        category: "",
-        categoryKey: "",
+        category: l.main_category ? classificationLabel(l.main_category, lang) : "",
+        categoryKey: l.main_category || "",
+        subcategory: l.subcategory || "",
         presenterKey: l.speaker.name.en || l.speaker.name.ar,
         location: l.schedule.location,
         mode: "",
@@ -136,8 +139,9 @@ export default function ProgrammesPage() {
         title: text(p.title),
         presenter: text(p.trainer.name),
         description: "",
-        category: text(p.category),
-        categoryKey: p.category.en || p.category.ar,
+        category: p.main_category ? classificationLabel(p.main_category, lang) : text(p.category),
+        categoryKey: p.main_category || p.category.en || p.category.ar,
+        subcategory: p.subcategory || "",
         presenterKey: p.trainer.name.en || p.trainer.name.ar,
         location: p.location,
         mode: p.type,

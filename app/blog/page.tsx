@@ -15,6 +15,7 @@ export default async function BlogPage() {
     ])
     categories = catRecords.map((record) => ({
       id: record.id,
+      main_category: record.main_category || "",
       key: record.key,
       label_en: record.label_en,
       label_ar: record.label_ar,
@@ -28,6 +29,7 @@ export default async function BlogPage() {
         slug: record.slug,
         title_en: record.title_en || "",
         title_ar: record.title_ar,
+        main_category: record.main_category || "",
         category: record.category || "",
         content_en: record.content_en || "",
         content_ar: record.content_ar,

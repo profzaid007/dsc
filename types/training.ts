@@ -37,6 +37,8 @@ export interface ProgramSchedule {
 }
 
 export interface TrainingProgram {
+  main_category?: string
+  subcategory?: string
   id: string
   title: BilingualString
   category: BilingualString

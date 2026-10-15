@@ -1,34 +1,9 @@
+import { EXPERT_CLASSIFICATIONS, mainCategoryKey } from "./classification"
 import catalog from "./allocation-role-catalog.json"
 import type { RolesManagement } from "@/types/expert-role"
 
-export const ALLOCATION_ROLE_GROUPS = [
-  {
-    id: "special-needs",
-    en: "Special Needs & Therapy",
-    ar: "الاحتياجات الخاصة والعلاج",
-  },
-  {
-    id: "mental-health",
-    en: "Psychology & Mental Health",
-    ar: "علم النفس والصحة النفسية",
-  },
-  {
-    id: "medical",
-    en: "Medical Specialists",
-    ar: "التخصصات الطبية",
-  },
-  {
-    id: "education",
-    en: "Education & Training",
-    ar: "التعليم والتدريب",
-  },
-  {
-    id: "leadership",
-    en: "Institutional & Leadership",
-    ar: "المؤسسات والقيادة",
-  },
-  { id: "other", en: "Other Roles", ar: "أدوار أخرى" },
-] as const
+// Uses the same six professional categories as articles, events and the landing page.
+export const ALLOCATION_ROLE_GROUPS = EXPERT_CLASSIFICATIONS.map(c => ({ id: c.key, en: c.en, ar: c.ar }))
 
 const legacyGroups: Record<string, string> = {
   physician: "medical",
@@ -39,6 +14,7 @@ const legacyGroups: Record<string, string> = {
 
 /** Classify existing records without replacing their IDs or tool permissions. */
 export function normalizeAllocationRole(role: RolesManagement): RolesManagement {
+  if (role.role_group === "psychology") role = { ...role, role_group: mainCategoryKey(role.role_group) }
   const knownGroup = ALLOCATION_ROLE_GROUPS.some(group => group.id === role.role_group)
   if (knownGroup) return role
   const name = role.role_name_en?.trim().toLowerCase() || ""

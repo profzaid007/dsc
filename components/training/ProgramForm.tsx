@@ -1,6 +1,8 @@
 "use client"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 
+import { ClassificationFields } from "@/components/form/ClassificationFields"
+import { classificationLabel } from "@/lib/classification"
 import { useLang } from "@/lib/lang-context"
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -168,28 +170,11 @@ export function ProgramForm({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="categoryEn">{ui("Category (English)")}</Label>
-              <Input
-                id="categoryEn"
-                dir="ltr"
-                value={formData.category.en}
-                onChange={(e) => updateBilingual("category", "en", e.target.value)}
-                placeholder={ui("e.g., Leadership")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="categoryAr">{ui("Category (Arabic)")}</Label>
-              <Input
-                id="categoryAr"
-                value={formData.category.ar}
-                onChange={(e) => updateBilingual("category", "ar", e.target.value)}
-                placeholder="مثال: القيادة"
-                dir="rtl"
-              />
-            </div>
-          </div>
+          {!formData.main_category && (formData.category.en || formData.category.ar) && <p className="text-sm text-muted-foreground">{lang === "ar" ? "التصنيف السابق: " : "Previous category: "}{formData.category[lang] || formData.category.en}</p>}
+          <ClassificationFields required={!initialData} main={formData.main_category || ""} sub={formData.subcategory || ""} disabled={isSubmitting}
+            onChange={(main, sub) => setFormData({ ...formData, main_category: main, subcategory: sub,
+              category: { en: classificationLabel(main, "en"), ar: classificationLabel(main, "ar") } })} />
+
         </CardContent>
       </Card>
 

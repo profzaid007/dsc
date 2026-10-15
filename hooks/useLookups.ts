@@ -5,7 +5,7 @@ import { boundedFullList } from "@/lib/bounded-records"
 import { useState, useCallback } from "react"
 import pb, { getErrorMessage } from "@/lib/pb"
 
-export type LookupType = "tool_types" | "case_types" | "user_types"
+export type LookupType = "tool_types" | "user_types"
 
 export interface LookupRecord {
   id: string

@@ -1,9 +1,10 @@
+import { blogField, blogContentLang } from "@/lib/blog-content"
 import { boundedFullList } from "@/lib/bounded-records"
 import Link from "next/link"
 import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import pb from "@/lib/pb"
-import { localizedField, t } from "@/lib/i18n"
+import { t } from "@/lib/i18n"
 import { formatDate } from "@/lib/format-date"
 import type { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
@@ -51,6 +52,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       slug: record.slug as string,
       title_en: record.title_en as string,
       title_ar: record.title_ar as string | undefined,
+      main_category: record.main_category || "",
       category: rawCategory,
       content_en: record.content_en as string,
       content_ar: record.content_ar as string | undefined,
@@ -70,7 +72,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12">
+    <div className="mx-auto w-full max-w-4xl px-6 py-12">
       <Link
         href="/blog"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
@@ -94,14 +96,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </>
           )}
         </div>
-        <h1 className="text-3xl font-bold">
-          {localizedField(page, lang, "title")}
+        <h1 dir="auto" className="text-3xl font-bold">
+          {blogField(page, "title")}
         </h1>
       </div>
 
       <CmsContent
-        html={localizedField(page, lang, "content")}
-        lang={lang}
+        html={blogField(page, "content")}
+        lang={blogContentLang(blogField(page, "content"))}
       />
     </div>
   )

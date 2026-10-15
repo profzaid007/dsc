@@ -39,7 +39,6 @@ import { ArrowLeft, Pencil, Plus, Trash2, List } from "lucide-react"
 const LOOKUP_TYPES: { value: LookupType; label: { en: string; ar: string } }[] =
   [
     { value: "tool_types", label: { en: "Tool Types", ar: "أنواع الأدوات" } },
-    { value: "case_types", label: { en: "Case Types", ar: "أنواع الحالات" } },
     {
       value: "user_types",
       label: { en: "User Types", ar: "أنواع المستخدمين" },

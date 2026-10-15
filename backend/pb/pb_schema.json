@@ -558,6 +558,25 @@
         "presentable": false,
         "system": false,
         "type": "autodate"
+      },
+      {
+        "id": "selectmaincat",
+        "name": "main_category",
+        "type": "select",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "maxSelect": 1,
+        "values": [
+          "special-needs",
+          "mental-health",
+          "medical",
+          "education",
+          "research",
+          "leadership",
+          "dsc-news"
+        ]
       }
     ],
     "indexes": [
@@ -857,6 +876,19 @@
         "id": "bool_role_retired",
         "name": "is_retired",
         "type": "bool"
+      },
+      {
+        "id": "relationcat",
+        "name": "category",
+        "type": "relation",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "collectionId": "dscclassroot001",
+        "cascadeDelete": false,
+        "minSelect": 0,
+        "maxSelect": 1
       }
     ],
     "indexes": [],
@@ -3507,6 +3539,25 @@
         "presentable": false,
         "system": false,
         "type": "autodate"
+      },
+      {
+        "id": "selectmaincat",
+        "name": "main_category",
+        "type": "select",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "maxSelect": 1,
+        "values": [
+          "special-needs",
+          "mental-health",
+          "medical",
+          "education",
+          "research",
+          "leadership",
+          "dsc-news"
+        ]
       }
     ],
     "indexes": [
@@ -4622,6 +4673,38 @@
         "presentable": false,
         "system": false,
         "type": "autodate"
+      },
+      {
+        "id": "selectmaincat",
+        "name": "main_category",
+        "type": "select",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "maxSelect": 1,
+        "values": [
+          "special-needs",
+          "mental-health",
+          "medical",
+          "education",
+          "research",
+          "leadership",
+          "dsc-news"
+        ]
+      },
+      {
+        "id": "textsubcategory",
+        "name": "subcategory",
+        "type": "text",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "min": 0,
+        "max": 200,
+        "pattern": "",
+        "autogeneratePattern": ""
       }
     ],
     "indexes": [],
@@ -4867,6 +4950,38 @@
         "presentable": false,
         "system": false,
         "type": "autodate"
+      },
+      {
+        "id": "selectmaincat",
+        "name": "main_category",
+        "type": "select",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "maxSelect": 1,
+        "values": [
+          "special-needs",
+          "mental-health",
+          "medical",
+          "education",
+          "research",
+          "leadership",
+          "dsc-news"
+        ]
+      },
+      {
+        "id": "textsubcategory",
+        "name": "subcategory",
+        "type": "text",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "min": 0,
+        "max": 200,
+        "pattern": "",
+        "autogeneratePattern": ""
       }
     ],
     "indexes": [],
@@ -5016,11 +5131,31 @@
         "presentable": false,
         "system": false,
         "type": "autodate"
+      },
+      {
+        "id": "jsonmaincat",
+        "name": "main_category",
+        "type": "json",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "maxSize": 0
+      },
+      {
+        "id": "jsonsubcat",
+        "name": "subcategory",
+        "type": "json",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "maxSize": 0
       }
     ],
     "indexes": [],
     "system": false,
-    "viewQuery": "SELECT id, title, description, speaker, schedule, duration, thumbnail, status, is_public, current_registrations, created, updated FROM public_lectures WHERE is_public = true"
+    "viewQuery": "SELECT id, title, description, speaker, schedule, duration, thumbnail, status, is_public, current_registrations, created, updated , main_category, subcategory FROM public_lectures WHERE is_public = true"
   },
   {
     "id": "pbc_2769025244",
@@ -5693,5 +5828,90 @@
     "createRule": null,
     "updateRule": null,
     "deleteRule": null
+  },
+  {
+    "id": "dscclassroot001",
+    "name": "specialist_role_categories",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"super_admin\" || @request.auth.security_permissions:each ?= \"settings.create\")",
+    "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"super_admin\" || @request.auth.security_permissions:each ?= \"settings.update\")",
+    "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"super_admin\" || @request.auth.security_permissions:each ?= \"settings.delete\")",
+    "fields": [
+      {
+        "id": "textkey",
+        "name": "key",
+        "type": "text",
+        "required": true,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "min": 0,
+        "max": 0,
+        "pattern": "",
+        "autogeneratePattern": ""
+      },
+      {
+        "id": "textname_en",
+        "name": "name_en",
+        "type": "text",
+        "required": true,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "min": 0,
+        "max": 0,
+        "pattern": "",
+        "autogeneratePattern": ""
+      },
+      {
+        "id": "textname_ar",
+        "name": "name_ar",
+        "type": "text",
+        "required": true,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "min": 0,
+        "max": 0,
+        "pattern": "",
+        "autogeneratePattern": ""
+      },
+      {
+        "id": "numberorder",
+        "name": "order",
+        "type": "number",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false,
+        "min": null,
+        "max": null,
+        "onlyInt": false
+      },
+      {
+        "id": "boolis_active",
+        "name": "is_active",
+        "type": "bool",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false
+      },
+      {
+        "id": "boolmedia_only",
+        "name": "media_only",
+        "type": "bool",
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_specialist_category_key ON specialist_role_categories (key)"
+    ]
   }
 ]

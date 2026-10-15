@@ -1,5 +1,7 @@
 "use client"
-import { useUiTranslation } from "@/hooks/useUiTranslation"
+import { ClassificationFields } from "@/components/form/ClassificationFields"
+import { classificationParent } from "@/lib/classification"
+import { blogField, blogContentLang, blogContentPayload } from "@/lib/blog-content"
 
 
 import { boundedFullList } from "@/lib/bounded-records"
@@ -9,23 +11,15 @@ import Link from "next/link"
 import Image from "next/image"
 import { blogPagesCollection, blogCategoriesCollection } from "@/lib/pb-collections"
 import { BlogPage, BlogCategory } from "@/types/cms"
-import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
 import { CmsPreviewDialog } from "@/components/cms/CmsPreviewDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+
 import { Card } from "@/components/ui/card"
-import { Loader2, ArrowLeft, ArrowRight, Eye, Trash2, Copy } from "lucide-react"
+import { Loader2, ArrowLeft, ArrowRight, Eye, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { t, UI_STRINGS } from "@/lib/i18n"
@@ -39,23 +33,13 @@ function extractThumbnail(record: Record<string, unknown>): string {
   return t as string
 }
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-}
-
 export default function CmsBlogEditorPage() {
-  const ui = useUiTranslation()
 
   const { lang } = useLang()
   const params = useParams()
   const router = useRouter()
   const slug = params.slug as string
-  const [activeLang, setActiveLang] = useState<Lang>("en")
+
   const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
 
   const [page, setPage] = useState<BlogPage | null>(null)
@@ -66,11 +50,10 @@ export default function CmsBlogEditorPage() {
 
   // Form state
   const [enTitle, setEnTitle] = useState("")
-  const [arTitle, setArTitle] = useState("")
   const [postSlug, setPostSlug] = useState("")
   const [category, setCategory] = useState("")
+  const [mainCategory, setMainCategory] = useState("")
   const [enContent, setEnContent] = useState("")
-  const [arContent, setArContent] = useState("")
   const [isPublished, setIsPublished] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [authorName, setAuthorName] = useState("")
@@ -81,7 +64,6 @@ export default function CmsBlogEditorPage() {
 
   const [resetKey, setResetKey] = useState(0)
 
-  const isInitialMount = useRef(true)
   const pageRecordRef = useRef<Record<string, unknown> | null>(null)
 
   useEffect(() => {
@@ -105,6 +87,7 @@ export default function CmsBlogEditorPage() {
         slug: rawRecord.slug as string,
         title_en: rawRecord.title_en as string,
         title_ar: rawRecord.title_ar as string | undefined,
+        main_category: rawRecord.main_category as string,
         category: rawRecord.category as string,
         content_en: rawRecord.content_en as string,
         content_ar: rawRecord.content_ar as string | undefined,
@@ -116,12 +99,11 @@ export default function CmsBlogEditorPage() {
         updated: rawRecord.updated as string,
       }
       setPage(data)
-      setEnTitle(data.title_en)
-      setArTitle(data.title_ar || "")
+      setEnTitle(blogField(data, "title"))
       setPostSlug(data.slug)
       setCategory(data.category)
-      setEnContent(data.content_en)
-      setArContent(data.content_ar || "")
+      setMainCategory(data.main_category || classificationParent(data.category))
+      setEnContent(blogField(data, "content"))
       setIsPublished(data.is_published)
       setAuthorName(data.author_name)
       setCategories(cats)
@@ -130,37 +112,26 @@ export default function CmsBlogEditorPage() {
     load()
   }, [slug])
 
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false
-      return
-    }
-    // Auto-generate slug from English title
-    setPostSlug(slugify(enTitle))
-  }, [enTitle])
-
   const handleSave = useCallback(
     async (overrideContent?: string) => {
       if (!page) return
+      if (!mainCategory) {
+        toast.error(lang === "ar" ? "اختر التصنيف الرئيسي للمقال" : "Choose a main category for the article")
+        return
+      }
       setSaving(true)
       try {
-        const contentField = `content_${activeLang}` as const
-        const contentValue = overrideContent !== undefined
-          ? overrideContent
-          : (activeLang === "en" ? enContent : arContent)
+        const contentValue = overrideContent ?? enContent
         const updated = await blogPagesCollection.update(page.id, {
-          title_en: enTitle,
-          title_ar: arTitle,
+          ...blogContentPayload(enTitle, contentValue),
           slug: postSlug,
           category,
+          main_category: mainCategory,
           author_name: authorName,
-          [contentField]: contentValue,
         })
         setPage(updated)
-        setEnTitle(updated.title_en)
-        setArTitle(updated.title_ar || "")
-        setEnContent(updated.content_en)
-        setArContent(updated.content_ar || "")
+        setEnTitle(blogField(updated, "title"))
+        setEnContent(blogField(updated, "content"))
         // If slug changed, redirect to new slug
         if (updated.slug !== slug) {
           router.push(`/cms/blog/${updated.slug}`)
@@ -177,46 +148,21 @@ export default function CmsBlogEditorPage() {
         setSaving(false)
       }
     },
-    [page, enTitle, arTitle, postSlug, category, authorName, enContent, arContent, slug, router, activeLang, lang]
+    [page, enTitle, postSlug, category, mainCategory, authorName, enContent, slug, router, lang]
   )
 
-  const handleContentChange = useCallback(
-    (html: string) => {
-      if (activeLang === "en") {
-        setEnContent(html)
-      } else {
-        setArContent(html)
-      }
-    },
-    [activeLang]
-  )
-
-  const handleContentSave = useCallback(
-    async (html: string) => {
-      if (activeLang === "en") {
-        setEnContent(html)
-      } else {
-        setArContent(html)
-      }
-      await handleSave(html)
-    },
-    [handleSave, activeLang]
-  )
-
-  const copyFromEnglish = useCallback(() => {
-    setArTitle(enTitle)
-    setArContent(enContent)
-    setResetKey(t => t + 1)
-  }, [enTitle, enContent])
+  const handleContentSave = useCallback(async (html: string) => {
+    setEnContent(html)
+    await handleSave(html)
+  }, [handleSave])
 
   const handleDiscard = useCallback(() => {
     if (!page) return
-    setEnTitle(page.title_en)
-    setArTitle(page.title_ar || "")
+    setEnTitle(blogField(page, "title"))
     setPostSlug(page.slug)
     setCategory(page.category)
-    setEnContent(page.content_en)
-    setArContent(page.content_ar || "")
+    setMainCategory(page.main_category || classificationParent(page.category))
+    setEnContent(blogField(page, "content"))
     setIsPublished(page.is_published)
     setAuthorName(page.author_name)
     setThumbnailUrl(
@@ -329,7 +275,7 @@ export default function CmsBlogEditorPage() {
   const previewCategoryLabel = (() => {
     const matched = categories.find((c) => c.key === category)
     if (!matched) return category
-    return activeLang === "ar" && matched.label_ar ? matched.label_ar : matched.label_en
+    return lang === "ar" && matched.label_ar ? matched.label_ar : matched.label_en
   })()
 
   if (loading) {
@@ -401,23 +347,8 @@ export default function CmsBlogEditorPage() {
       </div>
 
       <Card className="space-y-4 p-4">
-        <div className="space-y-2">
-          <Label htmlFor="category">
-            {t({ en: "Category", ar: "التصنيف" }, lang)}
-          </Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger id="category" className="w-72">
-              <SelectValue placeholder={t({ en: "Select category", ar: "اختر التصنيف" }, lang)} />
-            </SelectTrigger>
-            <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)] min-w-[160px]">
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.key}>
-                  {activeLang === "ar" && cat.label_ar ? cat.label_ar : cat.label_en}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ClassificationFields main={mainCategory} sub={category} disabled={saving}
+          onChange={(main, sub) => { setMainCategory(main); setCategory(sub) }} />
 
         <div className="space-y-2">
           <Label htmlFor="author">
@@ -466,74 +397,31 @@ export default function CmsBlogEditorPage() {
         </div>
       </Card>
 
-      <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
-        <TabsList>
-          <TabsTrigger value="en">{ui("English")}</TabsTrigger>
-          <TabsTrigger value="ar">العربية</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {activeLang === "en" ? (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="en-title">
-              {t({ en: "Title (English)", ar: "العنوان (إنجليزي)" }, lang)}
-            </Label>
-            <Input
-              id="en-title"
-              value={enTitle}
-              onChange={(e) => setEnTitle(e.target.value)}
-              placeholder={t({ en: "Post title", ar: "عنوان المنشور" }, lang)}
-            />
-          </div>
-          <RichTextEditor
-            key={`${resetKey}-en`}
-            title={t({ en: "English Content", ar: "المحتوى (إنجليزي)" }, lang)}
-            initialContent={enContent}
-            onSave={handleContentSave}
-            isSaving={saving}
-            onImageUpload={handleImageUpload}
-            onDiscard={handleDiscard}
-            onChange={handleContentChange}
-          />
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="post-title">{t({ en: "Title", ar: "العنوان" }, lang)}</Label>
+          <Input id="post-title" dir="auto" value={enTitle} disabled={saving}
+            onChange={(e) => setEnTitle(e.target.value)} />
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="ar-title">
-              {t({ en: "Title (Arabic)", ar: "العنوان (عربي)" }, lang)}
-            </Label>
-            <Button variant="outline" size="sm" onClick={copyFromEnglish}>
-              <Copy className="mr-2 h-4 w-4" />
-              {t({ en: "Copy from English", ar: "نسخ من الإنجليزية" }, lang)}
-            </Button>
-          </div>
-          <Input
-            id="ar-title"
-            value={arTitle}
-            onChange={(e) => setArTitle(e.target.value)}
-            placeholder="عنوان المقال"
-          />
-          <RichTextEditor
-            key={`${resetKey}-ar`}
-            title={t({ en: "Arabic Content", ar: "المحتوى (عربي)" }, lang)}
-            initialContent={arContent}
-            onSave={handleContentSave}
-            isSaving={saving}
-            onImageUpload={handleImageUpload}
-            onDiscard={handleDiscard}
-            onChange={handleContentChange}
-            direction="rtl"
-          />
+        <div className="space-y-2">
+          <Label htmlFor="post-slug">{t({ en: "URL slug", ar: "معرف الرابط" }, lang)}</Label>
+          <Input id="post-slug" dir="auto" value={postSlug} disabled={saving}
+            onChange={(e) => setPostSlug(e.target.value)} />
         </div>
-      )}
+        <RichTextEditor key={resetKey}
+          title={t({ en: "Content", ar: "المحتوى" }, lang)}
+          initialContent={enContent} onSave={handleContentSave} isSaving={saving}
+          onImageUpload={handleImageUpload} onDiscard={handleDiscard}
+          onChange={setEnContent}
+          direction={blogContentLang(enContent || enTitle) === "ar" ? "rtl" : "ltr"} />
+      </div>
 
       <CmsPreviewDialog
         open={previewOpen}
         onOpenChange={setPreviewOpen}
-        title={activeLang === "ar" && arTitle ? arTitle : enTitle}
-        html={activeLang === "en" ? enContent : arContent}
-        lang={activeLang}
+        title={enTitle}
+        html={enContent}
+        lang={blogContentLang(enContent || enTitle)}
         path={`/blog/${postSlug}`}
       >
         <div className="mb-8 space-y-2">

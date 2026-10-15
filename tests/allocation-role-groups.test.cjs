@@ -6,7 +6,15 @@ const exportsState = {}
 new Function("exports", "require", ts.transpileModule(
   fs.readFileSync("lib/allocation-role-groups.ts", "utf8"),
   { compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true } }
-).outputText)(exportsState, () => JSON.parse(fs.readFileSync("lib/allocation-role-catalog.json", "utf8")))
+).outputText
+)(exportsState, name => {
+  if (name === "./classification") {
+    const classification = {}
+    new Function("exports", "require", ts.transpileModule(fs.readFileSync("lib/classification.ts", "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true } }).outputText)(classification, () => JSON.parse(fs.readFileSync("lib/classification-catalog.json", "utf8")))
+    return classification
+  }
+  return JSON.parse(fs.readFileSync("lib/allocation-role-catalog.json", "utf8"))
+})
 const { normalizeAllocationRole, allocationRowsForSave } = exportsState
 const role = (name, extra = {}) => ({ id: "existing-role", role_name_en: name, role_name_ar: "", tool_types: ["survey"], ...extra })
 
