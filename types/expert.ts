@@ -47,6 +47,7 @@ export interface ExpertProfileDraft {
   ageGroup: string[]
   /** Option keys for `specialization_type`, stored comma-separated on save. */
   specialization: string[]
+  specialistRoles: string[]
   consultationMode: string
   fee: string
   availability: string

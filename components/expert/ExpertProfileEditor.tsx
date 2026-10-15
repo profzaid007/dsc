@@ -1,5 +1,6 @@
 "use client"
 
+import { SpecialistSelector } from "@/components/specialists/SpecialistSelector"
 import { ExpertPublicDetailsFields } from "@/components/expert/ExpertPublicDetailsFields"
 
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -508,6 +509,9 @@ export function ExpertProfileEditor({
           </div>
         </CardHeader>
         <CardContent className="grid gap-5 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <SpecialistSelector value={draft.specialistRoles} onChange={(specialistRoles) => patch({ specialistRoles })} disabled={isSaving} />
+          </div>
           <div className="space-y-2">
             <Label>
               {t(

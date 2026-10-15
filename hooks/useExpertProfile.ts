@@ -41,6 +41,7 @@ export function emptyDraft(name = ""): ExpertProfileDraft {
     fieldOfStudy: "",
     ageGroup: [],
     specialization: [],
+    specialistRoles: [],
     consultationMode: "",
     fee: "",
     availability: "",
@@ -80,6 +81,7 @@ export function draftFromProfile(
     fieldOfStudy: toText(profile.field_of_study),
     ageGroup: toStringList(profile.age_group),
     specialization: toStringList(profile.specialization_type),
+    specialistRoles: toStringList(profile.specialist_roles),
     consultationMode: toText(profile.consultation_mode),
     fee: toText(profile.fee),
     availability: toText(profile.availability),
@@ -139,6 +141,7 @@ function expertProfileFormData(
   formData.set("highest_academic_degree", draft.highestAcademicDegree)
   formData.set("degree_title", draft.degreeTitle.trim())
   formData.set("field_of_study", draft.fieldOfStudy.trim())
+  formData.set("specialist_roles", JSON.stringify(draft.specialistRoles))
 
   // `age_group` is still a multi-select field, so each value is appended
   // separately. `specialization_type` became a single text field: the chosen

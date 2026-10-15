@@ -767,6 +767,41 @@
         "presentable": false,
         "system": false,
         "type": "autodate"
+      },
+      {
+        "hidden": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "id": "text_role_group",
+        "name": "role_group",
+        "type": "text",
+        "autogeneratePattern": "",
+        "max": 100,
+        "min": 0,
+        "pattern": "",
+        "primaryKey": false
+      },
+      {
+        "hidden": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "id": "number_role_order",
+        "name": "role_order",
+        "type": "number",
+        "min": null,
+        "max": null,
+        "onlyInt": true
+      },
+      {
+        "hidden": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "id": "bool_role_retired",
+        "name": "is_retired",
+        "type": "bool"
       }
     ],
     "indexes": [],
@@ -2024,6 +2059,19 @@
         "presentable": false,
         "system": false,
         "type": "autodate"
+      },
+      {
+        "hidden": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "id": "relation_expert_roles",
+        "name": "specialist_roles",
+        "type": "relation",
+        "collectionId": "pbc_1493570882",
+        "cascadeDelete": false,
+        "minSelect": 0,
+        "maxSelect": 100
       }
     ],
     "indexes": [
@@ -5227,5 +5275,97 @@
     ],
     "indexes": [],
     "system": false
+  },
+  {
+    "id": "pbc_2980040011",
+    "name": "expert_roles_public",
+    "type": "view",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 0,
+        "min": 0,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text2176491327",
+        "max": 0,
+        "min": 0,
+        "name": "role_name_en",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text4057400948",
+        "max": 0,
+        "min": 0,
+        "name": "role_name_ar",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "hidden": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "id": "text_role_group",
+        "name": "role_group",
+        "type": "text",
+        "autogeneratePattern": "",
+        "max": 100,
+        "min": 0,
+        "pattern": "",
+        "primaryKey": false
+      },
+      {
+        "hidden": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "id": "number_role_order",
+        "name": "role_order",
+        "type": "number",
+        "min": null,
+        "max": null,
+        "onlyInt": true
+      },
+      {
+        "hidden": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "id": "bool_role_retired",
+        "name": "is_retired",
+        "type": "bool"
+      }
+    ],
+    "indexes": [],
+    "viewQuery": "SELECT id, role_name_en, role_name_ar, role_group, role_order, is_retired FROM roles_management"
   }
 ]

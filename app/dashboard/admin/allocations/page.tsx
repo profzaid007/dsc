@@ -1,6 +1,6 @@
 "use client"
 
-import { ALLOCATION_ROLE_GROUPS } from "@/lib/allocation-role-groups"
+import { ALLOCATION_ROLE_GROUPS, allocationRowsForSave } from "@/lib/allocation-role-groups"
 import { boundedFullList } from "@/lib/bounded-records"
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { DataError } from "@/components/ui/data-error"
@@ -466,7 +466,7 @@ export default function AllocationsPage() {
     try {
       await pb.send(`/api/dsc/cases/${selectedCase}/allocations`, {
         method: "POST",
-        body: { rows },
+        body: { rows: allocationRowsForSave(rows, roleMgmtRoles) },
       })
       await refreshAllocations()
     } catch (error) {
@@ -743,7 +743,7 @@ export default function AllocationsPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {ALLOCATION_ROLE_GROUPS.map((group) => (
-                                <SelectItem key={group.id} value={group.id}>
+                                <SelectItem key={group.id} value={group.id} disabled={!roleMgmtRoles.some(role => !role.is_retired && role.role_group === group.id)}>
                                   {lang === "ar" ? group.ar : group.en}
                                 </SelectItem>
                               ))}
@@ -988,7 +988,7 @@ export default function AllocationsPage() {
               </SelectTrigger>
               <SelectContent>
                 {ALLOCATION_ROLE_GROUPS.map((group) => (
-                  <SelectItem key={group.id} value={group.id}>
+                  <SelectItem key={group.id} value={group.id} disabled={!roleMgmtRoles.some(role => !role.is_retired && role.role_group === group.id)}>
                     {lang === "ar" ? group.ar : group.en}
                   </SelectItem>
                 ))}

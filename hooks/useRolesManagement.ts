@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { normalizeAllocationRole } from "@/lib/allocation-role-groups"
 import { rolesManagementCollection } from "@/lib/pb-collections"
 import type { RolesManagement } from "@/types/expert-role"
 import { toast } from "sonner"
@@ -13,7 +14,7 @@ export function useRolesManagement() {
   const fetchRoles = useCallback(async () => {
     try {
       const data = await rolesManagementCollection.getAll()
-      setRoles(data)
+      setRoles(data.map(normalizeAllocationRole))
     } catch (error) {
       console.error("Failed to fetch roles:", error)
       toast.error(getErrorMessage(error))
