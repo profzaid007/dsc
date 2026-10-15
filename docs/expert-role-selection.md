@@ -52,3 +52,12 @@ saving updates the user first, so this fails before any selected roles are saved
 `(@request.body.field:isset = false || @request.body.field = field)` expressions.
 Admin/owner restrictions and protected-field checks are retained. The targeted
 repair script and canonical schema include the same compatibility fix.
+
+## Deleting specialist roles
+
+`1792800300_unused_specialist_role_deletion.js` enables deletion by active
+administrators only for roles with no `case_experts.role_id` or
+`expert_profiles.specialist_roles` references. This rule uses reverse relations
+and protects linked data even before the request hook is deployed. It matches
+the canonical schema. Deletion errors stay inside the confirmation dialog and
+also appear as a notification, so they remain visible when the page is scrolled.

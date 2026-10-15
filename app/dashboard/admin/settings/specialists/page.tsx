@@ -1,6 +1,11 @@
 "use client"
 import { useState } from "react"
-import { deleteSpecialistItem } from "@/lib/specialist-deletion"
+import { toast } from "sonner"
+import {
+  deleteSpecialistItem,
+  SpecialistDeletionBlockedError,
+  type SpecialistDeletionLink,
+} from "@/lib/specialist-deletion"
 import {
   Dialog,
   DialogContent,
@@ -32,6 +37,9 @@ export default function SpecialistsSettings() {
   } | null>(null)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState("")
+  const [deleteError, setDeleteError] = useState("")
+  const [deleteLinks, setDeleteLinks] = useState<SpecialistDeletionLink[]>([])
+  const [deleteLinkTotal, setDeleteLinkTotal] = useState(0)
   const reset = () => {
     setId("")
     setEn("")
@@ -118,8 +126,17 @@ export default function SpecialistsSettings() {
       setSaving(false)
     }
   }
+  function openDeleteDialog(target: NonNullable<typeof deleteTarget>) {
+    setDeleteError("")
+    setDeleteLinks([])
+    setDeleteLinkTotal(0)
+    setDeleteTarget(target)
+  }
   async function confirmDelete() {
     if (!deleteTarget) return
+    setDeleteError("")
+    setDeleteLinks([])
+    setDeleteLinkTotal(0)
     setSaving(true)
     setNotice("")
     try {
@@ -128,9 +145,16 @@ export default function SpecialistsSettings() {
       setDeleteTarget(null)
       await refresh()
       setNotice(ar ? "تم الحذف" : "Deleted")
+      toast.success(ar ? "تم الحذف" : "Deleted")
     } catch (error) {
-      setNotice(getErrorMessage(error, lang))
-      setDeleteTarget(null)
+      const message = getErrorMessage(error, lang)
+      setDeleteError(message)
+      if (error instanceof SpecialistDeletionBlockedError) {
+        setDeleteLinks(error.links)
+        setDeleteLinkTotal(error.total)
+      }
+      setNotice(message)
+      toast.error(message)
     } finally {
       setSaving(false)
     }
@@ -255,7 +279,7 @@ export default function SpecialistsSettings() {
                     className="text-destructive"
                     disabled={saving}
                     onClick={() =>
-                      setDeleteTarget({
+                      openDeleteDialog({
                         kind: "category",
                         id: c.id,
                         name: ar ? c.name_ar : c.name_en,
@@ -315,7 +339,7 @@ export default function SpecialistsSettings() {
                     className="text-destructive"
                     disabled={saving}
                     onClick={() =>
-                      setDeleteTarget({
+                      openDeleteDialog({
                         kind: "role",
                         id: r.id,
                         name: ar ? r.role_name_ar : r.role_name_en,
@@ -345,8 +369,56 @@ export default function SpecialistsSettings() {
                 : `Permanently delete “${deleteTarget?.name}”? This cannot be undone.`}
             </DialogDescription>
           </DialogHeader>
+          {deleteError && (
+            <p
+              role="alert"
+              className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {deleteError}
+            </p>
+          )}
+          {deleteLinks.length > 0 && (
+            <div className="space-y-2">
+              <p className="font-medium">
+                {ar
+                  ? "العناصر المرتبطة التي تمنع الحذف"
+                  : "Linked items preventing deletion"}
+              </p>
+              <ul className="max-h-64 space-y-3 overflow-y-auto rounded-lg border p-3">
+                {deleteLinks.map((link) => (
+                  <li key={link.id} className="space-y-1">
+                    {link.href ? (
+                      <a
+                        className="text-primary underline"
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <span>{link.label}</span>
+                    )}
+                    {link.detail && (
+                      <p className="text-xs text-muted-foreground">
+                        {link.detail}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {deleteLinkTotal > deleteLinks.length && (
+                <p className="text-xs text-muted-foreground">
+                  {ar
+                    ? `عرض ${deleteLinks.length} من ${deleteLinkTotal} عنصر مرتبط.`
+                    : `Showing ${deleteLinks.length} of ${deleteLinkTotal} linked items.`}
+                </p>
+              )}
+            </div>
+          )}
           <DialogFooter>
             <Button
+              type="button"
               variant="outline"
               disabled={saving}
               onClick={() => setDeleteTarget(null)}
@@ -354,6 +426,7 @@ export default function SpecialistsSettings() {
               {ar ? "إلغاء" : "Cancel"}
             </Button>
             <Button
+              type="button"
               variant="destructive"
               disabled={saving}
               onClick={() => void confirmDelete()}

@@ -633,7 +633,7 @@
     "viewRule": "@request.auth.id != \"\"",
     "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
     "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
-    "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+    "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") && case_experts_via_role_id.id = \"\" && expert_profiles_via_specialist_roles.id = \"\"",
     "name": "roles_management",
     "type": "base",
     "fields": [
