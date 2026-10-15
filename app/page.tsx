@@ -4,6 +4,9 @@ import { HeroSection } from "@/components/landing/HeroSection"
 import { PortalDiscovery } from "@/components/landing/PortalDiscovery"
 import { getTeamExperts } from "@/lib/team-experts"
 
+// Role selections can change after deployment; do not freeze the team at build time.
+export const dynamic = "force-dynamic"
+
 export default async function HomePage() {
   const experts = await getTeamExperts({ all: true })
   const categories: SpecialistCategory[] = ALLOCATION_ROLE_GROUPS.map((group, order) => ({

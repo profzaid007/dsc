@@ -57,7 +57,13 @@ export async function getTeamExperts({
     const [records, order, specialistRoles] = await Promise.all([
       boundedFullList(pb.collection("experts_public"), { sort: "name" }),
       readExpertOrder().catch(() => []),
-      boundedFullList<RolesManagement>(pb.collection("expert_roles_public")),
+      boundedFullList<RolesManagement>(pb.collection("expert_roles_public")).catch(async error => {
+        // Older deployments may already publish their role catalog. A missing
+        // optional role view must not remove every expert from All categories.
+        if ((error as { status?: number }).status !== 404) throw error
+        return boundedFullList<RolesManagement>(pb.collection("roles_management"))
+          .catch(() => [])
+      }),
     ])
 
     const roleGroups = new Map(specialistRoles.map(role => [role.id, normalizeAllocationRole(role).role_group]))

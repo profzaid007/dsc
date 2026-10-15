@@ -22,3 +22,33 @@ migration to include `specialist_roles` in `experts_public`. The homepage reads
 role grouping from `expert_roles_public`, so visitors do not need access to
 private roles or expert profiles. Experts with several roles appear under each
 matching group; All categories retains experts with no roles selected.
+
+## Existing published backend
+
+For a backend managed by schema imports rather than the repository's migrations,
+use `backend/pb/repair-expert-role-filter.mjs` instead of reimporting the entire
+schema. It preserves the installed category relations, all existing fields and
+records, and the public view's active-expert restriction. It adds the saved role
+IDs to `experts_public` and creates the safe public role view. It maps the older
+`psychology` category key to the profile selector's `mental-health` group.
+
+Set `PB_URL` to the backend used by the published site. Run the script without
+flags for a read-only check. To apply, set `PB_SUPERUSER_EMAIL` and
+`PB_SUPERUSER_PASSWORD` securely in the local environment, then run:
+
+```powershell
+node backend/pb/repair-expert-role-filter.mjs --apply
+```
+
+Do not paste passwords into chat or commit them. The script imports only the
+affected collections with `deleteMissing: false`; it does not replace the full
+schema. After applying, redeploy the frontend on Netlify to refresh any homepage
+HTML generated during the earlier build, and verify the live category filter.
+
+PocketBase 0.31 also rejects the newer `@request.body.*:changed` syntax. Profile
+saving updates the user first, so this fails before any selected roles are saved.
+`1792800200_profile_update_rule_compat.js` replaces the unsupported checks in
+`users.updateRule` and `expert_profiles.updateRule` with their equivalent
+`(@request.body.field:isset = false || @request.body.field = field)` expressions.
+Admin/owner restrictions and protected-field checks are retained. The targeted
+repair script and canonical schema include the same compatibility fix.
