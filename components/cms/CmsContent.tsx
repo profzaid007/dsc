@@ -1,6 +1,8 @@
 "use client"
 
 import { sanitizeCmsContent } from "@/lib/sanitize"
+import { isCustomCmsLayout } from "@/lib/cms-layout"
+import { CustomLayoutFrame } from "./CustomLayoutFrame"
 import type { Lang } from "@/types/form"
 
 import "suneditor/css/contents"
@@ -20,6 +22,13 @@ interface CmsContentProps {
  * visitors actually see.
  */
 export function CmsContent({ html, lang, className }: CmsContentProps) {
+  if (isCustomCmsLayout(html)) {
+    return (
+      <div className={className}>
+        <CustomLayoutFrame html={html} lang={lang} />
+      </div>
+    )
+  }
   return (
     <div
       dir={lang === "ar" ? "rtl" : "ltr"}

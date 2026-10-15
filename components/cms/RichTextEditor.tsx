@@ -14,6 +14,13 @@ import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"
 import { UI_STRINGS, t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
+import {
+  cmsLayoutSource,
+  isCustomCmsLayout,
+  storeCmsLayout,
+} from "@/lib/cms-layout"
+import { CustomLayoutFrame } from "./CustomLayoutFrame"
+import { sanitizeCmsContent } from "@/lib/sanitize"
 
 import "suneditor/css/editor"
 import "suneditor/css/contents"
@@ -46,8 +53,11 @@ export function RichTextEditor({
   const onImageUploadRef = useRef(onImageUpload)
   const onChangeRef = useRef(onChange)
   const lastSyncedInitialContent = useRef<string>("")
-  const [content, setContent] = useState(initialContent)
-  const [mode, setMode] = useState<"visual" | "html">("visual")
+  const [content, setContent] = useState(() => cmsLayoutSource(initialContent))
+  const [mode, setMode] = useState<"visual" | "html" | "custom">(() =>
+    isCustomCmsLayout(initialContent) ? "custom" : "visual"
+  )
+  const modeRef = useRef(mode)
   const [editorReady, setEditorReady] = useState(false)
 
   // Keep callback refs up-to-date without re-creating the editor
@@ -61,6 +71,7 @@ export function RichTextEditor({
   // Create editor once on mount
   useEffect(() => {
     let instance: SunEditor.Instance | undefined
+    let cancelled = false
 
     const init = async () => {
       if (!containerRef.current) return
@@ -72,7 +83,7 @@ export function RichTextEditor({
       const [{ default: suneditor, plugins }, { default: CodeMirror }] =
         await Promise.all([import("suneditor"), import("codemirror")])
 
-      if (!textarea.parentNode) return
+      if (cancelled || !textarea.isConnected) return
 
       instance = suneditor.create(textarea, {
         plugins,
@@ -81,7 +92,7 @@ export function RichTextEditor({
         },
         textDirection: direction,
         toolbar_sticky: 93,
-        value: initialContent,
+        value: isCustomCmsLayout(initialContent) ? "" : initialContent,
         height: "600px",
         minHeight: "400px",
         buttonList: [
@@ -105,6 +116,7 @@ export function RichTextEditor({
         ],
         events: {
           onChange: (params: { data: string }) => {
+            if (modeRef.current === "custom") return
             setContent(params.data)
             lastSyncedInitialContent.current = params.data
             onChangeRef.current?.(params.data)
@@ -160,6 +172,7 @@ export function RichTextEditor({
     init()
 
     return () => {
+      cancelled = true
       // Fallback: destroy if useLayoutEffect hasn't already (e.g. effect re-run)
       if (instance && editorRef.current === instance) {
         try {
@@ -179,6 +192,17 @@ export function RichTextEditor({
       editorRef.current &&
       initialContent !== lastSyncedInitialContent.current
     ) {
+      if (isCustomCmsLayout(initialContent)) {
+        modeRef.current = "custom"
+        setMode("custom")
+        setContent(cmsLayoutSource(initialContent))
+        lastSyncedInitialContent.current = initialContent
+        return
+      }
+      if (modeRef.current === "custom") {
+        modeRef.current = "visual"
+        setMode("visual")
+      }
       const current = editorRef.current.$.html.get()
       if (current === initialContent) {
         lastSyncedInitialContent.current = initialContent
@@ -188,7 +212,7 @@ export function RichTextEditor({
       setContent(initialContent)
       lastSyncedInitialContent.current = initialContent
     }
-  }, [initialContent])
+  }, [initialContent, editorReady])
 
   // Destroy editor BEFORE React removes the DOM.
   // useLayoutEffect cleanup runs synchronously before DOM mutations,
@@ -240,16 +264,57 @@ export function RichTextEditor({
     }
   }, [])
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     const currentContent =
       mode === "visual" && editorRef.current
         ? editorRef.current.$.html.get()
-        : content
-    onSave(currentContent)
+        : mode === "custom"
+          ? storeCmsLayout(content)
+          : content
+    try {
+      await onSave(currentContent)
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+    }
   }, [content, mode, onSave])
 
-  const switchMode = (next: "visual" | "html") => {
-    if (next === mode || !editorRef.current) return
+  const switchMode = (next: "visual" | "html" | "custom") => {
+    if (next === mode) return
+    if (next === "custom") {
+      const source =
+        mode === "visual" && editorRef.current
+          ? editorRef.current.$.html.get()
+          : content
+      modeRef.current = "custom"
+      setContent(cmsLayoutSource(source))
+      const stored = storeCmsLayout(source)
+      lastSyncedInitialContent.current = stored
+      onChangeRef.current?.(stored)
+      setMode("custom")
+      return
+    }
+    if (!editorRef.current) return
+    if (mode === "custom") {
+      if (
+        !window.confirm(
+          lang === "ar"
+            ? "التحويل إلى النص المنسق يزيل CSS والتخطيط المخصص. هل تريد المتابعة؟"
+            : "Converting to rich text removes custom CSS and layout formatting. Continue?"
+        )
+      )
+        return
+      modeRef.current = next
+      editorRef.current.$.html.set(
+        sanitizeCmsContent(content, direction === "rtl" ? "ar" : "en")
+      )
+      const html = editorRef.current.$.html.get()
+      setContent(html)
+      lastSyncedInitialContent.current = html
+      onChangeRef.current?.(html)
+      setMode(next)
+      return
+    }
+    modeRef.current = next
     if (next === "html") {
       const html = editorRef.current.$.html.get()
       setContent(html)
@@ -272,7 +337,7 @@ export function RichTextEditor({
           <h2 className="text-xl font-semibold">{title}</h2>
           <div className="flex items-center gap-2">
             {onDiscard && (
-              <Button variant="outline" onClick={onDiscard}>
+              <Button variant="outline" onClick={onDiscard} disabled={isSaving}>
                 <RotateCcw className="mr-2 h-4 w-4" />
                 {t(UI_STRINGS.discard_changes, lang)}
               </Button>
@@ -312,42 +377,77 @@ export function RichTextEditor({
         >
           <Code2 className="h-4 w-4" /> HTML
         </Button>
+        <Button
+          type="button"
+          variant={mode === "custom" ? "default" : "outline"}
+          aria-pressed={mode === "custom"}
+          disabled={isSaving}
+          onClick={() => switchMode("custom")}
+        >
+          <Code2 className="h-4 w-4" />
+          {lang === "ar" ? "تخطيط HTML/CSS مخصص" : "Custom HTML/CSS layout"}
+        </Button>
       </div>
       <div
         ref={containerRef}
         className="rounded-md border"
-        hidden={mode === "html"}
+        hidden={mode !== "visual"}
+        inert={isSaving}
       />
-      {mode === "html" && (
+      {(mode === "html" || mode === "custom") && (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            {t(
-              {
-                en: "Copy, paste, or edit HTML here. Switch to Visual to view the formatted content.",
-                ar: "انسخ أو الصق أو عدّل HTML هنا. انتقل إلى المحرر المرئي لعرض المحتوى المنسّق.",
-              },
-              lang
-            )}
+            {mode === "custom"
+              ? lang === "ar"
+                ? "الصق مستند HTML كاملًا أو محتوى مع CSS داخل وسم style. تُحفظ التنسيقات وتظهر في المعاينة أدناه. JavaScript وملفات CSS الخارجية غير مدعومة."
+                : "Paste a complete HTML document or content with a style block. CSS is preserved in the preview below. JavaScript and external stylesheets are not supported."
+              : t(
+                  {
+                    en: "Copy, paste, or edit HTML here. Switch to Visual to view the formatted content.",
+                    ar: "انسخ أو الصق أو عدّل HTML هنا. انتقل إلى المحرر المرئي لعرض المحتوى المنسّق.",
+                  },
+                  lang
+                )}
           </p>
           <Textarea
+            disabled={isSaving}
             aria-label={t({ en: "HTML source", ar: "مصدر HTML" }, lang)}
             dir="ltr"
             spellCheck={false}
-            className="min-h-[400px] font-mono text-sm"
+            className="[field-sizing:fixed] h-[400px] max-h-[600px] min-h-[300px] resize-y overflow-y-auto font-mono text-sm"
             value={content}
             onChange={(event) => {
               const html = event.target.value
-              setContent(html)
-              lastSyncedInitialContent.current = html
-              onChangeRef.current?.(html)
+              const custom = mode === "custom" || isCustomCmsLayout(html)
+              if (custom) {
+                modeRef.current = "custom"
+                setMode("custom")
+              }
+              setContent(custom ? cmsLayoutSource(html) : html)
+              const stored = custom ? storeCmsLayout(html) : html
+              lastSyncedInitialContent.current = stored
+              onChangeRef.current?.(stored)
             }}
           />
+          {mode === "custom" && (
+            <div className="overflow-hidden rounded-md border">
+              <h3 className="border-b bg-muted/30 p-3 text-sm font-medium">
+                {lang === "ar"
+                  ? "معاينة التخطيط المخصص"
+                  : "Custom layout preview"}
+              </h3>
+              <CustomLayoutFrame
+                html={content}
+                lang={direction === "rtl" ? "ar" : "en"}
+              />
+            </div>
+          )}
         </div>
       )}
       {!title && (
         <div className="flex justify-end gap-2">
           {onDiscard && (
-            <Button variant="outline" onClick={onDiscard}>
+            <Button variant="outline" onClick={onDiscard} disabled={isSaving}>
               <RotateCcw className="mr-2 h-4 w-4" />
               {t(UI_STRINGS.discard_changes, lang)}
             </Button>

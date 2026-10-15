@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 import { t, UI_STRINGS } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
+import { cmsContentPayload, CmsSaveVerificationError, saveCmsPageVerified } from "@/lib/cms-save"
 
 export default function CmsHomePageEditorPage() {
   const ui = useUiTranslation()
@@ -44,6 +45,7 @@ export default function CmsHomePageEditorPage() {
   const [slugValue, setSlugValue] = useState("")
   const [resetKey, setResetKey] = useState(0)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<"saved" | "error" | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -76,12 +78,13 @@ export default function CmsHomePageEditorPage() {
   }, [slug])
 
   const handleSave = useCallback(
-    async (html: string) => {
+    async (contentLanguage: Lang, html: string) => {
       if (!page) return
       setSaving(true)
+      setSaveStatus(null)
       try {
-        const contentField = `content_${activeLang}` as const
-        const updateData: Record<string, unknown> = { [contentField]: html }
+        const content = cmsContentPayload(contentLanguage, html, enContent, arContent)
+        const updateData: Record<string, unknown> = { ...content }
         if (isSuperAdmin) {
           updateData.title_en = enTitle
           updateData.title_ar = arTitle
@@ -90,34 +93,47 @@ export default function CmsHomePageEditorPage() {
         if (Array.isArray(page.media)) {
           updateData.media = page.media
         }
-        const updated = await homePagesCollection.update(page.id, updateData as Partial<HomePage>)
+        const updated = await saveCmsPageVerified(
+          () => homePagesCollection.update(page.id, updateData as Partial<HomePage>),
+          homePagesCollection.getById,
+          content
+        )
         setPage(updated)
         setEnTitle(updated.title_en)
         setArTitle(updated.title_ar || "")
         setSlugValue(updated.slug)
+        setSaveStatus("saved")
+        toast.success(lang === "ar" ? "تم الحفظ والتحقق من المحتوى." : "Changes saved and verified.")
+        if (updated.slug !== slug) router.replace(`/cms/home-pages/${encodeURIComponent(updated.slug)}`)
         // Content state is intentionally not re-seeded from the response here.
         // RichTextEditor's onChange already keeps it in sync with the editor
         // buffer, and writing the server's copy back would retrigger its
         // initialContent sync effect and move the cursor after every save.
         // This matches the blog + info editors.
+      } catch (error) {
+        setSaveStatus("error")
+        toast.error(error instanceof CmsSaveVerificationError
+          ? (lang === "ar" ? "لم يتطابق المحتوى المحفوظ مع تعديلاتك. احتفظ بنسخة وأعد المحاولة." : "Saved content did not match your changes. Keep a copy and retry.")
+          : getErrorMessage(error, lang))
       } finally {
         setSaving(false)
       }
     },
-    [page, enTitle, arTitle, slugValue, isSuperAdmin, activeLang]
+    [page, enTitle, arTitle, slugValue, isSuperAdmin, enContent, arContent, lang, slug, router]
   )
 
   // Mirrors the blog + info editors: keeps the current editor buffer in state
   // so the preview dialog can render unsaved content.
   const handleContentChange = useCallback(
-    (html: string) => {
-      if (activeLang === "en") {
+    (contentLanguage: Lang, html: string) => {
+      setSaveStatus(null)
+      if (contentLanguage === "en") {
         setEnContent(html)
       } else {
         setArContent(html)
       }
     },
-    [activeLang]
+    []
   )
 
   const handleDiscard = useCallback(async () => {
@@ -140,7 +156,7 @@ export default function CmsHomePageEditorPage() {
     if (!page) return
     setArTitle(enTitle)
     setArContent(enContent)
-    setPage(prev => prev ? { ...prev, content_ar: prev.content_en, title_ar: prev.title_en } : null)
+    setSaveStatus(null)
     setResetKey(t => t + 1)
   }, [page, enTitle, enContent])
 
@@ -248,7 +264,7 @@ export default function CmsHomePageEditorPage() {
               id="publish"
               checked={page.is_published}
               onCheckedChange={togglePublish}
-              disabled={publishing}
+              disabled={publishing || saving}
             />
             <Label htmlFor="publish" className="font-medium">
               {page.is_published ? t(UI_STRINGS.published, lang) : t(UI_STRINGS.draft, lang)}
@@ -260,8 +276,8 @@ export default function CmsHomePageEditorPage() {
       {page && (
         <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
           <TabsList>
-            <TabsTrigger value="en">{ui("English")}</TabsTrigger>
-            <TabsTrigger value="ar">العربية</TabsTrigger>
+            <TabsTrigger value="en" disabled={saving}>{ui("English")}</TabsTrigger>
+            <TabsTrigger value="ar" disabled={saving}>العربية</TabsTrigger>
           </TabsList>
 
           <TabsContent value="en" className="mt-4 space-y-4">
@@ -272,8 +288,9 @@ export default function CmsHomePageEditorPage() {
                 </Label>
                 <Input
                   id="en-title"
+                  disabled={saving}
                   value={enTitle}
-                  onChange={(e) => setEnTitle(e.target.value)}
+                  onChange={(e) => { setEnTitle(e.target.value); setSaveStatus(null) }}
                   placeholder={t({ en: "Page title", ar: "عنوان الصفحة" }, lang)}
                 />
               </div>
@@ -285,8 +302,9 @@ export default function CmsHomePageEditorPage() {
                 </Label>
                 <Input
                   id="slug"
+                  disabled={saving}
                   value={slugValue}
-                  onChange={(e) => setSlugValue(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
+                  onChange={(e) => { setSlugValue(e.target.value.toLowerCase().replace(/\s+/g, "-")); setSaveStatus(null) }}
                   placeholder="url-slug"
                 />
               </div>
@@ -295,8 +313,8 @@ export default function CmsHomePageEditorPage() {
               key={`${resetKey}-en`}
               title={t({ en: "English Content", ar: "المحتوى (إنجليزي)" }, lang)}
               initialContent={enContent}
-              onChange={handleContentChange}
-              onSave={handleSave}
+              onChange={(html) => handleContentChange("en", html)}
+              onSave={(html) => handleSave("en", html)}
               isSaving={saving}
               onImageUpload={handleImageUpload}
               onDiscard={handleDiscard}
@@ -308,7 +326,7 @@ export default function CmsHomePageEditorPage() {
               <Label htmlFor="ar-title">
                 {t({ en: "Title (Arabic)", ar: "العنوان (عربي)" }, lang)}
               </Label>
-              <Button variant="outline" size="sm" onClick={copyFromEnglish}>
+              <Button variant="outline" size="sm" onClick={copyFromEnglish} disabled={saving}>
                 <Copy className="mr-2 h-4 w-4" />
                 {t({ en: "Copy from English", ar: "نسخ من الإنجليزية" }, lang)}
               </Button>
@@ -320,8 +338,9 @@ export default function CmsHomePageEditorPage() {
                 </Label>
                 <Input
                   id="ar-title"
+                  disabled={saving}
                   value={arTitle}
-                  onChange={(e) => setArTitle(e.target.value)}
+                  onChange={(e) => { setArTitle(e.target.value); setSaveStatus(null) }}
                   placeholder="عنوان الصفحة"
                 />
               </div>
@@ -330,8 +349,8 @@ export default function CmsHomePageEditorPage() {
               key={`${resetKey}-ar`}
               title={t({ en: "Arabic Content", ar: "المحتوى (عربي)" }, lang)}
               initialContent={arContent}
-              onChange={handleContentChange}
-              onSave={handleSave}
+              onChange={(html) => handleContentChange("ar", html)}
+              onSave={(html) => handleSave("ar", html)}
               isSaving={saving}
               onImageUpload={handleImageUpload}
               onDiscard={handleDiscard}
@@ -340,6 +359,11 @@ export default function CmsHomePageEditorPage() {
           </TabsContent>
         </Tabs>
       )}
+      {saveStatus && <p role={saveStatus === "error" ? "alert" : "status"} className={saveStatus === "error" ? "text-sm text-destructive" : "text-sm text-emerald-700"}>
+        {saveStatus === "saved"
+          ? (lang === "ar" ? "تم حفظ التعديلات والتحقق منها. يمكنك مغادرة الصفحة." : "Changes saved and verified. You can leave this page.")
+          : (lang === "ar" ? "تعذر تأكيد الحفظ. تعديلاتك ما زالت في المحرر؛ أعد المحاولة قبل المغادرة." : "Save could not be confirmed. Your changes remain in the editor; retry before leaving.")}
+      </p>}
 
       <div className="flex items-center justify-between">
         {isSuperAdmin && (

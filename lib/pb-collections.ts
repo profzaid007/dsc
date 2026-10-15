@@ -542,6 +542,9 @@ export const infoPagesCollection = {
 }
 
 export const homePagesCollection = {
+  async getById(id: string): Promise<HomePage> {
+    return await pb.collection("home_pages").getOne(id, { requestKey: null }) as unknown as HomePage
+  },
   async getBySlug(slug: string): Promise<HomePage | null> {
     try {
       const data = await pb

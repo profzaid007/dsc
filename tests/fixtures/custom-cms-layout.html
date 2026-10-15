@@ -1,0 +1,406 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>من نحن | استشارية أسرار التطور DSC</title>
+
+  <style>
+    :root {
+      --navy: #183b50;
+      --gold: #b58a51;
+      --background: #f5f6f8;
+      --white: #ffffff;
+      --text: #263746;
+      --muted: #687783;
+      --light: #f0f2f4;
+      --border: #e7e9ed;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font-family: Tahoma, Arial, sans-serif;
+      line-height: 1.9;
+    }
+
+    .about-container {
+      max-width: 1120px;
+      margin: 45px auto;
+      padding: 0 22px;
+    }
+
+    .section {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 35px;
+      margin-bottom: 18px;
+      border: 1px solid var(--border);
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 34px;
+      color: var(--navy);
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 23px;
+      color: var(--navy);
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      margin-bottom: 0;
+    }
+
+    .accent-line {
+      width: 52px;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 4px;
+      margin: 15px 0 22px;
+    }
+
+    .brand-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .hero h3 {
+      font-size: 22px;
+      color: var(--navy);
+      margin-bottom: 15px;
+      line-height: 1.7;
+    }
+
+    .two-columns {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .two-columns .section {
+      margin-bottom: 0;
+    }
+
+    .small-line {
+      width: 36px;
+      height: 2px;
+      background: var(--gold);
+      margin: 12px 0 20px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .step {
+      background: var(--light);
+      border-radius: 9px;
+      padding: 17px 10px;
+      text-align: center;
+    }
+
+    .step-number {
+      display: block;
+      color: var(--muted);
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 1.5;
+      margin-bottom: 6px;
+    }
+
+    .step-title {
+      display: block;
+      color: var(--navy);
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px 35px;
+      margin-top: 25px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .feature-number {
+      flex-shrink: 0;
+      background: var(--light);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: bold;
+      min-width: 40px;
+      padding: 5px;
+      text-align: center;
+    }
+
+    .feature-text {
+      font-size: 15px;
+      font-weight: bold;
+      padding-top: 2px;
+    }
+
+    .closing {
+      background: var(--navy);
+      color: var(--white);
+      border: none;
+      text-align: center;
+      padding: 42px 30px;
+    }
+
+    .closing-label {
+      color: #d9b987;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .closing h2 {
+      color: var(--white);
+      font-size: 24px;
+      margin-bottom: 14px;
+    }
+
+    .closing p {
+      color: #f0f3f5;
+      max-width: 750px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+      .about-container {
+        margin: 20px auto;
+        padding: 0 12px;
+      }
+
+      .section {
+        padding: 24px 20px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      h2 {
+        font-size: 21px;
+      }
+
+      .hero h3 {
+        font-size: 19px;
+      }
+
+      .two-columns,
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .steps {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .closing {
+        padding: 32px 20px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .steps {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<main class="about-container">
+
+  <!-- مقدمة من نحن -->
+  <section class="section hero">
+    <div class="brand-label">
+      DSC | DEVELOPMENT SECRETS CONSULTANCY
+    </div>
+
+    <h1>من نحن؟</h1>
+    <div class="accent-line"></div>
+
+    <h3>
+      نفهم الواقع، نكتشف الإمكانات، ونصنع التطور.
+    </h3>
+
+    <p>
+      <strong>استشارية أسرار التطور (DSC)</strong>
+      جهة استشارية علمية متخصصة في التشخيص والتطوير
+      المتكامل للأفراد والمؤسسات، تجمع نخبة من الخبرات
+      الطبية والنفسية والتربوية والسلوكية والبحثية
+      ضمن منظومة واحدة، لتقديم حلول عملية تستند
+      إلى الأدلة العلمية وتراعي الاحتياجات الفعلية
+      لكل حالة.
+    </p>
+  </section>
+
+  <!-- الرؤية والرسالة -->
+  <div class="two-columns">
+
+    <section class="section">
+      <h2>رؤيتنا</h2>
+      <div class="small-line"></div>
+
+      <p>
+        نؤمن بأن لكل فرد ومؤسسة إمكانات تستحق
+        الاكتشاف والتطوير، وأن التشخيص ليس غاية
+        أو تصنيفًا، بل بداية لفهم أعمق،
+        وقرارات أدق، ومستقبل أفضل.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>رسالتنا</h2>
+      <div class="small-line"></div>
+
+      <p>
+        نساعد الأفراد والمؤسسات على فهم واقعهم
+        واكتشاف قدراتهم، وتحويل نتائج التقييم
+        إلى خطط تطوير واقعية ومستدامة،
+        يمكن تنفيذها وقياس أثرها.
+      </p>
+    </section>
+
+  </div>
+
+  <!-- المنهج العلمي -->
+  <section class="section">
+    <h2>منهجنا العلمي</h2>
+
+    <p>
+      نعتمد منهجًا متكاملًا يتجاوز الاختبارات
+      المنفردة والآراء الفردية، من خلال تقييم
+      متعدد الأبعاد، وتحليل البيانات من مصادر
+      متنوعة، والاستفادة من خبرات فريق متعدد
+      التخصصات للوصول إلى قرارات دقيقة وخطط
+      قابلة للتطوير المستمر.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <span class="step-number">01</span>
+        <span class="step-title">فهم الحالة</span>
+      </div>
+
+      <div class="step">
+        <span class="step-number">02</span>
+        <span class="step-title">تقييم شامل</span>
+      </div>
+
+      <div class="step">
+        <span class="step-number">03</span>
+        <span class="step-title">خطة مخصصة</span>
+      </div>
+
+      <div class="step">
+        <span class="step-number">04</span>
+        <span class="step-title">قياس التطور</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- المميزات -->
+  <section class="section">
+    <h2>ما الذي يميزنا؟</h2>
+
+    <div class="features">
+
+      <div class="feature">
+        <span class="feature-number">01</span>
+        <span class="feature-text">
+          تشخيص شامل متعدد الأبعاد
+        </span>
+      </div>
+
+      <div class="feature">
+        <span class="feature-number">02</span>
+        <span class="feature-text">
+          فريق علمي متعدد التخصصات
+        </span>
+      </div>
+
+      <div class="feature">
+        <span class="feature-number">03</span>
+        <span class="feature-text">
+          خطط فردية مصممة لكل حالة
+        </span>
+      </div>
+
+      <div class="feature">
+        <span class="feature-number">04</span>
+        <span class="feature-text">
+          متابعة مستمرة وقياس موضوعي للتقدم
+        </span>
+      </div>
+
+      <div class="feature">
+        <span class="feature-number">05</span>
+        <span class="feature-text">
+          برامج تطوير مبتكرة تستجيب للاحتياجات
+        </span>
+      </div>
+
+      <div class="feature">
+        <span class="feature-number">06</span>
+        <span class="feature-text">
+          ممارسات قائمة على الأدلة العلمية
+        </span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- الخاتمة -->
+  <section class="section closing">
+    <div class="closing-label">
+      فلسفتنا في DSC
+    </div>
+
+    <h2>
+      لا يبدأ التغيير بالتشخيص، بل بالفهم.
+    </h2>
+
+    <p>
+      ولا تنتهي رحلتنا بتقرير، بل تستمر حتى
+      يصبح التطور واقعًا ملموسًا،
+      قابلًا للقياس والاستدامة.
+    </p>
+  </section>
+
+</main>
+
+</body>
+</html>
