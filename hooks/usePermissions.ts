@@ -2,18 +2,25 @@
 import { useSyncExternalStore } from "react"
 import pb from "@/lib/pb"
 import { securityApi } from "@/lib/security"
+import {
+  securityFailure,
+  validSecurityAccess,
+  type SecurityFailure,
+} from "@/lib/security-failure"
 
 type Snapshot = {
   permissions: string[]
   is_super_admin: boolean
   isLoading: boolean
   error: boolean
+  failure: SecurityFailure | null
 }
 const empty: Snapshot = {
   permissions: [],
   is_super_admin: false,
   isLoading: true,
   error: false,
+  failure: null,
 }
 let snapshot = empty
 let token = ""
@@ -44,12 +51,25 @@ function load(force = false) {
     "/me"
   )
     .then((data) => {
+      if (!validSecurityAccess(data))
+        throw new Error("Invalid security service response")
       if (generation === revision)
-        snapshot = { ...data, isLoading: false, error: false }
+        snapshot = {
+          permissions: [...data.permissions],
+          is_super_admin: data.is_super_admin,
+          isLoading: false,
+          error: false,
+          failure: null,
+        }
     })
-    .catch(() => {
+    .catch((error: unknown) => {
       if (generation === revision)
-        snapshot = { ...empty, isLoading: false, error: true }
+        snapshot = {
+          ...empty,
+          isLoading: false,
+          error: true,
+          failure: securityFailure(error),
+        }
     })
     .finally(() => {
       if (generation === revision) {
