@@ -1,5 +1,22 @@
 type ContentFields = { content_en?: string; content_ar?: string }
 
+export function cmsFieldErrorsMessage(
+  errors: Record<string, string>,
+  lang: "en" | "ar"
+): string {
+  const labels: Record<string, { en: string; ar: string }> = {
+    content_en: { en: "English content", ar: "المحتوى الإنجليزي" },
+    content_ar: { en: "Arabic content", ar: "المحتوى العربي" },
+    title_en: { en: "English title", ar: "العنوان الإنجليزي" },
+    title_ar: { en: "Arabic title", ar: "العنوان العربي" },
+    slug: { en: "URL slug", ar: "معرف الرابط" },
+    media: { en: "Media", ar: "الوسائط" },
+  }
+  return Object.entries(errors)
+    .map(([field, message]) => `${labels[field]?.[lang] ?? field}: ${message}`)
+    .join("\n")
+}
+
 /** Save the current editor buffer and retain drafts from the other language tab. */
 export function cmsContentPayload(
   language: "en" | "ar",

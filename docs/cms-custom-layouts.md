@@ -2,7 +2,7 @@
 
 CMS home pages, information pages and blog content share a **Custom HTML/CSS layout** editor mode. Paste a complete HTML document or an HTML fragment with `<style>` blocks. Full documents and style blocks are automatically detected when pasted into the HTML source editor. Existing rich text continues to use the visual editor.
 
-The source is stored in the existing content field with a versioned comment marker. No database migration is needed. Opening the page again restores custom mode without sending the source through SunEditor. The custom source panel includes a live preview; CMS preview dialogs and public pages use the same renderer.
+The source is stored in the existing content field with a versioned comment marker. No new fields are needed. Existing databases must apply `1793000000_cms_content_capacity.js` to raise the default 5,000-character text limit to 1,000,000 characters. Opening the page again restores custom mode without sending the source through SunEditor. The custom source panel includes a live preview; CMS preview dialogs and public pages use the same renderer.
 
 CSS variables, grid, flexbox, inline styles and media queries are preserved. The layout fills the existing CMS content area, retaining the site's header, navigation and footer. CSS is isolated in a sandboxed iframe. Its height follows the content, including collapsed margins. Very tall documents are capped at 30,000px and scroll within the frame.
 
@@ -21,3 +21,5 @@ Paste the original HTML again if an earlier editor version already stripped the 
 `npx tsx --test tests/cms-layout.test.ts tests/cms-layout-render.test.tsx tests/cms-save.test.ts`
 
 Tests cover the supplied Arabic About Us document, exact source round-tripping, CSS preservation, sandbox/CSP restrictions, ordinary rich-text behavior, bilingual saves and read-back verification. A local in-memory browser harness also verified source retention after saving and remounting, two desktop columns, single-column mobile CSS at 375px, and automatic iframe height. The harness is removed before delivery and does not modify existing CMS records.
+
+`node --test tests/cms-capacity-integration.test.mjs` reproduces the original API rejection in a disposable local PocketBase database, applies the actual migration, and checks saving/reopening after a restart. Set `CMS_TEST_POCKETBASE` to test a specific binary. The regression passes with PocketBase 0.31.0 (the test server's version) and 0.40.5. Existing content, field IDs, larger configured limits, and access rules are preserved.

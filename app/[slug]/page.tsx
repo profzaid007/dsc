@@ -9,6 +9,7 @@ import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
 
 import { CmsContent } from "@/components/cms/CmsContent"
+import { isCustomCmsLayout } from "@/lib/cms-layout"
 
 interface SlugPageProps {
   params: Promise<{ slug: string }>
@@ -36,8 +37,13 @@ export default async function SlugPage({ params }: SlugPageProps) {
     notFound()
   }
 
+  const content = localizedField(page, lang, "content")
+  if (isCustomCmsLayout(content)) {
+    return <CmsContent html={content} lang={lang} className="w-full min-w-0" />
+  }
+
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12">
+    <div className="mx-auto w-full max-w-4xl px-6 py-12">
       <Link
         href="/"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
@@ -52,7 +58,7 @@ export default async function SlugPage({ params }: SlugPageProps) {
       </h1>
 
       <CmsContent
-        html={localizedField(page, lang, "content")}
+        html={content}
         lang={lang}
       />
     </div>

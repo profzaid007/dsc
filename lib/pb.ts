@@ -219,10 +219,7 @@ function fieldErrorMessage(
     const minMsg = minLengthMessage(field, msg, lang)
     if (minMsg) return minMsg
     if (lang === "ar" && looksEnglish(msg)) {
-      return t(
-        { en: "The value is invalid.", ar: "القيمة غير صالحة." },
-        lang
-      )
+      return t({ en: "The value is invalid.", ar: "القيمة غير صالحة." }, lang)
     }
     return msg
   }
@@ -230,6 +227,27 @@ function fieldErrorMessage(
   if (!value || typeof value !== "object") return undefined
   const v = value as { code?: unknown; message?: unknown }
   const code = String(v.code ?? "")
+
+  if (code === "validation_max_text_constraint") {
+    const maximum = String(v.message ?? "").match(
+      /(?:no more than|at most)\s+(\d+)/i
+    )?.[1]
+    return maximum
+      ? t(
+          {
+            en: `The maximum is ${maximum} characters.`,
+            ar: `الحد الأقصى هو ${maximum} حرفًا.`,
+          },
+          lang
+        )
+      : t(
+          {
+            en: "The content exceeds this field's character limit.",
+            ar: "المحتوى يتجاوز الحد الأقصى لأحرف هذا الحقل.",
+          },
+          lang
+        )
+  }
 
   if (code.includes("not_unique")) return notUniqueMessage(field, lang)
 
@@ -246,10 +264,7 @@ function fieldErrorMessage(
       return t(VALIDATION_CODE_MESSAGES.validation_email, lang)
     }
     if (lang === "ar" && looksEnglish(msg)) {
-      return t(
-        { en: "The value is invalid.", ar: "القيمة غير صالحة." },
-        lang
-      )
+      return t({ en: "The value is invalid.", ar: "القيمة غير صالحة." }, lang)
     }
     return msg
   }
@@ -364,7 +379,8 @@ export function handlePocketBaseError(
     )
   }
 
-  const rawMessage = typeof details?.message === "string" ? details.message.trim() : ""
+  const rawMessage =
+    typeof details?.message === "string" ? details.message.trim() : ""
   const isMeaningfulMessage =
     rawMessage.length > 0 &&
     rawMessage !== "[object Object]" &&

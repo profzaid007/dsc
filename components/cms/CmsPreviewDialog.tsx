@@ -6,6 +6,7 @@ import { CmsContent } from "@/components/cms/CmsContent"
 import { UI_STRINGS, t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import type { Lang } from "@/types/form"
+import { isCustomCmsLayout } from "@/lib/cms-layout"
 
 interface CmsPreviewDialogProps {
   open: boolean
@@ -39,6 +40,7 @@ export function CmsPreviewDialog({
   children,
 }: CmsPreviewDialogProps) {
   const { lang: siteLang } = useLang()
+  const customLayout = isCustomCmsLayout(html)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,10 +74,10 @@ export function CmsPreviewDialog({
 
           <div
             dir={lang === "ar" ? "rtl" : "ltr"}
-            className="mx-auto max-w-4xl px-6 py-12"
+            className={customLayout ? "w-full min-w-0" : "mx-auto w-full max-w-4xl px-6 py-12"}
           >
             {children}
-            <h1 className="mb-8 text-3xl font-bold capitalize">{title}</h1>
+            {!customLayout && <h1 className="mb-8 text-3xl font-bold capitalize">{title}</h1>}
             <CmsContent html={html} lang={lang} />
           </div>
         </div>

@@ -2,9 +2,11 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
   cmsContentPayload,
+  cmsFieldErrorsMessage,
   CmsSaveVerificationError,
   saveCmsPageVerified,
 } from "../lib/cms-save"
+import { getFieldErrors } from "../lib/pb"
 import { cmsLayoutSource, storeCmsLayout } from "../lib/cms-layout"
 
 test("saving one language also persists edits made in the other tab", () => {
@@ -123,4 +125,23 @@ test("verification accepts only harmless outer whitespace and CRLF normalization
     expected
   )
   assert.equal(result.id, "page1")
+})
+
+test("PocketBase content length errors identify the language and actual backend limit", () => {
+  const error = {
+    data: {
+      data: {
+        content_ar: {
+          code: "validation_max_text_constraint",
+          message: "Must be no more than 5000 character(s).",
+        },
+      },
+    },
+  }
+  const arabic = cmsFieldErrorsMessage(getFieldErrors(error, "ar"), "ar")
+  assert.ok(arabic.includes("المحتوى العربي"))
+  assert.ok(arabic.includes("5000"))
+  assert.ok(!arabic.includes("القيمة غير صالحة"))
+  const english = cmsFieldErrorsMessage(getFieldErrors(error, "en"), "en")
+  assert.equal(english, "Arabic content: The maximum is 5000 characters.")
 })

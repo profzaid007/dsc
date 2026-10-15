@@ -24,7 +24,7 @@ interface CmsContentProps {
 export function CmsContent({ html, lang, className }: CmsContentProps) {
   if (isCustomCmsLayout(html)) {
     return (
-      <div className={className}>
+      <div className={`w-full min-w-0${className ? ` ${className}` : ""}`}>
         <CustomLayoutFrame html={html} lang={lang} />
       </div>
     )

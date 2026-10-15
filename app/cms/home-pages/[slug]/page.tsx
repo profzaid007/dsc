@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { homePagesCollection } from "@/lib/pb-collections"
-import pb, { getErrorMessage } from "@/lib/pb"
+import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
 import type { HomePage } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import { RichTextEditor } from "@/components/cms/RichTextEditor"
@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 import { t, UI_STRINGS } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
-import { cmsContentPayload, CmsSaveVerificationError, saveCmsPageVerified } from "@/lib/cms-save"
+import { cmsContentPayload, cmsFieldErrorsMessage, CmsSaveVerificationError, saveCmsPageVerified } from "@/lib/cms-save"
 
 export default function CmsHomePageEditorPage() {
   const ui = useUiTranslation()
@@ -46,6 +46,7 @@ export default function CmsHomePageEditorPage() {
   const [resetKey, setResetKey] = useState(0)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"saved" | "error" | null>(null)
+  const [saveError, setSaveError] = useState("")
 
   useEffect(() => {
     async function init() {
@@ -82,6 +83,7 @@ export default function CmsHomePageEditorPage() {
       if (!page) return
       setSaving(true)
       setSaveStatus(null)
+      setSaveError("")
       try {
         const content = cmsContentPayload(contentLanguage, html, enContent, arContent)
         const updateData: Record<string, unknown> = { ...content }
@@ -112,9 +114,11 @@ export default function CmsHomePageEditorPage() {
         // This matches the blog + info editors.
       } catch (error) {
         setSaveStatus("error")
-        toast.error(error instanceof CmsSaveVerificationError
+        const message = error instanceof CmsSaveVerificationError
           ? (lang === "ar" ? "لم يتطابق المحتوى المحفوظ مع تعديلاتك. احتفظ بنسخة وأعد المحاولة." : "Saved content did not match your changes. Keep a copy and retry.")
-          : getErrorMessage(error, lang))
+          : cmsFieldErrorsMessage(getFieldErrors(error, lang), lang) || getErrorMessage(error, lang)
+        setSaveError(message)
+        toast.error(message)
       } finally {
         setSaving(false)
       }
@@ -363,6 +367,7 @@ export default function CmsHomePageEditorPage() {
         {saveStatus === "saved"
           ? (lang === "ar" ? "تم حفظ التعديلات والتحقق منها. يمكنك مغادرة الصفحة." : "Changes saved and verified. You can leave this page.")
           : (lang === "ar" ? "تعذر تأكيد الحفظ. تعديلاتك ما زالت في المحرر؛ أعد المحاولة قبل المغادرة." : "Save could not be confirmed. Your changes remain in the editor; retry before leaving.")}
+        {saveStatus === "error" && saveError && <span className="mt-1 block whitespace-pre-line">{saveError}</span>}
       </p>}
 
       <div className="flex items-center justify-between">
