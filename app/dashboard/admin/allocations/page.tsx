@@ -1,6 +1,6 @@
 "use client"
 
-
+import { ALLOCATION_ROLE_GROUPS } from "@/lib/allocation-role-groups"
 import { boundedFullList } from "@/lib/bounded-records"
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { DataError } from "@/components/ui/data-error"
@@ -84,6 +84,7 @@ interface AllocationRow {
   expert_id: string
   /** Matches `role_name_en` of a roles_management record */
   role: string
+  role_group?: string
 }
 
 function ExpertCombobox({
@@ -181,6 +182,12 @@ export default function AllocationsPage() {
       .catch((error) => toast.error(getErrorMessage(error)))
   }, [])
   const [selectedCase, setSelectedCase] = useState<string>("")
+  useEffect(() => {
+    const requestedCase = new URLSearchParams(window.location.search).get(
+      "case"
+    )
+    if (requestedCase) setSelectedCase(requestedCase)
+  }, [])
   const [rows, setRows] = useState<AllocationRow[]>([])
   const [originalRows, setOriginalRows] = useState<AllocationRow[]>([])
   const [isSaving, setIsSaving] = useState(false)
@@ -204,6 +211,7 @@ export default function AllocationsPage() {
   >({})
   const [isSavingAll, setIsSavingAll] = useState(false)
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
+  const [newRoleGroup, setNewRoleGroup] = useState("")
   const [newRoleNameEn, setNewRoleNameEn] = useState("")
   const [newRoleNameAr, setNewRoleNameAr] = useState("")
   const [isAddingRole, setIsAddingRole] = useState(false)
@@ -274,11 +282,11 @@ export default function AllocationsPage() {
   const handleAddRole = async () => {
     const roleNameEn = newRoleNameEn.trim()
     const roleNameAr = newRoleNameAr.trim()
-    if (!roleNameEn || !roleNameAr) return
+    if (!roleNameEn || !roleNameAr || !newRoleGroup) return
 
     setIsAddingRole(true)
     try {
-      const created = await addRole(roleNameEn, roleNameAr)
+      const created = await addRole(roleNameEn, roleNameAr, newRoleGroup)
       setRoleToolTypesMap((prev) => ({
         ...prev,
         [created.id]: created.tool_types || [],
@@ -377,7 +385,11 @@ export default function AllocationsPage() {
           const profile = expertProfiles.find((p) => p.user === u.id)
           return (
             (!countryFilter ||
-              ((profile?.country_of_residence || "") + " " + countryLabel(profile?.country_of_residence || "", lang))
+              (
+                (profile?.country_of_residence || "") +
+                " " +
+                countryLabel(profile?.country_of_residence || "", lang)
+              )
                 .toLowerCase()
                 .includes(countryFilter.toLowerCase())) &&
             (!cityFilter ||
@@ -424,10 +436,7 @@ export default function AllocationsPage() {
   }, [selectedCase, loadAllocationsForCase, isSaving])
 
   const addRow = () => {
-    setRows((prev) => [
-      ...prev,
-      { expert_id: "", role: roleMgmtRoles[0]?.role_name_en ?? "" },
-    ])
+    setRows((prev) => [...prev, { expert_id: "", role: "", role_group: "" }])
   }
 
   const removeRow = (index: number) => {
@@ -679,6 +688,9 @@ export default function AllocationsPage() {
                         {lang === "ar" ? "الخبير" : "Expert"}
                       </TableHead>
                       <TableHead className="w-[250px]">
+                        {lang === "ar" ? "مجموعة الأدوار" : "Role Group"}
+                      </TableHead>
+                      <TableHead className="w-[250px]">
                         {lang === "ar" ? "الدور" : "Role"}
                       </TableHead>
                       <TableHead className="text-right">
@@ -705,6 +717,52 @@ export default function AllocationsPage() {
                         </TableCell>
                         <TableCell>
                           <Select
+                            value={
+                              row.role_group ??
+                              roleMgmtRoles.find(
+                                (role) => role.role_name_en === row.role
+                              )?.role_group ??
+                              ""
+                            }
+                            onValueChange={(value) =>
+                              updateRow(index, { role_group: value, role: "" })
+                            }
+                            disabled={isSaving}
+                          >
+                            <SelectTrigger
+                              aria-label={
+                                lang === "ar" ? "مجموعة الأدوار" : "Role Group"
+                              }
+                            >
+                              <SelectValue
+                                placeholder={
+                                  lang === "ar"
+                                    ? "اختر مجموعة…"
+                                    : "Select group…"
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ALLOCATION_ROLE_GROUPS.map((group) => (
+                                <SelectItem key={group.id} value={group.id}>
+                                  {lang === "ar" ? group.ar : group.en}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            disabled={
+                              isSaving ||
+                              (!(
+                                row.role_group ??
+                                roleMgmtRoles.find(
+                                  (role) => role.role_name_en === row.role
+                                )?.role_group
+                              ) &&
+                                !row.role)
+                            }
                             value={row.role}
                             onValueChange={(value) =>
                               updateRow(index, { role: value })
@@ -720,14 +778,41 @@ export default function AllocationsPage() {
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              {roleMgmtRoles.map((role) => (
-                                <SelectItem
-                                  key={role.id}
-                                  value={role.role_name_en}
-                                >
-                                  {getRoleLabel(role)}
-                                </SelectItem>
-                              ))}
+                              {row.role &&
+                                roleMgmtRoles.find(
+                                  (role) => role.role_name_en === row.role
+                                )?.is_retired && (
+                                  <SelectItem value={row.role}>
+                                    {row.role} (
+                                    {lang === "ar"
+                                      ? "دور سابق"
+                                      : "Previous role"}
+                                    )
+                                  </SelectItem>
+                                )}
+                              {roleMgmtRoles
+                                .filter(
+                                  (role) =>
+                                    !role.is_retired &&
+                                    role.role_group ===
+                                      (row.role_group ??
+                                        roleMgmtRoles.find(
+                                          (item) =>
+                                            item.role_name_en === row.role
+                                        )?.role_group)
+                                )
+                                .sort(
+                                  (a, b) =>
+                                    (a.role_order || 0) - (b.role_order || 0)
+                                )
+                                .map((role) => (
+                                  <SelectItem
+                                    key={role.id}
+                                    value={role.role_name_en}
+                                  >
+                                    {getRoleLabel(role)}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -892,6 +977,24 @@ export default function AllocationsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <Select value={newRoleGroup} onValueChange={setNewRoleGroup}>
+              <SelectTrigger
+                aria-label={lang === "ar" ? "مجموعة الأدوار" : "Role Group"}
+              >
+                <SelectValue
+                  placeholder={
+                    lang === "ar" ? "اختر مجموعة…" : "Select role group…"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {ALLOCATION_ROLE_GROUPS.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {lang === "ar" ? group.ar : group.en}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
@@ -931,7 +1034,10 @@ export default function AllocationsPage() {
             <Button
               onClick={handleAddRole}
               disabled={
-                isAddingRole || !newRoleNameEn.trim() || !newRoleNameAr.trim()
+                isAddingRole ||
+                !newRoleGroup ||
+                !newRoleNameEn.trim() ||
+                !newRoleNameAr.trim()
               }
             >
               {isAddingRole

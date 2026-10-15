@@ -146,7 +146,7 @@ export function ExpertApplicationForm({
       lang
     )
 
-    if (!name.trim()) errs.name = required
+    if (!publicDetails.publicNameAr.trim() || !publicDetails.publicNameEn.trim()) errs.name = required
     if (!email.trim()) errs.email = required
     else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
     if (!password) errs.password = required
@@ -365,26 +365,16 @@ export function ExpertApplicationForm({
 
           {step === 1 && (
             <>
-              <div className="space-y-2">
-                <Label>
-                  {t({ en: "Full Name", ar: "الاسم الكامل" }, lang)}
-                  <span className="ml-1 text-red-500">*</span>
-                </Label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="name"
-                  aria-invalid={fieldErrors.name ? true : undefined}
-                  placeholder={t(
-                    {
-                      en: "e.g. Dr. Ahmed Al-Rashid",
-                      ar: "مثال: د. أحمد الراشد",
-                    },
-                    lang
-                  )}
-                />
-                {fieldErrorNode("name")}
-              </div>
+              <ExpertPublicDetailsFields
+                namesOnly
+                values={publicDetails}
+                onChange={(change) => {
+                  const next = { ...publicDetails, ...change }
+                  setPublicDetails(next)
+                  setName(next.publicNameAr || next.publicNameEn)
+                }}
+              />
+              {fieldErrorNode("name")}
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -937,6 +927,7 @@ export function ExpertApplicationForm({
               </div>
 
               <ExpertPublicDetailsFields
+                omitNames
                 values={publicDetails}
                 onChange={(change) =>
                   setPublicDetails((current) => ({ ...current, ...change }))

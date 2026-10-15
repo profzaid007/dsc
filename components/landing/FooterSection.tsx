@@ -104,7 +104,8 @@ export function FooterSection() {
               <p>
                 <a
                   href="tel:+962780127435"
-                  className="hover:text-[#00a4e4]"
+                  dir="ltr"
+                  className="inline-block [unicode-bidi:isolate] hover:text-[#00a4e4]"
                 >
                   {t(
                     {

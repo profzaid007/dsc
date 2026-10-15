@@ -292,24 +292,11 @@ export function ExpertProfileEditor({
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="profile-name">
-              {t({ en: "Full Name", ar: "الاسم الكامل" }, lang)}
-              <span className="ms-1 text-destructive">*</span>
-            </Label>
-            <Input
-              id="profile-name"
-              value={draft.name}
-              onChange={(event) => patch({ name: event.target.value })}
-              autoComplete="name"
-              aria-invalid={fieldErrors.name ? true : undefined}
-              placeholder={t(
-                { en: "e.g. Dr. Ahmed Al-Rashid", ar: "مثال: د. أحمد الراشد" },
-                lang
-              )}
-            />
-            {errorFor("name")}
-          </div>
+          <ExpertPublicDetailsFields
+            namesOnly
+            values={draft}
+            onChange={(change) => patch({ ...change, name: (change.publicNameAr ?? draft.publicNameAr) || (change.publicNameEn ?? draft.publicNameEn) })}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="profile-email">
@@ -817,7 +804,7 @@ export function ExpertProfileEditor({
         </CardHeader>
         <CardContent>
           <div className="mb-6">
-            <ExpertPublicDetailsFields values={draft} onChange={patch} />
+            <ExpertPublicDetailsFields omitNames values={draft} onChange={patch} />
           </div>
           <div className="space-y-5">
             {(

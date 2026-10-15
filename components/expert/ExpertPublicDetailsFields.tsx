@@ -17,7 +17,11 @@ export interface ExpertPublicDetails {
 export function ExpertPublicDetailsFields({
   values,
   onChange,
+  namesOnly = false,
+  omitNames = false,
 }: {
+  namesOnly?: boolean
+  omitNames?: boolean
   values: ExpertPublicDetails
   onChange: (change: Partial<ExpertPublicDetails>) => void
 }) {
@@ -25,15 +29,15 @@ export function ExpertPublicDetailsFields({
   const fields = [
     {
       key: "publicNameEn",
-      en: "Displayed name (English)",
-      ar: "الاسم المعروض بالإنجليزية",
+      en: "Full name (English)",
+      ar: "الاسم الكامل بالإنجليزية",
       dir: "ltr",
       max: 100,
     },
     {
       key: "publicNameAr",
-      en: "Displayed name (Arabic)",
-      ar: "الاسم المعروض بالعربية",
+      en: "Full name (Arabic)",
+      ar: "الاسم الكامل بالعربية",
       dir: "rtl",
       max: 100,
     },
@@ -68,7 +72,7 @@ export function ExpertPublicDetailsFields({
   ] as const
   return (
     <fieldset className="space-y-4 md:col-span-2">
-      <legend className="font-semibold">
+      {!namesOnly && <><legend className="font-semibold">
         {t({ en: "Public team display", ar: "بيانات عرض فريق الخبراء" }, lang)}
       </legend>
       <p className="text-sm text-muted-foreground">
@@ -79,9 +83,9 @@ export function ExpertPublicDetailsFields({
           },
           lang
         )}
-      </p>
+      </p></>}
       <div className="grid gap-4 sm:grid-cols-2">
-        {fields.map((field) => (
+        {fields.filter((field) => namesOnly ? field.key.startsWith("publicName") : omitNames ? !field.key.startsWith("publicName") : true).map((field) => (
           <div key={field.key} className="space-y-2">
             <Label htmlFor={`expert-${field.key}`}>
               {t({ en: field.en, ar: field.ar }, lang)}
@@ -91,6 +95,7 @@ export function ExpertPublicDetailsFields({
               dir={field.dir}
               value={values[field.key]}
               maxLength={field.max}
+              required={field.key.startsWith("publicName")}
               onChange={(event) =>
                 onChange({ [field.key]: event.target.value })
               }

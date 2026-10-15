@@ -1,6 +1,5 @@
 "use client"
 
-
 import { boundedFullList } from "@/lib/bounded-records"
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
@@ -11,6 +10,7 @@ import { DataError } from "@/components/ui/data-error"
 import { usePortals } from "@/hooks/usePortals"
 import { infoPagesCollection } from "@/lib/pb-collections"
 import pb, { getErrorMessage } from "@/lib/pb"
+import { PortalBannerEditor } from "@/components/cms/PortalBannerEditor"
 import { Card } from "@/components/ui/card"
 import { DragList } from "@/components/ui/drag-list"
 import { Badge } from "@/components/ui/badge"
@@ -38,8 +38,14 @@ interface InfoPageRecord {
 
 export default function CmsPortalServicesPage() {
   const { lang } = useLang()
-  const { portals: PORTALS, isLoading: portalsLoading, error: portalsError, reload: reloadPortals } = usePortals()
-  const getPortalById = (id: string) => PORTALS.find((portal) => portal.id === id)
+  const {
+    portals: PORTALS,
+    isLoading: portalsLoading,
+    error: portalsError,
+    reload: reloadPortals,
+  } = usePortals()
+  const getPortalById = (id: string) =>
+    PORTALS.find((portal) => portal.id === id)
   const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const params = useParams()
   const router = useRouter()
@@ -62,7 +68,9 @@ export default function CmsPortalServicesPage() {
 
   useEffect(() => {
     if (!portal) return
-    const timer = window.setTimeout(() => { void loadPages().finally(() => setLoading(false)) }, 0)
+    const timer = window.setTimeout(() => {
+      void loadPages().finally(() => setLoading(false))
+    }, 0)
     return () => window.clearTimeout(timer)
   }, [portal, loadPages])
 
@@ -103,34 +111,38 @@ export default function CmsPortalServicesPage() {
     }
   }
 
-  const handleReorder = useCallback(async (items: InfoPageRecord[]) => {
-    setSavingOrder(true)
-    try {
-      await Promise.all(
-        items.map((item) =>
-          infoPagesCollection.update(item.id, { order: item.order })
+  const handleReorder = useCallback(
+    async (items: InfoPageRecord[]) => {
+      setSavingOrder(true)
+      try {
+        await Promise.all(
+          items.map((item) =>
+            infoPagesCollection.update(item.id, { order: item.order })
+          )
         )
-      )
-      setPages(items)
-    } 
-
-    catch (err) {
-      toast.error(
-        t(
-          { en: "Failed to save order.", ar: "فشل حفظ الترتيب." },
-          lang
-        ),
-        { description: getErrorMessage(err) }
-      )
-    } 
-
-    finally {
-      setSavingOrder(false)
-    }
-  }, [lang])
+        setPages(items)
+      } catch (err) {
+        toast.error(
+          t({ en: "Failed to save order.", ar: "فشل حفظ الترتيب." }, lang),
+          { description: getErrorMessage(err) }
+        )
+      } finally {
+        setSavingOrder(false)
+      }
+    },
+    [lang]
+  )
 
   if (portalsLoading) return <PageLoader />
-  if (portalsError) return <DataError message={lang === "ar" ? "تعذر تحميل البوابات." : "Unable to load portals."} onRetry={() => void reloadPortals()} />
+  if (portalsError)
+    return (
+      <DataError
+        message={
+          lang === "ar" ? "تعذر تحميل البوابات." : "Unable to load portals."
+        }
+        onRetry={() => void reloadPortals()}
+      />
+    )
   if (!portal) {
     return (
       <div className="space-y-4">
@@ -163,7 +175,10 @@ export default function CmsPortalServicesPage() {
           <h1 className="text-2xl font-bold">{t(portal.title, lang)}</h1>
           <p className="text-muted-foreground">
             {t(
-              { en: "Manage info pages for this portal", ar: "إدارة صفحات المعلومات لهذه البوابة" },
+              {
+                en: "Manage info pages for this portal",
+                ar: "إدارة صفحات المعلومات لهذه البوابة",
+              },
               lang
             )}
           </p>
@@ -178,6 +193,12 @@ export default function CmsPortalServicesPage() {
           New Page
         </Button> */}
       </div>
+
+      <PortalBannerEditor
+        key={portal.recordId || portal.id}
+        portal={portal}
+        onSaved={() => reloadPortals(true)}
+      />
 
       {loading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -199,59 +220,75 @@ export default function CmsPortalServicesPage() {
             {t({ en: "Create your first page", ar: "أنشئ صفحتك الأولى" }, lang)}
           </Button>
         </div>
-        ) : (
-          <DragList
-            items={pages}
-            onReorder={handleReorder}
-            keyExtractor={(p) => p.id}
-            containerClassName="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            renderItem={(p) => {
-              const iconUrl = p.icon ? pb.files.getUrl(p as never, p.icon) : null
-              return (
-                <>
-                  <div
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: `${portal.accent}15` }}
-                  >
-                    {iconUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={iconUrl} alt="" className="h-6 w-6 object-contain" />
+      ) : (
+        <DragList
+          items={pages}
+          onReorder={handleReorder}
+          keyExtractor={(p) => p.id}
+          containerClassName="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          renderItem={(p) => {
+            const iconUrl = p.icon ? pb.files.getUrl(p as never, p.icon) : null
+            return (
+              <>
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: `${portal.accent}15` }}
+                >
+                  {iconUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={iconUrl}
+                      alt=""
+                      className="h-6 w-6 object-contain"
+                    />
+                  ) : (
+                    <FileText
+                      className="h-6 w-6"
+                      style={{ color: portal.accent }}
+                    />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-medium">{p.title_en}</h3>
+                  <div className="mt-1 flex items-center gap-2">
+                    {p.is_published ? (
+                      <Badge
+                        variant="default"
+                        className="text-xs"
+                        style={{
+                          backgroundColor: portal.accent,
+                          color: "#fff",
+                        }}
+                      >
+                        {t(UI_STRINGS.published, lang)}
+                      </Badge>
                     ) : (
-                      <FileText className="h-6 w-6" style={{ color: portal.accent }} />
+                      <Badge variant="secondary" className="text-xs">
+                        {t(UI_STRINGS.draft, lang)}
+                      </Badge>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-medium">{p.title_en}</h3>
-                    <div className="mt-1 flex items-center gap-2">
-                      {p.is_published ? (
-                        <Badge variant="default" className="text-xs" style={{ backgroundColor: portal.accent, color: "#fff" }}>
-                          {t(UI_STRINGS.published, lang)}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">{t(UI_STRINGS.draft, lang)}</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Link href={`/cms/info/${portalId}/${p.slug}`}>
-                      <Button variant="ghost" size="sm">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(p.id, p.title_en)}
-                      disabled={deleting === p.id}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Link href={`/cms/info/${portalId}/${p.slug}`}>
+                    <Button variant="ghost" size="sm">
+                      <Pencil className="h-4 w-4" />
                     </Button>
-                  </div>
-                </>
-              )
-            }}
-          />
-        )}
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(p.id, p.title_en)}
+                    disabled={deleting === p.id}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </>
+            )
+          }}
+        />
+      )}
     </div>
   )
 }

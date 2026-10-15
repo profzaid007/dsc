@@ -83,8 +83,8 @@ export function draftFromProfile(
     fee: toText(profile.fee),
     availability: toText(profile.availability),
     bio: toText(profile.bio),
-    publicNameEn: toText(profile.public_name_en),
-    publicNameAr: toText(profile.public_name_ar),
+    publicNameEn: toText(profile.public_name_en) || (!/[\u0600-\u06ff]/.test(name) ? name : ""),
+    publicNameAr: toText(profile.public_name_ar) || (/[\u0600-\u06ff]/.test(name) ? name : ""),
     publicQualificationEn: toText(profile.public_qualification_en),
     publicQualificationAr: toText(profile.public_qualification_ar),
     publicSpecialtyEn: toText(profile.public_specialty_en),
@@ -186,7 +186,9 @@ export async function saveExpertProfileFor(
 ): Promise<ExpertProfile> {
   if (draft.shortBioEn.length > 250 || draft.shortBioAr.length > 250)
     throw new Error("Each short biography must be at most 250 characters.")
-  await pb.collection("users").update(userId, { name: draft.name.trim() })
+  if (!draft.publicNameAr.trim() || !draft.publicNameEn.trim())
+    throw new Error("Please enter the expert name in Arabic and English. / يرجى إدخال اسم الخبير بالعربية والإنجليزية.")
+  await pb.collection("users").update(userId, { name: draft.publicNameAr.trim() })
   const formData = expertProfileFormData(draft, userId, profileId)
   const collection = pb.collection("expert_profiles")
   const saved = profileId

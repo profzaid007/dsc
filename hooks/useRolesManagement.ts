@@ -64,10 +64,12 @@ export function useRolesManagement() {
   )
 
   const addRole = useCallback(
-    async (roleNameEn: string, roleNameAr: string) => {
+    async (roleNameEn: string, roleNameAr: string, roleGroup: string) => {
       const created = await rolesManagementCollection.create({
         role_name_en: roleNameEn,
         role_name_ar: roleNameAr,
+        role_group: roleGroup,
+        is_retired: false,
       })
       setRoles((prev) => [...prev, created])
       return created

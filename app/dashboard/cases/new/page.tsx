@@ -106,9 +106,7 @@ export default function NewProfilePage() {
         const today = new Date().toISOString().slice(0, 10)
         const running = data
           .filter((p) => today <= p.schedule.endDate)
-          .sort((a, b) =>
-            a.schedule.endDate < b.schedule.endDate ? -1 : 1
-          )
+          .sort((a, b) => (a.schedule.endDate < b.schedule.endDate ? -1 : 1))
         setTrainingPrograms(running)
       })
       .catch((err) => {
@@ -230,7 +228,10 @@ export default function NewProfilePage() {
 
       fetch("/api/telegram-notify", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${pb.authStore.token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${pb.authStore.token}`,
+        },
         body: JSON.stringify({
           text: [
             "*New Case Needs Payment Amount*",
@@ -278,7 +279,7 @@ export default function NewProfilePage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  {lang === "ar" ? "اسم الحالة" : "Case Name"}
+                  {lang === "ar" ? "اسم الطفل *" : "Child Name *"}
                 </Label>
                 <Input
                   id="name"
@@ -293,7 +294,7 @@ export default function NewProfilePage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="date_of_birth">
-                    {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
+                    {lang === "ar" ? "تاريخ الميلاد *" : "Date of Birth *"}
                   </Label>
                   <DateInput
                     id="date_of_birth"
@@ -307,15 +308,16 @@ export default function NewProfilePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">
-                    {lang === "ar" ? "الجنس" : "Gender"}
+                    {lang === "ar" ? "الجنس *" : "Gender *"}
                   </Label>
                   <Select
+                    required
                     value={formData.gender}
                     onValueChange={(value) =>
                       setFormData({ ...formData, gender: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="gender" aria-required="true">
                       <SelectValue
                         placeholder={
                           lang === "ar" ? "اختر الجنس" : "Select gender"
@@ -381,7 +383,7 @@ export default function NewProfilePage() {
             <div className="space-y-2">
               <Label>
                 {t({ en: "Service Type", ar: "نوع الخدمة" }, lang)}
-                <span className="text-red-500 ms-1">*</span>
+                <span className="ms-1 text-red-500">*</span>
               </Label>
               <Select
                 value={portalService.categoryId}
@@ -404,10 +406,7 @@ export default function NewProfilePage() {
                     </SelectItem>
                   ))}
                   <SelectItem value={TRAINING_SERVICE_ID}>
-                    {t(
-                      { en: "Attending Training", ar: "حضور تدريب" },
-                      lang
-                    )}
+                    {t({ en: "Attending Training", ar: "حضور تدريب" }, lang)}
                   </SelectItem>
                   <SelectItem value={OTHER_VALUE}>
                     {t({ en: "Other", ar: "أخرى" }, lang)}
@@ -420,7 +419,7 @@ export default function NewProfilePage() {
               <div className="space-y-2">
                 <Label>
                   {t({ en: "Case Type", ar: "نوع الحالة" }, lang)}
-                  <span className="text-red-500 ms-1">*</span>
+                  <span className="ms-1 text-red-500">*</span>
                 </Label>
                 <Select
                   value={selectedProgramId}
@@ -431,10 +430,7 @@ export default function NewProfilePage() {
                     <SelectValue
                       placeholder={
                         trainingProgramsLoading
-                          ? t(
-                              { en: "Loading...", ar: "جاري التحميل..." },
-                              lang
-                            )
+                          ? t({ en: "Loading...", ar: "جاري التحميل..." }, lang)
                           : t(
                               {
                                 en: "Select a training program",
@@ -478,7 +474,7 @@ export default function NewProfilePage() {
                         },
                         lang
                       )}
-                      <span className="text-red-500 ms-1">*</span>
+                      <span className="ms-1 text-red-500">*</span>
                     </Label>
                     <Input
                       value={portalService.customCategory}
@@ -500,7 +496,7 @@ export default function NewProfilePage() {
                   <div className="space-y-2">
                     <Label>
                       {t({ en: "Issue Type", ar: "نوع المشكلة" }, lang)}
-                      <span className="text-red-500 ms-1">*</span>
+                      <span className="ms-1 text-red-500">*</span>
                     </Label>
                     <Input
                       value={portalService.subCategoryId}
@@ -526,7 +522,8 @@ export default function NewProfilePage() {
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>
-              {t({ en: "Explain more", ar: "اشرح أكثر" }, lang)}  <span className="text-red-500 ms-1">*</span>
+              {t({ en: "Explain more", ar: "اشرح أكثر" }, lang)}{" "}
+              <span className="ms-1 text-red-500">*</span>
             </CardTitle>
             <CardDescription>
               {t(
@@ -567,8 +564,7 @@ export default function NewProfilePage() {
           <Button
             type="submit"
             disabled={
-              isSubmitting ||
-              (isTrainingSelected && !selectedProgramId)
+              isSubmitting || (isTrainingSelected && !selectedProgramId)
             }
           >
             {isSubmitting

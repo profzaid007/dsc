@@ -1,5 +1,7 @@
 "use client"
 
+import { toast } from "sonner"
+import { getErrorMessage } from "@/lib/pb"
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { useProfiles } from "@/hooks/useProfiles"
@@ -65,9 +67,33 @@ interface AssignmentCount {
 
 export default function AdminCasesPage() {
   const { lang } = useLang()
-  const { profiles, isLoading: isProfilesLoading } = useProfiles()
+  const {
+    profiles,
+    deleteProfile,
+    isLoading: isProfilesLoading,
+  } = useProfiles()
   const { assignments, isLoading: isAssignmentsLoading } = useAssignments()
 
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const removeCase = async (profile: Profile) => {
+    if (
+      !window.confirm(
+        lang === "ar"
+          ? `حذف الحالة ${profile.name}؟ لا يمكن التراجع عن الحذف.`
+          : `Delete case ${profile.name}? This cannot be undone.`
+      )
+    )
+      return
+    setDeletingId(profile.id)
+    try {
+      await deleteProfile(profile.id)
+      toast.success(lang === "ar" ? "تم حذف الحالة" : "Case deleted")
+    } catch (error) {
+      toast.error(getErrorMessage(error, lang))
+    } finally {
+      setDeletingId(null)
+    }
+  }
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<CaseSortField>("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
@@ -418,6 +444,28 @@ export default function AdminCasesPage() {
                             {lang === "ar" ? "عرض" : "View"}
                           </Button>
                         </SmartLink>
+                        <Link
+                          href={`/dashboard/admin/allocations?case=${encodeURIComponent(profile.id)}`}
+                        >
+                          <Button variant="outline" size="sm">
+                            {lang === "ar" ? "تعيين" : "Assign"}
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="ms-2"
+                          disabled={deletingId !== null}
+                          onClick={() => removeCase(profile)}
+                        >
+                          {deletingId === profile.id
+                            ? lang === "ar"
+                              ? "جارٍ الحذف…"
+                              : "Deleting…"
+                            : lang === "ar"
+                              ? "حذف"
+                              : "Delete"}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   )

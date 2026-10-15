@@ -962,6 +962,8 @@ export const rolesManagementCollection = {
   async create(data: {
     role_name_en: string
     role_name_ar: string
+    role_group?: string
+    is_retired?: boolean
     tool_types?: string[]
   }): Promise<import("@/types/expert-role").RolesManagement> {
     return pb.collection("roles_management").create(data)

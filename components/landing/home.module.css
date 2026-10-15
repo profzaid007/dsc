@@ -273,7 +273,7 @@
   animation: spotlightEnter 0.45s ease both;
 }
 .expertPortrait {
-  height: 254px;
+  height: 422px;
   overflow: hidden;
   position: relative;
 }
@@ -536,7 +536,7 @@
     margin-top: 8px;
   }
   .expertPortrait {
-    height: 250px;
+    height: 422px;
   }
 }
 @media (max-width: 480px) {
@@ -602,7 +602,7 @@
     letter-spacing: 1px;
   }
   .expertPortrait {
-    height: 220px;
+    height: 390px;
   }
   .expertCopy {
     min-height: 195px;
@@ -631,4 +631,19 @@
     animation: none;
     width: 100%;
   }
+}
+
+/* Reserve two thirds of each rotating card for the expert portrait. */
+.expertCard {
+  display: grid;
+  grid-template-rows: 2fr 1fr;
+}
+.expertCard .expertPortrait {
+  height: auto;
+  min-height: 0;
+}
+.expertPortrait img,
+.expertPortrait .initials {
+  position: absolute;
+  inset: 0;
 }
