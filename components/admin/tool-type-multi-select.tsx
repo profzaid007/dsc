@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState } from "react"
 import { Check, ChevronsUpDown, X } from "lucide-react"
@@ -37,6 +38,8 @@ export function ToolTypeMultiSelect({
   placeholder = "Select tool types...",
   emptyMessage = "No tool types found.",
 }: ToolTypeMultiSelectProps) {
+  const ui = useUiTranslation()
+
   const [open, setOpen] = useState(false)
 
   const selectedToolTypes = toolTypes.filter((t) => value.includes(t.id))
@@ -88,7 +91,7 @@ export function ToolTypeMultiSelect({
                 </Badge>
               ))
             ) : (
-              <span className="text-muted-foreground">{placeholder}</span>
+              <span className="text-muted-foreground">{ui(placeholder)}</span>
             )}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -96,9 +99,9 @@ export function ToolTypeMultiSelect({
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search tool types..." />
+          <CommandInput placeholder={ui("Search tool types...")} />
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandEmpty>{ui(emptyMessage)}</CommandEmpty>
             <CommandGroup>
               {toolTypes.map((toolType) => (
                 <CommandItem

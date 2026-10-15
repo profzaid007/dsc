@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState } from "react"
 import { useProfiles } from "@/hooks/useProfiles"
@@ -38,6 +39,8 @@ export function CaseSearchCombobox({
   disabled = false,
   enabled = true,
 }: CaseSearchComboboxProps) {
+  const ui = useUiTranslation()
+
   const [open, setOpen] = useState(false)
   const { profiles } = useProfiles(enabled)
 
@@ -53,15 +56,15 @@ export function CaseSearchCombobox({
           disabled={disabled || !enabled}
           className={cn("w-full justify-between", className)}
         >
-          {selectedCase ? selectedCase.name : placeholder}
+          {selectedCase ? selectedCase.name : ui(placeholder)}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0">
         <Command>
-          <CommandInput placeholder="Search cases..." />
+          <CommandInput placeholder={ui("Search cases...")} />
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandEmpty>{ui(emptyMessage)}</CommandEmpty>
             <CommandGroup>
               {profiles.map((profile) => (
                 <CommandItem
@@ -81,7 +84,7 @@ export function CaseSearchCombobox({
                   <div className="flex flex-col">
                     <span>{profile.name}</span>
                     <span className="text-xs text-muted-foreground">
-                      Grade: {profile.grade}
+                      {ui("Grade:")} {profile.grade}
                     </span>
                   </div>
                 </CommandItem>

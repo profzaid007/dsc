@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useLang } from "@/lib/lang-context"
 import { formatDate } from "@/lib/format-date"
@@ -9,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 export function ReportPreview({ config }: { config: ReportConfig }) {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
 
   const getBilingualValue = (value?: string | BilingualString) => {
@@ -23,21 +26,21 @@ export function ReportPreview({ config }: { config: ReportConfig }) {
       {/* Basic Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Basic Information</CardTitle>
+          <CardTitle className="text-base">{ui("Basic Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-medium">Child:</span>{" "}
+              <span className="font-medium">{ui("Child:")}</span>{" "}
               {config.childName || "-"}
             </div>
             <div>
-              <span className="font-medium">Expert:</span>{" "}
+              <span className="font-medium">{ui("Expert:")}</span>{" "}
               {config.expertName || "-"}
             </div>
             {config.date && (
               <div>
-                <span className="font-medium">Date:</span> {formatDate(config.date)}
+                <span className="font-medium">{ui("Date:")}</span> {formatDate(config.date)}
               </div>
             )}
           </div>
@@ -47,7 +50,7 @@ export function ReportPreview({ config }: { config: ReportConfig }) {
       {/* Assessment */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Assessment</CardTitle>
+          <CardTitle className="text-base">{ui("Assessment")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
@@ -61,7 +64,7 @@ export function ReportPreview({ config }: { config: ReportConfig }) {
       {/* Suggestions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Suggestions</CardTitle>
+          <CardTitle className="text-base">{ui("Suggestions")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea

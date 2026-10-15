@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState } from "react"
 import { useLang } from "@/lib/lang-context"
@@ -19,6 +20,8 @@ interface MultipleChoicePreviewProps {
 }
 
 export function MultipleChoicePreview({ config, responses = {}, readOnly = false }: MultipleChoicePreviewProps) {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const [draftAnswers, setAnswers] = useState<Record<string, unknown>>(responses)
   const [showAnswers, setShowAnswers] = useState(false)
@@ -42,7 +45,7 @@ export function MultipleChoicePreview({ config, responses = {}, readOnly = false
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
           <img
             src={question.mediaUrl}
-            alt="Media"
+            alt={ui("Media")}
             className="h-full w-full object-contain"
           />
         </div>
@@ -205,7 +208,7 @@ export function MultipleChoicePreview({ config, responses = {}, readOnly = false
     return (
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
-          No questions yet
+          {ui("No questions yet")}
         </CardContent>
       </Card>
     )
@@ -222,13 +225,13 @@ export function MultipleChoicePreview({ config, responses = {}, readOnly = false
             size="sm"
             onClick={() => setShowAnswers(!showAnswers)}
           >
-            {showAnswers ? "Hide Answers" : "Show Correct Answers"}
+            {ui(showAnswers ? "Hide Answers" : "Show Correct Answers")}
           </Button>
         </div>
       )}
       {!readOnly && (
         <div className="rounded-lg bg-muted/30 p-4">
-          <p className="mb-2 text-sm font-medium">Your Answers:</p>
+          <p className="mb-2 text-sm font-medium">{ui("Your Answers:")}</p>
           <pre className="overflow-auto text-xs">
             {JSON.stringify(answers, null, 2)}
           </pre>

@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -30,6 +31,7 @@ function getStoredCollapsed(title: string, defaultCollapsed: boolean): boolean {
 }
 
 export function SubSidebar({ title, items, collapsible = false, defaultCollapsed = false }: SubSidebarProps) {
+  const ui = useUiTranslation()
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(() => getStoredCollapsed(title, defaultCollapsed))
 
@@ -56,7 +58,7 @@ export function SubSidebar({ title, items, collapsible = false, defaultCollapsed
               variant="ghost"
               size="icon"
               onClick={toggleCollapsed}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={ui(isCollapsed ? "Expand sidebar" : "Collapse sidebar")}
             >
               {isCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </Button>

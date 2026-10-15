@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useState } from "react"
 import {
@@ -36,6 +37,8 @@ import { useSpecialists } from "@/hooks/useSpecialists"
 import pb, { getErrorMessage } from "@/lib/pb"
 import type { SpecialistCategory, SpecialistRole } from "@/lib/specialist-types"
 export default function SpecialistsSettings() {
+  const ui = useUiTranslation()
+
   const access = usePermissions()
   const { isAdmin, isSuperAdmin, isLoading } = useAuth()
   const { lang } = useLang()
@@ -67,7 +70,7 @@ export default function SpecialistsSettings() {
     setArabic("")
     setCategory("")
   }
-  if (isLoading) return <p>Loading...</p>
+  if (isLoading) return <p>{ui("Loading...")}</p>
   if (!isAdmin && !isSuperAdmin)
     return <p role="alert">{ar ? "غير مصرح" : "Access denied"}</p>
   const edit = (
@@ -391,7 +394,7 @@ export default function SpecialistsSettings() {
                 <th scope="col">
                   <span className="sr-only">{ar ? "أيقونة" : "Icon"}</span>
                 </th>
-                <th scope="col">Name (English)</th>
+                <th scope="col">{ui("Name (English)")}</th>
                 <th scope="col">الاسم (العربية)</th>
                 <th scope="col">{ar ? "الأدوار" : "Roles"}</th>
                 <th scope="col">{ar ? "الحالة" : "Status"}</th>
@@ -479,7 +482,7 @@ export default function SpecialistsSettings() {
               <tr>
                 <th scope="col">#</th>
                 <th scope="col">{ar ? "الفئة" : "Category"}</th>
-                <th scope="col">Name (English)</th>
+                <th scope="col">{ui("Name (English)")}</th>
                 <th scope="col">الاسم (العربية)</th>
                 <th scope="col">{ar ? "الحالة" : "Status"}</th>
                 <th scope="col">{ar ? "الإجراءات" : "Actions"}</th>
@@ -572,7 +575,7 @@ export default function SpecialistsSettings() {
               </label>
             )}
             <label>
-              Name (English)
+              {ui("Name (English)")}
               <input
                 dir="ltr"
                 required

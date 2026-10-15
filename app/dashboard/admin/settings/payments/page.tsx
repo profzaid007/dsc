@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState } from "react"
@@ -21,6 +22,8 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Landmark, Loader2 } from "lucide-react"
 
 export default function PaymentSettingsPage() {
+  const ui = useUiTranslation()
+
   const access = usePermissions()
   const router = useRouter()
   const canReadSettings = access.can("settings.read")
@@ -193,7 +196,7 @@ export default function PaymentSettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="iban">IBAN</Label>
+              <Label htmlFor="iban">{ui("IBAN")}</Label>
               <Input
                 id="iban"
                 dir="ltr"

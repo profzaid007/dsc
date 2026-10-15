@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState } from "react"
 import { useLang } from "@/lib/lang-context"
@@ -15,6 +16,8 @@ interface MediaPreviewProps {
 }
 
 export function MediaPreview({ config, responses = {}, readOnly = false }: MediaPreviewProps) {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const [localResponses, setLocalResponses] = useState<Record<string, string>>(responses)
   const [playingId, setPlayingId] = useState<string | null>(null)
@@ -33,7 +36,7 @@ export function MediaPreview({ config, responses = {}, readOnly = false }: Media
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
           <img
             src={item.mediaUrl}
-            alt="Media"
+            alt={ui("Media")}
             className="h-full w-full object-contain"
           />
         </div>
@@ -60,7 +63,7 @@ export function MediaPreview({ config, responses = {}, readOnly = false }: Media
     return (
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
-          No media items yet
+          {ui("No media items yet")}
         </CardContent>
       </Card>
     )
@@ -73,14 +76,14 @@ export function MediaPreview({ config, responses = {}, readOnly = false }: Media
         <div key={item.id} className="space-y-3 rounded-lg border bg-card p-4">
           <div className="flex items-start gap-2">
             <Label className="font-medium">
-              {item.question || "No question text"}
+              {item.question || ui("No question text")}
             </Label>
           </div>
           {renderMedia(item)}
           <div>
             <Label className="text-sm text-muted-foreground">
-              Response Type:{" "}
-              <span className="capitalize">{item.responseType}</span>
+              {ui("Response Type:")}{" "}
+              <span className="capitalize">{ui(item.responseType)}</span>
             </Label>
             {item.responseType === "text" && (
               <Input
@@ -98,7 +101,7 @@ export function MediaPreview({ config, responses = {}, readOnly = false }: Media
         ))}
       {!readOnly && (
         <div className="rounded-lg bg-muted/30 p-4">
-          <p className="mb-2 text-sm font-medium">Responses:</p>
+          <p className="mb-2 text-sm font-medium">{ui("Responses:")}</p>
           <pre className="overflow-auto text-xs">
             {JSON.stringify(localResponses, null, 2)}
           </pre>

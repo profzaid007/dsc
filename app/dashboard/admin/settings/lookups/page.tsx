@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState, useRef } from "react"
@@ -46,6 +47,8 @@ const LOOKUP_TYPES: { value: LookupType; label: { en: string; ar: string } }[] =
   ]
 
 export default function LookupsPage() {
+  const ui = useUiTranslation()
+
   const access = usePermissions()
   const router = useRouter()
   const canReadSettings = access.can("settings.read")
@@ -351,7 +354,7 @@ export default function LookupsPage() {
             <div className="space-y-2">
               <Label>{lang === "ar" ? "المفتاح" : "Key"}</Label>
               <Input
-                placeholder="e.g. survey"
+                placeholder={ui("e.g. survey")}
                 value={formData.key}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, key: e.target.value }))
@@ -364,7 +367,7 @@ export default function LookupsPage() {
                 {lang === "ar" ? "التسمية (إنجليزي)" : "Label (English)"}
               </Label>
               <Input
-                placeholder="e.g. Survey"
+                placeholder={ui("e.g. Survey")}
                 value={formData.label_en}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, label_en: e.target.value }))

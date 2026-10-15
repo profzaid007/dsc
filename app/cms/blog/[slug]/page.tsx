@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 
 import { boundedFullList } from "@/lib/bounded-records"
@@ -48,6 +49,8 @@ function slugify(text: string): string {
 }
 
 export default function CmsBlogEditorPage() {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const params = useParams()
   const router = useRouter()
@@ -465,7 +468,7 @@ export default function CmsBlogEditorPage() {
 
       <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
         <TabsList>
-          <TabsTrigger value="en">English</TabsTrigger>
+          <TabsTrigger value="en">{ui("English")}</TabsTrigger>
           <TabsTrigger value="ar">العربية</TabsTrigger>
         </TabsList>
       </Tabs>

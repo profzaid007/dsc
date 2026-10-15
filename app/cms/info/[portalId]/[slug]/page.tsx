@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -76,6 +77,8 @@ async function resizeIconToSquare(file: File, size = 256): Promise<File> {
 }
 
 export default function CmsServiceEditorPage() {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const { portals: PORTALS } = usePortals()
   const getPortalById = (id: string) => PORTALS.find((portal) => portal.id === id)
@@ -470,7 +473,7 @@ export default function CmsServiceEditorPage() {
 
       <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
         <TabsList>
-          <TabsTrigger value="en">English</TabsTrigger>
+          <TabsTrigger value="en">{ui("English")}</TabsTrigger>
           <TabsTrigger value="ar">العربية</TabsTrigger>
         </TabsList>
       </Tabs>

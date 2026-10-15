@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { use, useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -41,6 +42,8 @@ export default function AdminLectureDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const ui = useUiTranslation()
+
   const { id } = use(params)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -237,7 +240,7 @@ export default function AdminLectureDetailPage({
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <h4 className="mb-2 font-medium">English</h4>
+                  <h4 className="mb-2 font-medium">{ui("English")}</h4>
                   <p className="text-muted-foreground">
                     {lecture.description.en}
                   </p>

@@ -1,3 +1,4 @@
+import { LocalizedText } from "@/components/LocalizedText"
 import { Suspense } from "react"
 
 import { ResetPasswordForm } from "./reset-password-form"
@@ -7,7 +8,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center p-4">
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground"><LocalizedText text={"Loading..."} /></p>
         </div>
       }
     >

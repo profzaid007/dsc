@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { cn } from "@/lib/utils"
 
@@ -68,6 +69,8 @@ function AboutSkeleton() {
  * lands, so the page does not visibly jump.
  */
 export function ProfileSkeleton({ expert = false }: { expert?: boolean }) {
+  const ui = useUiTranslation()
+
   // Every view leads with an account section plus one or two role sections;
   // experts render three.
   const sectionCount = expert ? 3 : 2
@@ -109,7 +112,7 @@ export function ProfileSkeleton({ expert = false }: { expert?: boolean }) {
 
       <AboutSkeleton />
 
-      <span className="sr-only">Loading profile</span>
+      <span className="sr-only">{ui("Loading profile")}</span>
     </div>
   )
 }

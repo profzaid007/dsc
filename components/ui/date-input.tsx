@@ -1,6 +1,8 @@
 "use client"
 
 import DatePicker from "react-datepicker"
+import { ar } from "date-fns/locale/ar"
+import { useLang } from "@/lib/lang-context"
 
 import { Input } from "@/components/ui/input"
 import { formatDate, parseISODate, toISODate } from "@/lib/format-date"
@@ -39,13 +41,18 @@ export function DateInput({
   minDate,
   maxDate,
 }: DateInputProps) {
+  const { lang } = useLang()
+  const isArabic = lang === "ar"
+  const inputPlaceholder = placeholder === "dd-mm-yyyy" && isArabic
+    ? "يوم-شهر-سنة"
+    : placeholder
   if (readOnly) {
     return (
       <Input
         id={id}
         readOnly
         value={value ? formatDate(value) : ""}
-        placeholder={placeholder}
+        placeholder={inputPlaceholder}
         className={cn("cursor-default", className)}
       />
     )
@@ -54,12 +61,20 @@ export function DateInput({
   return (
     <DatePicker
       id={id}
+      locale={isArabic ? ar : undefined}
+      previousMonthAriaLabel={isArabic ? "الشهر السابق" : "Previous month"}
+      nextMonthAriaLabel={isArabic ? "الشهر التالي" : "Next month"}
+      previousYearAriaLabel={isArabic ? "السنة السابقة" : "Previous year"}
+      nextYearAriaLabel={isArabic ? "السنة التالية" : "Next year"}
+      monthAriaLabelPrefix={isArabic ? "الشهر" : "Month"}
+      chooseDayAriaLabelPrefix={isArabic ? "اختر" : "Choose"}
+      disabledDayAriaLabelPrefix={isArabic ? "غير متاح" : "Not available"}
       required={required}
       disabled={disabled}
       selected={value ? parseISODate(value) : null}
       onChange={(d: Date | null) => onChange?.(d ? toISODate(d) : "")}
       dateFormat="dd-MM-yyyy"
-      placeholderText={placeholder}
+      placeholderText={inputPlaceholder}
       showPopperArrow={false}
       showYearDropdown
       showMonthDropdown

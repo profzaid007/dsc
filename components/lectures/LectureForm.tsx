@@ -1,5 +1,7 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
+import { useLang } from "@/lib/lang-context"
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -53,6 +55,9 @@ export function LectureForm({
   isSubmitting = false,
   submitLabel = "Create Lecture",
 }: LectureFormProps) {
+  const { lang } = useLang()
+  const ui = useUiTranslation()
+
   const [formData, setFormData] = useState<CreateLectureInput>(() => ({
     ...emptyForm,
     ...initialData,
@@ -115,17 +120,18 @@ export function LectureForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" dir={lang === "ar" ? "rtl" : "ltr"}>
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle>{ui("Basic Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="titleEn">Title (English) *</Label>
+              <Label htmlFor="titleEn">{ui("Title (English) *")}</Label>
               <Input
                 id="titleEn"
+                dir="ltr"
                 value={formData.title.en}
                 onChange={(e) =>
                   setFormData({
@@ -133,12 +139,12 @@ export function LectureForm({
                     title: { ...formData.title, en: e.target.value },
                   })
                 }
-                placeholder="Enter lecture title in English"
+                placeholder={ui("Enter lecture title in English")}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="titleAr">Title (Arabic) *</Label>
+              <Label htmlFor="titleAr">{ui("Title (Arabic) *")}</Label>
               <Input
                 id="titleAr"
                 value={formData.title.ar}
@@ -157,9 +163,10 @@ export function LectureForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="descEn">Description (English) *</Label>
+              <Label htmlFor="descEn">{ui("Description (English) *")}</Label>
               <Textarea
                 id="descEn"
+                dir="ltr"
                 value={formData.description.en}
                 onChange={(e) =>
                   setFormData({
@@ -170,13 +177,13 @@ export function LectureForm({
                     },
                   })
                 }
-                placeholder="Enter lecture description in English"
+                placeholder={ui("Enter lecture description in English")}
                 rows={4}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="descAr">Description (Arabic) *</Label>
+              <Label htmlFor="descAr">{ui("Description (Arabic) *")}</Label>
               <Textarea
                 id="descAr"
                 value={formData.description.ar}
@@ -201,22 +208,23 @@ export function LectureForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Speaker Information</CardTitle>
+          <CardTitle>{ui("Speaker Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="speakerNameEn">Speaker Name (English) *</Label>
+              <Label htmlFor="speakerNameEn">{ui("Speaker Name (English) *")}</Label>
               <Input
                 id="speakerNameEn"
+                dir="ltr"
                 value={formData.speaker.name.en}
                 onChange={(e) => updateSpeaker("name", "en", e.target.value)}
-                placeholder="Enter speaker name in English"
+                placeholder={ui("Enter speaker name in English")}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="speakerNameAr">Speaker Name (Arabic) *</Label>
+              <Label htmlFor="speakerNameAr">{ui("Speaker Name (Arabic) *")}</Label>
               <Input
                 id="speakerNameAr"
                 value={formData.speaker.name.ar}
@@ -230,16 +238,17 @@ export function LectureForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="speakerRoleEn">Speaker Role/Title (English)</Label>
+              <Label htmlFor="speakerRoleEn">{ui("Speaker Role/Title (English)")}</Label>
               <Input
                 id="speakerRoleEn"
+                dir="ltr"
                 value={formData.speaker.role.en}
                 onChange={(e) => updateSpeaker("role", "en", e.target.value)}
-                placeholder="e.g., Child Psychologist"
+                placeholder={ui("e.g., Child Psychologist")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="speakerRoleAr">Speaker Role/Title (Arabic)</Label>
+              <Label htmlFor="speakerRoleAr">{ui("Speaker Role/Title (Arabic)")}</Label>
               <Input
                 id="speakerRoleAr"
                 value={formData.speaker.role.ar}
@@ -254,12 +263,12 @@ export function LectureForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Schedule & Location</CardTitle>
+          <CardTitle>{ui("Schedule & Location")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="dateTime">Date & Time *</Label>
+              <Label htmlFor="dateTime">{ui("Date & Time *")}</Label>
               <Input
                 id="dateTime"
                 type="datetime-local"
@@ -269,7 +278,7 @@ export function LectureForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="duration">Duration (minutes) *</Label>
+              <Label htmlFor="duration">{ui("Duration (minutes) *")}</Label>
               <Input
                 id="duration"
                 type="number"
@@ -289,19 +298,19 @@ export function LectureForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="location">Location *</Label>
+              <Label htmlFor="location">{ui("Location *")}</Label>
               <Input
                 id="location"
                 value={formData.schedule.location}
                 onChange={(e) => updateSchedule("location", e.target.value)}
-                placeholder="e.g., Main Conference Hall"
+                placeholder={ui("e.g., Main Conference Hall")}
                 required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="meetingLink">Meeting Link (for virtual lectures)</Label>
+            <Label htmlFor="meetingLink">{ui("Meeting Link (for virtual lectures)")}</Label>
             <Input
               id="meetingLink"
               type="url"
@@ -314,7 +323,7 @@ export function LectureForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="recordingUrl">Recording URL</Label>
+            <Label htmlFor="recordingUrl">{ui("Recording URL")}</Label>
             <Input
               id="recordingUrl"
               type="url"
@@ -330,14 +339,14 @@ export function LectureForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Thumbnail Image</CardTitle>
+          <CardTitle>{ui("Thumbnail Image")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {thumbnailPreview && (
             <div className="relative h-48 w-full overflow-hidden rounded-lg bg-muted">
               <img
                 src={thumbnailPreview}
-                alt="Thumbnail preview"
+                alt={ui("Thumbnail preview")}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -353,14 +362,14 @@ export function LectureForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Status</CardTitle>
+          <CardTitle>{ui("Status")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <Label htmlFor="is_public">Public Visibility</Label>
+              <Label htmlFor="is_public">{ui("Public Visibility")}</Label>
               <p className="text-sm text-muted-foreground">
-                Show this lecture on the public lectures page
+                {ui("Show this lecture on the public lectures page")}
               </p>
             </div>
             <Switch
@@ -381,12 +390,12 @@ export function LectureForm({
             }
           >
             <SelectTrigger className="w-64">
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder={ui("Select status")} />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  {ui(option.label)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -396,10 +405,10 @@ export function LectureForm({
 
       <div className="flex justify-end gap-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {ui("Cancel")}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : submitLabel}
+          {isSubmitting ? ui("Saving...") : ui(submitLabel)}
         </Button>
       </div>
     </form>

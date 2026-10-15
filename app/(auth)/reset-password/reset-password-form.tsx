@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -16,6 +17,8 @@ import { Label } from "@/components/ui/label"
 import { confirmPasswordReset, getErrorMessage } from "@/lib/pb"
 
 export function ResetPasswordForm() {
+  const ui = useUiTranslation()
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
@@ -31,11 +34,11 @@ export function ResetPasswordForm() {
     setError("")
     if (!token) return
     if (password.length < 8) {
-      setError("Password must be at least 8 characters")
+      setError(ui("Password must be at least 8 characters"))
       return
     }
     if (password !== confirm) {
-      setError("Passwords do not match")
+      setError(ui("Passwords do not match"))
       return
     }
 
@@ -46,7 +49,7 @@ export function ResetPasswordForm() {
     } catch (err: unknown) {
       const status = (err as { status?: number } | null)?.status
       if (status === 400) {
-        setError("Invalid or expired reset link. Please request a new one.")
+        setError(ui("Invalid or expired reset link. Please request a new one."))
       } else {
         setError(getErrorMessage(err))
       }
@@ -60,25 +63,25 @@ export function ResetPasswordForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-primary">
-            Reset Password
+            {ui("Reset Password")}
           </CardTitle>
           <CardDescription>
             {success
-              ? "Your password has been reset successfully. You can now sign in with your new password."
+              ? ui("Your password has been reset successfully. You can now sign in with your new password.")
               : token
-                ? "Enter a new password for your account."
-                : "This reset link is invalid or has expired. Please request a new one from the login page."}
+                ? ui("Enter a new password for your account.")
+                : ui("This reset link is invalid or has expired. Please request a new one from the login page.")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {success ? (
             <div className="flex justify-center">
-              <Button onClick={() => router.push("/login")}>Go to Login</Button>
+              <Button onClick={() => router.push("/login")}>{ui("Go to Login")}</Button>
             </div>
           ) : !token ? (
             <div className="flex justify-center">
               <Button variant="outline" onClick={() => router.push("/login")}>
-                Back to Login
+                {ui("Back to Login")}
               </Button>
             </div>
           ) : (
@@ -89,7 +92,7 @@ export function ResetPasswordForm() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
+                <Label htmlFor="new-password">{ui("New Password")}</Label>
                 <PasswordInput
                   id="new-password"
                   placeholder="••••••••"
@@ -100,7 +103,7 @@ export function ResetPasswordForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Label htmlFor="confirm-password">{ui("Confirm Password")}</Label>
                 <PasswordInput
                   id="confirm-password"
                   placeholder="••••••••"
@@ -114,7 +117,7 @@ export function ResetPasswordForm() {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? "Resetting..." : "Reset Password"}
+                {isLoading ? ui("Resetting...") : ui("Reset Password")}
               </Button>
             </form>
           )}

@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
@@ -23,6 +24,8 @@ const NAV_LINKS = [
 ]
 
 export function Navbar() {
+  const ui = useUiTranslation()
+
   const pathname = usePathname()
   const { lang, toggleLang } = useLang()
   const { portals: PORTALS } = usePortals()
@@ -71,7 +74,7 @@ export function Navbar() {
                 <div className="flex h-[56px] w-[56px] shrink-0 items-center justify-center">
                   <Image
                     src="/logo.svg"
-                    alt="DSC Logo"
+                    alt={ui("DSC Logo")}
                     width={56}
                     height={56}
                     className="object-contain"
@@ -95,7 +98,7 @@ export function Navbar() {
             {!isAppRoute && (
               <nav
                 className="col-start-2 hidden flex-nowrap items-center gap-0 ltr:-translate-x-8 rtl:translate-x-22 2xl:flex"
-                aria-label="Main navigation"
+                aria-label={ui("Main navigation")}
               >
                 {NAV_LINKS.map((item, i) => {
                   const isActive = pathname === item.href

@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 
@@ -140,6 +141,8 @@ function TagList({ values }: { values: string[] }) {
 }
 
 export function ExpertApprovalPage() {
+  const ui = useUiTranslation()
+
   const access = usePermissions()
   const { users, isLoading, updateUser, refresh } = useUsers(
     access.can("experts.read")
@@ -316,31 +319,31 @@ export function ExpertApprovalPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <CheckCircle2 className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-medium">
-              No pending applications
+              {ui("No pending applications")}
             </h3>
             <p className="text-center text-muted-foreground">
-              There are no expert applications waiting for approval.
+              {ui("There are no expert applications waiting for approval.")}
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Pending Expert Applications</CardTitle>
+            <CardTitle>{ui("Pending Expert Applications")}</CardTitle>
             <CardDescription>
-              {pendingExperts.length} application(s) awaiting approval
+              {pendingExperts.length} {ui("application(s) awaiting approval")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[220px]">Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Contact Number</TableHead>
-                  <TableHead>Applied On</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[220px]">{ui("Name")}</TableHead>
+                  <TableHead>{ui("Email")}</TableHead>
+                  <TableHead>{ui("Contact Number")}</TableHead>
+                  <TableHead>{ui("Applied On")}</TableHead>
+                  <TableHead>{ui("Status")}</TableHead>
+                  <TableHead className="text-end">{ui("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -375,7 +378,7 @@ export function ExpertApprovalPage() {
                         variant="outline"
                         className="bg-amber-50 text-amber-700"
                       >
-                        Pending
+                        {ui("Pending")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -386,7 +389,7 @@ export function ExpertApprovalPage() {
                           onClick={() => setSelectedUser(user)}
                         >
                           <Eye className="me-1 h-4 w-4" />
-                          View
+                          {ui("View")}
                         </Button>
                         <Button
                           size="sm"
@@ -397,8 +400,8 @@ export function ExpertApprovalPage() {
                           }
                         >
                           {approvingId === user.id
-                            ? "Approving..."
-                            : "Approve & Notify"}
+                            ? ui("Approving...")
+                            : ui("Approve & Notify")}
                         </Button>
                       </div>
                     </TableCell>
@@ -452,63 +455,63 @@ export function ExpertApprovalPage() {
                       variant="outline"
                       className="bg-amber-50 text-amber-700"
                     >
-                      Pending
+                      {ui("Pending")}
                     </Badge>
                   </span>
                 </DialogTitle>
                 <DialogDescription>
-                  Expert application submitted on{" "}
+                  {ui("Expert application submitted on")}{" "}
                   {formatDateTime(selectedUser.created)}
                 </DialogDescription>
               </DialogHeader>
 
               {profileLoading ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  Loading profile details...
+                  {ui("Loading profile details...")}
                 </p>
               ) : !selectedProfile ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <DetailItem
                       icon={Mail}
-                      label="Email"
+                      label={ui("Email")}
                       value={selectedUser.email}
                     />
                     <DetailItem
                       icon={Phone}
-                      label="Contact"
+                      label={ui("Contact")}
                       value={selectedUser.contact_number}
                     />
                   </div>
                   <p className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-                    No profile details were found for this application.
+                    {ui("No profile details were found for this application.")}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div>
                     <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-                      Personal Details
+                      {ui("Personal Details")}
                     </h3>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <DetailItem
                         icon={UserIcon}
-                        label="Full Legal Name"
+                        label={ui("Full Legal Name")}
                         value={toText(selectedProfile.full_legal_name)}
                       />
                       <DetailItem
                         icon={Mail}
-                        label="Email"
+                        label={ui("Email")}
                         value={selectedUser.email}
                       />
                       <DetailItem
                         icon={Phone}
-                        label="Contact Number"
+                        label={ui("Contact Number")}
                         value={selectedUser.contact_number}
                       />
                       <DetailItem
                         icon={Phone}
-                        label="WhatsApp"
+                        label={ui("WhatsApp")}
                         value={
                           toText(selectedProfile.whatsapp_number)
                             ? `${toText(
@@ -519,22 +522,22 @@ export function ExpertApprovalPage() {
                       />
                       <DetailItem
                         icon={Globe}
-                        label="Nationality"
+                        label={ui("Nationality")}
                         value={toText(selectedProfile.nationality)}
                       />
                       <DetailItem
                         icon={MapPin}
-                        label="Country of Residence"
+                        label={ui("Country of Residence")}
                         value={toText(selectedProfile.country_of_residence)}
                       />
                       <DetailItem
                         icon={MapPin}
-                        label="City"
+                        label={ui("City")}
                         value={toText(selectedProfile.city)}
                       />
                       <DetailItem
                         icon={Languages}
-                        label="Preferred Languages"
+                        label={ui("Preferred Languages")}
                         value={
                           toList(selectedProfile.preferred_languages)
                             .map(languageLabel)
@@ -546,12 +549,12 @@ export function ExpertApprovalPage() {
 
                   <div>
                     <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-                      Academic Background
+                      {ui("Academic Background")}
                     </h3>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <DetailItem
                         icon={GraduationCap}
-                        label="Highest Academic Degree"
+                        label={ui("Highest Academic Degree")}
                         value={
                           toText(selectedProfile.highest_academic_degree)
                             ? humanize(
@@ -562,12 +565,12 @@ export function ExpertApprovalPage() {
                       />
                       <DetailItem
                         icon={BookOpen}
-                        label="Degree Title"
+                        label={ui("Degree Title")}
                         value={toText(selectedProfile.degree_title)}
                       />
                       <DetailItem
                         icon={BookOpen}
-                        label="Field of Study"
+                        label={ui("Field of Study")}
                         value={toText(selectedProfile.field_of_study)}
                       />
                     </div>
@@ -575,19 +578,19 @@ export function ExpertApprovalPage() {
 
                   <div>
                     <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-                      Professional Details
+                      {ui("Professional Details")}
                     </h3>
                     <div className="space-y-3">
                       <DetailItem
                         icon={UserCheck}
-                        label="Age Group"
+                        label={ui("Age Group")}
                         value={
                           <TagList values={toList(selectedProfile.age_group)} />
                         }
                       />
                       <DetailItem
                         icon={Briefcase}
-                        label="Specialization"
+                        label={ui("Specialization")}
                         value={
                           <TagList
                             values={toList(selectedProfile.specialization_type)}
@@ -596,7 +599,7 @@ export function ExpertApprovalPage() {
                       />
                       <DetailItem
                         icon={UserCheck}
-                        label="Client Type"
+                        label={ui("Client Type")}
                         value={
                           <TagList
                             values={toList(selectedProfile.client_type)}
@@ -606,7 +609,7 @@ export function ExpertApprovalPage() {
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <DetailItem
                           icon={Globe}
-                          label="Consultation Mode"
+                          label={ui("Consultation Mode")}
                           value={
                             toText(selectedProfile.consultation_mode)
                               ? humanize(
@@ -617,12 +620,12 @@ export function ExpertApprovalPage() {
                         />
                         <DetailItem
                           icon={Wallet}
-                          label="Fee"
+                          label={ui("Fee")}
                           value={toText(selectedProfile.fee)}
                         />
                         <DetailItem
                           icon={Clock}
-                          label="Availability"
+                          label={ui("Availability")}
                           value={toText(selectedProfile.availability)}
                         />
                       </div>
@@ -633,7 +636,7 @@ export function ExpertApprovalPage() {
                     <div>
                       <div className="mb-1 flex items-center gap-1.5 text-sm font-medium">
                         <MessageSquareText className="h-4 w-4 text-muted-foreground" />
-                        Message
+                        {ui("Message")}
                       </div>
                       <p className="rounded-lg bg-muted/50 p-3 text-sm whitespace-pre-wrap">
                         {toText(selectedProfile.bio)}
@@ -644,7 +647,7 @@ export function ExpertApprovalPage() {
                   <div>
                     <div className="mb-1 flex items-center gap-1.5 text-sm font-medium">
                       <Paperclip className="h-4 w-4 text-muted-foreground" />
-                      Attachments
+                      {ui("Attachments")}
                     </div>
                     <div className="flex flex-col gap-1.5">
                       {profilePhotoUrl && (
@@ -655,7 +658,7 @@ export function ExpertApprovalPage() {
                           className="flex items-center gap-2 rounded-lg border p-2 text-sm text-primary hover:bg-muted/50 hover:underline"
                         >
                           <ImageIcon className="h-4 w-4 shrink-0" />
-                          <span className="truncate">Profile Photo</span>
+                          <span className="truncate">{ui("Profile Photo")}</span>
                         </a>
                       )}
                       {cvFiles.map((filename) => (
@@ -672,7 +675,7 @@ export function ExpertApprovalPage() {
                       ))}
                       {!profilePhotoUrl && cvFiles.length === 0 && (
                         <p className="text-sm text-muted-foreground">
-                          No attachments were uploaded.
+                          {ui("No attachments were uploaded.")}
                         </p>
                       )}
                     </div>
@@ -682,7 +685,7 @@ export function ExpertApprovalPage() {
 
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setSelectedUser(null)}>
-                  Close
+                  {ui("Close")}
                 </Button>
                 <Button
                   onClick={() => handleApprove(selectedUser)}
@@ -692,8 +695,8 @@ export function ExpertApprovalPage() {
                   }
                 >
                   {approvingId === selectedUser.id
-                    ? "Approving..."
-                    : "Approve & Notify"}
+                    ? ui("Approving...")
+                    : ui("Approve & Notify")}
                 </Button>
               </div>
             </>

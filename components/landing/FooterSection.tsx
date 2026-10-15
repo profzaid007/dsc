@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import Link from "next/link"
 import { t } from "@/lib/i18n"
@@ -7,6 +8,8 @@ import { usePortals } from "@/hooks/usePortals"
 import Image from "next/image"
 
 export function FooterSection() {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const { portals: PORTALS } = usePortals()
 
@@ -16,7 +19,7 @@ export function FooterSection() {
         <div className="grid grid-cols-1 gap-6 min-[480px]:grid-cols-2 md:grid-cols-3 md:gap-x-8 md:gap-y-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <Image src="/logo.svg" alt="DSC Logo" width={32} height={32} className="object-contain" />
+              <Image src="/logo.svg" alt={ui("DSC Logo")} width={32} height={32} className="object-contain" />
               <div>
                 <span className="text-lg font-bold text-white">DSC</span>
                 <p className="text-xs" style={{ color: "#00a4e4" }}>
@@ -33,7 +36,7 @@ export function FooterSection() {
             <div className="flex flex-wrap items-center gap-3">
               <a
                 href="https://wa.me/message/XGN76UVRTVL7C1"
-                aria-label="WhatsApp"
+                aria-label={ui("WhatsApp")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
@@ -42,7 +45,7 @@ export function FooterSection() {
               </a>
               <a
                 href="https://www.facebook.com/share/17cqyrgK7t/"
-                aria-label="Facebook"
+                aria-label={ui("Facebook")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
@@ -51,7 +54,7 @@ export function FooterSection() {
               </a>
               <a
                 href="https://www.instagram.com/drgeniusdsc?igsh=MXI2eHl5djJ2N2phbA=="
-                aria-label="Instagram"
+                aria-label={ui("Instagram")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
@@ -69,7 +72,7 @@ export function FooterSection() {
               </a>
               <a
                 href="https://www.linkedin.com/in/radwan-abusaif-ab5089323?utm_source=share_via&utm_content=profile&utm_medium=member_android"
-                aria-label="LinkedIn"
+                aria-label={ui("LinkedIn")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
@@ -158,7 +161,7 @@ export function FooterSection() {
             </Link>
           </div>
           <div className="mt-1">
-            © 2026 Development Secrets Consultancy.{" "}
+            {ui("© 2026 Development Secrets Consultancy.")}{" "}
             {t({ en: "All rights reserved.", ar: "جميع الحقوق محفوظة." }, lang)}
           </div>
         </div>

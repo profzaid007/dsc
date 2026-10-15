@@ -1,17 +1,20 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function QuotationsPage() {
+  const ui = useUiTranslation()
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Quotations</h1>
+      <h1 className="text-2xl font-bold">{ui("Quotations")}</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Quotations</CardTitle>
+          <CardTitle>{ui("Quotations")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Coming soon.</p>
+          <p className="text-sm text-muted-foreground">{ui("Coming soon.")}</p>
         </CardContent>
       </Card>
     </div>

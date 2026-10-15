@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { openProtectedFile } from "@/components/ProtectedFileLink"
 
 import { use, useState, useEffect } from "react"
@@ -118,6 +119,8 @@ export default function AdminTrainingProgramDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const ui = useUiTranslation()
+
   const { id } = use(params)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -570,7 +573,7 @@ export default function AdminTrainingProgramDetailPage({
                     <div className="grid gap-4 md:grid-cols-2">
                       {program.goals.en && (
                         <div>
-                          <h4 className="mb-2 font-medium">English</h4>
+                          <h4 className="mb-2 font-medium">{ui("English")}</h4>
                           <p className="text-muted-foreground">
                             {program.goals.en}
                           </p>

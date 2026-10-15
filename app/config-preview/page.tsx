@@ -1,4 +1,5 @@
 "use client";
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -12,6 +13,8 @@ const totalQuestions = FORM_STEPS.reduce(
 );
 
 export default function ConfigPreviewPage() {
+  const ui = useUiTranslation()
+
   const [openSteps, setOpenSteps] = useState<Set<string>>(new Set());
 
   function toggleStep(id: string) {
@@ -32,10 +35,10 @@ export default function ConfigPreviewPage() {
 
       <div className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="mb-1 text-2xl font-bold" style={{ color: "var(--dsc-navy)" }}>
-          Form Config Preview
+          {ui("Form Config Preview")}
         </h1>
         <p className="mb-6 text-sm text-muted-foreground">
-          {FORM_STEPS.length} steps &bull; {totalQuestions} total questions
+          {FORM_STEPS.length} {ui("steps &bull;")} {totalQuestions} {ui("total questions")}
         </p>
 
         {/* Collapsible steps */}
@@ -60,7 +63,7 @@ export default function ConfigPreviewPage() {
                     </span>
                     <span className="font-medium">{step.title.en}</span>
                     <span className="text-xs text-muted-foreground">
-                      ({step.questions.length} questions)
+                      ({step.questions.length} {ui("questions)")}
                     </span>
                   </div>
                   {isOpen ? (
@@ -75,11 +78,11 @@ export default function ConfigPreviewPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-start text-xs uppercase tracking-wider text-muted-foreground">
-                          <th className="pb-2 pe-4 text-start font-medium">ID</th>
-                          <th className="pb-2 pe-4 text-start font-medium">Type</th>
-                          <th className="pb-2 pe-4 text-start font-medium">Label (EN)</th>
-                          <th className="pb-2 pe-4 text-start font-medium">Required</th>
-                          <th className="pb-2 text-start font-medium">Conditional</th>
+                          <th className="pb-2 pe-4 text-start font-medium">{ui("ID")}</th>
+                          <th className="pb-2 pe-4 text-start font-medium">{ui("Type")}</th>
+                          <th className="pb-2 pe-4 text-start font-medium">{ui("Label (EN)")}</th>
+                          <th className="pb-2 pe-4 text-start font-medium">{ui("Required")}</th>
+                          <th className="pb-2 text-start font-medium">{ui("Conditional")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
@@ -99,7 +102,7 @@ export default function ConfigPreviewPage() {
                             <td className="py-2 pe-4">{q.label.en}</td>
                             <td className="py-2 pe-4">
                               {q.required ? (
-                                <span className="text-xs font-semibold text-green-600">Yes</span>
+                                <span className="text-xs font-semibold text-green-600">{ui("Yes")}</span>
                               ) : (
                                 <span className="text-xs text-muted-foreground/50">—</span>
                               )}
@@ -127,7 +130,7 @@ export default function ConfigPreviewPage() {
         {/* Full JSON */}
         <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Full JSON Config
+            {ui("Full JSON Config")}
           </h2>
           <pre className="max-h-[500px] overflow-auto rounded-lg border bg-muted p-4 text-xs leading-relaxed">
             {JSON.stringify(FORM_STEPS, null, 2)}

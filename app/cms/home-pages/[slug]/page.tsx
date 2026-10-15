@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
@@ -21,6 +22,8 @@ import { t, UI_STRINGS } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 
 export default function CmsHomePageEditorPage() {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const { isSuperAdmin } = useAuth()
@@ -257,7 +260,7 @@ export default function CmsHomePageEditorPage() {
       {page && (
         <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as Lang)}>
           <TabsList>
-            <TabsTrigger value="en">English</TabsTrigger>
+            <TabsTrigger value="en">{ui("English")}</TabsTrigger>
             <TabsTrigger value="ar">العربية</TabsTrigger>
           </TabsList>
 

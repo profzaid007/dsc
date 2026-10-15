@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -68,6 +69,8 @@ function ExpertPendingNotice() {
 }
 
 export default function LoginPage() {
+  const ui = useUiTranslation()
+
 
   const router = useRouter()
   const { login } = useAuth()
@@ -180,7 +183,7 @@ export default function LoginPage() {
               <div className="relative z-10 flex h-full w-full items-center justify-center rounded-full border-2 border-white bg-white/70 shadow-lg backdrop-blur-sm">
                 <Image
                   src="/logo.svg"
-                  alt="DSC Logo"
+                  alt={ui("DSC Logo")}
                   width={80}
                   height={80}
                   className="object-contain"
@@ -189,7 +192,7 @@ export default function LoginPage() {
             </div>
 
             <p className="mt-2 text-2xl font-bold text-primary">DSC</p>
-            <p>Development Secrets Consultancy</p>
+            <p>{ui("Development Secrets Consultancy")}</p>
 
             <p className="max-w-[220px] text-sm text-muted-foreground">
               {t(

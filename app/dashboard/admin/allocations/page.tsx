@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import {
@@ -166,6 +167,8 @@ function ExpertCombobox({
 }
 
 export default function AllocationsPage() {
+  const ui = useUiTranslation()
+
   const access = usePermissions()
   const canReadExperts = access.can("experts.read")
   const router = useRouter()
@@ -1046,7 +1049,7 @@ export default function AllocationsPage() {
                 <Input
                   value={newRoleNameEn}
                   onChange={(e) => setNewRoleNameEn(e.target.value)}
-                  placeholder="e.g., Lawyer"
+                  placeholder={ui("e.g., Lawyer")}
                 />
               </div>
               <div>
@@ -1122,7 +1125,7 @@ export default function AllocationsPage() {
                 <Input
                   value={editRoleNameEn}
                   onChange={(e) => setEditRoleNameEn(e.target.value)}
-                  placeholder="e.g., Lawyer"
+                  placeholder={ui("e.g., Lawyer")}
                 />
               </div>
               <div>

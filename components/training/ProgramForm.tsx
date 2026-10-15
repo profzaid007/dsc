@@ -1,5 +1,7 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
+import { useLang } from "@/lib/lang-context"
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -46,6 +48,9 @@ export function ProgramForm({
   isSubmitting = false,
   submitLabel = "Save Program",
 }: ProgramFormProps) {
+  const { lang } = useLang()
+  const ui = useUiTranslation()
+
   const [formData, setFormData] = useState<CreateProgramInput>(() => ({
     ...emptyForm,
     ...initialData,
@@ -132,25 +137,26 @@ export function ProgramForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" dir={lang === "ar" ? "rtl" : "ltr"}>
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle>{ui("Basic Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="titleEn">Title (English) *</Label>
+              <Label htmlFor="titleEn">{ui("Title (English) *")}</Label>
               <Input
                 id="titleEn"
+                dir="ltr"
                 value={formData.title.en}
                 onChange={(e) => updateBilingual("title", "en", e.target.value)}
-                placeholder="Program title"
+                placeholder={ui("Program title")}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="titleAr">Title (Arabic) *</Label>
+              <Label htmlFor="titleAr">{ui("Title (Arabic) *")}</Label>
               <Input
                 id="titleAr"
                 value={formData.title.ar}
@@ -164,16 +170,17 @@ export function ProgramForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="categoryEn">Category (English)</Label>
+              <Label htmlFor="categoryEn">{ui("Category (English)")}</Label>
               <Input
                 id="categoryEn"
+                dir="ltr"
                 value={formData.category.en}
                 onChange={(e) => updateBilingual("category", "en", e.target.value)}
-                placeholder="e.g., Leadership"
+                placeholder={ui("e.g., Leadership")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="categoryAr">Category (Arabic)</Label>
+              <Label htmlFor="categoryAr">{ui("Category (Arabic)")}</Label>
               <Input
                 id="categoryAr"
                 value={formData.category.ar}
@@ -188,21 +195,22 @@ export function ProgramForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Trainer Information</CardTitle>
+          <CardTitle>{ui("Trainer Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="trainerNameEn">Trainer Name (English)</Label>
+              <Label htmlFor="trainerNameEn">{ui("Trainer Name (English)")}</Label>
               <Input
                 id="trainerNameEn"
+                dir="ltr"
                 value={formData.trainer.name.en}
                 onChange={(e) => updateTrainer("name", "en", e.target.value)}
-                placeholder="Trainer name"
+                placeholder={ui("Trainer name")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="trainerNameAr">Trainer Name (Arabic)</Label>
+              <Label htmlFor="trainerNameAr">{ui("Trainer Name (Arabic)")}</Label>
               <Input
                 id="trainerNameAr"
                 value={formData.trainer.name.ar}
@@ -214,16 +222,17 @@ export function ProgramForm({
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="trainerRoleEn">Role (English)</Label>
+              <Label htmlFor="trainerRoleEn">{ui("Role (English)")}</Label>
               <Input
                 id="trainerRoleEn"
+                dir="ltr"
                 value={formData.trainer.role.en}
                 onChange={(e) => updateTrainer("role", "en", e.target.value)}
-                placeholder="e.g., Lead Instructor"
+                placeholder={ui("e.g., Lead Instructor")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="trainerRoleAr">Role (Arabic)</Label>
+              <Label htmlFor="trainerRoleAr">{ui("Role (Arabic)")}</Label>
               <Input
                 id="trainerRoleAr"
                 value={formData.trainer.role.ar}
@@ -235,18 +244,18 @@ export function ProgramForm({
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="coordinator">Coordinator</Label>
+              <Label htmlFor="coordinator">{ui("Coordinator")}</Label>
               <Input
                 id="coordinator"
                 value={formData.coordinator}
                 onChange={(e) =>
                   setFormData({ ...formData, coordinator: e.target.value })
                 }
-                placeholder="Coordinator name"
+                placeholder={ui("Coordinator name")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
+              <Label htmlFor="type">{ui("Type")}</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) =>
@@ -257,9 +266,9 @@ export function ProgramForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="in_person">In-Person</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="online">{ui("Online")}</SelectItem>
+                  <SelectItem value="in_person">{ui("In-Person")}</SelectItem>
+                  <SelectItem value="hybrid">{ui("Hybrid")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -269,23 +278,23 @@ export function ProgramForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Schedule & Settings</CardTitle>
+          <CardTitle>{ui("Schedule & Settings")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">{ui("Location")}</Label>
               <Input
                 id="location"
                 value={formData.location}
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })
                 }
-                placeholder="Location"
+                placeholder={ui("Location")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="duration">Duration (days)</Label>
+              <Label htmlFor="duration">{ui("Duration (days)")}</Label>
               <Input
                 id="duration"
                 type="number"
@@ -303,7 +312,7 @@ export function ProgramForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="maxParticipants">Max Participants</Label>
+              <Label htmlFor="maxParticipants">{ui("Max Participants")}</Label>
               <Input
                 id="maxParticipants"
                 type="number"
@@ -317,11 +326,11 @@ export function ProgramForm({
                       : undefined,
                   })
                 }
-                placeholder="Unlimited if empty"
+                placeholder={ui("Unlimited if empty")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{ui("Status")}</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) =>
@@ -335,11 +344,11 @@ export function ProgramForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="draft">{ui("Draft")}</SelectItem>
+                  <SelectItem value="published">{ui("Published")}</SelectItem>
+                  <SelectItem value="in_progress">{ui("In Progress")}</SelectItem>
+                  <SelectItem value="completed">{ui("Completed")}</SelectItem>
+                  <SelectItem value="cancelled">{ui("Cancelled")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -347,9 +356,9 @@ export function ProgramForm({
 
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <Label htmlFor="isPublic">Public Visibility</Label>
+              <Label htmlFor="isPublic">{ui("Public Visibility")}</Label>
               <p className="text-sm text-muted-foreground">
-                Show this program on the public programmes page
+                {ui("Show this program on the public programmes page")}
               </p>
             </div>
             <Switch
@@ -368,14 +377,14 @@ export function ProgramForm({
           <CardTitle>
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Program Dates & Sessions
+              {ui("Program Dates & Sessions")}
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
+              <Label htmlFor="startDate">{ui("Start Date")}</Label>
               <DateInput
                 id="startDate"
                 value={formData.schedule.startDate}
@@ -388,7 +397,7 @@ export function ProgramForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate">{ui("End Date")}</Label>
               <DateInput
                 id="endDate"
                 value={formData.schedule.endDate}
@@ -403,31 +412,31 @@ export function ProgramForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Sessions</Label>
+            <Label>{ui("Sessions")}</Label>
             {formData.schedule.sessions.map((session, idx) => (
               <div key={idx} className="flex items-end gap-2 rounded-md border p-3">
                 <div className="grid gap-2 flex-1 grid-cols-4">
                   <DateInput
                     value={session.date}
                     onChange={(v) => updateSession(idx, "date", v)}
-                    placeholder="Date"
+                    placeholder={ui("Date")}
                   />
                   <Input
                     type="time"
                     value={session.timeFrom}
                     onChange={(e) => updateSession(idx, "timeFrom", e.target.value)}
-                    placeholder="From"
+                    placeholder={ui("From")}
                   />
                   <Input
                     type="time"
                     value={session.timeTo}
                     onChange={(e) => updateSession(idx, "timeTo", e.target.value)}
-                    placeholder="To"
+                    placeholder={ui("To")}
                   />
                   <Input
                     value={session.location}
                     onChange={(e) => updateSession(idx, "location", e.target.value)}
-                    placeholder="Location"
+                    placeholder={ui("Location")}
                   />
                 </div>
                 <Button
@@ -435,6 +444,7 @@ export function ProgramForm({
                   variant="ghost"
                   size="icon"
                   onClick={() => removeSession(idx)}
+                  aria-label={ui("Remove session")}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -442,7 +452,7 @@ export function ProgramForm({
             ))}
             <Button type="button" variant="outline" onClick={addSession}>
               <Plus className="me-2 h-4 w-4" />
-              Add Session
+              {ui("Add Session")}
             </Button>
           </div>
         </CardContent>
@@ -450,12 +460,12 @@ export function ProgramForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Links & Resources</CardTitle>
+          <CardTitle>{ui("Links & Resources")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="meetingLink">Meeting Link</Label>
+              <Label htmlFor="meetingLink">{ui("Meeting Link")}</Label>
               <Input
                 id="meetingLink"
                 type="url"
@@ -467,7 +477,7 @@ export function ProgramForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="recordingUrl">Recording URL</Label>
+              <Label htmlFor="recordingUrl">{ui("Recording URL")}</Label>
               <Input
                 id="recordingUrl"
                 type="url"
@@ -484,22 +494,23 @@ export function ProgramForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Goals & Notes</CardTitle>
+          <CardTitle>{ui("Goals & Notes")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="goalsEn">Goals (English)</Label>
+              <Label htmlFor="goalsEn">{ui("Goals (English)")}</Label>
               <Textarea
                 id="goalsEn"
+                dir="ltr"
                 value={formData.goals?.en || ""}
                 onChange={(e) => updateBilingual("goals", "en", e.target.value)}
-                placeholder="Program goals"
+                placeholder={ui("Program goals")}
                 rows={2}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="goalsAr">Goals (Arabic)</Label>
+              <Label htmlFor="goalsAr">{ui("Goals (Arabic)")}</Label>
               <Textarea
                 id="goalsAr"
                 value={formData.goals?.ar || ""}
@@ -511,14 +522,14 @@ export function ProgramForm({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{ui("Notes")}</Label>
             <Textarea
               id="notes"
               value={formData.notes || ""}
               onChange={(e) =>
                 setFormData({ ...formData, notes: e.target.value })
               }
-              placeholder="Additional notes"
+              placeholder={ui("Additional notes")}
               rows={2}
             />
           </div>
@@ -527,10 +538,10 @@ export function ProgramForm({
 
       <div className="flex justify-end gap-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {ui("Cancel")}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : submitLabel}
+          {isSubmitting ? ui("Saving...") : ui(submitLabel)}
         </Button>
       </div>
     </form>

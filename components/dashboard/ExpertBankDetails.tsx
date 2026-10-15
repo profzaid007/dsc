@@ -1,9 +1,12 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { useEffect, useState } from "react"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { useLang } from "@/lib/lang-context"
 
 export function ExpertBankDetails({ userId }: { userId: string }) {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const [details, setDetails] = useState<{ iban?: string; error?: string }>({})
   useEffect(() => {
@@ -34,7 +37,7 @@ export function ExpertBankDetails({ userId }: { userId: string }) {
         {lang === "ar" ? "بيانات الدفع الخاصة" : "Private payment details"}
       </h3>
       <p>
-        IBAN:{" "}
+        {ui("IBAN:")}{" "}
         <span dir="ltr">
           {details.iban ||
             details.error ||

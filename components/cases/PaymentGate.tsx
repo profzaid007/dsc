@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 
 import { useState } from "react"
@@ -63,6 +64,8 @@ export function PaymentGate({
   noun?: "case" | "project"
   children?: React.ReactNode
 }) {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const { currentUser } = useAuth()
   const { submitPaymentSlip } = useProfiles()
@@ -206,7 +209,7 @@ export function PaymentGate({
               )}
               {bankDetails.iban && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">IBAN</span>
+                  <span className="text-muted-foreground">{ui("IBAN")}</span>
                   <span className="font-medium" dir="ltr">
                     {bankDetails.iban}
                   </span>

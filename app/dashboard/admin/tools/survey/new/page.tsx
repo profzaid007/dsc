@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { use, useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -63,6 +64,8 @@ export default function SurveyBuilderPage({
   params,
   searchParams,
 }: SurveyBuilderPageProps = {}) {
+  const ui = useUiTranslation()
+
   const router = useRouter()
   const { lang } = useLang()
   const {
@@ -281,9 +284,9 @@ export default function SurveyBuilderPage({
       <div key={option.id} className="flex items-center gap-2">
         <div className="grid flex-1 gap-2 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label htmlFor={`option-${option.id}-en`}>Option (EN)</Label>
+            <Label htmlFor={`option-${option.id}-en`}>{ui("Option (EN)")}</Label>
             <Input id={`option-${option.id}-en`} dir="ltr"
-              placeholder="English option" value={option.label}
+              placeholder={ui("English option")} value={option.label}
               onChange={(e) => updateOption(option.id, "label", e.target.value)} />
           </div>
           <div className="space-y-1">

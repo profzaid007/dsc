@@ -1,4 +1,5 @@
 "use client"
+import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { surveyOptionLabel } from "@/lib/survey-options"
 
 import { useState } from "react"
@@ -18,6 +19,8 @@ interface SurveyPreviewProps {
 }
 
 export function SurveyPreview({ config, responses = {}, readOnly = false }: SurveyPreviewProps) {
+  const ui = useUiTranslation()
+
   const { lang } = useLang()
   const [draftAnswers, setAnswers] = useState<Record<string, unknown>>(responses)
 
@@ -53,7 +56,7 @@ export function SurveyPreview({ config, responses = {}, readOnly = false }: Surv
     return (
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
-          No questions yet
+          {ui("No questions yet")}
         </CardContent>
       </Card>
     )
@@ -63,7 +66,7 @@ export function SurveyPreview({ config, responses = {}, readOnly = false }: Surv
     return (
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
-          No options defined
+          {ui("No options defined")}
         </CardContent>
       </Card>
     )
@@ -77,7 +80,7 @@ export function SurveyPreview({ config, responses = {}, readOnly = false }: Surv
           <thead>
             <tr>
               <th className="min-w-[200px] border-b-2 border-border bg-muted/30 p-3 text-left text-sm font-semibold">
-                Questions
+                {ui("Questions")}
               </th>
               {sortedOptions.map((opt) => (
                 <th
