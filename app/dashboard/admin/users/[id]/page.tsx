@@ -2,6 +2,7 @@
 
 import { use, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
+import { usePermissions } from "@/hooks/usePermissions"
 import { useUsers } from "@/hooks/useUsers"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfiles } from "@/hooks/useProfiles"
@@ -99,8 +100,12 @@ export default function AdminUserDetailPage({
 }) {
   const { id: userId } = use(params)
   const router = useRouter()
-  const usersListPath = usePathname().includes("/experts/") ? "/dashboard/admin/experts" : "/dashboard/admin/users"
+  const usersListPath = usePathname().includes("/experts/")
+    ? "/dashboard/admin/experts"
+    : "/dashboard/admin/users"
   const { lang } = useLang()
+  const access = usePermissions()
+  const moduleName = usersListPath.includes("experts") ? "experts" : "users"
   const {
     users,
     isLoading: isUsersLoading,
@@ -109,12 +114,18 @@ export default function AdminUserDetailPage({
     getDeletionBlockers,
     refresh,
   } = useUsers()
-  const { profiles, isLoading: isProfilesLoading, refresh: refreshProfiles } = useProfiles()
+  const {
+    profiles,
+    isLoading: isProfilesLoading,
+    refresh: refreshProfiles,
+  } = useProfiles(access.can("cases.read"))
 
   const [activeTab, setActiveTab] = useState("overview")
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState<UserProfileDraft | null>(null)
-  const [expertDraft, setExpertDraft] = useState<ExpertProfileDraft | null>(null)
+  const [expertDraft, setExpertDraft] = useState<ExpertProfileDraft | null>(
+    null
+  )
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [isExpertSaving, setIsExpertSaving] = useState(false)
   const [showAddCaseModal, setShowAddCaseModal] = useState(false)
@@ -159,7 +170,11 @@ export default function AdminUserDetailPage({
       : null
 
   const expertPhotoUrl = expertProfile
-    ? profileFileUrl(expertProfile, profilePhotoName(expertProfile), roleFileToken)
+    ? profileFileUrl(
+        expertProfile,
+        profilePhotoName(expertProfile),
+        roleFileToken
+      )
     : ""
 
   const userCases = profiles.filter((p) => p.user === userId)
@@ -168,12 +183,21 @@ export default function AdminUserDetailPage({
   // reset their own here — the self-serve reset flow covers that.
   const { currentUser, isSuperAdmin } = useAuth()
   const canResetPassword =
+    access.can("users.reset_password") &&
     Boolean(user) &&
     user!.id !== currentUser?.id &&
-    (isSuperAdmin || user!.role !== "super_admin")
+    (isSuperAdmin || !["admin", "super_admin"].includes(user!.role))
 
+  const canEditTarget =
+    access.can(moduleName + ".update") &&
+    (isSuperAdmin ||
+      user?.id === currentUser?.id ||
+      !["admin", "super_admin"].includes(user?.role || ""))
+  const canDeleteTarget =
+    access.can(moduleName + ".delete") &&
+    (isSuperAdmin || !["admin", "super_admin"].includes(user?.role || ""))
   const startEditing = () => {
-    if (!user) return
+    if (!user || !canEditTarget) return
     setFieldErrors({})
     if (user.role === "expert") {
       setExpertDraft(draftFromProfile(expertProfile, user.name))
@@ -199,7 +223,10 @@ export default function AdminUserDetailPage({
       if (isExpert && expertDraft) {
         if (!expertDraft.name.trim()) {
           setFieldErrors({
-            name: t({ en: "This field is required.", ar: "هذا الحقل مطلوب." }, lang),
+            name: t(
+              { en: "This field is required.", ar: "هذا الحقل مطلوب." },
+              lang
+            ),
           })
           return
         }
@@ -210,14 +237,20 @@ export default function AdminUserDetailPage({
       } else if (draft) {
         if (!draft.name.trim()) {
           setFieldErrors({
-            name: t({ en: "This field is required.", ar: "هذا الحقل مطلوب." }, lang),
+            name: t(
+              { en: "This field is required.", ar: "هذا الحقل مطلوب." },
+              lang
+            ),
           })
           return
         }
         await saveRoleProfile(draft)
       }
       toast.success(
-        t({ en: "Profile updated successfully.", ar: "تم تحديث الملف بنجاح." }, lang)
+        t(
+          { en: "Profile updated successfully.", ar: "تم تحديث الملف بنجاح." },
+          lang
+        )
       )
       cancelEditing()
       // Both writers return the saved row, but refreshing keeps the view honest
@@ -391,12 +424,8 @@ export default function AdminUserDetailPage({
             {t({ en: "Reset Password", ar: "تغيير كلمة المرور" }, lang)}
           </Button>
         )}
-        {user.role !== "super_admin" && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteClick}
-          >
+        {canDeleteTarget && user.role !== "super_admin" && (
+          <Button variant="destructive" size="sm" onClick={handleDeleteClick}>
             <Trash2 className="me-1 h-4 w-4" />
             {lang === "ar" ? "حذف" : "Delete"}
           </Button>
@@ -419,7 +448,11 @@ export default function AdminUserDetailPage({
         </Badge>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="overview">
             {lang === "ar" ? "نظرة عامة" : "Overview"}
@@ -447,7 +480,10 @@ export default function AdminUserDetailPage({
               photoUrl={expertPhotoUrl}
               fieldErrors={fieldErrors}
               isSaving={isExpertSaving}
-              title={t({ en: "Edit Expert Profile", ar: "تعديل ملف الخبير" }, lang)}
+              title={t(
+                { en: "Edit Expert Profile", ar: "تعديل ملف الخبير" },
+                lang
+              )}
               subtitle={t(
                 {
                   en: `Update the details ${user.name} submitted when they applied.`,
@@ -476,13 +512,15 @@ export default function AdminUserDetailPage({
               profile={expertProfile}
               fileToken={roleFileToken}
               hideHeading
-              memberSinceLabel={
-                lang === "ar" ? "مقدم الطلب منذ" : "Applied"
-              }
-              onEdit={startEditing}
+              memberSinceLabel={lang === "ar" ? "مقدم الطلب منذ" : "Applied"}
+              onEdit={canEditTarget ? startEditing : undefined}
             />
           ) : (
-            <UserProfileView user={user} profile={roleProfile} onEdit={startEditing} />
+            <UserProfileView
+              user={user}
+              profile={roleProfile}
+              onEdit={canEditTarget ? startEditing : undefined}
+            />
           )}
         </TabsContent>
 
@@ -500,7 +538,10 @@ export default function AdminUserDetailPage({
                     : `Manage cases for ${user.name}`}
                 </CardDescription>
               </div>
-              <Button onClick={() => setShowAddCaseModal(true)}>
+              <Button
+                disabled={!access.can("cases.create")}
+                onClick={() => setShowAddCaseModal(true)}
+              >
                 <Plus className="me-2 h-4 w-4" />
                 {lang === "ar" ? "إضافة حالة" : "Add Case"}
               </Button>
@@ -516,12 +557,15 @@ export default function AdminUserDetailPage({
                   <h3 className="mb-2 text-lg font-medium">
                     {lang === "ar" ? "لا توجد حالات بعد" : "No cases yet"}
                   </h3>
-                  <p className="text-muted-foreground mb-4">
+                  <p className="mb-4 text-muted-foreground">
                     {lang === "ar"
                       ? 'لا توجد حالات لهذا المستخدم. انقر على "إضافة حالة" لإنشاء حالة.'
                       : 'This user has no cases. Click "Add Case" to create one.'}
                   </p>
-                  <Button onClick={() => setShowAddCaseModal(true)}>
+                  <Button
+                    disabled={!access.can("cases.create")}
+                    onClick={() => setShowAddCaseModal(true)}
+                  >
                     <Plus className="me-2 h-4 w-4" />
                     {lang === "ar" ? "إضافة حالة" : "Add Case"}
                   </Button>
@@ -536,8 +580,12 @@ export default function AdminUserDetailPage({
                       <TableHead>
                         {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
                       </TableHead>
-                      <TableHead>{lang === "ar" ? "الجنس" : "Gender"}</TableHead>
-                      <TableHead>{lang === "ar" ? "الصف الدراسي" : "Grade"}</TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "الجنس" : "Gender"}
+                      </TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "الصف الدراسي" : "Grade"}
+                      </TableHead>
                       <TableHead>
                         {lang === "ar" ? "تاريخ الإنشاء" : "Created"}
                       </TableHead>
@@ -593,7 +641,7 @@ export default function AdminUserDetailPage({
       {/* Add Case Modal */}
       {showAddCaseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="mx-4 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <Card className="mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto">
             <CardHeader>
               <CardTitle>
                 {lang === "ar"
@@ -615,7 +663,8 @@ export default function AdminUserDetailPage({
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="case_name">
-                    {lang === "ar" ? "اسم الحالة" : "Case Name"} <span className="text-red-500">*</span>
+                    {lang === "ar" ? "اسم الحالة" : "Case Name"}{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="case_name"
@@ -623,7 +672,9 @@ export default function AdminUserDetailPage({
                     onChange={(e) =>
                       setCaseFormData({ ...caseFormData, name: e.target.value })
                     }
-                    placeholder={lang === "ar" ? "أدخل اسم الحالة" : "Enter case name"}
+                    placeholder={
+                      lang === "ar" ? "أدخل اسم الحالة" : "Enter case name"
+                    }
                     required
                   />
                 </div>
@@ -687,7 +738,9 @@ export default function AdminUserDetailPage({
                   >
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={lang === "ar" ? "اختر الصف" : "Select grade"}
+                        placeholder={
+                          lang === "ar" ? "اختر الصف" : "Select grade"
+                        }
                       />
                     </SelectTrigger>
                     <SelectContent>
@@ -707,9 +760,14 @@ export default function AdminUserDetailPage({
                     id="notes"
                     value={caseFormData.notes}
                     onChange={(e) =>
-                      setCaseFormData({ ...caseFormData, notes: e.target.value })
+                      setCaseFormData({
+                        ...caseFormData,
+                        notes: e.target.value,
+                      })
                     }
-                    placeholder={lang === "ar" ? "ملاحظات إضافية" : "Additional notes"}
+                    placeholder={
+                      lang === "ar" ? "ملاحظات إضافية" : "Additional notes"
+                    }
                   />
                 </div>
                 <div className="flex justify-end gap-3 pt-4">

@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
@@ -16,11 +17,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Loader2, ArrowLeft, ArrowRight, Plus, Trash2, Pencil, X, Check } from "lucide-react"
+import {
+  Loader2,
+  ArrowLeft,
+  ArrowRight,
+  Plus,
+  Trash2,
+  Pencil,
+  X,
+  Check,
+} from "lucide-react"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 
 export default function BlogCategoriesPage() {
+  const access = usePermissions()
   const { lang } = useLang()
   const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const [categories, setCategories] = useState<BlogCategory[]>([])
@@ -56,7 +67,10 @@ export default function BlogCategoriesPage() {
     if (!trimmedKey || !trimmedLabelEn) {
       alert(
         t(
-          { en: "Key and Label (EN) are required.", ar: "المفتاح والتسمية (إنجليزي) مطلوبان." },
+          {
+            en: "Key and Label (EN) are required.",
+            ar: "المفتاح والتسمية (إنجليزي) مطلوبان.",
+          },
           lang
         )
       )
@@ -76,7 +90,10 @@ export default function BlogCategoriesPage() {
     } catch (err) {
       toast.error(
         t(
-          { en: "Failed to add category. The key may already exist.", ar: "فشل إضافة التصنيف. قد يكون المفتاح موجوداً بالفعل." },
+          {
+            en: "Failed to add category. The key may already exist.",
+            ar: "فشل إضافة التصنيف. قد يكون المفتاح موجوداً بالفعل.",
+          },
           lang
         ),
         { description: getErrorMessage(err) }
@@ -87,7 +104,8 @@ export default function BlogCategoriesPage() {
   }
 
   const handleDelete = async (id: string, label: string) => {
-    if (!confirm(t({ en: `Delete "${label}"?`, ar: `حذف "${label}"؟` }, lang))) return
+    if (!confirm(t({ en: `Delete "${label}"?`, ar: `حذف "${label}"؟` }, lang)))
+      return
     setDeletingId(id)
     try {
       await blogCategoriesCollection.delete(id)
@@ -95,7 +113,10 @@ export default function BlogCategoriesPage() {
     } catch (err) {
       toast.error(
         t(
-          { en: "Failed to delete category. It may be in use.", ar: "فشل حذف التصنيف. ربما يكون قيد الاستخدام." },
+          {
+            en: "Failed to delete category. It may be in use.",
+            ar: "فشل حذف التصنيف. ربما يكون قيد الاستخدام.",
+          },
           lang
         ),
         { description: getErrorMessage(err) }
@@ -134,10 +155,7 @@ export default function BlogCategoriesPage() {
       cancelEdit()
     } catch (err) {
       toast.error(
-        t(
-          { en: "Failed to update category.", ar: "فشل تحديث التصنيف." },
-          lang
-        ),
+        t({ en: "Failed to update category.", ar: "فشل تحديث التصنيف." }, lang),
         { description: getErrorMessage(err) }
       )
     } finally {
@@ -162,7 +180,10 @@ export default function BlogCategoriesPage() {
           {t({ en: "Categories", ar: "التصنيفات" }, lang)}
         </h1>
         <p className="text-muted-foreground">
-          {t({ en: "Manage blog categories", ar: "إدارة تصنيفات المدونة" }, lang)}
+          {t(
+            { en: "Manage blog categories", ar: "إدارة تصنيفات المدونة" },
+            lang
+          )}
         </p>
       </div>
 
@@ -172,28 +193,37 @@ export default function BlogCategoriesPage() {
             placeholder={t({ en: "Key", ar: "المفتاح" }, lang)}
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
-            disabled={adding}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAdd()
+            }}
+            disabled={adding || !access.can("cms.create")}
             className="w-36"
           />
           <Input
             placeholder={t({ en: "Label (EN)", ar: "التسمية (إنجليزي)" }, lang)}
             value={newLabelEn}
             onChange={(e) => setNewLabelEn(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
-            disabled={adding}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAdd()
+            }}
+            disabled={adding || !access.can("cms.create")}
             className="w-48"
           />
           <Input
             placeholder={t({ en: "Label (AR)", ar: "التسمية (عربي)" }, lang)}
             value={newLabelAr}
             onChange={(e) => setNewLabelAr(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleAdd() }}
-            disabled={adding}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAdd()
+            }}
+            disabled={adding || !access.can("cms.create")}
             className="w-48"
           />
         </div>
-        <Button onClick={handleAdd} disabled={adding}>
+        <Button
+          onClick={handleAdd}
+          disabled={adding || !access.can("cms.create")}
+        >
           {adding ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -206,7 +236,10 @@ export default function BlogCategoriesPage() {
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-md bg-gray-100" />
+            <div
+              key={i}
+              className="h-12 animate-pulse rounded-md bg-gray-100"
+            />
           ))}
         </div>
       ) : categories.length === 0 ? (
@@ -219,9 +252,15 @@ export default function BlogCategoriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>{t({ en: "Key", ar: "المفتاح" }, lang)}</TableHead>
-                <TableHead>{t({ en: "Label (EN)", ar: "التسمية (إنجليزي)" }, lang)}</TableHead>
-                <TableHead>{t({ en: "Label (AR)", ar: "التسمية (عربي)" }, lang)}</TableHead>
-                <TableHead className="w-32">{t({ en: "Actions", ar: "إجراءات" }, lang)}</TableHead>
+                <TableHead>
+                  {t({ en: "Label (EN)", ar: "التسمية (إنجليزي)" }, lang)}
+                </TableHead>
+                <TableHead>
+                  {t({ en: "Label (AR)", ar: "التسمية (عربي)" }, lang)}
+                </TableHead>
+                <TableHead className="w-32">
+                  {t({ en: "Actions", ar: "إجراءات" }, lang)}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -256,7 +295,11 @@ export default function BlogCategoriesPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => saveEdit(cat.id)}
-                            disabled={savingEdit || !editKey.trim() || !editLabelEn.trim()}
+                            disabled={
+                              savingEdit ||
+                              !editKey.trim() ||
+                              !editLabelEn.trim()
+                            }
                           >
                             {savingEdit ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -264,7 +307,11 @@ export default function BlogCategoriesPage() {
                               <Check className="h-4 w-4 text-green-500" />
                             )}
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={cancelEdit}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={cancelEdit}
+                          >
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
@@ -280,6 +327,7 @@ export default function BlogCategoriesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            disabled={!access.can("cms.update")}
                             onClick={() => startEdit(cat)}
                           >
                             <Pencil className="h-4 w-4" />
@@ -288,7 +336,9 @@ export default function BlogCategoriesPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(cat.id, cat.label_en)}
-                            disabled={deletingId === cat.id}
+                            disabled={
+                              deletingId === cat.id || !access.can("cms.delete")
+                            }
                           >
                             {deletingId === cat.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />

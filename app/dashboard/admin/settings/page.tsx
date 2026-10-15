@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { usePermissions } from "@/hooks/usePermissions"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import { ArrowLeft, List, Landmark, Plus } from "lucide-react"
@@ -16,7 +17,15 @@ import {
 import { Button } from "@/components/ui/button"
 
 const settingsCards = [
-  { title: { en: "Specialist categories and roles", ar: "فئات وأدوار التخصص" }, description: { en: "Manage bilingual specialist categories and roles", ar: "إدارة فئات وأدوار التخصص بالعربية والإنجليزية" }, href: "/dashboard/admin/settings/specialists", icon: List },
+  {
+    title: { en: "Specialist categories and roles", ar: "فئات وأدوار التخصص" },
+    description: {
+      en: "Manage bilingual specialist categories and roles",
+      ar: "إدارة فئات وأدوار التخصص بالعربية والإنجليزية",
+    },
+    href: "/dashboard/admin/settings/specialists",
+    icon: List,
+  },
   {
     title: { en: "Lookups", ar: "القوائم المرجعية" },
     description: {
@@ -39,6 +48,7 @@ const settingsCards = [
 
 export default function SettingsPage() {
   const router = useRouter()
+  const access = usePermissions()
   const { isAdmin, isSuperAdmin, isLoading } = useAuth()
   const { lang } = useLang()
 
@@ -81,19 +91,21 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {settingsCards.filter(card => isSuperAdmin || card.href.endsWith("/specialists")).map((card) => (
-          <Link key={card.href} href={card.href}>
-            <Card className="cursor-pointer transition-all hover:shadow-md">
-              <CardHeader>
-                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <card.icon className="h-5 w-5 text-primary" />
-                </div>
-                <CardTitle>{card.title[lang]}</CardTitle>
-                <CardDescription>{card.description[lang]}</CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
+        {settingsCards
+          .filter(() => access.can("settings.read"))
+          .map((card) => (
+            <Link key={card.href} href={card.href}>
+              <Card className="cursor-pointer transition-all hover:shadow-md">
+                <CardHeader>
+                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <card.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle>{card.title[lang]}</CardTitle>
+                  <CardDescription>{card.description[lang]}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
       </div>
     </div>
   )

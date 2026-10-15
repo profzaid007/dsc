@@ -1,4 +1,5 @@
 "use client"
+import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 
 import { useState } from "react"
 import { useLang } from "@/lib/lang-context"
@@ -297,14 +298,14 @@ export function PaymentGate({
         }
       >
         {slipUrl && (
-          <a
+          <ProtectedFileLink
             href={slipUrl}
             target="_blank"
             rel="noreferrer"
             className="text-sm text-primary underline"
           >
             {lang === "ar" ? "عرض الإيصال المرفوع" : "View uploaded receipt"}
-          </a>
+          </ProtectedFileLink>
         )}
       </Panel>
     )

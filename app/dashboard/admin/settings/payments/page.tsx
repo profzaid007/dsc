@@ -1,8 +1,9 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/useAuth"
+
 import { useLang } from "@/lib/lang-context"
 import { usePaymentSettings } from "@/hooks/usePaymentSettings"
 import type { PaymentBankDetails } from "@/lib/payment"
@@ -20,8 +21,10 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Landmark, Loader2 } from "lucide-react"
 
 export default function PaymentSettingsPage() {
+  const access = usePermissions()
   const router = useRouter()
-  const { isSuperAdmin, isLoading: isAuthLoading } = useAuth()
+  const canReadSettings = access.can("settings.read")
+  const isAuthLoading = access.isLoading
   const { lang } = useLang()
   const {
     bankDetails,
@@ -36,10 +39,10 @@ export default function PaymentSettingsPage() {
 
   useEffect(() => {
     if (isAuthLoading) return
-    if (!isSuperAdmin) {
+    if (!canReadSettings) {
       router.push("/dashboard")
     }
-  }, [isAuthLoading, isSuperAdmin, router])
+  }, [isAuthLoading, canReadSettings, router])
 
   useEffect(() => {
     setFormData(bankDetails)
@@ -55,12 +58,13 @@ export default function PaymentSettingsPage() {
     )
   }
 
-  if (!isSuperAdmin) {
+  if (!canReadSettings) {
     return null
   }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!access.can("settings.update")) return
     setIsSaving(true)
     setSaved(false)
     setError(null)
@@ -70,9 +74,7 @@ export default function PaymentSettingsPage() {
     } catch (err) {
       setError(
         getErrorMessage(err) ||
-          (lang === "ar"
-            ? "فشل حفظ الإعدادات."
-            : "Failed to save settings.")
+          (lang === "ar" ? "فشل حفظ الإعدادات." : "Failed to save settings.")
       )
     } finally {
       setIsSaving(false)
@@ -102,7 +104,9 @@ export default function PaymentSettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Landmark className="h-5 w-5" />
-              {lang === "ar" ? "بيانات التحويل البنكي" : "Bank Transfer Details"}
+              {lang === "ar"
+                ? "بيانات التحويل البنكي"
+                : "Bank Transfer Details"}
             </CardTitle>
             <CardDescription>
               {lang === "ar"
@@ -167,9 +171,7 @@ export default function PaymentSettingsPage() {
                   setFormData({ ...formData, beneficiary: e.target.value })
                 }
                 placeholder={
-                  lang === "ar"
-                    ? "اسم صاحب الحساب"
-                    : "Account holder name"
+                  lang === "ar" ? "اسم صاحب الحساب" : "Account holder name"
                 }
               />
             </div>
@@ -204,7 +206,10 @@ export default function PaymentSettingsPage() {
             </div>
 
             <div className="flex justify-end pt-2">
-              <Button type="submit" disabled={isSaving}>
+              <Button
+                type="submit"
+                disabled={isSaving || !access.can("settings.update")}
+              >
                 {isSaving ? (
                   <Loader2 className="me-1 h-4 w-4 animate-spin" />
                 ) : null}

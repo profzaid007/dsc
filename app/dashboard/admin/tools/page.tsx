@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -50,6 +51,7 @@ const statusLabels: Record<Tool["status"], { en: string; ar: string }> = {
 }
 
 export default function AdminToolsPage() {
+  const access = usePermissions()
   const router = useRouter()
   const { lang } = useLang()
   const { currentUser } = useAuth()
@@ -131,7 +133,7 @@ export default function AdminToolsPage() {
             </p>
           </div>
           <Link href="/dashboard/admin/tools/new">
-            <Button>
+            <Button disabled={!access.can("tools.create")}>
               <Plus className="me-2 h-4 w-4" />
               {lang === "ar" ? "أداة جديدة" : "New Tool"}
             </Button>
@@ -154,7 +156,7 @@ export default function AdminToolsPage() {
           </p>
         </div>
         <Link href="/dashboard/admin/tools/new">
-          <Button>
+          <Button disabled={!access.can("tools.create")}>
             <Plus className="me-2 h-4 w-4" />
             {lang === "ar" ? "أداة جديدة" : "New Tool"}
           </Button>
@@ -224,7 +226,7 @@ export default function AdminToolsPage() {
                 : "Create your first tool to get started"}
             </p>
             <Link href="/dashboard/admin/tools/new">
-              <Button>{lang === "ar" ? "إنشاء أداة" : "Create Tool"}</Button>
+              <Button disabled={!access.can("tools.create")}>{lang === "ar" ? "إنشاء أداة" : "Create Tool"}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -283,7 +285,7 @@ export default function AdminToolsPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={(e) => {
+                          disabled={!access.can("tools.update")} onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
                             router.push(
@@ -296,7 +298,7 @@ export default function AdminToolsPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={(e) => handleDelete(tool.id, e)}
+                          disabled={!access.can("tools.delete")} onClick={(e) => handleDelete(tool.id, e)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>

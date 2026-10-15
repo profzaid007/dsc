@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Plus, Pencil, Trash2, RotateCcw } from "lucide-react"
@@ -48,6 +49,7 @@ const empty: Draft = {
   order: 0,
 }
 export default function CmsPortalsPage() {
+  const access = usePermissions()
   const { lang } = useLang()
   const ar = lang === "ar"
   const text = (en: string, arabic: string) => (ar ? arabic : en)
@@ -71,6 +73,7 @@ export default function CmsPortalsPage() {
     }
   }, [picture])
   const start = (p: Portal | null) => {
+    if (!access.can(p ? "cms.update" : "cms.create")) return
     setEditing(p)
     setDraft(
       p
@@ -101,6 +104,7 @@ export default function CmsPortalsPage() {
   }
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!access.can(editing ? "cms.update" : "cms.create")) return
     setFailure("")
     setNotice("")
     if (!/^[a-z0-9-]{1,80}$/.test(draft.key)) {
@@ -192,7 +196,10 @@ export default function CmsPortalsPage() {
             )}
           </p>
         </div>
-        <Button onClick={() => start(null)} disabled={saving}>
+        <Button
+          onClick={() => start(null)}
+          disabled={saving || !access.can("cms.create")}
+        >
           <Plus size={16} />
           {text("Add portal", "إضافة بوابة")}
         </Button>
@@ -372,13 +379,21 @@ export default function CmsPortalsPage() {
                 }}
               />
               {pictureError && (
-                <p id="portal-picture-error" role="alert" className="text-sm text-red-700">
+                <p
+                  id="portal-picture-error"
+                  role="alert"
+                  className="text-sm text-red-700"
+                >
                   {pictureError}
                 </p>
               )}
               {picture && (
                 <p role="status" className="text-sm text-emerald-700">
-                  {picture.name} — {text("Selected. Click Save portal to upload.", "تم اختيار الصورة. اضغط حفظ البوابة لرفعها.")}
+                  {picture.name} —{" "}
+                  {text(
+                    "Selected. Click Save portal to upload.",
+                    "تم اختيار الصورة. اضغط حفظ البوابة لرفعها."
+                  )}
                 </p>
               )}
               <p id="portal-picture-help" className="text-xs text-slate-500">
@@ -465,9 +480,11 @@ export default function CmsPortalsPage() {
               style={{ borderTop: `4px solid ${draft.accent}` }}
             >
               <div
-                className={image
-                  ? "-mx-6 -mt-6 mb-5 h-54 overflow-hidden bg-slate-50"
-                  : "mb-6 flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg bg-slate-50"}
+                className={
+                  image
+                    ? "-mx-6 -mt-6 mb-5 h-54 overflow-hidden bg-slate-50"
+                    : "mb-6 flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg bg-slate-50"
+                }
                 style={{ color: draft.accent }}
               >
                 {image ? (
@@ -539,7 +556,7 @@ export default function CmsPortalsPage() {
                     <Button
                       variant="outline"
                       onClick={() => start(p)}
-                      disabled={saving}
+                      disabled={saving || !access.can("cms.update")}
                     >
                       <Pencil size={15} />
                       {text("Edit", "تعديل")}
@@ -551,8 +568,10 @@ export default function CmsPortalsPage() {
                     </Button>
                     <Button
                       variant="ghost"
-                      onClick={() => void archive(p)}
-                      disabled={saving}
+                      onClick={() => {
+                        if (access.can("cms.delete")) void archive(p)
+                      }}
+                      disabled={saving || !access.can("cms.delete")}
                     >
                       <Trash2 size={15} />
                       {text("Remove", "حذف")}
@@ -597,8 +616,10 @@ export default function CmsPortalsPage() {
                         </h3>
                         <Button
                           variant="outline"
-                          onClick={() => void archive(p)}
-                          disabled={saving}
+                          onClick={() => {
+                            if (access.can("cms.delete")) void archive(p)
+                          }}
+                          disabled={saving || !access.can("cms.delete")}
                         >
                           <RotateCcw size={15} />
                           {text("Restore", "استعادة")}

@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { boundedFullList } from "@/lib/bounded-records"
 import { useEffect, useState, useCallback } from "react"
@@ -37,6 +38,7 @@ interface InfoPageRecord {
 }
 
 export default function CmsPortalServicesPage() {
+  const access = usePermissions()
   const { lang } = useLang()
   const {
     portals: PORTALS,
@@ -184,7 +186,7 @@ export default function CmsPortalServicesPage() {
           </p>
         </div>
 
-        {/* <Button onClick={handleNewPage} disabled={creating}>
+        {/* <Button onClick={handleNewPage} disabled={creating || !access.can("cms.create")}>
           {creating ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -211,7 +213,11 @@ export default function CmsPortalServicesPage() {
           <p className="text-muted-foreground">
             {t({ en: "No pages yet.", ar: "لا توجد صفحات بعد." }, lang)}
           </p>
-          <Button onClick={handleNewPage} className="mt-4" disabled={creating}>
+          <Button
+            onClick={handleNewPage}
+            className="mt-4"
+            disabled={creating || !access.can("cms.create")}
+          >
             {creating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -279,7 +285,7 @@ export default function CmsPortalServicesPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(p.id, p.title_en)}
-                    disabled={deleting === p.id}
+                    disabled={deleting === p.id || !access.can("cms.delete")}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>

@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -64,26 +65,27 @@ const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
 }
 
 export default function AssignmentsPage() {
+  const access = usePermissions()
   const router = useRouter()
   const { lang } = useLang()
+  const { currentUser } = useAuth()
+  const isExpert = currentUser?.role === "expert"
+  const canReadCases = isExpert || access.can("cases.read")
+  const canReadTools = isExpert || access.can("tools.read")
   const {
     assignments,
     deleteAssignment,
     updateAssignment,
     isLoading: isAssignmentsLoading,
   } = useAssignments()
-  const { profiles, isLoading: isProfilesLoading } = useProfiles()
+  const { profiles, isLoading: isProfilesLoading } = useProfiles(canReadCases)
   const {
     toolTypes,
     isLoading: isToolTypesLoading,
     fetchToolTypes,
     getToolTypeById,
-  } = useToolTypes()
+  } = useToolTypes(canReadTools)
   const hasFetched = useRef(false)
-
-  const { currentUser } = useAuth()
-  const isExpert = currentUser?.role === "expert"
-
   const [searchQuery, setSearchQuery] = useState("")
   const [filterCase, setFilterCase] = useState("")
   const [filterType, setFilterType] = useState<string>("all")
@@ -92,14 +94,18 @@ export default function AssignmentsPage() {
   )
 
   useEffect(() => {
+    if (!canReadTools) {
+      hasFetched.current = false
+      return
+    }
     if (hasFetched.current) return
     hasFetched.current = true
-    fetchToolTypes()
-  }, [fetchToolTypes])
+    void fetchToolTypes()
+  }, [fetchToolTypes, canReadTools])
 
   const getCaseName = (caseId: string) => {
     const profile = profiles.find((p) => p.id === caseId)
-    return profile?.name || (lang === "ar" ? "حالة غير معروفة" : "Unknown Case")
+    return profile?.name || caseId
   }
 
   const getToolTypeName = (typeId: string) => {
@@ -178,6 +184,16 @@ export default function AssignmentsPage() {
 
   return (
     <div className="space-y-6">
+      {(!canReadCases || !canReadTools) && (
+        <p
+          role="status"
+          className="rounded-lg border bg-white p-4 text-sm text-muted-foreground"
+        >
+          {lang === "ar"
+            ? "تظهر معرفات الحالات عند عدم توفر صلاحية قراءتها. بعض تفاصيل الأنواع تتطلب صلاحية قراءة الأدوات."
+            : "Case IDs are shown when case access is unavailable. Some type details require Tools read access."}
+        </p>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -215,15 +231,20 @@ export default function AssignmentsPage() {
               />
             </div>
             <CaseSearchCombobox
+              enabled={canReadCases}
               value={filterCase}
               onChange={setFilterCase}
-              placeholder={lang === "ar" ? "تصفية حسب الحالة..." : "Filter by case..."}
+              placeholder={
+                lang === "ar" ? "تصفية حسب الحالة..." : "Filter by case..."
+              }
               className="w-[250px]"
             />
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue
-                  placeholder={lang === "ar" ? "تصفية حسب النوع" : "Filter by Type"}
+                  placeholder={
+                    lang === "ar" ? "تصفية حسب النوع" : "Filter by Type"
+                  }
                 />
               </SelectTrigger>
               <SelectContent>
@@ -248,7 +269,9 @@ export default function AssignmentsPage() {
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue
-                  placeholder={lang === "ar" ? "تصفية حسب الحالة" : "Filter by Status"}
+                  placeholder={
+                    lang === "ar" ? "تصفية حسب الحالة" : "Filter by Status"
+                  }
                 />
               </SelectTrigger>
               <SelectContent>
@@ -359,7 +382,10 @@ export default function AssignmentsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[assignment.status]}>
-                          {statusLabels[assignment.status]?.[lang] || (lang === "ar" ? "حالة غير معروفة" : "Unknown status")}
+                          {statusLabels[assignment.status]?.[lang] ||
+                            (lang === "ar"
+                              ? "حالة غير معروفة"
+                              : "Unknown status")}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -373,7 +399,9 @@ export default function AssignmentsPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        {formatDate(assignment.assigned_at || assignment.created)}
+                        {formatDate(
+                          assignment.assigned_at || assignment.created
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -387,6 +415,7 @@ export default function AssignmentsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            disabled={!access.can("assignments.delete")}
                             onClick={() => deleteAssignment(assignment.id)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />

@@ -2,6 +2,13 @@
 
 This folder contains the PocketBase-side code the Next.js app depends on:
 
+For the new user/role/permission system, follow
+[`docs/security-management.md`](../../docs/security-management.md). Existing
+databases must use its additive security migration instead of replacing their
+schema. Deploy the security hooks and frontend together. The new
+`pb_migrations/` directory contains the supported security upgrade; it is separate
+from `pb_migrations_legacy/` below.
+
 - `pb_schema.json` – the canonical collections snapshot (PocketBase **v0.31.0**).
   Import it to create/replace the schema. This is the source of truth.
 - `pb_hooks/` – JS hooks: `/api/dsc/*` endpoints (backups, message contacts,

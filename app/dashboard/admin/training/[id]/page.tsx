@@ -1,4 +1,5 @@
 "use client"
+import { openProtectedFile } from "@/components/ProtectedFileLink"
 
 import { use, useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -1075,7 +1076,7 @@ export default function AdminTrainingProgramDetailPage({
                                 variant="ghost"
                                 size="icon-xs"
                                 onClick={() =>
-                                  window.open(cert.file, "_blank")
+                                  cert.file && void openProtectedFile(cert.file)
                                 }
                                 title={
                                   lang === "ar" ? "تحميل" : "Download"

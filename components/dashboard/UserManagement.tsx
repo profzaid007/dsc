@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"
+import { usePermissions } from "@/hooks/usePermissions"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
@@ -90,7 +91,13 @@ const roleLabels: Record<string, { en: string; ar: string }> = {
   super_admin: { en: "Super Admin", ar: "مشرف عام" },
 }
 
-type AddUserType = "care_foundation" | "individual" | "parent" | "organization" | "expert" | "admin"
+type AddUserType =
+  | "care_foundation"
+  | "individual"
+  | "parent"
+  | "organization"
+  | "expert"
+  | "admin"
 
 const USER_TYPE_OPTIONS: {
   value: AddUserType
@@ -114,7 +121,10 @@ const USER_TYPE_OPTIONS: {
     value: "care_foundation",
     icon: Building2,
     label: { en: "Care Foundation", ar: "مؤسسة الرعاية" },
-    description: { en: "Register and follow up children under your care", ar: "تسجيل الأطفال تحت الرعاية ومتابعتهم" },
+    description: {
+      en: "Register and follow up children under your care",
+      ar: "تسجيل الأطفال تحت الرعاية ومتابعتهم",
+    },
   },
   {
     value: "organization",
@@ -151,6 +161,8 @@ export function UserManagement({
   expertsOnly?: boolean
 }) {
   const { lang } = useLang()
+  const access = usePermissions()
+  const moduleName = expertsOnly ? "experts" : "users"
   const {
     users,
     isLoading: isUsersLoading,
@@ -160,7 +172,9 @@ export function UserManagement({
     getDeletionBlockers,
     refresh,
   } = useUsers()
-  const { profiles, isLoading: isProfilesLoading } = useProfiles()
+  const { profiles, isLoading: isProfilesLoading } = useProfiles(
+    access.can("cases.read")
+  )
 
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<string>("name")
@@ -422,7 +436,10 @@ export function UserManagement({
                 : "Manage user accounts"}
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
+        <Button
+          disabled={!access.can(moduleName + ".create")}
+          onClick={() => setShowAddModal(true)}
+        >
           <Plus className="me-2 h-4 w-4" />
           {expertsOnly
             ? lang === "ar"
@@ -434,6 +451,16 @@ export function UserManagement({
         </Button>
       </div>
 
+      {access.isSuperAdmin && (
+        <SmartLink
+          href="/dashboard/admin/security"
+          className="inline-flex text-sm font-semibold text-primary underline"
+        >
+          {lang === "ar"
+            ? "إدارة الأدوار والصلاحيات"
+            : "Manage roles and permissions"}
+        </SmartLink>
+      )}
       {/* Search & Sort */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
@@ -515,7 +542,10 @@ export function UserManagement({
                   : "Try adjusting your search query"}
             </p>
             {users.length === 0 && (
-              <Button onClick={() => setShowAddModal(true)}>
+              <Button
+                disabled={!access.can(moduleName + ".create")}
+                onClick={() => setShowAddModal(true)}
+              >
                 {expertsOnly
                   ? lang === "ar"
                     ? "إضافة خبير"
@@ -574,7 +604,9 @@ export function UserManagement({
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      {user.role === "super_admin" || expertsOnly ? (
+                      {user.role === "super_admin" ||
+                      expertsOnly ||
+                      !access.isSuperAdmin ? (
                         <Badge
                           variant="outline"
                           className="bg-purple-50 text-purple-700"
@@ -607,7 +639,9 @@ export function UserManagement({
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={user.is_active}
-                          disabled={user.role === "super_admin"}
+                          disabled={
+                            user.role === "super_admin" || !access.isSuperAdmin
+                          }
                           onCheckedChange={(checked) =>
                             handleStatusChange(user.id, checked)
                           }
@@ -645,7 +679,10 @@ export function UserManagement({
                             {lang === "ar" ? "عرض" : "View"}
                           </Button>
                         </SmartLink>
-                        {user.role !== "super_admin" &&
+                        {access.can(moduleName + ".delete") &&
+                          (access.isSuperAdmin ||
+                            !["admin", "super_admin"].includes(user.role)) &&
+                          user.role !== "super_admin" &&
                           (caseCounts[user.id] || 0) === 0 && (
                             <Button
                               variant="ghost"
@@ -913,7 +950,8 @@ export function UserManagement({
                   onSuccess={handleRegistrationSuccess}
                   hideChildren
                 />
-              ) : addUserType === "organization" || addUserType === "care_foundation" ? (
+              ) : addUserType === "organization" ||
+                addUserType === "care_foundation" ? (
                 <OrganizationRegistrationForm
                   accountType={addUserType}
                   onSuccess={handleRegistrationSuccess}

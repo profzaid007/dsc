@@ -1,4 +1,6 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
+import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
@@ -7,7 +9,7 @@ import { usePaymentSettings } from "@/hooks/usePaymentSettings"
 import { useLang } from "@/lib/lang-context"
 import { formatAmount, paymentStatusLabels } from "@/lib/payment"
 import { formatDate } from "@/lib/format-date"
-import type { CasePaymentStatus } from "@/types/profile"
+import type { CasePaymentStatus, Profile } from "@/types/profile"
 import {
   Card,
   CardContent,
@@ -19,12 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { SkeletonTable } from "@/components/ui/skeleton"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
   TableBody,
@@ -49,20 +46,17 @@ const QUEUE_TABS: { value: string; statuses: CasePaymentStatus[] }[] = [
   { value: "pending", statuses: ["pending"] },
   { value: "awaiting_payment", statuses: ["awaiting_payment"] },
   { value: "under_review", statuses: ["under_review"] },
-  {value: "active", statuses:["active"]}
+  { value: "active", statuses: ["active"] },
 ]
 
 export default function AdminPaymentsPage() {
+  const access = usePermissions()
   const { lang } = useLang()
-  const {
-    profiles,
-    isLoading,
-    setPaymentAmount,
-    approveCase,
-    rejectPayment,
-  } = useProfiles()
+  const { profiles, isLoading, setPaymentAmount, approveCase, rejectPayment } =
+    useProfiles(access.can("payments.read"), "payments")
   const { bankDetails } = usePaymentSettings()
 
+  const [exporting, setExporting] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
   const [amountInputs, setAmountInputs] = useState<Record<string, string>>({})
   const [rejectInputs, setRejectInputs] = useState<Record<string, string>>({})
@@ -70,13 +64,15 @@ export default function AdminPaymentsPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const queuedCases = useMemo(
-    () => profiles.filter((p) => p.status ),
+    () => profiles.filter((p) => p.status),
     [profiles]
   )
 
   const visibleCases = useMemo(() => {
     const tab = QUEUE_TABS.find((t) => t.value === activeTab) || QUEUE_TABS[0]
-    return queuedCases.filter((p) => tab.statuses.includes(p.status as CasePaymentStatus))
+    return queuedCases.filter((p) =>
+      tab.statuses.includes(p.status as CasePaymentStatus)
+    )
   }, [queuedCases, activeTab])
 
   const counts = useMemo(() => {
@@ -89,10 +85,51 @@ export default function AdminPaymentsPage() {
     return c
   }, [queuedCases])
 
+  async function exportCsv() {
+    if (!access.can("payments.export") || exporting) return
+    setExporting(true)
+    setErrorMsg(null)
+    try {
+      const records = await pb.send<Profile[]>("/api/dsc/payments/export", {
+        method: "GET",
+      })
+      const cell = (value: unknown) => {
+        let text = String(value ?? "")
+        if (/^[\s]*[=+\-@\t\r\n]/.test(text)) text = "'" + text
+        return '"' + text.replace(/"/g, '""') + '"'
+      }
+      const rows = [
+        ["Case ID", "Name", "Status", "Amount", "Paid", "Updated"],
+        ...records.map((record) => [
+          record.id,
+          record.name,
+          record.status,
+          record.payment_amount,
+          record.is_paid,
+          record.updated,
+        ]),
+      ]
+      const blob = new Blob(
+        ["\uFEFF" + rows.map((row) => row.map(cell).join(",")).join("\r\n")],
+        { type: "text/csv;charset=utf-8" }
+      )
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "dsc-payments.csv"
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      setErrorMsg(getErrorMessage(error, lang))
+    } finally {
+      setExporting(false)
+    }
+  }
   const getSlipUrl = (profileId: string, slip: string) =>
     pb.files.getURL({ collectionId: "cases", id: profileId }, slip)
 
   const runAction = async (fn: () => Promise<unknown>, id: string) => {
+    if (!access.can("payments.update")) return
     setBusyId(id)
     setErrorMsg(null)
     try {
@@ -110,12 +147,11 @@ export default function AdminPaymentsPage() {
   const handleSetAmount = (caseId: string) => {
     const value = amountInputs[caseId]
     if (!value || Number(value) <= 0) return
-    runAction(
-      () => setPaymentAmount(caseId, Number(value)),
-      caseId
-    ).then(() => {
-      setAmountInputs((prev) => ({ ...prev, [caseId]: "" }))
-    })
+    runAction(() => setPaymentAmount(caseId, Number(value)), caseId).then(
+      () => {
+        setAmountInputs((prev) => ({ ...prev, [caseId]: "" }))
+      }
+    )
   }
 
   const handleReject = (caseId: string) => {
@@ -133,9 +169,7 @@ export default function AdminPaymentsPage() {
             {lang === "ar" ? "المدفوعات" : "Payments"}
           </h1>
           <p className="text-muted-foreground">
-            {lang === "ar"
-              ? "إدارة مدفوعات الحالات"
-              : "Manage case payments"}
+            {lang === "ar" ? "إدارة مدفوعات الحالات" : "Manage case payments"}
           </p>
         </div>
         <SkeletonTable rows={6} />
@@ -156,6 +190,21 @@ export default function AdminPaymentsPage() {
         </p>
       </div>
 
+      {access.can("payments.export") && (
+        <Button
+          variant="outline"
+          disabled={exporting}
+          onClick={() => void exportCsv()}
+        >
+          {exporting
+            ? lang === "ar"
+              ? "جارٍ التصدير…"
+              : "Exporting…"
+            : lang === "ar"
+              ? "تصدير CSV"
+              : "Export CSV"}
+        </Button>
+      )}
       {errorMsg && (
         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
           {errorMsg}
@@ -172,9 +221,7 @@ export default function AdminPaymentsPage() {
                 : "No cases waiting for payment"}
             </h3>
             <p className="text-center text-muted-foreground">
-              {lang === "ar"
-                ? "جميع الحالات مفعلة"
-                : "All cases are active"}
+              {lang === "ar" ? "جميع الحالات مفعلة" : "All cases are active"}
             </p>
           </CardContent>
         </Card>
@@ -268,9 +315,7 @@ export default function AdminPaymentsPage() {
                                 )
                               : "—"}
                           </TableCell>
-                          <TableCell>
-                            {formatDate(profile.created)}
-                          </TableCell>
+                          <TableCell>{formatDate(profile.created)}</TableCell>
                           <TableCell className="text-right">
                             {profile.status === "pending" && (
                               <div className="flex flex-col items-end gap-2">
@@ -287,9 +332,7 @@ export default function AdminPaymentsPage() {
                                       }))
                                     }
                                     placeholder={
-                                      lang === "ar"
-                                        ? "المبلغ"
-                                        : "Amount"
+                                      lang === "ar" ? "المبلغ" : "Amount"
                                     }
                                     className="w-32"
                                   />
@@ -300,9 +343,7 @@ export default function AdminPaymentsPage() {
                                       !amountInputs[profile.id] ||
                                       Number(amountInputs[profile.id]) <= 0
                                     }
-                                    onClick={() =>
-                                      handleSetAmount(profile.id)
-                                    }
+                                    onClick={() => handleSetAmount(profile.id)}
                                   >
                                     {busyId === profile.id ? (
                                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -334,7 +375,7 @@ export default function AdminPaymentsPage() {
                             {profile.status === "under_review" && (
                               <div className="flex flex-col items-end gap-2">
                                 {profile.payment_slip && (
-                                  <a
+                                  <ProtectedFileLink
                                     href={getSlipUrl(
                                       profile.id,
                                       profile.payment_slip
@@ -348,7 +389,7 @@ export default function AdminPaymentsPage() {
                                         ? "عرض الإيصال"
                                         : "View Receipt"}
                                     </Button>
-                                  </a>
+                                  </ProtectedFileLink>
                                 )}
                                 <div className="flex items-center gap-2">
                                   <Input
@@ -368,11 +409,13 @@ export default function AdminPaymentsPage() {
                                   />
                                   <Button
                                     size="sm"
-                                    disabled={busyId === profile.id}
+                                    disabled={
+                                      busyId === profile.id ||
+                                      !access.can("payments.update")
+                                    }
                                     onClick={() =>
                                       runAction(
-                                        () =>
-                                          approveCase(profile.id),
+                                        () => approveCase(profile.id),
                                         profile.id
                                       )
                                     }
@@ -387,10 +430,11 @@ export default function AdminPaymentsPage() {
                                   <Button
                                     size="sm"
                                     variant="destructive"
-                                    disabled={busyId === profile.id}
-                                    onClick={() =>
-                                      handleReject(profile.id)
+                                    disabled={
+                                      busyId === profile.id ||
+                                      !access.can("payments.update")
                                     }
+                                    onClick={() => handleReject(profile.id)}
                                   >
                                     <XCircle className="me-1 h-4 w-4" />
                                     {lang === "ar" ? "رفض" : "Reject"}

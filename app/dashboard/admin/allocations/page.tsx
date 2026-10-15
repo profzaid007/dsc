@@ -1,6 +1,10 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
-import { ALLOCATION_ROLE_GROUPS, allocationRowsForSave } from "@/lib/allocation-role-groups"
+import {
+  ALLOCATION_ROLE_GROUPS,
+  allocationRowsForSave,
+} from "@/lib/allocation-role-groups"
 import { boundedFullList } from "@/lib/bounded-records"
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { DataError } from "@/components/ui/data-error"
@@ -162,9 +166,13 @@ function ExpertCombobox({
 }
 
 export default function AllocationsPage() {
+  const access = usePermissions()
+  const canReadExperts = access.can("experts.read")
   const router = useRouter()
   const { lang } = useLang()
-  const { users, isLoading: isUsersLoading } = useUsers()
+  const { users, isLoading: isUsersLoading } = useUsers(
+    access.can("experts.read") || access.can("users.read")
+  )
   const {
     allocations,
     loadError: allocationsError,
@@ -177,10 +185,11 @@ export default function AllocationsPage() {
   const [cityFilter, setCityFilter] = useState("")
   const [specialtyFilter, setSpecialtyFilter] = useState("")
   useEffect(() => {
+    if (!canReadExperts) return
     boundedFullList(pb.collection("expert_profiles"))
       .then((data) => setExpertProfiles(data as unknown as ExpertProfile[]))
       .catch((error) => toast.error(getErrorMessage(error)))
-  }, [])
+  }, [canReadExperts])
   const [selectedCase, setSelectedCase] = useState<string>("")
   useEffect(() => {
     const requestedCase = new URLSearchParams(window.location.search).get(
@@ -204,7 +213,7 @@ export default function AllocationsPage() {
     toolTypes: allToolTypes,
     isLoading: isToolTypesLoading,
     fetchToolTypes,
-  } = useToolTypes()
+  } = useToolTypes(access.can("tools.read"))
 
   const [roleToolTypesMap, setRoleToolTypesMap] = useState<
     Record<string, string[]>
@@ -322,11 +331,7 @@ export default function AllocationsPage() {
 
     setIsUpdatingRole(true)
     try {
-      await updateRole(
-        editingRole.id,
-        roleNameEn,
-        roleNameAr
-      )
+      await updateRole(editingRole.id, roleNameEn, roleNameAr)
       await refreshAllocations()
       toast.success(
         lang === "ar" ? "تم حفظ الإسنادات" : "Case allocations saved"
@@ -539,6 +544,16 @@ export default function AllocationsPage() {
       {allocationsError && (
         <DataError message={allocationsError} onRetry={refreshAllocations} />
       )}
+      {(!access.can("cases.read") || !canReadExperts) && (
+        <p
+          role="status"
+          className="rounded-lg border bg-white p-4 text-sm text-muted-foreground"
+        >
+          {lang === "ar"
+            ? "اختيار الحالات والخبراء يتطلب صلاحية قراءة الحالات والخبراء. تواصل مع المشرف العام لتحديث وصولك."
+            : "Selecting cases and experts requires Cases and Experts read access. Contact your Super Admin to update your access."}
+        </p>
+      )}
       <Tabs defaultValue="allocations">
         <TabsList>
           <TabsTrigger value="allocations">
@@ -585,7 +600,12 @@ export default function AllocationsPage() {
           <div className="flex justify-end">
             <Button
               onClick={handleSave}
-              disabled={!selectedCase || isSaving || !hasChanges}
+              disabled={
+                !selectedCase ||
+                isSaving ||
+                !hasChanges ||
+                !access.can("allocations.update")
+              }
             >
               <Save className="me-2 h-4 w-4" />
               {isSaving
@@ -613,6 +633,7 @@ export default function AllocationsPage() {
             <CardContent>
               <div className="max-w-md">
                 <CaseSearchCombobox
+                  enabled={access.can("cases.read")}
                   value={selectedCase}
                   onChange={setSelectedCase}
                   placeholder={
@@ -640,7 +661,7 @@ export default function AllocationsPage() {
                   <Button
                     variant="outline"
                     onClick={addRow}
-                    disabled={isSaving}
+                    disabled={isSaving || !access.can("allocations.create")}
                   >
                     <Plus className="me-2 h-4 w-4" />
                     {lang === "ar" ? "إضافة خبير" : "Add Expert"}
@@ -674,7 +695,10 @@ export default function AllocationsPage() {
                       ? "لم يتم تخصيص خبراء لهذه القضية بعد"
                       : "No experts have been assigned to this case yet"}
                   </p>
-                  <Button onClick={addRow}>
+                  <Button
+                    disabled={!access.can("allocations.create")}
+                    onClick={addRow}
+                  >
                     <Plus className="me-2 h-4 w-4" />
                     {lang === "ar" ? "إضافة خبير" : "Add Expert"}
                   </Button>
@@ -743,7 +767,17 @@ export default function AllocationsPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {ALLOCATION_ROLE_GROUPS.map((group) => (
-                                <SelectItem key={group.id} value={group.id} disabled={!roleMgmtRoles.some(role => !role.is_retired && role.role_group === group.id)}>
+                                <SelectItem
+                                  key={group.id}
+                                  value={group.id}
+                                  disabled={
+                                    !roleMgmtRoles.some(
+                                      (role) =>
+                                        !role.is_retired &&
+                                        role.role_group === group.id
+                                    )
+                                  }
+                                >
                                   {lang === "ar" ? group.ar : group.en}
                                 </SelectItem>
                               ))}
@@ -877,7 +911,8 @@ export default function AllocationsPage() {
                   <TableBody>
                     {roleMgmtRoles.map((role) => {
                       const hasAssignments = allocations.some(
-                        (a) => a.role_id === role.id || a.role === role.role_name_en
+                        (a) =>
+                          a.role_id === role.id || a.role === role.role_name_en
                       )
                       return (
                         <TableRow key={role.id}>
@@ -988,7 +1023,16 @@ export default function AllocationsPage() {
               </SelectTrigger>
               <SelectContent>
                 {ALLOCATION_ROLE_GROUPS.map((group) => (
-                  <SelectItem key={group.id} value={group.id} disabled={!roleMgmtRoles.some(role => !role.is_retired && role.role_group === group.id)}>
+                  <SelectItem
+                    key={group.id}
+                    value={group.id}
+                    disabled={
+                      !roleMgmtRoles.some(
+                        (role) =>
+                          !role.is_retired && role.role_group === group.id
+                      )
+                    }
+                  >
                     {lang === "ar" ? group.ar : group.en}
                   </SelectItem>
                 ))}

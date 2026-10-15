@@ -1,5 +1,7 @@
 routerAdd('GET','/api/dsc/message-contacts',(e)=>{
  const u=e.auth;if(!u||!u.getBool('is_active'))throw new ForbiddenError('An active account is required.');
+ const policy=require(`${__hooks}/lib/security-policy.js`);policy.freshUser(e.app,u);
+ if(u.getString('role')==='admin')policy.requirePermission(e.app,u,'messages.read');
  const role=u.getString('role');let filter;
  if(role==='expert')filter='is_active = true && (role = "admin" || role = "super_admin")';
  else if(role==='admin'||role==='super_admin')filter='is_active = true && role = "expert"';

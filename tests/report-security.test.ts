@@ -73,8 +73,10 @@ let deliveries = 0
 let role = "individual"
 let active = true
 let invalidToken = false
+let permissions = ["messages.create"]
 globalThis.fetch = async (input) => {
   const url = String(input instanceof Request ? input.url : input)
+  if (url.includes("/api/dsc/security/me")) return Response.json({ permissions })
   if (url.includes("/auth-refresh"))
     return Response.json(
       invalidToken
@@ -103,6 +105,16 @@ try {
     (e: unknown) => e instanceof RequestError && e.status === 403
   )
   role = "admin"
+  permissions = []
+  await assert.rejects(
+    messagingUser(req({}, { Authorization: "Bearer admin-without-grant" }), true),
+    (e: unknown) => e instanceof RequestError && e.status === 403
+  )
+  await assert.rejects(
+    messagingUser(req({}, { Authorization: "Bearer notification-without-grant" })),
+    (e: unknown) => e instanceof RequestError && e.status === 403
+  )
+  permissions = ["messages.create"]
   assert.equal(
     (await messagingUser(req({}, { Authorization: "Bearer admin" }), true)).id,
     "test-user"

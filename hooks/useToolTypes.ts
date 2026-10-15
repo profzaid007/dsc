@@ -6,12 +6,18 @@ import type { ToolTypeRecord } from "@/lib/tool-types"
 import type { BilingualString } from "@/types/tool"
 import { getErrorMessage } from "@/lib/pb"
 
-export function useToolTypes() {
+export function useToolTypes(enabled = true) {
   const [toolTypes, setToolTypes] = useState<ToolTypeRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchToolTypes = useCallback(async () => {
+    if (!enabled) {
+      setToolTypes([])
+      setIsLoading(false)
+      setError(null)
+      return []
+    }
     setIsLoading(true)
     setError(null)
     try {
@@ -25,27 +31,27 @@ export function useToolTypes() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [enabled])
 
   const getToolTypeById = useCallback(
     (id: string | undefined): ToolTypeRecord | undefined => {
-      if (!id) return undefined
+      if (!id || !enabled) return undefined
       return toolTypes.find((t) => t.id === id)
     },
-    [toolTypes]
+    [toolTypes, enabled]
   )
 
   const getToolTypeByKey = useCallback(
     (key: string | undefined): ToolTypeRecord | undefined => {
-      if (!key) return undefined
+      if (!key || !enabled) return undefined
       return toolTypes.find((t) => t.key === key)
     },
-    [toolTypes]
+    [toolTypes, enabled]
   )
 
   const getToolTypeByIdAsync = useCallback(
     async (id: string | undefined): Promise<ToolTypeRecord | undefined> => {
-      if (!id) return undefined
+      if (!id || !enabled) return undefined
       // First check cache
       const cached = toolTypes.find((t) => t.id === id)
       if (cached) return cached
@@ -56,7 +62,7 @@ export function useToolTypes() {
         return undefined
       }
     },
-    [toolTypes]
+    [toolTypes, enabled]
   )
 
   const getToolTypeLabel = useCallback(

@@ -3,6 +3,8 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { useUnreadMessages } from "@/hooks/useUnreadMessages"
+import { usePermissions } from "@/hooks/usePermissions"
+import { routePermission } from "@/lib/security"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import type { Lang } from "@/types/form"
@@ -44,8 +46,10 @@ type NavItem = {
 }
 
 const adminNavigation: NavItem[] = [
+  { name: { en: "Security management", ar: "إدارة الأمان" }, href: "/dashboard/admin/security", icon: BadgeCheck, superAdminOnly: true },
+  { name: { en: "Content management", ar: "إدارة المحتوى" }, href: "/cms", icon: FileText },
   { name: { en: "Messages", ar: "الرسائل" }, href: "/dashboard/messages", icon: MessageSquare },
-  { name: { en: "Database backups", ar: "النسخ الاحتياطية" }, href: "/dashboard/admin/backups", icon: FolderKanban },
+  { name: { en: "Database backups", ar: "النسخ الاحتياطية" }, href: "/dashboard/admin/backups", icon: FolderKanban, superAdminOnly: true },
   {
     name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/admin/cases",
@@ -229,14 +233,15 @@ export function DashboardSidebar() {
   const {
     currentUser,
     isAdmin,
-    isSuperAdmin,
     logout,
     isLoading: isAuthLoading,
   } = useAuth()
 
+  const permissions = usePermissions()
+  const canNavigate = (item: NavItem) => (!item.superAdminOnly || permissions.isSuperAdmin) && (!isAdmin || !routePermission(item.href) || permissions.can(routePermission(item.href)!))
   const role = currentUser?.role
   const isExpert = role === "expert"
-  const unread = useUnreadMessages(currentUser?.id, isAdmin || isExpert)
+  const unread = useUnreadMessages(currentUser?.id, isExpert || isAdmin && permissions.can("messages.read"))
   const withUnread = (item: NavItem): NavItem => item.href === "/dashboard/messages" ? { ...item, unread } : item
   const isOrganization = role === "organization"
   const isIndividual = role === "individual"
@@ -310,7 +315,7 @@ export function DashboardSidebar() {
         <nav id="dashboard-mobile-navigation" aria-label={lang === "ar" ? "التنقل في لوحة التحكم" : "Dashboard navigation"} className="max-h-[65dvh] space-y-1 overflow-y-auto border-t border-white/15 p-3" onClick={() => setMobileMenuPath(null)}>
           {renderNavItem({ name: dashboardLabel, href: dashboardHref, icon: LayoutDashboard }, pathname, lang)}
           {(isAdmin ? adminNavigation : isExpert ? expertNavigation : isOrganization ? organizationNavigation : isIndividual ? individualNavigation : isParent ? parentNavigation : [])
-            .filter((item) => !item.superAdminOnly || isSuperAdmin)
+            .filter(canNavigate)
             .map((item) => renderNavItem(withUnread(item), pathname, lang))}
           <Button variant="ghost" className="min-h-11 w-full justify-start text-white hover:bg-white/10 hover:text-white" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />{lang === "ar" ? "تسجيل الخروج" : "Logout"}
@@ -410,7 +415,7 @@ export function DashboardSidebar() {
               </div>
             )}
             {adminNavigation.map((item) => {
-              if (item.superAdminOnly && !isSuperAdmin) return null
+              if (!canNavigate(item)) return null
               return renderNavItem(withUnread(item), pathname, lang, true, isCollapsed)
             })}
           </>

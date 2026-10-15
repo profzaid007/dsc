@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -23,6 +24,7 @@ import { t, UI_STRINGS } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 
 export default function CmsBlogListPage() {
+  const access = usePermissions()
   const { lang } = useLang()
   const [posts, setPosts] = useState<BlogPage[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,7 +84,10 @@ export default function CmsBlogListPage() {
           </h1>
           <p className="text-muted-foreground">
             {t(
-              { en: "Create and manage blog posts", ar: "إنشاء وإدارة منشورات المدونة" },
+              {
+                en: "Create and manage blog posts",
+                ar: "إنشاء وإدارة منشورات المدونة",
+              },
               lang
             )}
           </p>
@@ -94,7 +99,10 @@ export default function CmsBlogListPage() {
               {t({ en: "Categories", ar: "التصنيفات" }, lang)}
             </Button>
           </Link>
-          <Button onClick={handleNewPost} disabled={creating}>
+          <Button
+            onClick={handleNewPost}
+            disabled={creating || !access.can("cms.create")}
+          >
             {creating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -108,7 +116,10 @@ export default function CmsBlogListPage() {
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-md bg-gray-100" />
+            <div
+              key={i}
+              className="h-12 animate-pulse rounded-md bg-gray-100"
+            />
           ))}
         </div>
       ) : posts.length === 0 ? (
@@ -116,7 +127,11 @@ export default function CmsBlogListPage() {
           <p className="text-muted-foreground">
             {t({ en: "No posts yet.", ar: "لا توجد منشورات بعد." }, lang)}
           </p>
-          <Button onClick={handleNewPost} className="mt-4" disabled={creating}>
+          <Button
+            onClick={handleNewPost}
+            className="mt-4"
+            disabled={creating || !access.can("cms.create")}
+          >
             {creating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -151,9 +166,7 @@ export default function CmsBlogListPage() {
                     </Link>
                   </TableCell>
                   <TableCell>{post.author_name || "—"}</TableCell>
-                  <TableCell>
-                    {formatDate(post.updated)}
-                  </TableCell>
+                  <TableCell>{formatDate(post.updated)}</TableCell>
                   <TableCell>
                     {post.is_published ? (
                       <Badge
@@ -184,6 +197,7 @@ export default function CmsBlogListPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        disabled={!access.can("cms.delete")}
                         onClick={() => handleDelete(post.id, post.title_en)}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />

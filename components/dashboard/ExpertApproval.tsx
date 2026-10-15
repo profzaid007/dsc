@@ -1,4 +1,6 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
+import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 
 import { useState, useEffect } from "react"
 import { useUsers } from "@/hooks/useUsers"
@@ -138,7 +140,10 @@ function TagList({ values }: { values: string[] }) {
 }
 
 export function ExpertApprovalPage() {
-  const { users, isLoading, updateUser, refresh } = useUsers()
+  const access = usePermissions()
+  const { users, isLoading, updateUser, refresh } = useUsers(
+    access.can("experts.read")
+  )
   const { lang } = useLang()
   const [approvingId, setApprovingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState("")
@@ -173,7 +178,9 @@ export function ExpertApprovalPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfileLoading(true)
     pb.collection("expert_profiles")
-      .getFirstListItem(pb.filter("user = {:value0}", { value0: selectedUser.id }))
+      .getFirstListItem(
+        pb.filter("user = {:value0}", { value0: selectedUser.id })
+      )
       .then((record) => {
         if (!cancelled) setSelectedProfile(record)
       })
@@ -231,7 +238,10 @@ export function ExpertApprovalPage() {
 
       const response = await fetch("/api/send-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${pb.authStore.token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${pb.authStore.token}`,
+        },
         body: JSON.stringify({
           from: "admin@dsc.ac",
           to: user.email,
@@ -381,7 +391,10 @@ export function ExpertApprovalPage() {
                         <Button
                           size="sm"
                           onClick={() => handleApprove(user)}
-                          disabled={approvingId === user.id}
+                          disabled={
+                            approvingId === user.id ||
+                            !access.can("experts.approve")
+                          }
                         >
                           {approvingId === user.id
                             ? "Approving..."
@@ -406,10 +419,12 @@ export function ExpertApprovalPage() {
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           {selectedUser && (
             <>
-              <ExpertBankDetails
-                key={selectedUser.id}
-                userId={selectedUser.id}
-              />
+              {access.can("payments.read") && (
+                <ExpertBankDetails
+                  key={selectedUser.id}
+                  userId={selectedUser.id}
+                />
+              )}
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-3">
                   {profilePhotoUrl ? (
@@ -644,7 +659,7 @@ export function ExpertApprovalPage() {
                         </a>
                       )}
                       {cvFiles.map((filename) => (
-                        <a
+                        <ProtectedFileLink
                           key={filename}
                           href={getFileUrl(selectedProfile, filename)}
                           target="_blank"
@@ -653,7 +668,7 @@ export function ExpertApprovalPage() {
                         >
                           <Paperclip className="h-4 w-4 shrink-0" />
                           <span className="truncate">{filename}</span>
-                        </a>
+                        </ProtectedFileLink>
                       ))}
                       {!profilePhotoUrl && cvFiles.length === 0 && (
                         <p className="text-sm text-muted-foreground">
@@ -671,7 +686,10 @@ export function ExpertApprovalPage() {
                 </Button>
                 <Button
                   onClick={() => handleApprove(selectedUser)}
-                  disabled={approvingId === selectedUser.id}
+                  disabled={
+                    approvingId === selectedUser.id ||
+                    !access.can("experts.approve")
+                  }
                 >
                   {approvingId === selectedUser.id
                     ? "Approving..."

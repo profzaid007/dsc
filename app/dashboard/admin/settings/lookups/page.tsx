@@ -1,8 +1,9 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/useAuth"
+
 import { useLang } from "@/lib/lang-context"
 import { useLookups, type LookupType } from "@/hooks/useLookups"
 import { formatDate } from "@/lib/format-date"
@@ -34,15 +35,21 @@ import {
 } from "@/components/ui/dialog"
 import { ArrowLeft, Pencil, Plus, Trash2, List } from "lucide-react"
 
-const LOOKUP_TYPES: { value: LookupType; label: { en: string; ar: string } }[] = [
-  { value: "tool_types", label: { en: "Tool Types", ar: "أنواع الأدوات" } },
-  { value: "case_types", label: { en: "Case Types", ar: "أنواع الحالات" } },
-  { value: "user_types", label: { en: "User Types", ar: "أنواع المستخدمين" } },
-]
+const LOOKUP_TYPES: { value: LookupType; label: { en: string; ar: string } }[] =
+  [
+    { value: "tool_types", label: { en: "Tool Types", ar: "أنواع الأدوات" } },
+    { value: "case_types", label: { en: "Case Types", ar: "أنواع الحالات" } },
+    {
+      value: "user_types",
+      label: { en: "User Types", ar: "أنواع المستخدمين" },
+    },
+  ]
 
 export default function LookupsPage() {
+  const access = usePermissions()
   const router = useRouter()
-  const { isSuperAdmin, isLoading: isAuthLoading } = useAuth()
+  const canReadSettings = access.can("settings.read")
+  const isAuthLoading = access.isLoading
   const { lang } = useLang()
   const {
     lookups,
@@ -68,10 +75,10 @@ export default function LookupsPage() {
   const hasFetched = useRef(false)
 
   useEffect(() => {
-    if (!isAuthLoading && !isSuperAdmin) {
+    if (!isAuthLoading && !canReadSettings) {
       router.push("/dashboard")
     }
-  }, [isAuthLoading, isSuperAdmin, router])
+  }, [isAuthLoading, canReadSettings, router])
 
   useEffect(() => {
     if (!hasFetched.current) {
@@ -105,6 +112,8 @@ export default function LookupsPage() {
   }
 
   const handleSave = async () => {
+    if (!access.can(editingLookup ? "settings.update" : "settings.create"))
+      return
     if (!formData.key || !formData.label_en || !formData.label_ar) return
 
     if (editingLookup) {
@@ -146,7 +155,7 @@ export default function LookupsPage() {
     )
   }
 
-  if (!isSuperAdmin) {
+  if (!canReadSettings) {
     return null
   }
 
@@ -196,7 +205,10 @@ export default function LookupsPage() {
               </Select>
             </div>
           </div>
-          <Button onClick={openCreateDialog}>
+          <Button
+            disabled={!access.can("settings.create")}
+            onClick={openCreateDialog}
+          >
             <Plus className="me-2 h-4 w-4" />
             {lang === "ar" ? "إضافة قيمة" : "Add Lookup"}
           </Button>
@@ -212,9 +224,15 @@ export default function LookupsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>{lang === "ar" ? "المفتاح" : "Key"}</TableHead>
-                <TableHead>{lang === "ar" ? "التسمية (إنجليزي)" : "Label (EN)"}</TableHead>
-                <TableHead>{lang === "ar" ? "التسمية (عربي)" : "Label (AR)"}</TableHead>
-                <TableHead>{lang === "ar" ? "تاريخ الإنشاء" : "Created"}</TableHead>
+                <TableHead>
+                  {lang === "ar" ? "التسمية (إنجليزي)" : "Label (EN)"}
+                </TableHead>
+                <TableHead>
+                  {lang === "ar" ? "التسمية (عربي)" : "Label (AR)"}
+                </TableHead>
+                <TableHead>
+                  {lang === "ar" ? "تاريخ الإنشاء" : "Created"}
+                </TableHead>
                 <TableHead className="text-right">
                   {lang === "ar" ? "إجراءات" : "Actions"}
                 </TableHead>
@@ -238,6 +256,7 @@ export default function LookupsPage() {
                       <Button
                         size="sm"
                         variant="outline"
+                        disabled={!access.can("settings.create")}
                         onClick={openCreateDialog}
                       >
                         {lang === "ar"
@@ -263,6 +282,7 @@ export default function LookupsPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
+                          disabled={!access.can("settings.update")}
                           onClick={() => openEditDialog(lookup.id)}
                         >
                           <Pencil className="h-4 w-4" />
@@ -422,7 +442,11 @@ export default function LookupsPage() {
             >
               {lang === "ar" ? "إلغاء" : "Cancel"}
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button
+              variant="destructive"
+              disabled={!access.can("settings.delete")}
+              onClick={handleDelete}
+            >
               {lang === "ar" ? "حذف" : "Delete"}
             </Button>
           </DialogFooter>

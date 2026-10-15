@@ -1,148 +1,72 @@
 "use client"
-
-import { useMemo } from "react"
+import Link from "next/link"
 import { useAuth } from "@/hooks/useAuth"
-import { useUsers } from "@/hooks/useUsers"
-import { useProfiles } from "@/hooks/useProfiles"
-import { useAssignments } from "@/hooks/useAssignments"
-import { useAllocations } from "@/hooks/useAllocations"
-import { useTools } from "@/hooks/useTools"
-import { useTraining } from "@/hooks/useTraining"
-import { useLectures } from "@/hooks/useLectures"
+import { usePermissions } from "@/hooks/usePermissions"
+import { securityModules } from "@/lib/security"
 import { useLang } from "@/lib/lang-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Users,
-  ClipboardList,
-  UserCheck,
-  BadgeCheck,
-  GraduationCap,
-  BookOpen,
-  Wallet,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react"
-
-interface Stat {
-  title: string
-  value: number
-  icon: LucideIcon
-  isLoading: boolean
-}
-
 export default function AdminDashboardPage() {
   const { currentUser } = useAuth()
+  const access = usePermissions()
   const { lang } = useLang()
-
-  const { users, isLoading: isUsersLoading } = useUsers()
-  const { profiles, isLoading: isProfilesLoading } = useProfiles()
-  const { assignments, isLoading: isAssignmentsLoading } = useAssignments()
-  const { allocations, isLoading: isAllocationsLoading } = useAllocations()
-  const { tools, isLoading: isToolsLoading } = useTools()
-  const { programs, isLoading: isTrainingLoading } = useTraining()
-  const { lectures, isLoading: isLecturesLoading } = useLectures()
-
-  const pendingExpertApprovals = useMemo(
-    () => users.filter((u) => u.role === "expert" && !u.is_active).length,
-    [users]
-  )
-
-  // A "payment made" is a case an admin has approved (approveCase sets is_paid)
-  const paymentsMade = useMemo(
-    () => profiles.filter((p) => p.is_paid).length,
-    [profiles]
-  )
-
-  const primaryStats: Stat[] = [
-    {
-      title: lang === "ar" ? "المستخدمون" : "Users",
-      value: users.filter((user) => user.role !== "expert").length,
-      icon: Users,
-      isLoading: isUsersLoading,
-    },
-    {
-      title: lang === "ar" ? "التعيينات" : "Assignments",
-      value: assignments.length,
-      icon: ClipboardList,
-      isLoading: isAssignmentsLoading,
-    },
-    {
-      title: lang === "ar" ? "التخصيصات" : "Allocations",
-      value: allocations.length,
-      icon: UserCheck,
-      isLoading: isAllocationsLoading,
-    },
-    {
-      title: lang === "ar" ? "اعتماد الخبراء" : "Expert Approvals",
-      value: pendingExpertApprovals,
-      icon: BadgeCheck,
-      isLoading: isUsersLoading,
-    },
-  ]
-
-  const secondaryStats: Stat[] = [
-    {
-      title: lang === "ar" ? "الأدوات" : "Tools",
-      value: tools.length,
-      icon: Wrench,
-      isLoading: isToolsLoading,
-    },
-    {
-      title: lang === "ar" ? "التدريب" : "Training",
-      value: programs.length,
-      icon: GraduationCap,
-      isLoading: isTrainingLoading,
-    },
-    {
-      title: lang === "ar" ? "المحاضرات العامة" : "Public Lectures",
-      value: lectures.length,
-      icon: BookOpen,
-      isLoading: isLecturesLoading,
-    },
-    {
-      title: lang === "ar" ? "المدفوعات" : "Payments",
-      value: paymentsMade,
-      icon: Wallet,
-      isLoading: isProfilesLoading,
-    },
-  ]
-
-  const renderStat = (stat: Stat) => (
-    <Card key={stat.title}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-        <stat.icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {stat.isLoading ? (
-          <div className="text-2xl font-bold text-muted-foreground">--</div>
-        ) : (
-          <div className="text-2xl font-bold">{stat.value}</div>
-        )}
-      </CardContent>
-    </Card>
-  )
-
+  const ar = lang === "ar"
+  const modules = securityModules.filter(([key]) => access.can(key + ".read"))
+  const href = (key: string) =>
+    key === "cms"
+      ? "/cms"
+      : key === "messages"
+        ? "/dashboard/messages"
+        : "/dashboard/admin/" + (key === "lectures" ? "public-lectures" : key)
   return (
-    <div className="space-y-6">
-      <div>
+    <section className="space-y-6">
+      <header>
         <h1 className="text-2xl font-bold text-primary">
-          {lang === "ar" ? "لوحة التحكم" : "Admin Dashboard"}
+          {ar ? "لوحة التحكم" : "Admin dashboard"}
         </h1>
-        <p className="text-muted-foreground">
-          {lang === "ar"
-            ? `مرحباً بعودتك، ${currentUser?.name}`
-            : `Welcome back, ${currentUser?.name}`}
+        <p className="mt-2 text-muted-foreground">
+          {ar ? "مرحباً، " : "Welcome, "}
+          {currentUser?.name}
         </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {primaryStats.map(renderStat)}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {secondaryStats.map(renderStat)}
-      </div>
-    </div>
+      </header>
+      <h2 className="font-semibold">
+        {ar ? "الوحدات المتاحة لك" : "Your available modules"}
+      </h2>
+      {access.isLoading ? (
+        <p role="status">{ar ? "جارٍ التحميل…" : "Loading…"}</p>
+      ) : access.error ? (
+        <button onClick={access.refresh} className="text-primary underline">
+          {ar
+            ? "تعذر تحميل الصلاحيات. إعادة المحاولة"
+            : "Unable to load permissions. Retry"}
+        </button>
+      ) : (
+        <div className="divide-y rounded-lg border bg-white">
+          {modules.map(([key, en, arabic]) => (
+            <Link
+              key={key}
+              href={href(key)}
+              className="flex items-center justify-between p-4 font-medium text-primary hover:bg-muted/50"
+            >
+              {ar ? arabic : en}
+              <span aria-hidden="true">{ar ? "←" : "→"}</span>
+            </Link>
+          ))}
+          {access.isSuperAdmin && (
+            <Link
+              href="/dashboard/admin/security"
+              className="block p-4 font-semibold text-primary hover:bg-muted/50"
+            >
+              {ar ? "إدارة الأمان" : "Security management"}
+            </Link>
+          )}
+          {!modules.length && (
+            <p className="p-4 text-muted-foreground">
+              {ar
+                ? "لم تمنح صلاحيات وحدات بعد. تواصل مع المشرف العام."
+                : "No module access has been granted. Contact your Super Admin."}
+            </p>
+          )}
+        </div>
+      )}
+    </section>
   )
 }

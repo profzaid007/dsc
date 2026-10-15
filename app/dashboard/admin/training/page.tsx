@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -28,6 +29,7 @@ const statusOptions = [
 ]
 
 export default function AdminTrainingProgramsPage() {
+  const access = usePermissions()
   const router = useRouter()
   const { lang } = useLang()
   const { programs, isLoading, deleteProgram, registrations } = useTraining()
@@ -98,6 +100,7 @@ export default function AdminTrainingProgramsPage() {
           </p>
         </div>
         <Button
+          disabled={!access.can("training.create")}
           onClick={() =>
             router.push("/dashboard/admin/training/new")
           }

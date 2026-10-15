@@ -1,0 +1,327 @@
+{
+  "users": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || id = @request.auth.id",
+      "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || id = @request.auth.id",
+      "createRule": "(@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")) || (@request.body.role != \"admin\" && @request.body.role != \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && id = @request.auth.id && (@request.body.role:isset = false || @request.body.role = role) && (@request.body.is_active:isset = false || @request.body.is_active = is_active))",
+      "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "manageRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "avatar": false,
+      "attachments": false
+    }
+  },
+  "lookups": {
+    "rules": {
+      "listRule": "",
+      "viewRule": "",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "blog_categories": {
+    "rules": {
+      "listRule": "",
+      "viewRule": "",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "tool_types": {
+    "rules": {
+      "listRule": "",
+      "viewRule": "",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "roles_management": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\"",
+      "viewRule": "@request.auth.id != \"\"",
+      "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") && case_experts_via_role_id.id = \"\" && expert_profiles_via_specialist_roles.id = \"\""
+    },
+    "files": {}
+  },
+  "cases": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && (user = @request.auth.id || (@collection.case_experts.case_id ?= id && @collection.case_experts.expert_id ?= @request.auth.id)))",
+      "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && (user = @request.auth.id || (@collection.case_experts.case_id ?= id && @collection.case_experts.expert_id ?= @request.auth.id)))",
+      "createRule": "",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id && @request.body.user:changed = false && @request.body.is_paid:changed = false && @request.body.payment_amount:changed = false && (@request.body.status:changed = false || @request.body.status = \"under_review\"))",
+      "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "payment_slip": true
+    }
+  },
+  "case_experts": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || expert_id = @request.auth.id || case_id.user = @request.auth.id",
+      "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || expert_id = @request.auth.id || case_id.user = @request.auth.id",
+      "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "case_tools": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && ((case.user = @request.auth.id && is_visible_to_user = true) || (@collection.case_experts.case_id ?= case && @collection.case_experts.expert_id ?= @request.auth.id && (assigned_expert = \"\" || assigned_expert = @request.auth.id))))",
+      "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && ((case.user = @request.auth.id && is_visible_to_user = true) || (@collection.case_experts.case_id ?= case && @collection.case_experts.expert_id ?= @request.auth.id && (assigned_expert = \"\" || assigned_expert = @request.auth.id))))",
+      "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.role = \"expert\" && @request.auth.is_active = true && assigned_expert = @request.auth.id && @request.body.case:changed = false && @request.body.type:changed = false && @request.body.config:changed = false && @request.body.assigned_expert:changed = false && @request.body.specialization:changed = false && @request.body.task_brief:changed = false && @request.body.is_visible_to_user:changed = false)",
+      "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "media": true
+    }
+  },
+  "case_feedback": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && ((@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")) || case.user = @request.auth.id || (@collection.case_experts.case_id ?= case && @collection.case_experts.expert_id ?= @request.auth.id))",
+      "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && ((@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")) || case.user = @request.auth.id || (@collection.case_experts.case_id ?= case && @collection.case_experts.expert_id ?= @request.auth.id))",
+      "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && author = @request.auth.id && case.user = @request.auth.id",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && author = @request.auth.id && case.user = @request.auth.id && @request.body.author:changed = false && @request.body.case:changed = false",
+      "deleteRule": null
+    },
+    "files": {}
+  },
+  "expert_profiles": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.role = \"expert\" && @request.body.user = @request.auth.id)",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.role = \"expert\" && user = @request.auth.id && (@request.body.user:isset = false || @request.body.user = user))",
+      "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "profile_photo": false,
+      "cv": true
+    }
+  },
+  "expert_bank_details": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "createRule": null,
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "expert_display_settings": {
+    "rules": {
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": null
+    },
+    "files": {}
+  },
+  "experts_public": {
+    "rules": {
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": null,
+      "deleteRule": null
+    },
+    "files": {
+      "profile_photo": false
+    }
+  },
+  "event_certificates": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "file": false
+    }
+  },
+  "event_registrations": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "home_pages": {
+    "rules": {
+      "listRule": "is_published = true || (@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\"))",
+      "viewRule": "is_published = true || (@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\"))",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "media": false,
+      "thumbnail": false
+    }
+  },
+  "info_pages": {
+    "rules": {
+      "listRule": "is_published = true || (@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\"))",
+      "viewRule": "is_published = true || (@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\"))",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "icon": false,
+      "media": false,
+      "thumbnail": false
+    }
+  },
+  "blog_pages": {
+    "rules": {
+      "listRule": "is_published = true || (@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\"))",
+      "viewRule": "is_published = true || (@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\"))",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "media": false,
+      "thumbnail": false
+    }
+  },
+  "individual_profiles": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "createRule": "",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "organization_profiles": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "createRule": "",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "parent_profiles": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id)",
+      "createRule": "",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "internal_messages": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (sender = @request.auth.id || recipient = @request.auth.id)",
+      "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (sender = @request.auth.id || recipient = @request.auth.id)",
+      "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && sender = @request.auth.id && read = false && recipient.is_active = true && ((@request.auth.role = \"expert\" && (recipient.role = \"admin\" || recipient.role = \"super_admin\")) || ((@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")) && recipient.role = \"expert\"))",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && recipient = @request.auth.id && @request.body.sender:changed = false && @request.body.recipient:changed = false && @request.body.body:changed = false",
+      "deleteRule": null
+    },
+    "files": {}
+  },
+  "portals": {
+    "rules": {
+      "listRule": "is_deleted = false || (@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\"))",
+      "viewRule": "is_deleted = false || (@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\"))",
+      "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": null
+    },
+    "files": {
+      "picture": false
+    }
+  },
+  "programs": {
+    "rules": {
+      "listRule": "is_public = true || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "viewRule": "is_public = true || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "thumbnail": false
+    }
+  },
+  "public_lectures": {
+    "rules": {
+      "listRule": "is_public = true || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "viewRule": "is_public = true || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "thumbnail": false
+    }
+  },
+  "public_lectures_public": {
+    "rules": {
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": null,
+      "deleteRule": null
+    },
+    "files": {
+      "thumbnail": false
+    }
+  },
+  "settings": {
+    "rules": {
+      "listRule": "",
+      "viewRule": "",
+      "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {}
+  },
+  "tools": {
+    "rules": {
+      "listRule": "@request.auth.id != \"\"",
+      "viewRule": "@request.auth.id != \"\"",
+      "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
+    },
+    "files": {
+      "media": false
+    }
+  },
+  "expert_roles_public": {
+    "rules": {
+      "listRule": "",
+      "viewRule": "",
+      "createRule": null,
+      "updateRule": null,
+      "deleteRule": null
+    },
+    "files": {}
+  }
+}

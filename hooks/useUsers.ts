@@ -1,18 +1,23 @@
 "use client"
 
-
 import { boundedFullList } from "@/lib/bounded-records"
 import { useState, useEffect, useCallback } from "react"
-import pb, { getErrorMessage } from "@/lib/pb"
+import pb, { getCurrentUser, getErrorMessage } from "@/lib/pb"
 import { normalizeEmail } from "@/lib/validators"
 import type { User } from "@/types/user"
 import { toast } from "sonner"
 
-export function useUsers() {
+export function useUsers(enabled = true) {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const fetchUsers = useCallback(async () => {
+    if (!enabled) {
+      setUsers([])
+      setIsLoading(false)
+      return
+    }
+    setIsLoading(true)
     try {
       const data = await boundedFullList(pb.collection("users"), {
         sort: "-created",
@@ -24,7 +29,7 @@ export function useUsers() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [enabled])
 
   useEffect(() => {
     fetchUsers()
@@ -56,7 +61,21 @@ export function useUsers() {
 
   const updateUser = async (id: string, data: Partial<User>) => {
     try {
-      const updated = await pb.collection("users").update(id, data)
+      const target = users.find((user) => user.id === id)
+      const approvingExpert =
+        getCurrentUser()?.role !== "super_admin" &&
+        target?.role === "expert" &&
+        !target.is_active &&
+        data.is_active === true &&
+        Object.keys(data).length === 1
+      if (approvingExpert) {
+        await pb.send(`/api/dsc/security/experts/${id}/approve`, {
+          method: "POST",
+        })
+      }
+      const updated = approvingExpert
+        ? await pb.collection("users").getOne(id)
+        : await pb.collection("users").update(id, data)
       setUsers((prev) =>
         prev.map((u) => (u.id === id ? (updated as unknown as User) : u))
       )
@@ -87,16 +106,10 @@ export function useUsers() {
   }
 
   const getDeletionBlockers = async (id: string) => {
-    const [userCases, expertAssignments] = await Promise.all([
-      boundedFullList(pb.collection("cases"), { filter: pb.filter("user = {:value0}", { value0: id }) }),
-      boundedFullList(pb.collection("case_experts"), {
-        filter: pb.filter("expert_id = {:value0}", { value0: id }),
-      }),
-    ])
-    return {
-      cases: userCases.length,
-      assignments: expertAssignments.length,
-    }
+    return pb.send<{ cases: number; assignments: number }>(
+      `/api/dsc/security/users/${id}/deletion-check`,
+      { method: "GET" }
+    )
   }
 
   const deleteUser = async (id: string) => {
@@ -106,21 +119,6 @@ export function useUsers() {
         throw new Error(
           "This user has linked cases or expert assignments and cannot be deleted."
         )
-      }
-
-      const profileCollections = [
-        "individual_profiles",
-        "parent_profiles",
-        "organization_profiles",
-        "expert_profiles",
-      ]
-      for (const collection of profileCollections) {
-        const records = await boundedFullList(pb.collection(collection), {
-          filter: pb.filter("user = {:value0}", { value0: id }),
-        })
-        for (const record of records) {
-          await pb.collection(collection).delete(record.id)
-        }
       }
 
       await pb.collection("users").delete(id)

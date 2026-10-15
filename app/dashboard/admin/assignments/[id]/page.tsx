@@ -1,4 +1,7 @@
 "use client"
+import pb from "@/lib/pb"
+import { ProtectedFileLink } from "@/components/ProtectedFileLink"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { use, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -70,13 +73,17 @@ export default function AssignmentDetailPage({
     isLoading: assignmentsLoading,
   } = useAssignments()
   const { currentUser } = useAuth()
-  const { profiles, isLoading: profilesLoading } = useProfiles()
+  const access = usePermissions()
+  const isExpert = currentUser?.role === "expert"
+  const { profiles, isLoading: profilesLoading } = useProfiles(
+    isExpert || access.can("cases.read")
+  )
   const {
     toolTypes,
     isLoading: toolTypesLoading,
     fetchToolTypes,
     getToolTypeById,
-  } = useToolTypes()
+  } = useToolTypes(isExpert || access.can("tools.read"))
 
   const assignment = assignments.find((a) => a.id === assignmentId)
   const profile = assignment
@@ -116,7 +123,7 @@ export default function AssignmentDetailPage({
     )
   }
 
-  if (!profile) {
+  if (!profile && (isExpert || access.can("cases.read"))) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <h2 className="mb-4 text-xl font-medium">
@@ -135,7 +142,9 @@ export default function AssignmentDetailPage({
   }
 
   const Icon = getToolTypeMeta(typeName)?.icon || FileText
-  const canEdit = typeName === "plan" || typeName === "report"
+  const canEdit =
+    (isExpert || access.can("assignments.update")) &&
+    (typeName === "plan" || typeName === "report")
 
   const renderToolPreview = () => {
     if (!config) return null
@@ -380,15 +389,15 @@ export default function AssignmentDetailPage({
             <ul className="space-y-2">
               {assignment.media.map((file, idx) => (
                 <li key={idx}>
-                  <a
-                    href={file}
+                  <ProtectedFileLink
+                    href={mediaFileUrl(file)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                   >
                     <Download className="h-4 w-4" />
                     {lang === "ar" ? "ملف" : "File"} {idx + 1}
-                  </a>
+                  </ProtectedFileLink>
                 </li>
               ))}
             </ul>
@@ -398,6 +407,23 @@ export default function AssignmentDetailPage({
     )
   }
 
+  const mediaFileUrl = (file: string) => {
+    if (/^https?:\/\//i.test(file)) {
+      try {
+        const url = new URL(file)
+        return url.origin === new URL(pb.baseURL).origin &&
+          url.pathname.includes("/api/files/")
+          ? url.toString()
+          : ""
+      } catch {
+        return ""
+      }
+    }
+    return pb.files.getURL(
+      { collectionId: "case_tools", id: assignmentId },
+      file
+    )
+  }
   const renderGenericResponse = () => {
     return (
       <div className="space-y-4">
@@ -409,15 +435,15 @@ export default function AssignmentDetailPage({
             <ul className="space-y-2">
               {assignment.media.map((file, idx) => (
                 <li key={idx}>
-                  <a
-                    href={file}
+                  <ProtectedFileLink
+                    href={mediaFileUrl(file)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                   >
                     <Download className="h-4 w-4" />
                     {lang === "ar" ? "ملف" : "File"} {idx + 1}
-                  </a>
+                  </ProtectedFileLink>
                 </li>
               ))}
             </ul>
@@ -499,14 +525,15 @@ export default function AssignmentDetailPage({
 
   return (
     <div className="space-y-6">
-      {(currentUser?.role === "admin" ||
-        currentUser?.role === "super_admin") && (
-        <ExpertTaskAssignment
-          key={assignment.id}
-          task={assignment}
-          onSaved={updateAssignment}
-        />
-      )}
+      {access.can("assignments.update") &&
+        access.can("allocations.read") &&
+        access.can("experts.read") && (
+          <ExpertTaskAssignment
+            key={assignment.id}
+            task={assignment}
+            onSaved={updateAssignment}
+          />
+        )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -558,10 +585,10 @@ export default function AssignmentDetailPage({
               </span>
               <p>
                 <Link
-                  href={`/dashboard/cases/${profile.id}`}
+                  href={profile ? `/dashboard/cases/${profile.id}` : "#"}
                   className="hover:text-primary hover:underline"
                 >
-                  {profile.name}
+                  {profile?.name || assignment.case}
                 </Link>
               </p>
             </div>
@@ -590,7 +617,8 @@ export default function AssignmentDetailPage({
               </span>
               <div>
                 <Badge className={statusColors[assignment.status]}>
-                  {statusLabels[assignment.status]?.[lang] || (lang === "ar" ? "حالة غير معروفة" : "Unknown status")}
+                  {statusLabels[assignment.status]?.[lang] ||
+                    (lang === "ar" ? "حالة غير معروفة" : "Unknown status")}
                 </Badge>
               </div>
             </div>

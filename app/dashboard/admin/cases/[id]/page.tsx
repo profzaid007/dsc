@@ -1,4 +1,6 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
+import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
 
 import { use, useEffect, useState } from "react"
@@ -109,11 +111,17 @@ export default function AdminCaseDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id: caseId } = use(params)
+  const access = usePermissions()
   const router = useRouter()
   const { lang } = useLang()
   const { currentUser, isAdmin } = useAuth()
-  const { getProfileById, updateProfile, setPaymentAmount, approveCase, rejectPayment } =
-    useProfiles()
+  const {
+    getProfileById,
+    updateProfile,
+    setPaymentAmount,
+    approveCase,
+    rejectPayment,
+  } = useProfiles()
   const { assignments, assignTool, deleteAssignment } = useAssignments()
   const { tools } = useTools()
   const { toolTypes, fetchToolTypes } = useToolTypes()
@@ -259,17 +267,23 @@ export default function AdminCaseDetailPage({
   }
 
   const handleSetAmount = async () => {
-    if (amountInput === null || !amountInput.trim() || !Number.isFinite(Number(amountInput)) || Number(amountInput) <= 0) return
+    if (!access.can("payments.update")) return
+    if (
+      amountInput === null ||
+      !amountInput.trim() ||
+      !Number.isFinite(Number(amountInput)) ||
+      Number(amountInput) <= 0
+    )
+      return
     setIsPaymentBusy(true)
     setPaymentError(null)
     setPaymentSuccess(null)
     try {
-      if (profile?.status === "pending") await setPaymentAmount(caseId, Number(amountInput))
+      if (profile?.status === "pending")
+        await setPaymentAmount(caseId, Number(amountInput))
       else await updateProfile(caseId, { payment_amount: Number(amountInput) })
       setPaymentSuccess(
-        lang === "ar"
-          ? "تم حفظ رسوم الحالة."
-          : "Case fee saved."
+        lang === "ar" ? "تم حفظ رسوم الحالة." : "Case fee saved."
       )
       setAmountInput(null)
     } catch (error) {
@@ -283,6 +297,7 @@ export default function AdminCaseDetailPage({
   }
 
   const handleApprove = async () => {
+    if (!access.can("payments.update")) return
     setIsPaymentBusy(true)
     setPaymentError(null)
     setPaymentSuccess(null)
@@ -304,6 +319,7 @@ export default function AdminCaseDetailPage({
   }
 
   const handleReject = async () => {
+    if (!access.can("payments.update")) return
     setIsPaymentBusy(true)
     setPaymentError(null)
     setPaymentSuccess(null)
@@ -334,11 +350,10 @@ export default function AdminCaseDetailPage({
       if (!caseId || !currentUser) return
       try {
         if (isExpert) {
-          const caseExpert =
-            await caseExpertsCollection.getByCaseAndExpert(
-              caseId,
-              currentUser.id
-            )
+          const caseExpert = await caseExpertsCollection.getByCaseAndExpert(
+            caseId,
+            currentUser.id
+          )
           const allowed = caseExpert?.role_id
             ? await getAllowedToolTypesForRoleId(caseExpert.role_id)
             : []
@@ -509,9 +524,7 @@ export default function AdminCaseDetailPage({
                     {linkMode === "existing" ? (
                       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
                         <div className="flex-1 space-y-2">
-                          <Label>
-                            {lang === "ar" ? "المستخدم" : "User"}
-                          </Label>
+                          <Label>{lang === "ar" ? "المستخدم" : "User"}</Label>
                           <Select
                             value={linkUserId}
                             onValueChange={setLinkUserId}
@@ -632,7 +645,7 @@ export default function AdminCaseDetailPage({
               </CardContent>
             </Card>
           )}
-          {isAdmin && (
+          {isAdmin && access.can("payments.read") && (
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -662,9 +675,7 @@ export default function AdminCaseDetailPage({
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1 space-y-2">
                       <Label htmlFor="payment_amount">
-                        {lang === "ar"
-                          ? "رسوم الحالة"
-                          : "Case fee"}
+                        {lang === "ar" ? "رسوم الحالة" : "Case fee"}
                       </Label>
                       <Input
                         id="payment_amount"
@@ -672,13 +683,18 @@ export default function AdminCaseDetailPage({
                         min="0"
                         step="0.01"
                         aria-describedby="case-fee-help"
-                        value={amountInput ?? String(profile.payment_amount ?? 0)}
+                        value={
+                          amountInput ?? String(profile.payment_amount ?? 0)
+                        }
                         onChange={(e) => setAmountInput(e.target.value)}
                         placeholder={
                           lang === "ar" ? "أدخل المبلغ" : "Enter amount"
                         }
                       />
-                      <p id="case-fee-help" className="text-xs text-muted-foreground">
+                      <p
+                        id="case-fee-help"
+                        className="text-xs text-muted-foreground"
+                      >
                         {lang === "ar"
                           ? `الرسوم الحالية بعملة ${bankDetails.currency}. عدّل القيمة ثم اضغط حفظ الرسوم.`
                           : `Current fee in ${bankDetails.currency}. Edit the value, then click Save fee.`}
@@ -687,7 +703,14 @@ export default function AdminCaseDetailPage({
                     <Button
                       onClick={handleSetAmount}
                       disabled={
-                        isPaymentBusy || amountInput === null || !amountInput.trim() || !Number.isFinite(Number(amountInput)) || Number(amountInput) <= 0 || Number(amountInput) === Number(profile.payment_amount ?? 0)
+                        isPaymentBusy ||
+                        !access.can("payments.update") ||
+                        amountInput === null ||
+                        !amountInput.trim() ||
+                        !Number.isFinite(Number(amountInput)) ||
+                        Number(amountInput) <= 0 ||
+                        Number(amountInput) ===
+                          Number(profile.payment_amount ?? 0)
                       }
                     >
                       {isPaymentBusy ? (
@@ -695,13 +718,11 @@ export default function AdminCaseDetailPage({
                       ) : (
                         <Save className="me-1 h-4 w-4" />
                       )}
-                      {lang === "ar"
-                        ? "حفظ الرسوم"
-                        : "Save fee"}
+                      {lang === "ar" ? "حفظ الرسوم" : "Save fee"}
                     </Button>
                   </div>
                   {profile.payment_slip && (
-                    <a
+                    <ProtectedFileLink
                       href={pb.files.getURL(
                         { collectionId: "cases", id: caseId },
                         profile.payment_slip
@@ -713,10 +734,9 @@ export default function AdminCaseDetailPage({
                         <FileText className="me-1 h-4 w-4" />
                         {lang === "ar" ? "عرض الإيصال" : "View Receipt"}
                       </Button>
-                    </a>
+                    </ProtectedFileLink>
                   )}
                 </div>
-
 
                 {profile.status === "awaiting_payment" && (
                   <p className="text-sm text-muted-foreground">
@@ -725,7 +745,9 @@ export default function AdminCaseDetailPage({
                       : "Waiting for the user to upload the transfer receipt."}
                     {profile.payment_reject_reason && (
                       <span className="ms-1 text-red-600">
-                        {lang === "ar" ? `الرفض: ${profile.payment_reject_reason}` : `Rejected: ${profile.payment_reject_reason}`}
+                        {lang === "ar"
+                          ? `الرفض: ${profile.payment_reject_reason}`
+                          : `Rejected: ${profile.payment_reject_reason}`}
                       </span>
                     )}
                   </p>
@@ -752,7 +774,7 @@ export default function AdminCaseDetailPage({
                     </div>
                     <Button
                       onClick={handleApprove}
-                      disabled={isPaymentBusy}
+                      disabled={isPaymentBusy || !access.can("payments.update")}
                     >
                       {isPaymentBusy ? (
                         <Loader2 className="me-1 h-4 w-4 animate-spin" />
@@ -764,7 +786,7 @@ export default function AdminCaseDetailPage({
                     <Button
                       variant="destructive"
                       onClick={handleReject}
-                      disabled={isPaymentBusy}
+                      disabled={isPaymentBusy || !access.can("payments.update")}
                     >
                       <XCircle className="me-1 h-4 w-4" />
                       {lang === "ar" ? "رفض" : "Reject"}
@@ -796,7 +818,9 @@ export default function AdminCaseDetailPage({
                     {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
                   </span>
                   <span className="font-medium">
-                    {profile.date_of_birth ? formatDate(profile.date_of_birth) : "—"}
+                    {profile.date_of_birth
+                      ? formatDate(profile.date_of_birth)
+                      : "—"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -828,7 +852,9 @@ export default function AdminCaseDetailPage({
                     <span className="mb-2 block text-muted-foreground">
                       {lang === "ar" ? "ملاحظات" : "Notes"}
                     </span>
-                    <p className="text-sm text-muted-foreground">{profile.notes}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.notes}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -871,7 +897,9 @@ export default function AdminCaseDetailPage({
                 <div className="py-8 text-center">
                   <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <h3 className="mb-2 text-lg font-medium">
-                    {lang === "ar" ? "لا توجد مهام مكلف بها" : "No tasks assigned"}
+                    {lang === "ar"
+                      ? "لا توجد مهام مكلف بها"
+                      : "No tasks assigned"}
                   </h3>
                   <p className="text-muted-foreground">
                     {lang === "ar"
@@ -887,7 +915,9 @@ export default function AdminCaseDetailPage({
                         {lang === "ar" ? "التعيين" : "Assignment"}
                       </TableHead>
                       <TableHead>{lang === "ar" ? "النوع" : "Type"}</TableHead>
-                      <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
+                      <TableHead>
+                        {lang === "ar" ? "الحالة" : "Status"}
+                      </TableHead>
                       <TableHead>
                         {lang === "ar" ? "مرئي للمستخدم" : "Visible to User"}
                       </TableHead>
@@ -912,7 +942,9 @@ export default function AdminCaseDetailPage({
                         <TableRow key={assignment.id}>
                           <TableCell className="font-medium">
                             {assignment.name_en ||
-                              (lang === "ar" ? "تعيين بدون اسم" : "Unnamed Assignment")}
+                              (lang === "ar"
+                                ? "تعيين بدون اسم"
+                                : "Unnamed Assignment")}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
@@ -924,7 +956,10 @@ export default function AdminCaseDetailPage({
                           </TableCell>
                           <TableCell>
                             <Badge className={statusColors[assignment.status]}>
-                              {statusLabels[assignment.status]?.[lang] || (lang === "ar" ? "حالة غير معروفة" : "Unknown status")}
+                              {statusLabels[assignment.status]?.[lang] ||
+                                (lang === "ar"
+                                  ? "حالة غير معروفة"
+                                  : "Unknown status")}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -1034,7 +1069,9 @@ export default function AdminCaseDetailPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <Card className="mx-4 w-full max-w-2xl">
             <CardHeader>
-              <CardTitle>{lang === "ar" ? "تعيين أداة" : "Assign Tool"}</CardTitle>
+              <CardTitle>
+                {lang === "ar" ? "تعيين أداة" : "Assign Tool"}
+              </CardTitle>
               <CardDescription>
                 {lang === "ar"
                   ? "اختر أداة أو أنشئ أداة جديدة لهذه الحالة"
@@ -1051,7 +1088,8 @@ export default function AdminCaseDetailPage({
                   .filter((key) => {
                     const toolType = toolTypes.find((item) => item.key === key)
                     if (!toolType) return false
-                    if (isExpert) return allowedToolTypeIds.includes(toolType.id)
+                    if (isExpert)
+                      return allowedToolTypeIds.includes(toolType.id)
                     return (
                       allowedToolTypeIds.length === 0 ||
                       allowedToolTypeIds.includes(toolType.id)
@@ -1088,15 +1126,12 @@ export default function AdminCaseDetailPage({
 
                 {/* Template-based tools - show template list or create new */}
                 {toolTypeOrder
-                  .filter((key) =>
-                    ["survey", "multiple_answer"].includes(
-                      key
-                    )
-                  )
+                  .filter((key) => ["survey", "multiple_answer"].includes(key))
                   .filter((key) => {
                     const toolType = toolTypes.find((item) => item.key === key)
                     if (!toolType) return false
-                    if (isExpert) return allowedToolTypeIds.includes(toolType.id)
+                    if (isExpert)
+                      return allowedToolTypeIds.includes(toolType.id)
                     return (
                       allowedToolTypeIds.length === 0 ||
                       allowedToolTypeIds.includes(toolType.id)
@@ -1162,10 +1197,11 @@ export default function AdminCaseDetailPage({
                         </div>
                       </div>
                     )
-                  })}</div>
+                  })}
+              </div>
 
               {allowedToolTypeIds.length > 0 && (
-                <p className="text-sm text-muted-foreground mt-4">
+                <p className="mt-4 text-sm text-muted-foreground">
                   {lang === "ar"
                     ? "يتم عرض أنواع الأدوات بناءً على أدوار الخبراء المخصصين لهذه القضية."
                     : "Tool types shown are based on the assigned experts' roles for this case."}

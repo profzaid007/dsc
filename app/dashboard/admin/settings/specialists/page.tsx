@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 import { useState } from "react"
 import {
   UsersRound,
@@ -35,6 +36,7 @@ import { useSpecialists } from "@/hooks/useSpecialists"
 import pb, { getErrorMessage } from "@/lib/pb"
 import type { SpecialistCategory, SpecialistRole } from "@/lib/specialist-types"
 export default function SpecialistsSettings() {
+  const access = usePermissions()
   const { isAdmin, isSuperAdmin, isLoading } = useAuth()
   const { lang } = useLang()
   const ar = lang === "ar"
@@ -83,6 +85,7 @@ export default function SpecialistsSettings() {
   }
   async function save(e: React.FormEvent) {
     e.preventDefault()
+    if (!access.can(id ? "settings.update" : "settings.create")) return
     if (!en.trim() || !arabic.trim() || (kind === "role" && !category)) {
       setFormError(
         ar
@@ -165,6 +168,7 @@ export default function SpecialistsSettings() {
     setDeleteTarget(target)
   }
   async function confirmDelete() {
+    if (!access.can("settings.delete")) return
     if (!deleteTarget) return
     setDeleteError("")
     setDeleteLinks([])
@@ -247,7 +251,9 @@ export default function SpecialistsSettings() {
             : "Activate"
       }
       aria-label={`${item.is_active ? (ar ? "تعطيل" : "Deactivate") : ar ? "تفعيل" : "Activate"} ${"name_en" in item ? item.name_en : item.role_name_en}`}
-      onClick={() => void toggleAvailability(k, item.id)}
+      onClick={() => {
+        if (access.can("settings.update")) void toggleAvailability(k, item.id)
+      }}
     >
       <span />
       {item.is_active ? (ar ? "نشط" : "Active") : ar ? "غير نشط" : "Inactive"}
@@ -260,16 +266,18 @@ export default function SpecialistsSettings() {
     <div className={styles.actions}>
       <button
         type="button"
-        disabled={saving}
+        disabled={saving || !access.can("settings.update")}
         className={styles.edit}
-        onClick={() => edit(k, item)}
+        onClick={() => {
+          if (access.can("settings.update")) edit(k, item)
+        }}
       >
         <Pencil size={14} aria-hidden="true" />
         {ar ? "تعديل" : "Edit"}
       </button>
       <button
         type="button"
-        disabled={saving}
+        disabled={saving || !access.can("settings.delete")}
         className={styles.delete}
         onClick={() =>
           openDeleteDialog({
@@ -365,7 +373,9 @@ export default function SpecialistsSettings() {
             <button
               type="button"
               className={styles.add}
-              disabled={saving || loading || !!error}
+              disabled={
+                saving || loading || !!error || !access.can("settings.create")
+              }
               onClick={() => add("category")}
             >
               <Plus size={17} />
@@ -453,7 +463,9 @@ export default function SpecialistsSettings() {
             <button
               type="button"
               className={styles.add}
-              disabled={saving || loading || !!error}
+              disabled={
+                saving || loading || !!error || !access.can("settings.create")
+              }
               onClick={() => add("role")}
             >
               <Plus size={17} />
@@ -685,7 +697,9 @@ export default function SpecialistsSettings() {
               type="button"
               variant="destructive"
               disabled={saving}
-              onClick={() => void confirmDelete()}
+              onClick={() => {
+                if (access.can("settings.delete")) void confirmDelete()
+              }}
             >
               {saving
                 ? ar

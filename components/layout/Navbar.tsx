@@ -7,6 +7,7 @@ import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText, UserPlus, ChevronD
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
+import { usePermissions } from "@/hooks/usePermissions"
 import { useAuth } from "@/hooks/useAuth"
 import { usePortals } from "@/hooks/usePortals"
 import { SITE_CONTENT } from "@/lib/site-content"
@@ -27,6 +28,7 @@ export function Navbar() {
   const { portals: PORTALS } = usePortals()
   const getPortalById = (id: string) => PORTALS.find((portal) => portal.id === id)
   const { isAuthenticated, isAdmin, currentUser, logout } = useAuth()
+  const permissions = usePermissions()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
   const accountRef = useRef<HTMLDivElement>(null)
@@ -166,7 +168,7 @@ export function Navbar() {
                         <LayoutDashboard className="h-4 w-4" />
                         {t({ en: "Dashboard", ar: "لوحة التحكم" }, lang)}
                       </Link>
-                      {isAdmin && (
+                      {isAdmin && permissions.can("cms.read") && (
                         <Link
                           href="/cms"
                           onClick={() => setAccountPopoverOpen(false)}
@@ -299,7 +301,7 @@ export function Navbar() {
                 </Button>
               )}
 
-              {isAdmin && (
+              {isAdmin && permissions.can("cms.read") && (
                 <Button
                   asChild
                   variant="outline"

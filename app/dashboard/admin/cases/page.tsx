@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"
@@ -66,6 +67,7 @@ interface AssignmentCount {
 }
 
 export default function AdminCasesPage() {
+  const access = usePermissions()
   const { lang } = useLang()
   const {
     profiles,
@@ -174,7 +176,7 @@ export default function AdminCasesPage() {
             </p>
           </div>
           <Link href="/dashboard/admin/cases/new">
-            <Button>
+            <Button disabled={!access.can("cases.create")}>
               <Plus className="me-2 h-4 w-4" />
               {lang === "ar" ? "حالة جديدة" : "New Case"}
             </Button>
@@ -197,7 +199,7 @@ export default function AdminCasesPage() {
           </p>
         </div>
         <Link href="/dashboard/admin/cases/new">
-          <Button>
+          <Button disabled={!access.can("cases.create")}>
             <Plus className="me-2 h-4 w-4" />
             {lang === "ar" ? "حالة جديدة" : "New Case"}
           </Button>
@@ -286,7 +288,7 @@ export default function AdminCasesPage() {
             </p>
             {profiles.length === 0 && (
               <Link href="/dashboard/admin/cases/new">
-                <Button>
+                <Button disabled={!access.can("cases.create")}>
                   {lang === "ar" ? "إنشاء الحالة" : "Create Case"}
                 </Button>
               </Link>
@@ -455,7 +457,7 @@ export default function AdminCasesPage() {
                           variant="destructive"
                           size="sm"
                           className="ms-2"
-                          disabled={deletingId !== null}
+                          disabled={deletingId !== null || !access.can("cases.delete")}
                           onClick={() => removeCase(profile)}
                         >
                           {deletingId === profile.id

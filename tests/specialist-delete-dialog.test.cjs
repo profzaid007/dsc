@@ -7,7 +7,7 @@ class BlockedError extends Error {
   constructor(message, links, total) { super(message); this.links = links; this.total = total }
 }
 
-function screen(deleteItem) {
+function screen(deleteItem, permissions = ["settings.read", "settings.create", "settings.update", "settings.delete"]) {
   const state = []
   let index = 0
   const notices = []
@@ -25,6 +25,7 @@ function screen(deleteItem) {
     "@/components/ui/dialog": Object.fromEntries(["Dialog", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter"].map(name => [name, name])),
     "@/components/ui/button": { Button: "Button" },
     "@/hooks/useAuth": { useAuth: () => ({ isAdmin: true, isSuperAdmin: false, isLoading: false }) },
+    "@/hooks/usePermissions": { usePermissions: () => ({ can: key => permissions.includes(key) }) },
     "@/lib/lang-context": { useLang: () => ({ lang: "en" }) },
     "@/hooks/useSpecialists": { useSpecialists: () => ({ categories: [], roles: [{ id: "physician", role_name_en: "Physician" }], loading: false, error: "", refresh: async () => {} }) },
     "@/lib/pb": { __esModule: true, default: {}, getErrorMessage: error => error.message },
@@ -54,6 +55,12 @@ test("failed deletion leaves its error visible inside the confirmation dialog", 
   assert.equal(nodes.find(node => node.type === "Dialog" && node.props.open).props.open, true)
   assert.equal(nodes.find(node => node.props?.role === "alert").props.children, message)
   assert.deepEqual(ui.notices, [message])
+})
+
+test("read-only settings access disables destructive specialist actions", () => {
+  const ui = screen(async () => assert.fail("Deletion must not run"), ["settings.read"])
+  const action = ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "delete")
+  assert.equal(action.props.disabled, true)
 })
 test("successful confirmed deletion closes the dialog and reports success", async () => {
   const calls = []

@@ -1,4 +1,5 @@
 "use client"
+import { useProtectedFileToken } from "@/hooks/useProtectedFileToken"
 import { surveyOptionLabel } from "@/lib/survey-options"
 
 import { use, useState, useEffect, useMemo, useRef } from "react"
@@ -70,6 +71,7 @@ export default function TakeSurveyToolPage({
   const params2 = use(params)
   const caseId = params2.id
   const assignmentId = params2.toolId
+  const fileToken = useProtectedFileToken(!!assignmentId)
   const router = useRouter()
   const { lang } = useLang()
   const { getProfileById } = useProfiles()
@@ -524,9 +526,11 @@ export default function TakeSurveyToolPage({
   }
 
   const getFileUrl = (filename: string) => {
+    if (!fileToken) return undefined
     return pb.files.getUrl(
       { collectionId: "case_tools", id: assignmentId },
-      filename
+      filename,
+      { token: fileToken }
     )
   }
 

@@ -1,5 +1,5 @@
 "use client"
-
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { boundedFullList } from "@/lib/bounded-records"
 import { useEffect, useState } from "react"
@@ -27,6 +27,7 @@ import { t, UI_STRINGS } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 
 export default function CmsHomePagesListPage() {
+  const access = usePermissions()
   const { lang } = useLang()
   const { isSuperAdmin } = useAuth()
   const [pages, setPages] = useState<HomePage[]>([])
@@ -66,7 +67,10 @@ export default function CmsHomePagesListPage() {
     } catch (err) {
       toast.error(
         t(
-          { en: "Failed to create page. Slug must be unique.", ar: "فشل إنشاء الصفحة. يجب أن يكون المعرف (slug) فريداً." },
+          {
+            en: "Failed to create page. Slug must be unique.",
+            ar: "فشل إنشاء الصفحة. يجب أن يكون المعرف (slug) فريداً.",
+          },
           lang
         ),
         { description: getErrorMessage(err) }
@@ -84,10 +88,7 @@ export default function CmsHomePagesListPage() {
       setPages((prev) => prev.map((p) => (p.id === page.id ? updated : p)))
     } catch (err) {
       toast.error(
-        t(
-          { en: "Failed to update status.", ar: "فشل تحديث الحالة." },
-          lang
-        ),
+        t({ en: "Failed to update status.", ar: "فشل تحديث الحالة." }, lang),
         { description: getErrorMessage(err) }
       )
     }
@@ -111,10 +112,7 @@ export default function CmsHomePagesListPage() {
       setPages((prev) => prev.filter((p) => p.id !== page.id))
     } catch (err) {
       toast.error(
-        t(
-          { en: "Failed to delete page.", ar: "فشل حذف الصفحة." },
-          lang
-        ),
+        t({ en: "Failed to delete page.", ar: "فشل حذف الصفحة." }, lang),
         { description: getErrorMessage(err) }
       )
     }
@@ -139,7 +137,11 @@ export default function CmsHomePagesListPage() {
         </div>
         <div className="flex items-center gap-2">
           {isSuperAdmin && (
-            <Button variant="outline" onClick={() => setShowCreate(!showCreate)}>
+            <Button
+              variant="outline"
+              disabled={!access.can("cms.create")}
+              onClick={() => setShowCreate(!showCreate)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               {t({ en: "New Page", ar: "صفحة جديدة" }, lang)}
             </Button>
@@ -157,8 +159,16 @@ export default function CmsHomePagesListPage() {
               <Input
                 id="slug"
                 value={newSlug}
-                onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
-                placeholder={t({ en: "e.g., about, contact, privacy", ar: "مثال: about، contact، privacy" }, lang)}
+                onChange={(e) =>
+                  setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))
+                }
+                placeholder={t(
+                  {
+                    en: "e.g., about, contact, privacy",
+                    ar: "مثال: about، contact، privacy",
+                  },
+                  lang
+                )}
               />
               <p className="text-xs text-muted-foreground">
                 {t(
@@ -176,7 +186,10 @@ export default function CmsHomePagesListPage() {
                 id="title"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder={t({ en: "e.g., About Us", ar: "مثال: من نحن" }, lang)}
+                placeholder={t(
+                  { en: "e.g., About Us", ar: "مثال: من نحن" },
+                  lang
+                )}
               />
             </div>
           </div>
@@ -184,8 +197,18 @@ export default function CmsHomePagesListPage() {
             <Button variant="outline" onClick={() => setShowCreate(false)}>
               {t(UI_STRINGS.cancel, lang)}
             </Button>
-            <Button onClick={handleCreate} disabled={creatingPage || !newSlug.trim() || !newTitle.trim()}>
-              {creatingPage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button
+              onClick={handleCreate}
+              disabled={
+                !access.can("cms.create") ||
+                creatingPage ||
+                !newSlug.trim() ||
+                !newTitle.trim()
+              }
+            >
+              {creatingPage ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               {t({ en: "Create Page", ar: "إنشاء الصفحة" }, lang)}
             </Button>
           </div>
@@ -202,8 +225,15 @@ export default function CmsHomePagesListPage() {
             {t({ en: "No pages yet.", ar: "لا توجد صفحات بعد." }, lang)}
           </p>
           {isSuperAdmin && (
-            <Button onClick={() => setShowCreate(true)} className="mt-4">
-              {t({ en: "Create your first page", ar: "أنشئ صفحتك الأولى" }, lang)}
+            <Button
+              disabled={!access.can("cms.create")}
+              onClick={() => setShowCreate(true)}
+              className="mt-4"
+            >
+              {t(
+                { en: "Create your first page", ar: "أنشئ صفحتك الأولى" },
+                lang
+              )}
             </Button>
           )}
         </div>
@@ -213,7 +243,9 @@ export default function CmsHomePagesListPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>{t({ en: "Title", ar: "العنوان" }, lang)}</TableHead>
-                <TableHead>{t({ en: "Last Updated", ar: "آخر تحديث" }, lang)}</TableHead>
+                <TableHead>
+                  {t({ en: "Last Updated", ar: "آخر تحديث" }, lang)}
+                </TableHead>
                 <TableHead>{t({ en: "Status", ar: "الحالة" }, lang)}</TableHead>
                 <TableHead className="w-24">
                   {t({ en: "Actions", ar: "إجراءات" }, lang)}
@@ -227,6 +259,7 @@ export default function CmsHomePagesListPage() {
                   <TableCell>{formatDate(page.updated)}</TableCell>
                   <TableCell>
                     <button
+                      disabled={!access.can("cms.update")}
                       onClick={() => togglePublish(page)}
                       className="flex items-center gap-1"
                     >

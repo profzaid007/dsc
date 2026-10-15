@@ -1,4 +1,5 @@
 "use client"
+import { usePermissions } from "@/hooks/usePermissions"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -27,6 +28,7 @@ const statusOptions = [
 ]
 
 export default function AdminLecturesPage() {
+  const access = usePermissions()
   const router = useRouter()
   const { lang } = useLang()
   const { lectures, isLoading, deleteLecture, getRegistrationsByLecture } =
@@ -92,7 +94,7 @@ export default function AdminLecturesPage() {
               : "Manage public lectures, registrations, and attendance"}
           </p>
         </div>
-        <Button onClick={() => router.push("/dashboard/admin/public-lectures/new")}>
+        <Button disabled={!access.can("lectures.create")} onClick={() => router.push("/dashboard/admin/public-lectures/new")}>
           <Plus className="me-2 h-4 w-4" />
           {lang === "ar" ? "محاضرة جديدة" : "New Lecture"}
         </Button>

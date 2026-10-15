@@ -109,6 +109,19 @@ export async function messagingUser(
     (adminOnly && !["admin", "super_admin"].includes(user.role))
   )
     throw new RequestError("Access denied", 403)
+  if ((adminOnly || user.role === "admin") && user.role !== "super_admin") {
+    try {
+      const access = await client.send<{ permissions: string[] }>(
+        "/api/dsc/security/me",
+        { method: "GET", requestKey: null, signal: AbortSignal.timeout(10_000) }
+      )
+      if (!access.permissions.includes("messages.create"))
+        throw new RequestError("Permission required: messages.create", 403)
+    } catch (error) {
+      if (error instanceof RequestError) throw error
+      throw new RequestError("Unable to verify messaging permission", 403)
+    }
+  }
   return user
 }
 export function messagingError(error: unknown) {

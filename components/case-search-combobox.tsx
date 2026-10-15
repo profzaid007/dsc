@@ -26,6 +26,7 @@ interface CaseSearchComboboxProps {
   emptyMessage?: string
   className?: string
   disabled?: boolean
+  enabled?: boolean
 }
 
 export function CaseSearchCombobox({
@@ -35,9 +36,10 @@ export function CaseSearchCombobox({
   emptyMessage = "No cases found.",
   className,
   disabled = false,
+  enabled = true,
 }: CaseSearchComboboxProps) {
   const [open, setOpen] = useState(false)
-  const { profiles } = useProfiles()
+  const { profiles } = useProfiles(enabled)
 
   const selectedCase = profiles.find((p) => p.id === value)
 
@@ -48,7 +50,7 @@ export function CaseSearchCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          disabled={disabled}
+          disabled={disabled || !enabled}
           className={cn("w-full justify-between", className)}
         >
           {selectedCase ? selectedCase.name : placeholder}

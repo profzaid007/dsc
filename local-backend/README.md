@@ -10,7 +10,7 @@ Data stays in `../work/pocketbase/pb_data`; back up this directory before changi
 From the repository run:
 
 ```powershell
-../work/pocketbase/pocketbase.exe serve --http=127.0.0.1:8090 --migrationsDir=../work/pocketbase/migrations --hooksDir=pb_hooks
+./local-backend/start.ps1
 ```
 
 Site: http://127.0.0.1:3000
@@ -22,3 +22,8 @@ Outgoing application email is simulated when development mode and
 Before using production, compare its schema and rules, deploy only reviewed
 production migrations/hooks, change the PocketBase URL and remove the local flag.
 Demo data is not automatically transferred to production.
+
+The startup script explicitly uses `../work/pocketbase/pb_data` regardless of
+the shell's current directory. It includes the additive security migration.
+See [security management](../docs/security-management.md) for role permissions,
+deployment, and isolated tests.
