@@ -1,9 +1,10 @@
-export type UserType = "parent" | "individual" | "organization" | "expert"
+export type UserType = "care_foundation" | "parent" | "individual" | "organization" | "expert"
 export type UserRole =
   | "super_admin"
   | "admin"
   | "individual"
   | "parent"
+  | "care_foundation"
   | "organization"
   | "expert"
 

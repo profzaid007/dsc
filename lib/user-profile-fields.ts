@@ -148,6 +148,7 @@ const ORGANIZATION_SECTION: ProfileSection = {
         label: type.label,
       })),
     },
+    { field: "address", label: { en: "Address", ar: "العنوان" }, icon: MapPin, input: "textarea" },
     { field: "city", label: { en: "City", ar: "المدينة" }, icon: MapPin },
     {
       field: "country",
@@ -277,6 +278,7 @@ export const ROLE_PROFILE_SECTIONS: Partial<
 > = {
   individual: [INDIVIDUAL_SECTION, EMERGENCY_SECTION],
   parent: [PARENT_SECTION],
+  care_foundation: [ORGANIZATION_SECTION, RESPONSIBLE_PERSON_SECTION],
   organization: [ORGANIZATION_SECTION, RESPONSIBLE_PERSON_SECTION],
 }
 
@@ -284,6 +286,7 @@ export const ROLE_PROFILE_SECTIONS: Partial<
 export const ROLE_NOTES_LABEL: Partial<Record<UserRole, BilingualString>> = {
   individual: { en: "Notes", ar: "ملاحظات" },
   parent: { en: "Notes", ar: "ملاحظات" },
+  care_foundation: { en: "Notes", ar: "ملاحظات" },
   organization: { en: "Notes", ar: "ملاحظات" },
 }
 
@@ -291,6 +294,7 @@ export const ROLE_LABELS: Record<UserRole, BilingualString> = {
   admin: { en: "Admin", ar: "مشرف" },
   individual: { en: "Individual", ar: "فرد" },
   parent: { en: "Parent", ar: "ولي أمر" },
+  care_foundation: { en: "Care Foundation", ar: "مؤسسة الرعاية" },
   organization: { en: "Organization", ar: "منظمة" },
   expert: { en: "Expert", ar: "خبير" },
   super_admin: { en: "Super Admin", ar: "مشرف عام" },
@@ -301,6 +305,7 @@ export const ROLE_ICONS: Record<UserRole, LucideIcon> = {
   admin: Shield,
   individual: UserIcon,
   parent: Users,
+  care_foundation: Building2,
   organization: Building2,
   expert: BookOpen,
   super_admin: Shield,

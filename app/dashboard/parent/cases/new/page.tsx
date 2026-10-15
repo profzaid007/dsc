@@ -156,6 +156,19 @@ export default function NewProfilePage() {
     e.preventDefault()
     if (!currentUser) return
 
+    if (
+      ["parent", "care_foundation"].includes(currentUser.role) &&
+      (!formData.name.trim() ||
+        !formData.date_of_birth ||
+        !["male", "female"].includes(formData.gender))
+    ) {
+      toast.error(
+        lang === "ar"
+          ? "اسم الطفل وتاريخ الميلاد والجنس حقول مطلوبة."
+          : "Child name, date of birth and gender are required."
+      )
+      return
+    }
     setIsSubmitting(true)
 
     try {
@@ -166,16 +179,25 @@ export default function NewProfilePage() {
 
       const profileId = await addProfile({
         user: currentUser.id,
-        name: isTraining
-          ? selectedProgram?.title[lang] ||
-            (lang === "ar" ? "التسجيل في التدريب" : "Training Enrollment")
-          : formData.name,
-        date_of_birth: isTraining ? "" : formData.date_of_birth,
-        gender: isTraining ? undefined : (formData.gender as "male" | "female"),
+        name:
+          isTraining && !["parent", "care_foundation"].includes(currentUser.role)
+            ? selectedProgram?.title[lang] ||
+              (lang === "ar" ? "التسجيل في التدريب" : "Training Enrollment")
+            : formData.name,
+        date_of_birth:
+          isTraining && !["parent", "care_foundation"].includes(currentUser.role)
+            ? ""
+            : formData.date_of_birth,
+        gender:
+          isTraining && !["parent", "care_foundation"].includes(currentUser.role)
+            ? undefined
+            : (formData.gender as "male" | "female"),
         grade: isTraining ? "" : formData.grade,
         relationship: isTraining ? undefined : formData.relationship,
         notes: formData.notes,
-        portal_type: isTraining ? "Attending Training" : portalService.categoryId,
+        portal_type: isTraining
+          ? "Attending Training"
+          : portalService.categoryId,
         service_type: isTraining
           ? selectedProgram?.title[lang]
           : portalService.subCategoryId.trim(),
@@ -343,8 +365,10 @@ export default function NewProfilePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="relationship">
-                  {lang === "ar" ? "صلة القرابة بالطفل" : "Relationship to Child"}
-                  <span className="text-red-500 ml-1">*</span>
+                  {lang === "ar"
+                    ? (currentUser?.role === "care_foundation" ? "صفة الإشراف على الطفل" : "صلة القرابة بالطفل")
+                    : (currentUser?.role === "care_foundation" ? "Supervisory Relationship" : "Relationship to Child")}
+                  <span className="ml-1 text-red-500">*</span>
                 </Label>
                 <Input
                   id="relationship"
@@ -352,7 +376,7 @@ export default function NewProfilePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, relationship: e.target.value })
                   }
-                  placeholder={lang === "ar" ? "مثال: أب" : "e.g. Father"}
+                  placeholder={currentUser?.role === "care_foundation" ? (lang === "ar" ? "مثال: مؤسسة مشرفة" : "e.g. Supervising foundation") : (lang === "ar" ? "مثال: أب" : "e.g. Father")}
                   required
                 />
               </div>

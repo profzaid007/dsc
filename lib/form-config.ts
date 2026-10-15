@@ -30,7 +30,7 @@ export const FORM_STEPS: FormStep[] = [
         id: "phone",
         type: "text",
         label: { en: "Phone Number", ar: "رقم الهاتف" },
-        placeholder: { en: "e.g. +966 50 000 0000", ar: "مثال: 0050 966+" },
+        placeholder: { en: "e.g. +962 50 000 0000", ar: "مثال: 0050 962+" },
         required: true,
         validation: [
           {
@@ -126,7 +126,7 @@ export const FORM_STEPS: FormStep[] = [
         id: "city",
         type: "text",
         label: { en: "City", ar: "المدينة" },
-        placeholder: { en: "e.g. Riyadh", ar: "مثال: الرياض" },
+        placeholder: { en: "e.g. Amman", ar: "مثال: عمّان" },
         required: true,
       },
       {

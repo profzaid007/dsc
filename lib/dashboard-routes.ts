@@ -11,6 +11,7 @@ export function getDashboardPath(role?: UserRole | string | null): string {
       return "/dashboard/institution"
     case "individual":
       return "/dashboard/individual"
+    case "care_foundation":
     case "parent":
       return "/dashboard/parent"
     default:

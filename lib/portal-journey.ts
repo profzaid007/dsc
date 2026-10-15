@@ -8,6 +8,7 @@ const registrationRoutes: Record<string, string> = {
 }
 const caseRoutes: Record<UserRole, string> = {
   parent: "/dashboard/parent/cases",
+  care_foundation: "/dashboard/parent/cases",
   individual: "/dashboard/individual/cases",
   organization: "/dashboard/institution/projects",
   expert: "/dashboard/expert/cases",
@@ -15,7 +16,7 @@ const caseRoutes: Record<UserRole, string> = {
   super_admin: "/dashboard/admin/cases",
 }
 
-export function portalJourneyHref(portalId: string, role?: UserRole, registrationType?: "parent" | "individual" | "organization" | "expert"): string {
+export function portalJourneyHref(portalId: string, role?: UserRole, registrationType?: "care_foundation" | "parent" | "individual" | "organization" | "expert"): string {
   if (role) return caseRoutes[role] || "/dashboard"
   if (registrationType) return `/register/${registrationType}`
   return registrationRoutes[portalId] || "/register"

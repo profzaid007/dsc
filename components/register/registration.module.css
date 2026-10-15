@@ -87,7 +87,7 @@
 }
 .roles {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 11px;
   max-width: 1680px;
   margin: auto;
@@ -396,4 +396,11 @@
 .landing[dir="rtl"],
 .dialog[dir="rtl"] {
   font-family: "Mohammad Bold Art", Tahoma, Arial, sans-serif;
+}
+
+.care_foundation {
+  --role-color: #24766b;
+  --role-tint: #edf8f4;
+  --step-tint: #b9e7dd;
+  --step-ink: #17564d;
 }

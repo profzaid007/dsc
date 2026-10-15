@@ -30,7 +30,9 @@ export default function ProfilesPage() {
             {lang === "ar" ? "الأطفال" : "Children"}
           </h1>
           <p className="text-muted-foreground">
-            {lang === "ar" ? "إدارة أطفالك" : "Manage your children"}
+            {currentUser?.role === "care_foundation"
+              ? (lang === "ar" ? "إدارة الأطفال تحت رعاية المؤسسة" : "Manage children under the foundation’s care")
+              : (lang === "ar" ? "إدارة أطفالك" : "Manage your children")}
           </p>
         </div>
         <Link href="/dashboard/parent/cases/new">
@@ -50,8 +52,8 @@ export default function ProfilesPage() {
             </h3>
             <p className="mb-4 text-center text-muted-foreground">
               {lang === "ar"
-                ? "أضف طفلك الأول للبدء"
-                : "Add your first child to get started"}
+                ? "أضف بيانات أول طفل للبدء"
+                : "Add the first child to get started"}
             </p>
             <Link href="/dashboard/parent/cases/new">
               <Button>{lang === "ar" ? "إضافة طفل" : "Add Child"}</Button>

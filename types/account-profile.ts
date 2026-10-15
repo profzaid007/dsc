@@ -22,6 +22,7 @@ export interface ParentProfile extends ProfileRecordBase {
 }
 
 export interface OrganizationProfile extends ProfileRecordBase {
+  address?: string
   organization_name?: string
   organization_type?: string
   country?: string
@@ -40,6 +41,7 @@ export interface OrganizationProfile extends ProfileRecordBase {
 export const ROLE_PROFILE_COLLECTION: Partial<Record<UserRole, string>> = {
   individual: "individual_profiles",
   parent: "parent_profiles",
+  care_foundation: "organization_profiles",
   organization: "organization_profiles",
   expert: "expert_profiles",
 }

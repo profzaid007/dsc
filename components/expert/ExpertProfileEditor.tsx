@@ -365,7 +365,7 @@ export function ExpertProfileEditor({
               id="profile-city"
               value={draft.city}
               onChange={(event) => patch({ city: event.target.value })}
-              placeholder={t({ en: "e.g. Riyadh", ar: "مثال: الرياض" }, lang)}
+              placeholder={t({ en: "e.g. Amman", ar: "مثال: عمّان" }, lang)}
             />
             {errorFor("city")}
           </div>
@@ -380,7 +380,7 @@ export function ExpertProfileEditor({
                 onValueChange={(value) => patch({ whatsappCountryCode: value })}
               >
                 <SelectTrigger className="w-32 shrink-0">
-                  <SelectValue placeholder="+966" />
+                  <SelectValue placeholder="+962" />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-60! max-w-32">
                   {COUNTRY_CODES.map((country) => (

@@ -43,9 +43,12 @@ const OTHER_VALUE = "other"
 
 export function OrganizationRegistrationForm({
   onSuccess,
+  accountType = "organization",
 }: {
+  accountType?: "organization" | "care_foundation"
   onSuccess?: () => void
 } = {}) {
+  const isCareFoundation = accountType === "care_foundation"
   const { lang } = useLang()
   const router = useRouter()
 
@@ -67,6 +70,7 @@ export function OrganizationRegistrationForm({
   const [organizationType, setOrganizationType] = useState("")
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
+  const [address, setAddress] = useState("")
   const [website, setWebsite] = useState("")
   const [representativeNumber, setRepresentativeNumber] = useState("")
   const [representativeTitle, setRepresentativeTitle] = useState("")
@@ -117,7 +121,7 @@ export function OrganizationRegistrationForm({
       return false
     }
 
-    if (!portalService.categoryId || !portalService.subCategoryId.trim()) {
+    if (!isCareFoundation && (!portalService.categoryId || !portalService.subCategoryId.trim())) {
       setError(
         t(
           {
@@ -130,7 +134,7 @@ export function OrganizationRegistrationForm({
       return false
     }
     if (
-      portalService.categoryId === OTHER_VALUE &&
+      !isCareFoundation && portalService.categoryId === OTHER_VALUE &&
       !portalService.customCategory.trim()
     ) {
       setError(
@@ -167,10 +171,12 @@ export function OrganizationRegistrationForm({
         passwordConfirm: password,
         name: cleanName,
         contact_number: `${countryCode} ${contactNumber.trim()}`.trim(),
-        role: "organization",
+        role: accountType,
         is_active: true,
         emailVisibility: true,
       })
+
+      if (isCareFoundation && !onSuccess) await authWithPassword(cleanEmail, password)
 
       await pb.collection("organization_profiles").create({
         user: user.id,
@@ -178,14 +184,17 @@ export function OrganizationRegistrationForm({
         organization_type: organizationType,
         country: country,
         city: city.trim(),
+        ...(isCareFoundation ? { address: address.trim() } : {}),
         website: website.trim(),
-        responsible_person_name: representativeName.trim(),
+        responsible_person_name: isCareFoundation ? cleanName : representativeName.trim(),
         responsible_person_title: representativeTitle.trim(),
-        responsible_person_phone: representativeNumber.trim(),
+        responsible_person_phone: isCareFoundation
+          ? `${countryCode} ${contactNumber.trim()}`.trim()
+          : representativeNumber.trim(),
         notes: notes.trim(),
       })
 
-      await pb.collection("cases").create({
+      if (!isCareFoundation) await pb.collection("cases").create({
         user: user.id,
         name: cleanOrganizationName,
         portal_type: portalService.categoryId,
@@ -216,8 +225,8 @@ export function OrganizationRegistrationForm({
       if (onSuccess) {
         onSuccess()
       } else {
-        await authWithPassword(cleanEmail, password)
-        router.push(getDashboardPath("organization"))
+        if (!isCareFoundation) await authWithPassword(cleanEmail, password)
+        router.push(getDashboardPath(accountType))
       }
     } catch (err) {
       const fieldErrs = getFieldErrors(err, lang)
@@ -231,43 +240,10 @@ export function OrganizationRegistrationForm({
     }
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {t({ en: "Organization Registration", ar: "تسجيل مؤسسة" }, lang)}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+  const foundationNameField = (
+<div className="space-y-2">
               <Label>
-                {t({ en: "Name", ar: "الاسم" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-                aria-invalid={fieldErrors.name ? true : undefined}
-                placeholder={t(
-                  { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
-                  lang
-                )}
-              />
-              {fieldErrorNode("name")}
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                {t({ en: "Organization Name", ar: "اسم المؤسسة" }, lang)}
+                {t(isCareFoundation ? { en: "Foundation Name", ar: "اسم مؤسسة الرعاية" } : { en: "Organization Name", ar: "اسم المؤسسة" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
               <Input
@@ -286,8 +262,29 @@ export function OrganizationRegistrationForm({
               />
               {fieldErrorNode("organizationName", "organization_name")}
             </div>
+  )
 
-            <div className="space-y-2">
+  const nameField = (
+<div className="space-y-2">
+              <Label>
+                {t(isCareFoundation ? { en: "Responsible Person’s Name", ar: "اسم الشخص المسؤول" } : { en: "Name", ar: "الاسم" }, lang)}
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                aria-invalid={fieldErrors.name ? true : undefined}
+                placeholder={t(
+                  { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
+                  lang
+                )}
+              />
+              {fieldErrorNode("name")}
+            </div>
+  )
+  const mobileField = (
+<div className="space-y-2">
               <Label>
                 {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
@@ -295,7 +292,7 @@ export function OrganizationRegistrationForm({
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger className="w-28">
-                    <SelectValue placeholder="+966" />
+                    <SelectValue placeholder="+962" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-60! max-w-30!">
                     {COUNTRY_CODES.map((c) => (
@@ -324,8 +321,9 @@ export function OrganizationRegistrationForm({
               </div>
               {fieldErrorNode("contactNumber", "contact_number")}
             </div>
-
-            <div className="space-y-2">
+  )
+  const emailField = (
+<div className="space-y-2">
               <Label>
                 {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
@@ -337,6 +335,55 @@ export function OrganizationRegistrationForm({
                 placeholder="your@email.com"
               />
             </div>
+  )
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {t(isCareFoundation ? { en: "Care Foundation Registration", ar: "تسجيل مؤسسة الرعاية" } : { en: "Organization Registration", ar: "تسجيل مؤسسة" }, lang)}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {isCareFoundation && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {foundationNameField}
+
+            </div>
+          )}
+
+          {isCareFoundation && (
+            <fieldset className="rounded-lg border border-border p-4">
+              <legend className="px-2 text-base font-semibold">
+                {t({ en: "Responsible Person", ar: "الشخص المسؤول" }, lang)}
+              </legend>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {nameField}
+            <div className="space-y-2">
+              <Label htmlFor="responsible-title">{t({ en: "Title", ar: "المسمى الوظيفي" }, lang)}</Label>
+              <Input id="responsible-title" value={representativeTitle} onChange={(e) => setRepresentativeTitle(e.target.value)} autoComplete="organization-title" placeholder={t({ en: "e.g. Care Coordinator", ar: "مثال: منسق الرعاية" }, lang)} />
+            </div>
+                {mobileField}
+                {emailField}
+              </div>
+            </fieldset>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {!isCareFoundation && nameField}
+
+            {!isCareFoundation && foundationNameField}
+
+            {!isCareFoundation && mobileField}
+
+            {!isCareFoundation && emailField}
 
             <div className="space-y-2">
               <Label>
@@ -437,11 +484,19 @@ export function OrganizationRegistrationForm({
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder={t(
-                  { en: "e.g. Riyadh", ar: "مثال: الرياض" },
+                  { en: "e.g. Amman", ar: "مثال: عمّان" },
                   lang
                 )}
               />
             </div>
+
+            {isCareFoundation && (
+              <div className="space-y-2">
+                <Label htmlFor="foundation-address">{t({ en: "Address", ar: "العنوان" }, lang)}</Label>
+                <Textarea id="foundation-address" value={address} onChange={(e) => setAddress(e.target.value)} autoComplete="street-address" placeholder={t({ en: "Street, building and area", ar: "الشارع والمبنى والمنطقة" }, lang)} rows={2} />
+                {fieldErrorNode("address")}
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>
@@ -455,12 +510,14 @@ export function OrganizationRegistrationForm({
               />
             </div>
 
+            {!isCareFoundation && (
             <div className="space-y-2">
               <Label>
                 {t({ en: "Representative Name", ar: "اسم الممثل" }, lang)}
                 <span className="text-red-500 ml-1">*</span>
               </Label>
               <Input
+                aria-invalid={!!fieldErrors.representativeName}
                 value={representativeName}
                 onChange={(e) => setRepresentativeName(e.target.value)}
                 placeholder={t(
@@ -470,6 +527,8 @@ export function OrganizationRegistrationForm({
               />
             </div>
 
+            )}
+            {!isCareFoundation && (<>
             <div className="space-y-2">
               <Label>
                 {t({ en: "Representative Number", ar: "رقم الممثل" }, lang)}
@@ -497,13 +556,14 @@ export function OrganizationRegistrationForm({
                 )}
               />
             </div>
+            </>)}
           </div>
 
-          <PortalServiceSelector
+          {!isCareFoundation && <PortalServiceSelector
             value={portalService}
             onChange={setPortalService}
             required
-          />
+          />}
 
           <div className="space-y-2">
             <Label>

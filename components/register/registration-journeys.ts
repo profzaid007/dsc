@@ -1,7 +1,7 @@
 type Localized = { en: string; ar: string }
 type JourneyStep = Localized & { detail: Localized }
 type RegistrationRole = {
-  key: "parent" | "individual" | "organization" | "expert"
+  key: "care_foundation" | "parent" | "individual" | "organization" | "expert"
   name: Localized
   registerAs: string
   description: Localized
@@ -77,6 +77,19 @@ export const registrationRoles: RegistrationRole[] = [
         "Reflect on progress and agree on the next steps.",
         "اطّلع على التقدم واتفق على الخطوات التالية."
       ),
+    ],
+  },
+  {
+    key: "care_foundation",
+    name: { en: "Care Foundation", ar: "مؤسسة الرعاية" },
+    registerAs: "كمؤسسة رعاية",
+    description: { en: "Register your foundation to enroll children under your care and follow their assessments, plans and progress.", ar: "سجّل مؤسسة الرعاية لإضافة الأطفال تحت إشرافها وتسجيلهم ومتابعة تقييماتهم وخططهم وتقدمهم." },
+    imageAlt: { en: "A care foundation building", ar: "مبنى مؤسسة رعاية" },
+    steps: [
+      step("Create Foundation Account", "إنشاء حساب المؤسسة", "Provide foundation and representative details.", "أضف بيانات المؤسسة ومسؤول التواصل."),
+      step("Register Children", "تسجيل الأطفال", "Add a separate record for each child under your care.", "أضف ملفاً مستقلاً لكل طفل تحت رعاية المؤسسة."),
+      step("Enroll in Services", "التسجيل في الخدمات", "Select suitable services for each child.", "اختر الخدمات المناسبة لكل طفل."),
+      step("Follow Up", "المتابعة", "Follow assessments, tasks, plans and progress for each child.", "تابع التقييمات والمهام والخطط والتقدم لكل طفل."),
     ],
   },
   {

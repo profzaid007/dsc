@@ -421,7 +421,7 @@ export function ExpertApplicationForm({
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder={t(
-                      { en: "e.g. Riyadh", ar: "مثال: الرياض" },
+                      { en: "e.g. Amman", ar: "مثال: عمّان" },
                       lang
                     )}
                   />
@@ -520,7 +520,7 @@ export function ExpertApplicationForm({
                       onValueChange={setWhatsappCountryCode}
                     >
                       <SelectTrigger className="w-30">
-                        <SelectValue placeholder="+966" />
+                        <SelectValue placeholder="+962" />
                       </SelectTrigger>
                       <SelectContent
                         position="popper"

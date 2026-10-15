@@ -25,19 +25,19 @@ export default function ParentDashboardPage() {
       title: lang === "ar" ? "الأطفال" : "Children",
       value: profiles.length,
       icon: Users,
-      href: `/dashboard/${currentUser?.role}/cases`,
+      href: "/dashboard/parent/cases",
     },
     {
       title: lang === "ar" ? "إجمالي التعيينات" : "Total Assignments",
       value: assignments.length,
       icon: ClipboardCheck,
-      href: `/dashboard/${currentUser?.role}/cases`,
+      href: "/dashboard/parent/cases",
     },
     {
       title: lang === "ar" ? "المكتملة" : "Completed",
       value: assignments.filter((a) => a.status === "completed").length,
       icon: Activity,
-      href: `/dashboard/${currentUser?.role}/cases`,
+      href: "/dashboard/parent/cases",
     },
   ]
 
@@ -113,8 +113,8 @@ export default function ParentDashboardPage() {
             </h3>
             <p className="mb-4 text-center text-muted-foreground">
               {lang === "ar"
-                ? "أضف طفلك الأول للبدء"
-                : "Add your first child to get started"}
+                ? "أضف بيانات أول طفل للبدء"
+                : "Add the first child to get started"}
             </p>
             <Link href={`/dashboard/parent/cases/new`}>
               <Button>{lang === "ar" ? "إضافة طفل" : "Add Child"}</Button>

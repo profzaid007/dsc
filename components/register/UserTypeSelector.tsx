@@ -27,7 +27,7 @@ export function UserTypeSelector() {
 
   useEffect(() => {
     let active = true
-    // The four supported forms remain available if optional CMS labels are unavailable.
+    // The supported forms remain available if optional CMS labels are unavailable.
     boundedFullList(pb.collection("lookups"), { filter: 'type = "user_types"', requestKey: null })
       .then((data) => {
         if (active) setUserTypes(data as unknown as LookupEntry[])
@@ -75,7 +75,7 @@ export function UserTypeSelector() {
             >
               <Image
                 className={styles.photo}
-                src={`/images/register/${role.key}.webp`}
+                src={`/images/register/${role.key === "care_foundation" ? "organization" : role.key}.webp`}
                 width={740}
                 height={306}
                 alt={role.imageAlt[lang]}

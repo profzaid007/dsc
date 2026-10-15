@@ -413,6 +413,7 @@ export default function CmsPortalsPage() {
                 >
                   {[
                     ["parent", "Parent", "ولي أمر"],
+                    ["care_foundation", "Care Foundation", "مؤسسة الرعاية"],
                     ["individual", "Individual", "فرد"],
                     ["organization", "Organization", "مؤسسة"],
                     ["expert", "Expert", "خبير"],

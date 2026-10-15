@@ -74,6 +74,7 @@ const ALL_ROLES: UserRole[] = [
   "admin",
   "individual",
   "parent",
+  "care_foundation",
   "organization",
   "expert",
   "super_admin",
@@ -83,12 +84,13 @@ const roleLabels: Record<string, { en: string; ar: string }> = {
   admin: { en: "Admin", ar: "مشرف" },
   individual: { en: "Individual", ar: "فرد" },
   parent: { en: "Parent", ar: "ولي أمر" },
+  care_foundation: { en: "Care Foundation", ar: "مؤسسة الرعاية" },
   organization: { en: "Organization", ar: "منظمة" },
   expert: { en: "Expert", ar: "خبير" },
   super_admin: { en: "Super Admin", ar: "مشرف عام" },
 }
 
-type AddUserType = "individual" | "parent" | "organization" | "expert" | "admin"
+type AddUserType = "care_foundation" | "individual" | "parent" | "organization" | "expert" | "admin"
 
 const USER_TYPE_OPTIONS: {
   value: AddUserType
@@ -107,6 +109,12 @@ const USER_TYPE_OPTIONS: {
     icon: Users,
     label: { en: "Parent", ar: "ولي أمر" },
     description: { en: "Parent or guardian account", ar: "حساب ولي أمر" },
+  },
+  {
+    value: "care_foundation",
+    icon: Building2,
+    label: { en: "Care Foundation", ar: "مؤسسة الرعاية" },
+    description: { en: "Register and follow up children under your care", ar: "تسجيل الأطفال تحت الرعاية ومتابعتهم" },
   },
   {
     value: "organization",
@@ -905,8 +913,9 @@ export function UserManagement({
                   onSuccess={handleRegistrationSuccess}
                   hideChildren
                 />
-              ) : addUserType === "organization" ? (
+              ) : addUserType === "organization" || addUserType === "care_foundation" ? (
                 <OrganizationRegistrationForm
+                  accountType={addUserType}
                   onSuccess={handleRegistrationSuccess}
                 />
               ) : (

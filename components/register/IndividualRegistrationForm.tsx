@@ -212,7 +212,7 @@ export function IndividualRegistrationForm({
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger className="w-30">
-                    <SelectValue placeholder="e.g. +966" />
+                    <SelectValue placeholder="e.g. +962" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-60! max-w-40">
                     {COUNTRY_CODES.map((c) => (

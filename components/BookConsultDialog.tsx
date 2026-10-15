@@ -221,7 +221,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                     )}
                     className={`w-40 ${styles.phoneCode}`}
                   >
-                    <SelectValue placeholder="+966" />
+                    <SelectValue placeholder="+962" />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"

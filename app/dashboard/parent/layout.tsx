@@ -14,7 +14,7 @@ export default function ParentLayout({
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && currentUser?.role !== "parent") {
+    if (!isLoading && !["parent", "care_foundation"].includes(currentUser?.role ?? "")) {
       router.push("/dashboard")
     }
   }, [currentUser, isLoading, router])
@@ -27,7 +27,7 @@ export default function ParentLayout({
     )
   }
 
-  if (currentUser?.role !== "parent") {
+  if (!["parent", "care_foundation"].includes(currentUser?.role ?? "")) {
     return null
   }
 

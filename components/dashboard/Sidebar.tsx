@@ -241,7 +241,7 @@ export function DashboardSidebar() {
   const withUnread = (item: NavItem): NavItem => item.href === "/dashboard/messages" ? { ...item, unread } : item
   const isOrganization = role === "organization"
   const isIndividual = role === "individual"
-  const isParent = role === "parent"
+  const isParent = role === "parent" || role === "care_foundation"
 
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -287,7 +287,7 @@ export function DashboardSidebar() {
         : isIndividual
           ? { en: "My Dashboard", ar: "لوحة التحكم" }
           : isParent
-            ? { en: "Parent Dashboard", ar: "لوحة التحكم" }
+            ? { en: role === "care_foundation" ? "Care Foundation Dashboard" : "Parent Dashboard", ar: "لوحة التحكم" }
             : { en: "Dashboard", ar: "لوحة التحكم" }
 
   return (
