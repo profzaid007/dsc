@@ -11,7 +11,7 @@ import { useLang } from "@/lib/lang-context"
 import { getToolTypeLabel } from "@/lib/tool-types"
 import { formatDate } from "@/lib/format-date"
 import { caseExpertsCollection } from "@/lib/pb-collections"
-import { getAllowedToolTypesForRole } from "@/lib/pb-collections"
+import { getAllowedToolTypesForRoleId } from "@/lib/pb-collections"
 import { PaymentGate } from "@/components/cases/PaymentGate"
 import {
   Card,
@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -57,7 +58,7 @@ export default function ProfileDetailPage({
   const { id } = use(params)
   const router = useRouter()
   const { lang } = useLang()
-  const { getProfileById } = useProfiles()
+  const { getProfileById, isLoading: profilesLoading } = useProfiles()
   const { getAssignmentsByCase, getVisibleAssignments } = useAssignments(id)
   const { toolTypes, fetchToolTypes } = useToolTypes()
   const { currentUser } = useAuth()
@@ -87,9 +88,9 @@ export default function ProfileDetailPage({
           id,
           currentUser.id
         )
-        if (caseExpert?.role) {
-          setExpertRole(caseExpert.role)
-          const allowed = await getAllowedToolTypesForRole(caseExpert.role)
+        if (caseExpert?.role_id) {
+          setExpertRole(caseExpert.role_id)
+          const allowed = await getAllowedToolTypesForRoleId(caseExpert.role_id)
           setAllowedToolTypeIds(allowed)
         }
       } catch (error) {
@@ -99,6 +100,22 @@ export default function ProfileDetailPage({
     }
     fetchExpertRole()
   }, [currentUser, id])
+
+  if (profilesLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9" />
+          <Skeleton className="h-7 w-56" />
+        </div>
+        <Skeleton className="h-44 w-full rounded-xl" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-32 rounded-xl" />
+        </div>
+      </div>
+    )
+  }
 
   if (!profile) {
     return (

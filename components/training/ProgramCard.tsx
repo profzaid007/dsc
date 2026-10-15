@@ -37,7 +37,7 @@ const statusColors = {
 const typeLabels = {
   online: { en: "Online", ar: "عبر الإنترنت" },
   in_person: { en: "In-Person", ar: "حضوري" },
-  hybrid: { en: "Hybrid", ar: "مختلط" },
+  hybrid: { en: "Hybrid", ar: "حصوري وعبر الشبكة" },
 }
 
 const upcomingColor = "bg-emerald-100 text-emerald-800"

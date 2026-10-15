@@ -6,12 +6,14 @@ function SkeletonPulse({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-muted",
+        "animate-pulse rounded-md bg-muted-foreground/30",
         className
       )}
     />
   )
 }
+
+export { SkeletonPulse as Skeleton }
 
 export function SkeletonCard({ count = 3 }: { count?: number }) {
   return (

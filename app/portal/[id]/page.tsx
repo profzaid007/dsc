@@ -66,10 +66,10 @@ export default async function PortalPage({ params }: PortalPageProps) {
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
           <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(90deg, ${portal.accent}FF 0%, transparent 50%)`,
-            }}
+            className="absolute inset-0
+                       bg-[linear-gradient(0deg,var(--accent)_0%,transparent_50%)]
+                       lg:bg-[linear-gradient(90deg,var(--accent)_0%,transparent_50%)]"
+            style={{ "--accent": `${portal.accent}FF` } as React.CSSProperties}
           />
         </div>
       </section>

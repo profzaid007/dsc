@@ -1,3 +1,5 @@
+export const DEFAULT_COUNTRY_CODE = "+962"
+
 export interface CountryCode {
   value: string
   dialCode: string

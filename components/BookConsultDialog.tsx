@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState, type FormEvent } from "react"
 import styles from "@/components/internal/internal-theme.module.css"
@@ -47,7 +48,7 @@ interface Props {
 
 export function BookConsultDialog({ open, onOpenChange }: Props) {
   const [name, setName] = useState("")
-  const [countryCode, setCountryCode] = useState("")
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [contact, setContact] = useState("")
   const [email, setEmail] = useState("")
   const [description, setDescription] = useState("")
@@ -130,7 +131,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
     // reset after dialog closes
     setTimeout(() => {
       setName("")
-      setCountryCode("")
+      setCountryCode(DEFAULT_COUNTRY_CODE)
       setContact("")
       setEmail("")
       setDescription("")
@@ -201,6 +202,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                maxLength={100}
                 autoComplete="name"
                 placeholder={t({ en: "Your name", ar: "اسمك" }, lang)}
               />
@@ -240,6 +242,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                   id="consult-contact"
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
+                  maxLength={20}
                   autoComplete="tel"
                   inputMode="tel"
                   placeholder={t(
@@ -263,6 +266,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                 required
                 value={email}
                 onChange={setEmail}
+                maxLength={254}
                 placeholder="your@email.com"
               />
             </div>
@@ -359,6 +363,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
                 id="consult-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                maxLength={2000}
                 placeholder={t(
                   {
                     en: "Briefly describe what you need help with",

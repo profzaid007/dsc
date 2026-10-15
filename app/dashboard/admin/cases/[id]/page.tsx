@@ -85,7 +85,7 @@ import {
 } from "@/lib/tool-types"
 import {
   getAllowedToolTypesForCase,
-  getAllowedToolTypesForRole,
+  getAllowedToolTypesForRoleId,
   caseExpertsCollection,
 } from "@/lib/pb-collections"
 
@@ -339,8 +339,8 @@ export default function AdminCaseDetailPage({
               caseId,
               currentUser.id
             )
-          const allowed = caseExpert?.role
-            ? await getAllowedToolTypesForRole(caseExpert.role)
+          const allowed = caseExpert?.role_id
+            ? await getAllowedToolTypesForRoleId(caseExpert.role_id)
             : []
           setAllowedToolTypeIds(allowed)
         } else {
@@ -924,7 +924,7 @@ export default function AdminCaseDetailPage({
                           </TableCell>
                           <TableCell>
                             <Badge className={statusColors[assignment.status]}>
-                              {statusLabels[assignment.status][lang]}
+                              {statusLabels[assignment.status]?.[lang] || (lang === "ar" ? "حالة غير معروفة" : "Unknown status")}
                             </Badge>
                           </TableCell>
                           <TableCell>

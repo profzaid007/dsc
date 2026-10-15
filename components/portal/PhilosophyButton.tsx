@@ -37,7 +37,7 @@ export function PhilosophyButton({
             className ||
             (compact
               ? "h-auto min-h-9 px-2 py-2 text-xs font-semibold whitespace-normal text-current"
-              : "px-4 py-3 text-xs font-semibold shadow-lg hover:bg-white/20 lg:px-15 lg:py-6 lg:text-base")
+              : "w-fit h-11 px-4 text-sm lg:px-8 lg:py-6 lg:text-base font-semibold shadow-lg")
           }
           style={
             compact

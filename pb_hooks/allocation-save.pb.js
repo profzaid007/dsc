@@ -56,6 +56,8 @@ routerAdd(
         record.set("case_id", caseId)
         record.set("expert_id", row.expert_id)
         record.set("role", row.role)
+        const assignedRole = app.findFirstRecordByFilter("roles_management", "role_name_en = {:name}", { name: row.role })
+        record.set("role_id", assignedRole.id)
         app.save(record)
       }
     })

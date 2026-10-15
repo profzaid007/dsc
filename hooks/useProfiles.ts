@@ -36,8 +36,7 @@ export function useProfiles() {
         currentUserId &&
         (currentRole === "individual" ||
           currentRole === "organization" ||
-          currentRole === "parent" ||
-          currentRole === "care_foundation")
+          currentRole === "parent" || currentRole === "care_foundation")
       ) {
         data = await casesCollection.getByUser(currentUserId!)
       } else {

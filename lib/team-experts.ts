@@ -9,6 +9,7 @@ interface ExpertProfileRecord {
   full_legal_name?: string
   profile_photo?: string
   specialization_type?: unknown
+  specialist_roles?: unknown
   highest_academic_degree?: string
   field_of_study?: string
   bio?: string
@@ -34,7 +35,14 @@ function toList(value: unknown): string[] {
     )
   }
   if (typeof value === "string" && value.trim()) {
-    return [value.trim()]
+    if (value.trim().startsWith("[")) {
+      try { return toList(JSON.parse(value)) } catch { return [] }
+    }
+    // Text fields store arrays as comma-separated values.
+    return value
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
   }
   return []
 }
@@ -44,9 +52,10 @@ export async function getTeamExperts({
   throwOnError = false,
 }: { all?: boolean; throwOnError?: boolean } = {}): Promise<TeamExpert[]> {
   try {
-    const [records, order] = await Promise.all([
+    const [records, order, specialistRoles] = await Promise.all([
       boundedFullList(pb.collection("experts_public"), { sort: "name" }),
       readExpertOrder().catch(() => []),
+      boundedFullList(pb.collection("roles_management"), { fields: "id,category" }).catch(() => []),
     ])
 
     return applyExpertOrder(records as unknown as ExpertProfileRecord[], order)
@@ -60,6 +69,7 @@ export async function getTeamExperts({
             ? `${pb.baseURL}/api/files/expert_profiles/${record.id}/${encodeURIComponent(filename)}`
             : null,
           roles: toList(record.specialization_type),
+          specialistCategoryIds: Array.from(new Set(toList(record.specialist_roles).map(id => specialistRoles.find(role => role.id === id)?.category).filter((id): id is string => typeof id === "string" && !!id))),
           degree: record.highest_academic_degree || null,
           fieldOfStudy: record.degree_title || null,
           bio: "",

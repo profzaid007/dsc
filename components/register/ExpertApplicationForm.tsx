@@ -1,4 +1,6 @@
 "use client"
+import { SpecialistSelector } from "@/components/specialists/SpecialistSelector"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -84,10 +86,11 @@ export function ExpertApplicationForm({
   const [highestAcademicDegree, setHighestAcademicDegree] = useState("")
   const [degreeTitle, setDegreeTitle] = useState("")
   const [fieldOfStudy, setFieldOfStudy] = useState("")
-  const [whatsappCountryCode, setWhatsappCountryCode] = useState("")
+  const [whatsappCountryCode, setWhatsappCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [whatsappNumber, setWhatsappNumber] = useState("")
   const [ageGroup, setAgeGroup] = useState<string[]>([])
   const [specialization, setSpecialization] = useState<string[]>([])
+  const [specialistRoles, setSpecialistRoles] = useState<string[]>([])
   const [consultationMode, setConsultationMode] = useState("")
   const [fee, setFee] = useState("")
   const [iban, setIban] = useState("")
@@ -275,8 +278,11 @@ export function ExpertApplicationForm({
       extraFormData.set("degree_title", degreeTitle)
       extraFormData.set("field_of_study", fieldOfStudy)
 
-      extraFormData.set("age_group", JSON.stringify(ageGroup))
-      extraFormData.set("specialization_type", JSON.stringify(specialization))
+      ageGroup.forEach((v) => extraFormData.append("age_group", v))
+      // specialization_type is a single text field now: store the selected
+      // option keys comma-separated (readers split on commas).
+      extraFormData.set("specialization_type", specialization.join(", "))
+      extraFormData.set("specialist_roles", JSON.stringify(specialistRoles))
       extraFormData.set("consultation_mode", consultationMode)
 
       files.forEach((file) => extraFormData.append("cv", file))
@@ -747,6 +753,8 @@ export function ExpertApplicationForm({
                   </Select>
                 </div>
               </div>
+
+              <SpecialistSelector value={specialistRoles} onChange={setSpecialistRoles} />
 
               <div className="space-y-2">
                 <Label>

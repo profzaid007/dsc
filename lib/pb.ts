@@ -140,6 +140,10 @@ const VALIDATION_CODE_MESSAGES: Record<string, BilingualString> = {
     en: "The value format is invalid.",
     ar: "تنسيق القيمة غير صالح.",
   },
+  validation_invalid_value: {
+    en: "The selected value is not valid.",
+    ar: "القيمة المحددة غير صالحة.",
+  },
 }
 
 const META_ERROR_KEYS = new Set(["status", "message", "data", "details"])
@@ -359,16 +363,22 @@ export function handlePocketBaseError(
       lang
     )
   }
-  return (
-    details?.message ||
-    t(
-      {
-        en: "An unexpected error occurred. Please try again.",
-        ar: "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
-      },
-      lang
-    )
-  )
+
+  const rawMessage = typeof details?.message === "string" ? details.message.trim() : ""
+  const isMeaningfulMessage =
+    rawMessage.length > 0 &&
+    rawMessage !== "[object Object]" &&
+    rawMessage !== "undefined" &&
+    rawMessage !== "null"
+  return isMeaningfulMessage
+    ? rawMessage
+    : t(
+        {
+          en: "An unexpected error occurred. Please try again.",
+          ar: "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+        },
+        lang
+      )
 }
 
 export function getErrorMessage(error: unknown, lang?: Lang): string {

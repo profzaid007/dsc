@@ -177,7 +177,7 @@ export default function ProgrammesPage() {
     s === "online"
       ? t("Online", "عبر الإنترنت")
       : s === "hybrid"
-        ? t("Hybrid", "مختلط")
+        ? t("Hybrid", "حصوري وعبر الشبكة")
         : t("In person", "حضوري")
   const typeEvents = events.filter(
     (event) => !filters.kind || event.kind === filters.kind

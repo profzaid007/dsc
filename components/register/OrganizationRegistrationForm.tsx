@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -55,7 +56,7 @@ export function OrganizationRegistrationForm({
   const [name, setName] = useState("")
   const [organizationName, setOrganizationName] = useState("")
   const [representativeName, setRepresentativeName] = useState("")
-  const [countryCode, setCountryCode] = useState("")
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [contactNumber, setContactNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

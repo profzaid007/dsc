@@ -1,4 +1,5 @@
 "use client"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -35,8 +36,7 @@ import { toast } from "sonner"
 
 const GENDERS = [
   { label: { en: "Male", ar: "ذكر" }, value: "male" },
-  { label: { en: "Female", ar: "نث" }, value: "female" },
-  { label: { en: "Other", ar: "آخر" }, value: "other" },
+  { label: { en: "Female", ar: "أنثى" }, value: "female" },
 ]
 
 export function IndividualRegistrationForm({
@@ -48,7 +48,7 @@ export function IndividualRegistrationForm({
   const router = useRouter()
 
   const [name, setName] = useState("")
-  const [countryCode, setCountryCode] = useState("")
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [contactNumber, setContactNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

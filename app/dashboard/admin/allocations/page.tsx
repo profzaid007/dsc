@@ -325,8 +325,7 @@ export default function AllocationsPage() {
       await updateRole(
         editingRole.id,
         roleNameEn,
-        roleNameAr,
-        editingRole.role_name_en
+        roleNameAr
       )
       await refreshAllocations()
       toast.success(
@@ -415,7 +414,7 @@ export default function AllocationsPage() {
       const loadedRows: AllocationRow[] = caseAllocations.map((a) => ({
         id: a.id,
         expert_id: a.expert_id,
-        role: a.role,
+        role: a.expand?.role_id?.role_name_en || a.role || "",
       }))
       setRows(loadedRows)
       setOriginalRows(loadedRows)
@@ -878,7 +877,7 @@ export default function AllocationsPage() {
                   <TableBody>
                     {roleMgmtRoles.map((role) => {
                       const hasAssignments = allocations.some(
-                        (a) => a.role === role.role_name_en
+                        (a) => a.role_id === role.id || a.role === role.role_name_en
                       )
                       return (
                         <TableRow key={role.id}>

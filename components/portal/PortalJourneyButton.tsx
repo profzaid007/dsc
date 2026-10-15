@@ -17,7 +17,7 @@ export function PortalJourneyButton({
   style,
 }: {
   portalId: string
-  registrationType?: "care_foundation" | "parent" | "individual" | "organization" | "expert"
+  registrationType?: "care_foundation" | "parent" | "individual" | "organization" | "expert" | "all"
   label: BilingualString
   className?: string
   style?: CSSProperties

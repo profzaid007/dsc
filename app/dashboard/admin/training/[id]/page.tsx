@@ -83,7 +83,7 @@ const statusColors: Record<ProgramStatus, string> = {
 const typeLabels = {
   online: { en: "Online", ar: "عبر الإنترنت" },
   in_person: { en: "In-Person", ar: "حضوري" },
-  hybrid: { en: "Hybrid", ar: "مختلط" },
+  hybrid: { en: "Hybrid", ar: "حصوري وعبر الشبكة" },
 }
 
 const registrationLabels: Record<

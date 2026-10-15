@@ -26,6 +26,7 @@ export interface SurveyOption {
   id: string
   value: string
   label: string
+  labelAr?: string
   order: number
 }
 

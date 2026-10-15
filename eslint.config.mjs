@@ -6,8 +6,8 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
-    files: ["pb_hooks/**/*.js", "tests/**/*.cjs"],
-    // PocketBase hooks and CommonJS test harnesses require CommonJS imports.
+    files: ["backend/pb/pb_hooks/**/*.js"],
+    // PocketBase hooks are CommonJS and run inside the PocketBase JS VM.
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },
   // Override default ignores of eslint-config-next.
