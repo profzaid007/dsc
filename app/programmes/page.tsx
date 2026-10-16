@@ -1,6 +1,6 @@
 "use client"
 
-import { classificationLabel } from "@/lib/classification"
+import { useClassifications } from "@/hooks/useClassifications"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import {
@@ -51,6 +51,7 @@ type Event = {
 
 export default function ProgrammesPage() {
   const { lang } = useLang()
+  const { label: classificationLabel } = useClassifications()
   const ar = lang === "ar"
   const t = (en: string, arabic: string) => (ar ? arabic : en)
   const locale = ar ? "ar-JO" : "en-GB"
@@ -169,7 +170,7 @@ export default function ProgrammesPage() {
             ? b.start.getTime() - a.start.getTime()
             : a.start.getTime() - b.start.getTime()
       })
-  }, [lectures, programs, lang, now])
+  }, [lectures, programs, lang, now, classificationLabel])
   const status = (e: Event) => eventStatus(e, now)
   const statusLabel = (s: string) =>
     s === "past"

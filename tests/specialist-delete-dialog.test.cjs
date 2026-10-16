@@ -33,13 +33,13 @@ function screen(deleteItem, permissions = ["settings.read", "settings.create", "
     "@/hooks/usePermissions": { usePermissions: () => ({ can: key => permissions.includes(key) }) },
     "@/lib/lang-context": { useLang: () => ({ lang: "en" }) },
     "@/hooks/useSpecialists": { useSpecialists: () => ({ categories: [{ id: "medical-cat", key: "medical", name_en: "Medicine & Health", name_ar: "الطب والصحة" }, { id: "research-cat", key: "research", name_en: "Research", name_ar: "البحث العلمي" }], roles: [{ id: "physician", role_name_en: "Physician", role_name_ar: "طبيب", category: "medical-cat" }], loading: false, error: "", refresh: async () => {} }) },
-    "@/lib/pb": { __esModule: true, default: { collection: name => ({ update: async (id, data) => { writes.push({ name, id, data }) } }) }, getErrorMessage: error => error.message },
+    "@/lib/pb": { __esModule: true, default: { collection: name => ({ update: async (id, data) => { writes.push({ name, id, data }) }, create: async data => { writes.push({ name, data }) } }) }, getErrorMessage: error => error.message },
     sonner: { toast: { error: message => notices.push(message), success: message => notices.push(message) } },
   }
   const exports = {}
-  new Function("exports", "require", ts.transpileModule(fs.readFileSync("components/settings/SpecialistSettings.tsx", "utf8"), {
+  new Function("exports", "require", "window", ts.transpileModule(fs.readFileSync("components/settings/SpecialistSettings.tsx", "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
-  }).outputText)(exports, name => { assert.ok(name in mocks, name); return mocks[name] })
+  }).outputText)(exports, name => { assert.ok(name in mocks, name); return mocks[name] }, { dispatchEvent() {} })
   const render = () => { index = 0; return exports.SpecialistSettings({ view }) }
   function nodes(tree) {
     if (!tree || typeof tree !== "object") return []
@@ -125,18 +125,28 @@ test("saving a role retains its category relation and canonical category key", a
 })
 
 
-test("the fixed classification table includes Research and Other without Add or Delete controls", () => {
-  const ui = screen(async () => assert.fail("Classifications must not be deleted"), ["settings.read", "settings.create", "settings.delete"], "classifications")
-  const all = ui.nodes(ui.render())
-  const section = all.find(node => node.props?.["aria-labelledby"] === "categories-heading")
-  const rows = ui.nodes(section).filter(node => node.type === "tr" && node.props?.children?.some?.(child => child?.type === "td"))
-  assert.equal(rows.length, 7)
-  const text = JSON.stringify(section)
-  assert.match(text, /Research & Statistical Analysis/)
-  assert.match(text, /البحث العلمي والتحليل الإحصائي/)
-  assert.match(text, /Other/)
-  assert.match(text, /أخرى/)
-  assert.match(text, /Server update required/)
-  assert.equal(ui.nodes(section).some(node => node.type === "button" || node.type === "Button"), false)
-  assert.equal(ui.nodes(section).some(node => node.type === "th" && node.props.children === "Actions"), false)
+test("classifications expose Add, Edit and Delete when permitted", () => {
+  const ui = screen(async () => {}, ["settings.read", "settings.create", "settings.update", "settings.delete"], "classifications")
+  const section = ui.nodes(ui.render()).find(node => node.props?.["aria-labelledby"] === "categories-heading")
+  for(const action of ["add","edit","delete"]) {
+    const button=ui.nodes(section).find(node=>node.type==='button' && node.props.className===action)
+    assert.ok(button,action)
+    assert.equal(button.props.disabled,false,action)
+  }
+})
+
+test("classification edits save the entered labels without recreating the record", async () => {
+  const ui = screen(async () => {}, ["settings.read", "settings.update"], "classifications")
+  ui.nodes(ui.render()).find(node=>node.type==='button' && node.props.className==='edit').props.onClick()
+  const fields=ui.nodes(ui.render()).filter(node=>node.type==='input')
+  const english=fields.find(node=>node.props.value==='Medicine & Health')
+  const arabic=fields.find(node=>node.props.value==='الطب والصحة')
+  english.props.onChange({target:{value:'Updated classification'}})
+  arabic.props.onChange({target:{value:'تصنيف معدل'}})
+  await ui.nodes(ui.render()).find(node=>node.type==='form').props.onSubmit({preventDefault(){}})
+  assert.equal(ui.writes[0].name,'specialist_role_categories')
+  assert.equal(ui.writes[0].id,'medical-cat')
+  assert.equal(ui.writes[0].data.name_en,'Updated classification')
+  assert.equal(ui.writes[0].data.name_ar,'تصنيف معدل')
+  assert.equal(ui.writes[0].data.key,undefined)
 })

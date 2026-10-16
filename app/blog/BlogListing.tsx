@@ -1,5 +1,6 @@
 "use client"
-import { MAIN_CLASSIFICATIONS, classificationParent, classificationLabel } from "@/lib/classification"
+import { classificationParent } from "@/lib/classification"
+import { useClassifications } from "@/hooks/useClassifications"
 import { blogField } from "@/lib/blog-content"
 
 import { useMemo, useState } from "react"
@@ -54,6 +55,7 @@ export function BlogListing({
   fetchFailed: boolean
 }) {
   const { lang } = useLang()
+  const { main: MAIN_CLASSIFICATIONS, label: classificationLabel } = useClassifications()
   const arabic = lang === "ar"
   const copy = (en: string, ar: string) => (arabic ? ar : en)
   const [query, setQuery] = useState("")

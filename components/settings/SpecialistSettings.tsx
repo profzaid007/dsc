@@ -1,9 +1,5 @@
 "use client"
-import {
-  EXPERT_CLASSIFICATIONS,
-  MAIN_CLASSIFICATIONS,
-  mainCategoryKey,
-} from "@/lib/classification"
+import { mainCategoryKey } from "@/lib/classification"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useState } from "react"
@@ -60,12 +56,7 @@ export function SpecialistSettings({
     error,
     refresh,
   } = useSpecialists()
-  const categories = storedCategories.map((c) => {
-    const main = MAIN_CLASSIFICATIONS.find(
-      (m) => m.key === mainCategoryKey(c.key)
-    )
-    return main ? { ...c, name_en: main.en, name_ar: main.ar } : c
-  })
+  const categories = storedCategories
   const [formOpen, setFormOpen] = useState(false)
   const [categorySearch, setCategorySearch] = useState("")
   const [roleSearch, setRoleSearch] = useState("")
@@ -73,6 +64,7 @@ export function SpecialistSettings({
   const [formError, setFormError] = useState("")
   const [kind, setKind] = useState<"category" | "role">("category")
   const [id, setId] = useState("")
+  const [categoryKey, setCategoryKey] = useState("")
   const [en, setEn] = useState("")
   const [arabic, setArabic] = useState("")
   const [category, setCategory] = useState("")
@@ -88,6 +80,7 @@ export function SpecialistSettings({
   const [deleteLinkTotal, setDeleteLinkTotal] = useState(0)
   const reset = () => {
     setId("")
+    setCategoryKey("")
     setEn("")
     setArabic("")
     setCategory("")
@@ -100,6 +93,7 @@ export function SpecialistSettings({
     r: SpecialistCategory | SpecialistRole
   ) => {
     setKind(k)
+    setCategoryKey("key" in r ? r.key : "")
     setId(r.id)
     setEn("name_en" in r ? r.name_en : r.role_name_en)
     setArabic("name_ar" in r ? r.name_ar : r.role_name_ar)
@@ -110,9 +104,18 @@ export function SpecialistSettings({
   }
   async function save(e: React.FormEvent) {
     e.preventDefault()
-    if (view !== "roles" || kind !== "role") return
+    if (
+      (kind === "role" && view !== "roles") ||
+      (kind === "category" && view !== "classifications")
+    )
+      return
     if (!access.can(id ? "settings.update" : "settings.create")) return
-    if (!en.trim() || !arabic.trim() || (kind === "role" && !category)) {
+    if (
+      !en.trim() ||
+      !arabic.trim() ||
+      (kind === "role" && !category) ||
+      (kind === "category" && !categoryKey.trim())
+    ) {
       setFormError(
         ar
           ? "يرجى تعبئة جميع الحقول المطلوبة"
@@ -122,10 +125,9 @@ export function SpecialistSettings({
     }
     if (
       kind === "role" &&
-      !EXPERT_CLASSIFICATIONS.some(
+      !categories.some(
         (c) =>
-          c.key ===
-          mainCategoryKey(categories.find((x) => x.id === category)?.key || "")
+          c.id === category && c.key !== "dsc-news" && c.is_active !== false
       )
     ) {
       setFormError(
@@ -139,21 +141,38 @@ export function SpecialistSettings({
     setSaving(true)
     setNotice("")
     try {
-      const col = pb.collection("roles_management")
-      const data = {
-        role_name_en: en.trim(),
-        role_name_ar: arabic.trim(),
-        category,
-        role_group: mainCategoryKey(
-          categories.find((c) => c.id === category)?.key || ""
-        ),
-        ...(id ? {} : { order: roles.length + 1, is_active: true }),
-      }
+      const col = pb.collection(
+        kind === "category" ? "specialist_role_categories" : "roles_management"
+      )
+      const data =
+        kind === "category"
+          ? {
+              name_en: en.trim(),
+              name_ar: arabic.trim(),
+              ...(id
+                ? {}
+                : {
+                    key: categoryKey.trim(),
+                    order: categories.length,
+                    is_active: true,
+                    media_only: false,
+                  }),
+            }
+          : {
+              role_name_en: en.trim(),
+              role_name_ar: arabic.trim(),
+              category,
+              role_group: mainCategoryKey(
+                categories.find((c) => c.id === category)?.key || ""
+              ),
+              ...(id ? {} : { order: roles.length + 1, is_active: true }),
+            }
       if (id) await col.update(id, data)
       else await col.create(data)
       reset()
       setFormOpen(false)
       await refresh()
+      window.dispatchEvent(new Event("dsc:classifications-changed"))
       setNotice(ar ? "تم الحفظ" : "Saved")
     } catch (e) {
       setNotice(getErrorMessage(e))
@@ -184,6 +203,8 @@ export function SpecialistSettings({
         .update(rid, { is_active: !item?.is_active })
       reset()
       await refresh()
+      if (k === "category")
+        window.dispatchEvent(new Event("dsc:classifications-changed"))
     } catch (e) {
       setNotice(getErrorMessage(e))
     } finally {
@@ -209,6 +230,8 @@ export function SpecialistSettings({
       if (id === deleteTarget.id && kind === deleteTarget.kind) reset()
       setDeleteTarget(null)
       await refresh()
+      if (deleteTarget.kind === "category")
+        window.dispatchEvent(new Event("dsc:classifications-changed"))
       setNotice(ar ? "تم الحذف" : "Deleted")
       toast.success(ar ? "تم الحذف" : "Deleted")
     } catch (error) {
@@ -248,13 +271,9 @@ export function SpecialistSettings({
     values.some((value) =>
       value.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
     )
-  const fixedCategories = EXPERT_CLASSIFICATIONS.map((main) => ({
-    main,
-    stored: categories.find((c) => mainCategoryKey(c.key) === main.key),
-  }))
-  const filteredCategories = fixedCategories.filter(({ main }) =>
-    matches(categorySearch, main.en, main.ar, main.key)
-  )
+  const filteredCategories = categories
+    .filter((c) => c.key !== "dsc-news")
+    .filter((c) => matches(categorySearch, c.name_en, c.name_ar, c.key))
   const filteredRoles = roles.filter(
     (r) =>
       (!roleFilter || r.category === roleFilter) &&
@@ -272,7 +291,7 @@ export function SpecialistSettings({
   ) => (
     <button
       type="button"
-      disabled={saving || k === "category"}
+      disabled={saving}
       className={`${styles.status} ${item.is_active ? styles.active : styles.inactive}`}
       title={
         item.is_active
@@ -299,7 +318,7 @@ export function SpecialistSettings({
     <div className={styles.actions}>
       <button
         type="button"
-        disabled={saving || k === "category" || !access.can("settings.update")}
+        disabled={saving || !access.can("settings.update")}
         className={styles.edit}
         onClick={() => {
           if (access.can("settings.update")) edit(k, item)
@@ -310,7 +329,7 @@ export function SpecialistSettings({
       </button>
       <button
         type="button"
-        disabled={saving || k === "category" || !access.can("settings.delete")}
+        disabled={saving || !access.can("settings.delete")}
         className={styles.delete}
         onClick={() =>
           openDeleteDialog({
@@ -422,17 +441,23 @@ export function SpecialistSettings({
                   onChange={(e) => setCategorySearch(e.target.value)}
                 />
               </label>
-              <span className={styles.count}>
-                {ar
-                  ? `${EXPERT_CLASSIFICATIONS.length} تصنيفات ثابتة`
-                  : `${EXPERT_CLASSIFICATIONS.length} fixed classifications`}
-              </span>
+              <button
+                type="button"
+                className={styles.add}
+                disabled={
+                  saving || loading || !!error || !access.can("settings.create")
+                }
+                onClick={() => add("category")}
+              >
+                <Plus size={17} />
+                {ar ? "إضافة تصنيف" : "Add classification"}
+              </button>
             </div>
           </div>
           <p className="px-4 pb-3 text-sm text-muted-foreground">
             {ar
-              ? "هذه القائمة ثابتة؛ لا يمكن إضافة تصنيفات إليها أو حذفها. التصنيف الإعلامي مخصص للمحتوى ولا يُعد فئة تخصص."
-              : "This list is fixed. Classifications cannot be added or deleted. The media category is reserved for content and is not a specialist classification."}
+              ? "يمكن إضافة التصنيفات وتعديل أسمائها وحذف غير المستخدمة. لا يمكن حذف تصنيف مرتبط بأدوار أو محتوى."
+              : "Add classifications, edit their names, or delete unused entries. Classifications linked to roles or content cannot be deleted."}
           </p>
           <div className={styles.tableWrap}>
             <table className={`${styles.table} ${styles.categoryTable}`}>
@@ -447,48 +472,31 @@ export function SpecialistSettings({
                   <th scope="col">{ar ? "المفتاح" : "Key"}</th>
                   <th scope="col">{ar ? "الأدوار" : "Roles"}</th>
                   <th scope="col">{ar ? "الحالة" : "Status"}</th>
+                  <th scope="col">{ar ? "الإجراءات" : "Actions"}</th>
                 </tr>
               </thead>
               <tbody>
                 {!loading &&
                   !error &&
-                  filteredCategories.map(({ main: c, stored }, i) => (
-                    <tr key={c.key}>
+                  filteredCategories.map((c, i) => (
+                    <tr key={c.id}>
                       <td>{i + 1}</td>
-                      <td>{categoryIcon(stored?.id || c.key)}</td>
-                      <td>{c.en}</td>
-                      <td dir="rtl">{c.ar}</td>
+                      <td>{categoryIcon(c.id)}</td>
+                      <td>{c.name_en}</td>
+                      <td dir="rtl">{c.name_ar}</td>
                       <td>
                         <code dir="ltr">{mainCategoryKey(c.key)}</code>
                       </td>
                       <td>
                         <span className={styles.count}>
-                          {stored
-                            ? roles.filter((r) => r.category === stored.id)
-                                .length
-                            : "—"}
+                          {roles.filter((r) => r.category === c.id).length}
                         </span>
                       </td>
-                      <td>
-                        <span
-                          className={`${styles.status} ${stored?.is_active !== false && stored ? styles.active : styles.inactive}`}
-                        >
-                          {stored
-                            ? stored.is_active !== false
-                              ? ar
-                                ? "نشط"
-                                : "Active"
-                              : ar
-                                ? "غير نشط"
-                                : "Inactive"
-                            : ar
-                              ? "يلزم تحديث الخادم"
-                              : "Server update required"}
-                        </span>
-                      </td>
+                      <td>{status("category", c)}</td>
+                      <td>{actions("category", c)}</td>
                     </tr>
                   ))}
-                {(loading || error || !filteredCategories.length) && empty(7)}
+                {(loading || error || !filteredCategories.length) && empty(8)}
               </tbody>
             </table>
           </div>
@@ -639,6 +647,19 @@ export function SpecialistSettings({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={save} className={styles.form}>
+            {kind === "category" && (
+              <label>
+                {ar ? "المفتاح" : "Key"}
+                <input
+                  required
+                  dir="ltr"
+                  value={categoryKey}
+                  disabled={saving || !!id}
+                  onChange={(e) => setCategoryKey(e.target.value)}
+                  pattern="[a-z0-9][a-z0-9_-]{0,199}"
+                />
+              </label>
+            )}
             {kind === "role" && (
               <label>
                 {ar ? "الفئة" : "Category"}
@@ -654,10 +675,10 @@ export function SpecialistSettings({
                     {ar ? "اختر فئة" : "Select category"}
                   </option>
                   {categories
-                    .filter((c) =>
-                      EXPERT_CLASSIFICATIONS.some(
-                        (main) => main.key === mainCategoryKey(c.key)
-                      )
+                    .filter(
+                      (c) =>
+                        c.key !== "dsc-news" &&
+                        (c.is_active !== false || c.id === category)
                     )
                     .map((c) => (
                       <option key={c.id} value={c.id}>

@@ -1,10 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { useClassifications } from "@/hooks/useClassifications"
 import { useLang } from "@/lib/lang-context"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { boundedFullList } from "@/lib/bounded-records"
-import { ALLOCATION_ROLE_GROUPS, normalizeAllocationRole } from "@/lib/allocation-role-groups"
+import { normalizeAllocationRole } from "@/lib/allocation-role-groups"
 import type { RolesManagement } from "@/types/expert-role"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,7 @@ export function SpecialistSelector({ value, onChange, disabled = false }: {
   disabled?: boolean
 }) {
   const { lang } = useLang()
+  const { groups: ALLOCATION_ROLE_GROUPS } = useClassifications()
   const ar = lang === "ar"
   const [roles, setRoles] = useState<RolesManagement[]>([])
   const [loading, setLoading] = useState(true)

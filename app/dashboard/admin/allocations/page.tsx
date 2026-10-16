@@ -1,9 +1,9 @@
 "use client"
+import { useClassifications } from "@/hooks/useClassifications"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import {
-  ALLOCATION_ROLE_GROUPS,
   allocationRowsForSave,
 } from "@/lib/allocation-role-groups"
 import { boundedFullList } from "@/lib/bounded-records"
@@ -167,6 +167,7 @@ function ExpertCombobox({
 }
 
 export default function AllocationsPage() {
+  const { groups: ALLOCATION_ROLE_GROUPS } = useClassifications()
   const ui = useUiTranslation()
 
   const access = usePermissions()

@@ -11,6 +11,8 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
   const migrations = path.join(fixture, "migrations")
   fs.mkdirSync(migrations)
   fs.writeFileSync(path.join(migrations, "1000_fixture.js"), `migrate(app=>{
+    let users;try{users=app.findCollectionByNameOrId('users')}catch{users=new Collection({name:'users',type:'auth'})};
+    for(const field of [new BoolField({name:'is_active'}),new TextField({name:'role'}),new JSONField({name:'security_permissions'})])if(!users.fields.getByName(field.name))users.fields.add(field);app.save(users);
     const roots=new Collection({name:'specialist_role_categories',type:'base',createRule:'',updateRule:'',deleteRule:'',fields:[
       {name:'key',type:'text'},{name:'name_en',type:'text'},{name:'name_ar',type:'text'},{name:'order',type:'number'}]});app.save(roots);
     app.save(new Record(roots,{id:'psychology00001',key:'psychology',name_en:'Psychology'}));
@@ -75,6 +77,21 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
   const additions=spawnSync(binary,args,{encoding:"utf8",windowsHide:true})
   assert.equal(additions.status,0,additions.stdout+additions.stderr)
   assert.match(additions.stdout+additions.stderr,/Applied 1793300001_verify_additions/,additions.stdout+additions.stderr)
+  fs.copyFileSync(path.resolve("pb_migrations/1793400000_editable_classifications.js"),path.join(migrations,"1793400000_editable_classifications.js"))
+  fs.writeFileSync(path.join(migrations,"1793400001_verify_editable.js"), `migrate(app=>{
+    for(const name of ['blog_categories','blog_pages','programs','public_lectures']) {
+      const f=app.findCollectionByNameOrId(name).fields.getByName('main_category');
+      if(f.type()!=='select')throw new Error('Classification field type changed');
+    }
+    const post=app.findRecordById('blog_pages','existingpost001');
+    if(post.getString('main_category')!=='special-needs'||post.getString('content_en')!=='Keep this content')throw new Error('Conversion lost content');
+    const roots=app.findCollectionByNameOrId('specialist_role_categories');
+    if(!roots.createRule.includes('settings.create')||!roots.updateRule.includes('settings.update')||!roots.deleteRule.includes('settings.delete'))throw new Error('Settings permission rules missing');
+    // Public access is enabled only in this disposable fixture to exercise hooks separately.
+    roots.createRule='';roots.updateRule='';roots.deleteRule='';app.save(roots);
+  });`)
+  const editable=spawnSync(binary,args,{encoding:"utf8",windowsHide:true})
+  assert.match(editable.stdout+editable.stderr,/Applied 1793400001_verify_editable/,editable.stdout+editable.stderr)
   const hooks=path.join(fixture,"hooks")
   fs.mkdirSync(path.join(hooks,"lib"),{recursive:true})
   for(const file of ["classification.pb.js","lib/classification-validation.js","lib/classification-catalog.js"]) fs.copyFileSync(path.resolve("backend/pb/pb_hooks",file),path.join(hooks,file))
@@ -111,10 +128,23 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
     const otherBody=await otherRole.json()
     assert.equal(otherRole.status,200,JSON.stringify(otherBody))
     assert.equal(otherBody.category,"legacyother0001")
-    const addCategory=await fetch(base+"/api/collections/specialist_role_categories/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:"other",name_en:"Other",name_ar:"أخرى"})})
+    const addCategory=await fetch(base+"/api/collections/specialist_role_categories/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:"custom-topic",name_en:"Custom topic",name_ar:"تصنيف مخصص",is_active:true})})
     const addBody=await addCategory.json()
-    assert.equal(addCategory.status,400,JSON.stringify(addBody))
-    assert.match(addBody.message,/additions are not allowed/)
+    assert.equal(addCategory.status,200,JSON.stringify(addBody))
+    const editCategory=await fetch(base+"/api/collections/specialist_role_categories/records/"+addBody.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({name_en:"Updated topic",name_ar:"تصنيف معدل"})})
+    const editBody=await editCategory.json()
+    assert.equal(editCategory.status,200,JSON.stringify(editBody))
+    assert.equal(editBody.name_en,"Updated topic")
+    assert.equal(editBody.name_ar,"تصنيف معدل")
+    const customPost=await create({main_category:"custom-topic",content_en:"Dynamic category content"})
+    assert.equal(customPost.status,200,JSON.stringify(customPost.body))
+    const deleteUsedCategory=await fetch(base+"/api/collections/specialist_role_categories/records/"+addBody.id,{method:"DELETE"})
+    assert.equal(deleteUsedCategory.status,400,await deleteUsedCategory.text())
+    const unusedCategory=await fetch(base+"/api/collections/specialist_role_categories/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:"unused-topic",name_en:"Unused topic",name_ar:"غير مستخدم"})})
+    const unusedBody=await unusedCategory.json()
+    assert.equal(unusedCategory.status,200,JSON.stringify(unusedBody))
+    const deleteUnusedCategory=await fetch(base+"/api/collections/specialist_role_categories/records/"+unusedBody.id,{method:"DELETE"})
+    assert.equal(deleteUnusedCategory.status,204,await deleteUnusedCategory.text())
     const renameCategory=await fetch(base+"/api/collections/specialist_role_categories/records/psychology00001",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:"research"})})
     assert.equal(renameCategory.status,400,await renameCategory.text())
     const deleteRoot=await fetch(base+"/api/collections/specialist_role_categories/records/psychology00001",{method:"DELETE"})

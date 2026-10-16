@@ -40,3 +40,9 @@ test("allocation save sends the backend role relation and rejects stale selectio
   assert.equal(payload.expert_id, "expert")
   assert.throws(() => allocationRowsForSave([row], []), /no longer available/)
 })
+
+test("administrator-created classification keys remain attached to their roles", () => {
+  const custom = role("Custom specialist", { role_group: "custom-topic" })
+  assert.equal(normalizeAllocationRole(custom), custom)
+  assert.equal(normalizeAllocationRole(custom).role_group, "custom-topic")
+})

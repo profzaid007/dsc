@@ -2,7 +2,7 @@
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { ClassificationFields } from "@/components/form/ClassificationFields"
-import { classificationLabel } from "@/lib/classification"
+import { useClassifications } from "@/hooks/useClassifications"
 import { useLang } from "@/lib/lang-context"
 import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,6 +51,7 @@ export function ProgramForm({
   submitLabel = "Save Program",
 }: ProgramFormProps) {
   const { lang } = useLang()
+  const { label: classificationLabel } = useClassifications()
   const ui = useUiTranslation()
 
   const [formData, setFormData] = useState<CreateProgramInput>(() => ({

@@ -1,4 +1,7 @@
-const catalog = require(`${__hooks}/lib/classification-catalog.js`)
+function categoryByKey(app, key) {
+  const records = app.findRecordsByFilter("specialist_role_categories", "key = {:key}", "", 1, 0, { key })
+  return records[0]
+}
 
 module.exports = (e) => {
   const record = e.record
@@ -6,12 +9,12 @@ module.exports = (e) => {
   if (collection === "specialist_role_categories") {
     const previousKey = record.original().getString("key")
     if (previousKey && previousKey !== record.getString("key")) throw new BadRequestError("Classification keys are fixed and cannot be changed")
-    const main = catalog.main.find(c => c.key === record.getString("key"))
-    if (!main) throw new BadRequestError("Choose a main category from the unified catalog; add a subcategory for a new topic")
-    record.set("name_en", main.en)
-    record.set("name_ar", main.ar)
-    record.set("media_only", main.media_only)
-    record.set("is_active", true)
+    const key = record.getString("key")
+    if (!/^[a-z0-9][a-z0-9_-]{0,199}$/.test(key)) throw new BadRequestError("Use a unique lowercase key with letters, numbers, hyphens or underscores")
+    if (!record.getString("name_en").trim() || !record.getString("name_ar").trim()) throw new BadRequestError("English and Arabic classification names are required")
+    const existing = categoryByKey(e.app, key)
+    if (existing && existing.id !== record.id) throw new BadRequestError("The classification key already exists")
+    if (key === "dsc-news") record.set("media_only", true)
     return
   }
   if (collection === "roles_management") {
@@ -21,17 +24,18 @@ module.exports = (e) => {
     const body = e.requestInfo().body
     if (group && Object.prototype.hasOwnProperty.call(body, "role_group") && !Object.prototype.hasOwnProperty.call(body, "category")) {
       const categories = e.app.findRecordsByFilter("specialist_role_categories", "key = {:key}", "", 1, 0, { key: group })
-      if (categories.length) record.set("category", categories[0].id)
+      if (!categories.length || categories[0].getBool("media_only")) throw new BadRequestError("Select a professional classification")
+      record.set("category", categories[0].id)
     } else if (categoryId) {
       const category = e.app.findRecordById("specialist_role_categories", categoryId)
       if (category.getBool("media_only") || category.getString("key") === "dsc-news") throw new BadRequestError("Media categories cannot contain specialist roles")
-      if (catalog.main.some(c => c.key === category.getString("key"))) record.set("role_group", category.getString("key"))
+      record.set("role_group", category.getString("key"))
     }
     return
   }
   const main = record.getString("main_category")
   const sub = record.getString(collection === "blog_pages" ? "category" : "subcategory")
-  if (main && !catalog.main.some(c => c.key === main)) throw new BadRequestError("Unknown main category")
+  if (main && !categoryByKey(e.app, main)) throw new BadRequestError("Unknown main category")
   if (collection === "blog_categories") {
     const previous = record.original()
     const oldKey = previous.getString("key")
@@ -48,5 +52,17 @@ module.exports = (e) => {
   if (main && sub) {
     const matches = e.app.findRecordsByFilter("blog_categories", "key = {:key}", "", 1, 0, { key: sub })
     if (!matches.length || matches[0].getString("main_category") !== main) throw new BadRequestError("Subcategory must belong to the selected main category")
+  }
+}
+
+module.exports.includeCategory = (app, key) => {
+  for (const name of ["blog_categories", "blog_pages", "programs", "public_lectures"]) {
+    const collection = app.findCollectionByNameOrId(name)
+    const field = collection.fields.getByName("main_category")
+    const type = typeof field.type === "function" ? field.type() : field.type
+    if (type === "select" && !Array.from(field.values).includes(key)) {
+      field.values = Array.from(field.values).concat([key])
+      app.save(collection)
+    }
   }
 }

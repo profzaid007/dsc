@@ -15,7 +15,7 @@ const legacyGroups: Record<string, string> = {
 /** Classify existing records without replacing their IDs or tool permissions. */
 export function normalizeAllocationRole(role: RolesManagement): RolesManagement {
   if (role.role_group === "psychology") role = { ...role, role_group: mainCategoryKey(role.role_group) }
-  const knownGroup = ALLOCATION_ROLE_GROUPS.some(group => group.id === role.role_group)
+  const knownGroup = !!role.role_group && role.role_group !== "dsc-news"
   if (knownGroup) return role
   const name = role.role_name_en?.trim().toLowerCase() || ""
   const match = catalog.find(item =>

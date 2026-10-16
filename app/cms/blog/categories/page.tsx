@@ -1,5 +1,6 @@
 "use client"
-import { MAIN_CLASSIFICATIONS, classificationParent } from "@/lib/classification"
+import { classificationParent } from "@/lib/classification"
+import { useClassifications } from "@/hooks/useClassifications"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState, useCallback } from "react"
@@ -34,6 +35,7 @@ import { useLang } from "@/lib/lang-context"
 export default function BlogCategoriesPage() {
   const access = usePermissions()
   const { lang } = useLang()
+  const { main: MAIN_CLASSIFICATIONS } = useClassifications()
   const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
   const [categories, setCategories] = useState<BlogCategory[]>([])
   const [loading, setLoading] = useState(true)
