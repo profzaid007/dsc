@@ -34,6 +34,7 @@ const statusOptions = [
 ]
 
 const emptyForm: CreateLectureInput = {
+  keywords: "",
   title: { en: "", ar: "" },
   description: { en: "", ar: "" },
   speaker: {
@@ -62,6 +63,7 @@ export function LectureForm({
   const [formData, setFormData] = useState<CreateLectureInput>(() => ({
     ...emptyForm,
     ...initialData,
+    keywords: initialData?.keywords ?? initialData?.subcategory ?? "",
     // Ensure nested objects are fully present when editing an existing lecture
     speaker: {
       ...emptyForm.speaker,
@@ -127,8 +129,8 @@ export function LectureForm({
           <CardTitle>{ui("Basic Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ClassificationFields required={!initialData} main={formData.main_category || ""} sub={formData.subcategory || ""} disabled={isSubmitting}
-            onChange={(main, sub) => setFormData({ ...formData, main_category: main, subcategory: sub })} />
+          <ClassificationFields required={!initialData} main={formData.main_category || ""} keywords={formData.keywords || ""} disabled={isSubmitting}
+            onChange={(main, keywords) => setFormData({ ...formData, main_category: main, keywords, subcategory: "" })} />
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="titleEn">{ui("Title (English) *")}</Label>

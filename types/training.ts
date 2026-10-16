@@ -37,6 +37,7 @@ export interface ProgramSchedule {
 }
 
 export interface TrainingProgram {
+  keywords?: string
   main_category?: string
   subcategory?: string
   id: string

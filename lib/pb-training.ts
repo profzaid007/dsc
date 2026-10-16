@@ -51,6 +51,7 @@ export function programFromDB(record: Record<string, unknown>): TrainingProgram 
     id: record.id as string,
     main_category: (record.main_category as string) || "",
     subcategory: (record.subcategory as string) || "",
+    keywords: record.keywords !== undefined ? String(record.keywords || "") : String(record.subcategory || ""),
     title: record.name as TrainingProgram["title"],
     category: record.category as TrainingProgram["category"],
     trainer: record.trainer_name as TrainerInfo,
@@ -86,8 +87,9 @@ function programToDB(
 ): Record<string, unknown> {
   const dbData: Record<string, unknown> = {}
 
+  if (data.keywords !== undefined) { dbData.keywords = data.keywords; dbData.subcategory = "" }
   if (data.main_category !== undefined) dbData.main_category = data.main_category
-  if (data.subcategory !== undefined) dbData.subcategory = data.subcategory
+  if (data.keywords === undefined && data.subcategory !== undefined) dbData.subcategory = data.subcategory
   if (data.title !== undefined) dbData.name = data.title
   if (data.category !== undefined) dbData.category = data.category
   if (data.trainer !== undefined) dbData.trainer_name = data.trainer

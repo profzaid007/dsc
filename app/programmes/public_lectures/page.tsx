@@ -1,5 +1,6 @@
 "use client"
 
+import { matchesContentSearch } from "@/lib/content-search"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
@@ -36,8 +37,7 @@ export default function PublicLecturesPage() {
   const filtered = searchTerm
     ? lectures.filter(
         (l) =>
-          l.title[lang].toLowerCase().includes(searchTerm.toLowerCase()) ||
-          l.speaker.name[lang].toLowerCase().includes(searchTerm.toLowerCase())
+          matchesContentSearch(searchTerm, l.title[lang], l.speaker.name[lang], l.keywords)
       )
     : lectures
 
@@ -73,8 +73,8 @@ export default function PublicLecturesPage() {
         <Input
           placeholder={
             lang === "ar"
-              ? "البحث في المحاضرات..."
-              : "Search lectures by title or speaker..."
+              ? "ابحث بالعنوان أو المحاضر أو الكلمات المفتاحية..."
+              : "Search lectures by title, speaker or keywords..."
           }
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

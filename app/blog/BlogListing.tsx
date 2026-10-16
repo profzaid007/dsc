@@ -1,4 +1,5 @@
 "use client"
+import { matchesContentSearch } from "@/lib/content-search"
 import { classificationParent } from "@/lib/classification"
 import { useClassifications } from "@/hooks/useClassifications"
 import { blogField } from "@/lib/blog-content"
@@ -70,9 +71,7 @@ export function BlogListing({
         (post) =>
           (!mainCategory || (post.main_category || classificationParent(post.category)) === mainCategory) &&
           (!category || post.category === category) &&
-          `${blogField(post, "title")} ${excerpt(blogField(post, "content"))}`
-            .toLocaleLowerCase()
-            .includes(search.toLocaleLowerCase().trim())
+          matchesContentSearch(search, blogField(post, "title"), excerpt(blogField(post, "content")), post.keywords)
       ),
     [posts, category, search, mainCategory]
   )
@@ -329,7 +328,7 @@ export function BlogListing({
               </button>
               <input
                 aria-label={copy("Search articles", "البحث عن مقالات")}
-                placeholder={copy("Search for an article…", "ابحث عن مقال ...")}
+                placeholder={copy("Search articles or keywords…", "ابحث عن مقال أو كلمات مفتاحية...")}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />

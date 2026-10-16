@@ -1,5 +1,6 @@
 "use client"
 
+import { matchesContentSearch } from "@/lib/content-search"
 import { useClassifications } from "@/hooks/useClassifications"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
@@ -35,6 +36,7 @@ type Event = {
   presenter: string
   description: string
   category: string
+  keywords: string
   subcategory: string
   categoryKey: string
   presenterKey: string
@@ -121,6 +123,7 @@ export default function ProgrammesPage() {
         description: text(l.description),
         category: l.main_category ? classificationLabel(l.main_category, lang) : "",
         categoryKey: l.main_category || "",
+        keywords: l.keywords || "",
         subcategory: l.subcategory || "",
         presenterKey: l.speaker.name.en || l.speaker.name.ar,
         location: l.schedule.location,
@@ -142,6 +145,7 @@ export default function ProgrammesPage() {
         description: "",
         category: p.main_category ? classificationLabel(p.main_category, lang) : text(p.category),
         categoryKey: p.main_category || p.category.en || p.category.ar,
+        keywords: p.keywords || "",
         subcategory: p.subcategory || "",
         presenterKey: p.trainer.name.en || p.trainer.name.ar,
         location: p.location,
@@ -240,10 +244,7 @@ export default function ProgrammesPage() {
   const filtered = events.filter(
     (e) =>
       (!query ||
-        [e.title, e.presenter, e.description, e.category, e.location]
-          .join(" ")
-          .toLocaleLowerCase()
-          .includes(query.toLocaleLowerCase().trim())) &&
+        matchesContentSearch(query, e.title, e.presenter, e.description, e.category, e.location, e.keywords)) &&
       (!filters.kind || e.kind === filters.kind) &&
       (!filters.status || status(e) === filters.status) &&
       (!filters.mode || e.mode === filters.mode) &&

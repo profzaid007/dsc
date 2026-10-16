@@ -1,46 +1,23 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useClassifications } from "@/hooks/useClassifications"
 import { useLang } from "@/lib/lang-context"
-import { classificationParent } from "@/lib/classification"
-import { blogCategoriesCollection } from "@/lib/pb-collections"
-import type { BlogCategory } from "@/types/cms"
 
 export function ClassificationFields({
   main,
-  sub,
+  keywords,
   onChange,
   disabled = false,
   required = false,
 }: {
   main: string
-  sub: string
-  onChange: (main: string, sub: string) => void
+  keywords: string
+  onChange: (main: string, keywords: string) => void
   disabled?: boolean
   required?: boolean
 }) {
   const { lang } = useLang()
   const { main: MAIN_CLASSIFICATIONS } = useClassifications()
-  const [categories, setCategories] = useState<BlogCategory[]>([])
-  const [error, setError] = useState(false)
-  useEffect(() => {
-    let active = true
-    blogCategoriesCollection
-      .getAll()
-      .then((data) => {
-        if (active) setCategories(data)
-      })
-      .catch(() => {
-        if (active) setError(true)
-      })
-    return () => {
-      active = false
-    }
-  }, [])
-  const children = categories.filter(
-    (c) => (c.main_category || classificationParent(c.key)) === main
-  )
   return (
     <fieldset disabled={disabled} className="grid min-w-0 gap-4 sm:grid-cols-2">
       <label className="space-y-2 text-sm font-medium">
@@ -49,7 +26,7 @@ export function ClassificationFields({
           className="h-10 w-full rounded-md border bg-background px-3"
           value={main}
           required={required}
-          onChange={(e) => onChange(e.target.value, "")}
+          onChange={(e) => onChange(e.target.value, keywords)}
         >
           <option value="">
             {lang === "ar" ? "اختر التصنيف" : "Select category"}
@@ -62,32 +39,11 @@ export function ClassificationFields({
         </select>
       </label>
       <label className="space-y-2 text-sm font-medium">
-        <span>{lang === "ar" ? "التصنيف الفرعي" : "Subcategory"}</span>
-        <select
-          className="h-10 w-full rounded-md border bg-background px-3"
-          value={sub}
-          disabled={!main || error}
-          onChange={(e) => onChange(main, e.target.value)}
-        >
-          <option value="">
-            {lang === "ar" ? "بدون تصنيف فرعي" : "No subcategory"}
-          </option>
-          {sub && !children.some((c) => c.key === sub) && (
-            <option value={sub}>{sub}</option>
-          )}
-          {children.map((c) => (
-            <option key={c.key} value={c.key}>
-              {lang === "ar" ? c.label_ar || c.label_en : c.label_en}
-            </option>
-          ))}
-        </select>
-        {error && (
-          <span role="alert">
-            {lang === "ar"
-              ? "تعذر تحميل التصنيفات الفرعية"
-              : "Could not load subcategories"}
-          </span>
-        )}
+        <span>{lang === "ar" ? "الكلمات المفتاحية" : "Keywords"}</span>
+        <input type="text" dir="auto" className="h-10 w-full rounded-md border bg-background px-3"
+          value={keywords} maxLength={5000}
+          placeholder={lang === "ar" ? "مثال: التوحد، مهارات التواصل، الأسرة" : "e.g. autism, communication, family"}
+          onChange={e => onChange(main, e.target.value)} />
       </label>
     </fieldset>
   )

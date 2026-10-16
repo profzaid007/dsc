@@ -33,6 +33,10 @@ module.exports = (e) => {
     }
     return
   }
+  if (["blog_pages", "programs", "public_lectures"].includes(collection) &&
+      Object.prototype.hasOwnProperty.call(e.requestInfo().body, "keywords")) {
+    record.set(collection === "blog_pages" ? "category" : "subcategory", "")
+  }
   const main = record.getString("main_category")
   const sub = record.getString(collection === "blog_pages" ? "category" : "subcategory")
   if (main && !categoryByKey(e.app, main)) throw new BadRequestError("Unknown main category")

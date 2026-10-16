@@ -54,6 +54,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       title_ar: record.title_ar as string | undefined,
       main_category: record.main_category || "",
       category: rawCategory,
+      keywords: record.keywords !== undefined ? String(record.keywords || "") : rawCategory,
       content_en: record.content_en as string,
       content_ar: record.content_ar as string | undefined,
       is_published: record.is_published as boolean,

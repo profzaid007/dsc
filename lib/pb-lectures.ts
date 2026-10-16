@@ -29,6 +29,7 @@ export function lectureFromDB(record: Record<string, unknown>): Lecture {
     id: record.id as string,
     main_category: (record.main_category as string) || "",
     subcategory: (record.subcategory as string) || "",
+    keywords: record.keywords !== undefined ? String(record.keywords || "") : String(record.subcategory || ""),
     title: record.title as Lecture["title"],
     description: record.description as Lecture["description"],
     speaker: record.speaker as Lecture["speaker"],
@@ -50,8 +51,9 @@ function lectureToDB(
 ): Record<string, unknown> {
   const dbData: Record<string, unknown> = {}
 
+  if (data.keywords !== undefined) { dbData.keywords = data.keywords; dbData.subcategory = "" }
   if (data.main_category !== undefined) dbData.main_category = data.main_category
-  if (data.subcategory !== undefined) dbData.subcategory = data.subcategory
+  if (data.keywords === undefined && data.subcategory !== undefined) dbData.subcategory = data.subcategory
   if (data.title !== undefined) dbData.title = data.title
   if (data.description !== undefined) dbData.description = data.description
   if (data.speaker !== undefined) dbData.speaker = data.speaker

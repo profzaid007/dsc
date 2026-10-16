@@ -16,6 +16,7 @@ export interface ScheduleInfo {
 }
 
 export interface Lecture {
+  keywords?: string
   main_category?: string
   subcategory?: string
   id: string

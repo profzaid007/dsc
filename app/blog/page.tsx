@@ -31,6 +31,7 @@ export default async function BlogPage() {
         title_ar: record.title_ar,
         main_category: record.main_category || "",
         category: record.category || "",
+        keywords: record.keywords !== undefined ? String(record.keywords || "") : String(record.category || ""),
         content_en: record.content_en || "",
         content_ar: record.content_ar,
         is_published: record.is_published,

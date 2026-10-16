@@ -1,5 +1,6 @@
 "use client"
 
+import { matchesContentSearch } from "@/lib/content-search"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
@@ -36,8 +37,7 @@ export default function TrainingProgrammesPage() {
   const filtered = searchTerm
     ? programs.filter(
         (p) =>
-          p.title[lang].toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.trainer.name[lang].toLowerCase().includes(searchTerm.toLowerCase())
+          matchesContentSearch(searchTerm, p.title[lang], p.trainer.name[lang], p.keywords)
       )
     : programs
 
@@ -74,7 +74,7 @@ export default function TrainingProgrammesPage() {
           placeholder={
             lang === "ar"
               ? "البحث في البرامج التدريبية..."
-              : "Search programmes by title or trainer..."
+              : "Search programmes by title, trainer or keywords..."
           }
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

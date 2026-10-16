@@ -31,6 +31,7 @@ interface ProgramFormProps {
 }
 
 const emptyForm: CreateProgramInput = {
+  keywords: "",
   title: { en: "", ar: "" },
   category: { en: "", ar: "" },
   trainer: { name: { en: "", ar: "" }, role: { en: "", ar: "" } },
@@ -57,6 +58,7 @@ export function ProgramForm({
   const [formData, setFormData] = useState<CreateProgramInput>(() => ({
     ...emptyForm,
     ...initialData,
+    keywords: initialData?.keywords ?? initialData?.subcategory ?? "",
     title: { ...emptyForm.title, ...initialData?.title },
     category: { ...emptyForm.category, ...initialData?.category },
     trainer: {
@@ -172,8 +174,8 @@ export function ProgramForm({
           </div>
 
           {!formData.main_category && (formData.category.en || formData.category.ar) && <p className="text-sm text-muted-foreground">{lang === "ar" ? "التصنيف السابق: " : "Previous category: "}{formData.category[lang] || formData.category.en}</p>}
-          <ClassificationFields required={!initialData} main={formData.main_category || ""} sub={formData.subcategory || ""} disabled={isSubmitting}
-            onChange={(main, sub) => setFormData({ ...formData, main_category: main, subcategory: sub,
+          <ClassificationFields required={!initialData} main={formData.main_category || ""} keywords={formData.keywords || ""} disabled={isSubmitting}
+            onChange={(main, keywords) => setFormData({ ...formData, main_category: main, keywords, subcategory: "",
               category: { en: classificationLabel(main, "en"), ar: classificationLabel(main, "ar") } })} />
 
         </CardContent>

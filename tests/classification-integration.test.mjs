@@ -92,6 +92,19 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
   });`)
   const editable=spawnSync(binary,args,{encoding:"utf8",windowsHide:true})
   assert.match(editable.stdout+editable.stderr,/Applied 1793400001_verify_editable/,editable.stdout+editable.stderr)
+  fs.copyFileSync(path.resolve("pb_migrations/1793500000_content_keywords.js"),path.join(migrations,"1793500000_content_keywords.js"))
+  fs.writeFileSync(path.join(migrations,"1793500001_verify_keywords.js"), `migrate(app=>{
+    for(const name of ['blog_pages','programs','public_lectures']) {
+      const c=app.findCollectionByNameOrId(name);
+      if(!c.fields.getByName('keywords'))throw new Error('Missing keywords: '+name);
+      c.createRule='';c.updateRule='';c.viewRule='';c.listRule='';app.save(c);
+    }
+    if(!app.findRecordById('blog_pages','existingpost001').getString('keywords'))throw new Error('Legacy keywords lost');
+    const view=app.findCollectionByNameOrId('public_lectures_public');
+    if(!view.viewQuery.includes('keywords'))throw new Error('Public view missing keywords');
+  });`)
+  const keywordsMigration=spawnSync(binary,args,{encoding:"utf8",windowsHide:true})
+  assert.match(keywordsMigration.stdout+keywordsMigration.stderr,/Applied 1793500001_verify_keywords/,keywordsMigration.stdout+keywordsMigration.stderr)
   const hooks=path.join(fixture,"hooks")
   fs.mkdirSync(path.join(hooks,"lib"),{recursive:true})
   for(const file of ["classification.pb.js","lib/classification-validation.js","lib/classification-catalog.js"]) fs.copyFileSync(path.resolve("backend/pb/pb_hooks",file),path.join(hooks,file))
@@ -112,6 +125,14 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
     async function create(body) {
       const response=await fetch(base+"/api/collections/blog_pages/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
       return {status:response.status,body:await response.json()}
+    }
+    for (const collection of ["blog_pages", "programs", "public_lectures"]) {
+      const response=await fetch(base+"/api/collections/"+collection+"/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({main_category:"medical",category:"autism",subcategory:"autism",keywords:"تواصل، أسرة, research"})})
+      const saved=await response.json()
+      assert.equal(response.status,200,JSON.stringify(saved))
+      const reopened=await (await fetch(base+"/api/collections/"+collection+"/records/"+saved.id)).json()
+      assert.equal(reopened.keywords,"تواصل، أسرة, research")
+      assert.equal(reopened[collection==="blog_pages"?"category":"subcategory"],"")
     }
     const mismatch=await create({main_category:"medical",category:"autism",content_en:"Mismatch"})
     assert.equal(mismatch.status,400,JSON.stringify(mismatch.body))

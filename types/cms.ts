@@ -15,6 +15,7 @@ export interface InfoPage {
 }
 
 export interface BlogPage {
+  keywords?: string
   main_category?: string
   id: string
   slug: string

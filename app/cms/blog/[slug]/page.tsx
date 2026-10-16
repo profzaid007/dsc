@@ -52,6 +52,7 @@ export default function CmsBlogEditorPage() {
   const [enTitle, setEnTitle] = useState("")
   const [postSlug, setPostSlug] = useState("")
   const [category, setCategory] = useState("")
+  const [keywords, setKeywords] = useState("")
   const [mainCategory, setMainCategory] = useState("")
   const [enContent, setEnContent] = useState("")
   const [isPublished, setIsPublished] = useState(false)
@@ -89,6 +90,7 @@ export default function CmsBlogEditorPage() {
         title_ar: rawRecord.title_ar as string | undefined,
         main_category: rawRecord.main_category as string,
         category: rawRecord.category as string,
+        keywords: rawRecord.keywords !== undefined ? String(rawRecord.keywords || "") : (cats.find(c => c.key === rawRecord.category)?.label_ar || cats.find(c => c.key === rawRecord.category)?.label_en || String(rawRecord.category || "")),
         content_en: rawRecord.content_en as string,
         content_ar: rawRecord.content_ar as string | undefined,
         is_published: rawRecord.is_published as boolean,
@@ -102,6 +104,7 @@ export default function CmsBlogEditorPage() {
       setEnTitle(blogField(data, "title"))
       setPostSlug(data.slug)
       setCategory(data.category)
+      setKeywords(data.keywords || "")
       setMainCategory(data.main_category || classificationParent(data.category))
       setEnContent(blogField(data, "content"))
       setIsPublished(data.is_published)
@@ -125,7 +128,8 @@ export default function CmsBlogEditorPage() {
         const updated = await blogPagesCollection.update(page.id, {
           ...blogContentPayload(enTitle, contentValue),
           slug: postSlug,
-          category,
+          keywords,
+          category: "",
           main_category: mainCategory,
           author_name: authorName,
         })
@@ -148,7 +152,7 @@ export default function CmsBlogEditorPage() {
         setSaving(false)
       }
     },
-    [page, enTitle, postSlug, category, mainCategory, authorName, enContent, slug, router, lang]
+    [page, enTitle, postSlug, category, keywords, mainCategory, authorName, enContent, slug, router, lang]
   )
 
   const handleContentSave = useCallback(async (html: string) => {
@@ -161,6 +165,7 @@ export default function CmsBlogEditorPage() {
     setEnTitle(blogField(page, "title"))
     setPostSlug(page.slug)
     setCategory(page.category)
+    setKeywords(page.keywords || "")
     setMainCategory(page.main_category || classificationParent(page.category))
     setEnContent(blogField(page, "content"))
     setIsPublished(page.is_published)
@@ -347,8 +352,8 @@ export default function CmsBlogEditorPage() {
       </div>
 
       <Card className="space-y-4 p-4">
-        <ClassificationFields main={mainCategory} sub={category} disabled={saving}
-          onChange={(main, sub) => { setMainCategory(main); setCategory(sub) }} />
+        <ClassificationFields main={mainCategory} keywords={keywords} disabled={saving}
+          onChange={(main, value) => { setMainCategory(main); setKeywords(value) }} />
 
         <div className="space-y-2">
           <Label htmlFor="author">

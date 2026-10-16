@@ -3560,6 +3560,14 @@
           "other",
           "dsc-news"
         ]
+      },
+      {
+        "name": "keywords",
+        "type": "text",
+        "required": false,
+        "max": 5000,
+        "min": 0,
+        "pattern": ""
       }
     ],
     "indexes": [
@@ -4708,6 +4716,14 @@
         "max": 200,
         "pattern": "",
         "autogeneratePattern": ""
+      },
+      {
+        "name": "keywords",
+        "type": "text",
+        "required": false,
+        "max": 5000,
+        "min": 0,
+        "pattern": ""
       }
     ],
     "indexes": [],
@@ -4986,6 +5002,14 @@
         "max": 200,
         "pattern": "",
         "autogeneratePattern": ""
+      },
+      {
+        "name": "keywords",
+        "type": "text",
+        "required": false,
+        "max": 5000,
+        "min": 0,
+        "pattern": ""
       }
     ],
     "indexes": [],
@@ -5159,7 +5183,7 @@
     ],
     "indexes": [],
     "system": false,
-    "viewQuery": "SELECT id, title, description, speaker, schedule, duration, thumbnail, status, is_public, current_registrations, created, updated , main_category, subcategory FROM public_lectures WHERE is_public = true"
+    "viewQuery": "SELECT id, title, description, speaker, schedule, duration, thumbnail, status, is_public, current_registrations, created, updated , main_category, subcategory , keywords FROM public_lectures WHERE is_public = true"
   },
   {
     "id": "pbc_2769025244",

@@ -656,6 +656,7 @@ export const blogPagesCollection = {
         title_ar: item.title_ar as string | undefined,
         main_category: (item.main_category as string) || "",
         category: item.category as string,
+        keywords: item.keywords !== undefined ? String(item.keywords || "") : String(item.category || ""),
         content_en: item.content_en as string,
         content_ar: item.content_ar as string | undefined,
         is_published: item.is_published as boolean,
@@ -681,6 +682,7 @@ export const blogPagesCollection = {
         title_ar: data.title_ar as string | undefined,
         main_category: (data.main_category as string) || "",
         category: data.category as string,
+        keywords: data.keywords !== undefined ? String(data.keywords || "") : String(data.category || ""),
         content_en: data.content_en as string,
         content_ar: data.content_ar as string | undefined,
         is_published: data.is_published as boolean,
@@ -708,6 +710,7 @@ export const blogPagesCollection = {
         title_ar: data.title_ar as string | undefined,
         main_category: (data.main_category as string) || "",
         category: data.category as string,
+        keywords: data.keywords !== undefined ? String(data.keywords || "") : String(data.category || ""),
         content_en: data.content_en as string,
         content_ar: data.content_ar as string | undefined,
         is_published: data.is_published as boolean,
@@ -747,6 +750,7 @@ export const blogPagesCollection = {
       title_ar: result.title_ar as string | undefined,
       main_category: (result.main_category as string) || "",
       category: result.category as string,
+      keywords: result.keywords !== undefined ? String(result.keywords || "") : String(result.category || ""),
       content_en: result.content_en as string,
       content_ar: result.content_ar as string | undefined,
       is_published: result.is_published as boolean,
@@ -768,6 +772,7 @@ export const blogPagesCollection = {
       title_ar: result.title_ar as string | undefined,
       main_category: (result.main_category as string) || "",
       category: result.category as string,
+      keywords: result.keywords !== undefined ? String(result.keywords || "") : String(result.category || ""),
       content_en: result.content_en as string,
       content_ar: result.content_ar as string | undefined,
       is_published: result.is_published as boolean,
@@ -800,6 +805,7 @@ export const blogPagesCollection = {
     if (data.title_en !== undefined) formData.append("title_en", data.title_en)
     if (data.title_ar !== undefined) formData.append("title_ar", data.title_ar)
     if (data.slug !== undefined) formData.append("slug", data.slug)
+    if (data.keywords !== undefined) formData.append("keywords", data.keywords)
     if (data.main_category !== undefined) formData.append("main_category", data.main_category)
     if (data.category !== undefined) formData.append("category", data.category)
     if (data.content_en !== undefined)
