@@ -26,9 +26,11 @@ The additive research/other migration reuses an existing Other category (includi
 
 ## Settings navigation
 
-- `/dashboard/admin/settings/classifications`: shared classifications, including the content-only media category.
+- `/dashboard/admin/settings/classifications`: the seven fixed professional classifications. The media category remains available for content only.
 - `/dashboard/admin/settings/roles`: specialist roles; each saved role requires a `category` relation and its matching canonical `role_group` key. The table displays the category name and key.
 - `/dashboard/admin/settings/tool-types`: the tool-type list, fixed to `lookups.type = "tool_types"` for reads and creation.
 - `/dashboard/admin/settings/user-types`: the user-type list, fixed to `lookups.type = "user_types"` for reads and creation.
 
 Old `/settings/specialists` and `/settings/lookups` bookmarks redirect to Classifications and Tool types. Splitting the settings pages does not change record IDs or require a new database migration.
+
+The classification table renders all seven canonical entries even if an older server has not created them yet. Missing backend rows are marked "Server update required" and do not receive fabricated record IDs or active status. Classifications have no Add/Delete controls; backend hooks reject all classification additions and deletions and prevent key changes. Role CRUD remains separate.

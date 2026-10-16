@@ -4,6 +4,8 @@ module.exports = (e) => {
   const record = e.record
   const collection = record.collection().name
   if (collection === "specialist_role_categories") {
+    const previousKey = record.original().getString("key")
+    if (previousKey && previousKey !== record.getString("key")) throw new BadRequestError("Classification keys are fixed and cannot be changed")
     const main = catalog.main.find(c => c.key === record.getString("key"))
     if (!main) throw new BadRequestError("Choose a main category from the unified catalog; add a subcategory for a new topic")
     record.set("name_en", main.en)

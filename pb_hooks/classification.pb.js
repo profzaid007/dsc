@@ -1,4 +1,5 @@
 onRecordCreateRequest((e) => {
+  if (e.record.collection().name === "specialist_role_categories") throw new BadRequestError("The classification list is fixed; additions are not allowed")
   require(`${__hooks}/lib/classification-validation.js`)(e)
   return e.next()
 }, "roles_management", "blog_categories", "blog_pages", "programs", "public_lectures", "specialist_role_categories")
@@ -9,9 +10,7 @@ onRecordUpdateRequest((e) => {
 }, "roles_management", "blog_categories", "blog_pages", "programs", "public_lectures", "specialist_role_categories")
 
 onRecordDelete((e) => {
-  const catalog = require(`${__hooks}/lib/classification-catalog.js`)
-  if (catalog.main.some(c => c.key === e.record.getString("key"))) throw new BadRequestError("Unified main categories cannot be deleted")
-  return e.next()
+  throw new BadRequestError("The classification list is fixed; deletions are not allowed")
 }, "specialist_role_categories")
 
 onRecordDelete((e) => {

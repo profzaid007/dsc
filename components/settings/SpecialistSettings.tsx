@@ -110,6 +110,7 @@ export function SpecialistSettings({
   }
   async function save(e: React.FormEvent) {
     e.preventDefault()
+    if (view !== "roles" || kind !== "role") return
     if (!access.can(id ? "settings.update" : "settings.create")) return
     if (!en.trim() || !arabic.trim() || (kind === "role" && !category)) {
       setFormError(
@@ -138,31 +139,16 @@ export function SpecialistSettings({
     setSaving(true)
     setNotice("")
     try {
-      const col = pb.collection(
-        kind === "category" ? "specialist_role_categories" : "roles_management"
-      )
-      const data =
-        kind === "category"
-          ? {
-              name_en: en.trim(),
-              name_ar: arabic.trim(),
-              ...(id
-                ? {}
-                : {
-                    key: `custom-${crypto.randomUUID()}`,
-                    order: categories.length,
-                    is_active: true,
-                  }),
-            }
-          : {
-              role_name_en: en.trim(),
-              role_name_ar: arabic.trim(),
-              category,
-              role_group: mainCategoryKey(
-                categories.find((c) => c.id === category)?.key || ""
-              ),
-              ...(id ? {} : { order: roles.length + 1, is_active: true }),
-            }
+      const col = pb.collection("roles_management")
+      const data = {
+        role_name_en: en.trim(),
+        role_name_ar: arabic.trim(),
+        category,
+        role_group: mainCategoryKey(
+          categories.find((c) => c.id === category)?.key || ""
+        ),
+        ...(id ? {} : { order: roles.length + 1, is_active: true }),
+      }
       if (id) await col.update(id, data)
       else await col.create(data)
       reset()
@@ -262,11 +248,13 @@ export function SpecialistSettings({
     values.some((value) =>
       value.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
     )
-  const filteredCategories = categories
-    .filter((c) =>
-      MAIN_CLASSIFICATIONS.some((main) => main.key === mainCategoryKey(c.key))
-    )
-    .filter((c) => matches(categorySearch, c.name_en, c.name_ar))
+  const fixedCategories = EXPERT_CLASSIFICATIONS.map((main) => ({
+    main,
+    stored: categories.find((c) => mainCategoryKey(c.key) === main.key),
+  }))
+  const filteredCategories = fixedCategories.filter(({ main }) =>
+    matches(categorySearch, main.en, main.ar, main.key)
+  )
   const filteredRoles = roles.filter(
     (r) =>
       (!roleFilter || r.category === roleFilter) &&
@@ -434,23 +422,17 @@ export function SpecialistSettings({
                   onChange={(e) => setCategorySearch(e.target.value)}
                 />
               </label>
-              <button
-                type="button"
-                className={styles.add}
-                disabled={true}
-                onClick={() => add("category")}
-              >
-                <Plus size={17} />
+              <span className={styles.count}>
                 {ar
-                  ? `${MAIN_CLASSIFICATIONS.length} تصنيفات موحّدة`
-                  : `${MAIN_CLASSIFICATIONS.length} classifications`}
-              </button>
+                  ? `${EXPERT_CLASSIFICATIONS.length} تصنيفات ثابتة`
+                  : `${EXPERT_CLASSIFICATIONS.length} fixed classifications`}
+              </span>
             </div>
           </div>
           <p className="px-4 pb-3 text-sm text-muted-foreground">
             {ar
-              ? "التصنيفات الرئيسية موحّدة وثابتة. تُدار التصنيفات الفرعية من إدارة تصنيفات المدونة، ويُستخدم التصنيف الإعلامي للمحتوى فقط."
-              : "Main categories are shared and fixed. Manage subcategories in Blog Categories. The media category is for content only."}
+              ? "هذه القائمة ثابتة؛ لا يمكن إضافة تصنيفات إليها أو حذفها. التصنيف الإعلامي مخصص للمحتوى ولا يُعد فئة تخصص."
+              : "This list is fixed. Classifications cannot be added or deleted. The media category is reserved for content and is not a specialist classification."}
           </p>
           <div className={styles.tableWrap}>
             <table className={`${styles.table} ${styles.categoryTable}`}>
@@ -465,31 +447,48 @@ export function SpecialistSettings({
                   <th scope="col">{ar ? "المفتاح" : "Key"}</th>
                   <th scope="col">{ar ? "الأدوار" : "Roles"}</th>
                   <th scope="col">{ar ? "الحالة" : "Status"}</th>
-                  <th scope="col">{ar ? "الإجراءات" : "Actions"}</th>
                 </tr>
               </thead>
               <tbody>
                 {!loading &&
                   !error &&
-                  filteredCategories.map((c, i) => (
-                    <tr key={c.id}>
+                  filteredCategories.map(({ main: c, stored }, i) => (
+                    <tr key={c.key}>
                       <td>{i + 1}</td>
-                      <td>{categoryIcon(c.id)}</td>
-                      <td>{c.name_en}</td>
-                      <td dir="rtl">{c.name_ar || "—"}</td>
+                      <td>{categoryIcon(stored?.id || c.key)}</td>
+                      <td>{c.en}</td>
+                      <td dir="rtl">{c.ar}</td>
                       <td>
                         <code dir="ltr">{mainCategoryKey(c.key)}</code>
                       </td>
                       <td>
                         <span className={styles.count}>
-                          {roles.filter((r) => r.category === c.id).length}
+                          {stored
+                            ? roles.filter((r) => r.category === stored.id)
+                                .length
+                            : "—"}
                         </span>
                       </td>
-                      <td>{status("category", c)}</td>
-                      <td>{actions("category", c)}</td>
+                      <td>
+                        <span
+                          className={`${styles.status} ${stored?.is_active !== false && stored ? styles.active : styles.inactive}`}
+                        >
+                          {stored
+                            ? stored.is_active !== false
+                              ? ar
+                                ? "نشط"
+                                : "Active"
+                              : ar
+                                ? "غير نشط"
+                                : "Inactive"
+                            : ar
+                              ? "يلزم تحديث الخادم"
+                              : "Server update required"}
+                        </span>
+                      </td>
                     </tr>
                   ))}
-                {(loading || error || !filteredCategories.length) && empty(8)}
+                {(loading || error || !filteredCategories.length) && empty(7)}
               </tbody>
             </table>
           </div>

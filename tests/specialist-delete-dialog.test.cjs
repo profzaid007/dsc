@@ -123,3 +123,20 @@ test("saving a role retains its category relation and canonical category key", a
   assert.equal(ui.writes[0].data.category, "research-cat")
   assert.equal(ui.writes[0].data.role_group, "research")
 })
+
+
+test("the fixed classification table includes Research and Other without Add or Delete controls", () => {
+  const ui = screen(async () => assert.fail("Classifications must not be deleted"), ["settings.read", "settings.create", "settings.delete"], "classifications")
+  const all = ui.nodes(ui.render())
+  const section = all.find(node => node.props?.["aria-labelledby"] === "categories-heading")
+  const rows = ui.nodes(section).filter(node => node.type === "tr" && node.props?.children?.some?.(child => child?.type === "td"))
+  assert.equal(rows.length, 7)
+  const text = JSON.stringify(section)
+  assert.match(text, /Research & Statistical Analysis/)
+  assert.match(text, /البحث العلمي والتحليل الإحصائي/)
+  assert.match(text, /Other/)
+  assert.match(text, /أخرى/)
+  assert.match(text, /Server update required/)
+  assert.equal(ui.nodes(section).some(node => node.type === "button" || node.type === "Button"), false)
+  assert.equal(ui.nodes(section).some(node => node.type === "th" && node.props.children === "Actions"), false)
+})

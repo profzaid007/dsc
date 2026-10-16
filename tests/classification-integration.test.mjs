@@ -11,7 +11,7 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
   const migrations = path.join(fixture, "migrations")
   fs.mkdirSync(migrations)
   fs.writeFileSync(path.join(migrations, "1000_fixture.js"), `migrate(app=>{
-    const roots=new Collection({name:'specialist_role_categories',type:'base',deleteRule:'',fields:[
+    const roots=new Collection({name:'specialist_role_categories',type:'base',createRule:'',updateRule:'',deleteRule:'',fields:[
       {name:'key',type:'text'},{name:'name_en',type:'text'},{name:'name_ar',type:'text'},{name:'order',type:'number'}]});app.save(roots);
     app.save(new Record(roots,{id:'psychology00001',key:'psychology',name_en:'Psychology'}));
     app.save(new Record(roots,{id:'legacyother0001',key:'custom-other',name_en:'Other'}));
@@ -111,6 +111,12 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
     const otherBody=await otherRole.json()
     assert.equal(otherRole.status,200,JSON.stringify(otherBody))
     assert.equal(otherBody.category,"legacyother0001")
+    const addCategory=await fetch(base+"/api/collections/specialist_role_categories/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:"other",name_en:"Other",name_ar:"أخرى"})})
+    const addBody=await addCategory.json()
+    assert.equal(addCategory.status,400,JSON.stringify(addBody))
+    assert.match(addBody.message,/additions are not allowed/)
+    const renameCategory=await fetch(base+"/api/collections/specialist_role_categories/records/psychology00001",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:"research"})})
+    assert.equal(renameCategory.status,400,await renameCategory.text())
     const deleteRoot=await fetch(base+"/api/collections/specialist_role_categories/records/psychology00001",{method:"DELETE"})
     assert.equal(deleteRoot.status,400,await deleteRoot.text())
     const deleteUsedChild=await fetch(base+"/api/collections/blog_categories/records/autismchild0001",{method:"DELETE"})
