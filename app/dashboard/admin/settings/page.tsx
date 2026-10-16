@@ -6,10 +6,9 @@ import Link from "next/link"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
-import { ArrowLeft, List, Landmark, Plus } from "lucide-react"
+import { ArrowLeft, List, Landmark, Users, Wrench } from "lucide-react"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -18,22 +17,40 @@ import { Button } from "@/components/ui/button"
 
 const settingsCards = [
   {
-    title: { en: "Specialist categories and roles", ar: "فئات وأدوار التخصص" },
+    title: { en: "Classifications", ar: "التصنيفات" },
     description: {
-      en: "Manage bilingual specialist categories and roles",
-      ar: "إدارة فئات وأدوار التخصص بالعربية والإنجليزية",
+      en: "Shared main classifications for specialties and content",
+      ar: "التصنيفات الرئيسية الموحّدة للتخصصات والمحتوى",
     },
-    href: "/dashboard/admin/settings/specialists",
+    href: "/dashboard/admin/settings/classifications",
     icon: List,
   },
   {
-    title: { en: "Lookups", ar: "القوائم المرجعية" },
+    title: { en: "Roles", ar: "الأدوار" },
     description: {
-      en: "Manage tool types and user types",
-      ar: "إدارة أنواع الأدوات وأنواع المستخدمين",
+      en: "Manage specialist roles and their category links",
+      ar: "إدارة أدوار التخصص وربط كل دور بتصنيفه",
     },
-    href: "/dashboard/admin/settings/lookups",
+    href: "/dashboard/admin/settings/roles",
     icon: List,
+  },
+  {
+    title: { en: "Tool types", ar: "أنواع الأدوات" },
+    description: {
+      en: "Manage the tool type list",
+      ar: "إدارة قائمة أنواع الأدوات",
+    },
+    href: "/dashboard/admin/settings/tool-types",
+    icon: Wrench,
+  },
+  {
+    title: { en: "User types", ar: "أنواع المستخدمين" },
+    description: {
+      en: "Manage the user type list",
+      ar: "إدارة قائمة أنواع المستخدمين",
+    },
+    href: "/dashboard/admin/settings/user-types",
+    icon: Users,
   },
   {
     title: { en: "Payment Settings", ar: "إعدادات الدفع" },

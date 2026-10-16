@@ -22,4 +22,13 @@ Backend validation rejects a specialist role in the media category and rejects m
 
 `tests/classification-integration.test.mjs` runs a disposable PocketBase 0.31 database and localhost API. It verifies seven active main categories, preserved roles/tool permissions, preserved article content and subcategory IDs, exact legacy-training matching, retained unmatched labels, public lecture projection fields, idempotence, parent-child validation, and media-only role rejection. Existing allocation and public-expert filter tests cover original role IDs and expert selections.
 
-The additive research/other migration reuses an existing Other category (including a legacy custom key) by its bilingual label and retains its ID and linked roles. `dsc-news` remains a separate content-only category and is hidden from the specialist-category table. Historical migration files are not regenerated when the catalog changes.
+The additive research/other migration reuses an existing Other category (including a legacy custom key) by its bilingual label and retains its ID and linked roles. `dsc-news` remains a separate content-only category and is excluded from specialist-role category selectors. Historical migration files are not regenerated when the catalog changes.
+
+## Settings navigation
+
+- `/dashboard/admin/settings/classifications`: shared classifications, including the content-only media category.
+- `/dashboard/admin/settings/roles`: specialist roles; each saved role requires a `category` relation and its matching canonical `role_group` key. The table displays the category name and key.
+- `/dashboard/admin/settings/tool-types`: the tool-type list, fixed to `lookups.type = "tool_types"` for reads and creation.
+- `/dashboard/admin/settings/user-types`: the user-type list, fixed to `lookups.type = "user_types"` for reads and creation.
+
+Old `/settings/specialists` and `/settings/lookups` bookmarks redirect to Classifications and Tool types. Splitting the settings pages does not change record IDs or require a new database migration.

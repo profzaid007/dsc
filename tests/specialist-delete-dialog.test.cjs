@@ -7,15 +7,20 @@ class BlockedError extends Error {
   constructor(message, links, total) { super(message); this.links = links; this.total = total }
 }
 
-function screen(deleteItem, permissions = ["settings.read", "settings.create", "settings.update", "settings.delete"]) {
+function screen(deleteItem, permissions = ["settings.read", "settings.create", "settings.update", "settings.delete"], view = "roles") {
   const state = []
   let index = 0
   const notices = []
+  const writes = []
   const jsx = (type, props) => ({ type, props })
+  const main = JSON.parse(fs.readFileSync("lib/classification-catalog.json", "utf8")).main
   const mocks = {
+    "next/link": { __esModule: true, default: "Link" },
+    "@/hooks/useUiTranslation": { useUiTranslation: () => text => text },
+    "@/lib/classification": { MAIN_CLASSIFICATIONS: main, EXPERT_CLASSIFICATIONS: main.filter(c => !c.media_only), mainCategoryKey: key => key === "psychology" ? "mental-health" : key },
     "react/jsx-runtime": { jsx, jsxs: jsx },
     "lucide-react": new Proxy({}, { get: (_, key) => String(key) }),
-    "./specialists.module.css": { __esModule: true, default: new Proxy({}, { get: (_, key) => String(key) }) },
+    "@/app/dashboard/admin/settings/specialists/specialists.module.css": { __esModule: true, default: new Proxy({}, { get: (_, key) => String(key) }) },
     react: { useState: initial => {
       const key = index++
       if (!(key in state)) state[key] = initial
@@ -27,21 +32,21 @@ function screen(deleteItem, permissions = ["settings.read", "settings.create", "
     "@/hooks/useAuth": { useAuth: () => ({ isAdmin: true, isSuperAdmin: false, isLoading: false }) },
     "@/hooks/usePermissions": { usePermissions: () => ({ can: key => permissions.includes(key) }) },
     "@/lib/lang-context": { useLang: () => ({ lang: "en" }) },
-    "@/hooks/useSpecialists": { useSpecialists: () => ({ categories: [], roles: [{ id: "physician", role_name_en: "Physician" }], loading: false, error: "", refresh: async () => {} }) },
-    "@/lib/pb": { __esModule: true, default: {}, getErrorMessage: error => error.message },
+    "@/hooks/useSpecialists": { useSpecialists: () => ({ categories: [{ id: "medical-cat", key: "medical", name_en: "Medicine & Health", name_ar: "الطب والصحة" }, { id: "research-cat", key: "research", name_en: "Research", name_ar: "البحث العلمي" }], roles: [{ id: "physician", role_name_en: "Physician", role_name_ar: "طبيب", category: "medical-cat" }], loading: false, error: "", refresh: async () => {} }) },
+    "@/lib/pb": { __esModule: true, default: { collection: name => ({ update: async (id, data) => { writes.push({ name, id, data }) } }) }, getErrorMessage: error => error.message },
     sonner: { toast: { error: message => notices.push(message), success: message => notices.push(message) } },
   }
   const exports = {}
-  new Function("exports", "require", ts.transpileModule(fs.readFileSync("app/dashboard/admin/settings/specialists/page.tsx", "utf8"), {
+  new Function("exports", "require", ts.transpileModule(fs.readFileSync("components/settings/SpecialistSettings.tsx", "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
   }).outputText)(exports, name => { assert.ok(name in mocks, name); return mocks[name] })
-  const render = () => { index = 0; return exports.default() }
+  const render = () => { index = 0; return exports.SpecialistSettings({ view }) }
   function nodes(tree) {
     if (!tree || typeof tree !== "object") return []
     if (Array.isArray(tree)) return tree.flatMap(nodes)
     return [tree, ...nodes(tree.props?.children)]
   }
-  return { render, nodes, notices }
+  return { render, nodes, notices, writes }
 }
 test("failed deletion leaves its error visible inside the confirmation dialog", async () => {
   const message = "This role is used by experts or case assignments. Deactivate it instead."
@@ -88,3 +93,33 @@ test("successful confirmed deletion closes the dialog and reports success", asyn
   assert.equal(links[1].props.href, "/dashboard/admin/experts/expert")
   assert.ok(nodes.some(node => node.props?.children === "Assigned expert: Hala aref"))
  })
+
+
+test("classifications and roles render as separate settings", () => {
+  for (const view of ["classifications", "roles"]) {
+    const ui = screen(async () => {}, ["settings.read"], view)
+    const nodes = ui.nodes(ui.render())
+    assert.equal(nodes.some(node => node.props?.["aria-labelledby"] === "categories-heading"), view === "classifications")
+    assert.equal(nodes.some(node => node.props?.["aria-labelledby"] === "roles-heading"), view === "roles")
+  }
+})
+
+test("role form requires the category foreign key", () => {
+  const ui = screen(async () => {})
+  const add = ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "add")
+  add.props.onClick()
+  const field = ui.nodes(ui.render()).find(node => node.type === "select" && node.props.name === "category")
+  assert.equal(field.props.required, true)
+})
+
+
+test("saving a role retains its category relation and canonical category key", async () => {
+  const ui = screen(async () => {})
+  ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "edit").props.onClick()
+  ui.nodes(ui.render()).find(node => node.type === "select" && node.props.name === "category").props.onChange({ target: { value: "research-cat" } })
+  await ui.nodes(ui.render()).find(node => node.type === "form").props.onSubmit({ preventDefault() {} })
+  assert.equal(ui.writes[0].name, "roles_management")
+  assert.equal(ui.writes[0].id, "physician")
+  assert.equal(ui.writes[0].data.category, "research-cat")
+  assert.equal(ui.writes[0].data.role_group, "research")
+})
