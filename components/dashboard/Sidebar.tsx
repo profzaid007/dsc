@@ -23,7 +23,6 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
-  UserCheck,
   BadgeCheck,
   Wallet,
   Briefcase,
@@ -57,11 +56,6 @@ const adminNavigation: NavItem[] = [
     name: { en: "Tools", ar: "الأدوات" },
     href: "/dashboard/admin/tools",
     icon: Wrench,
-  },
-  {
-    name: { en: "Allocations", ar: "التخصيصات" },
-    href: "/dashboard/admin/allocations",
-    icon: UserCheck,
   },
   {
     name: { en: "Training", ar: "التدريب" },

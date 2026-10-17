@@ -2,6 +2,7 @@
 import { usePermissions } from "@/hooks/usePermissions"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 import { CaseAssessments } from "@/components/assessments/CaseAssessments"
+import { CaseAllocations } from "@/components/cases/CaseAllocations"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
 
 import { use, useEffect, useState } from "react"
@@ -110,7 +111,7 @@ export default function AdminCaseDetailPage({
   const { id: caseId } = use(params)
   const [activeTab, setActiveTab] = useState("overview")
   useEffect(() => {
-    const openTab = () => { if (window.location.hash === "#case-assignments") setActiveTab("assigned") }
+    const openTab = () => { if (window.location.hash === "#case-assignments") setActiveTab("assigned"); if (window.location.hash === "#case-allocations") setActiveTab("allocations") }
     openTab()
     window.addEventListener("hashchange", openTab)
     return () => window.removeEventListener("hashchange", openTab)
@@ -444,6 +445,7 @@ export default function AdminCaseDetailPage({
               {caseAssignments.length + assessmentCount}
             </Badge>
           </TabsTrigger>
+          {access.can("allocations.read") && <TabsTrigger value="allocations">{lang === "ar" ? "تخصيص الخبراء" : "Expert allocation"}</TabsTrigger>}
           <TabsTrigger value="case-file">
             {lang === "ar" ? "ملف الحالة" : "Case File"}
           </TabsTrigger>
@@ -971,6 +973,7 @@ export default function AdminCaseDetailPage({
           </Card>
         </TabsContent>
 
+        {access.can("allocations.read") && <TabsContent value="allocations" id="case-allocations"><CaseAllocations key={profile.id} caseId={profile.id} /></TabsContent>}
         <TabsContent value="case-file">
           <Card>
             <CardHeader>
