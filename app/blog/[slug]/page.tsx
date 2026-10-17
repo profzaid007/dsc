@@ -10,6 +10,7 @@ import type { BlogPage, BlogCategory } from "@/types/cms"
 import type { Lang } from "@/types/form"
 import "suneditor/css/contents"
 
+import { isCustomCmsLayout } from "@/lib/cms-layout"
 import { CmsContent } from "@/components/cms/CmsContent"
 
 interface BlogPostPageProps {
@@ -72,8 +73,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound()
   }
 
+  const content = blogField(page, "content")
+  const customLayout = isCustomCmsLayout(content)
+
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-12">
+    <div className={customLayout ? "w-full min-w-0 py-12" : "mx-auto w-full max-w-4xl px-6 py-12"}>
+      <div className={customLayout ? "mx-auto w-full max-w-7xl px-6" : undefined}>
       <Link
         href="/blog"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
@@ -102,9 +107,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </h1>
       </div>
 
+      </div>
       <CmsContent
-        html={blogField(page, "content")}
-        lang={blogContentLang(blogField(page, "content"))}
+        html={content}
+        lang={blogContentLang(content)}
       />
     </div>
   )

@@ -2,7 +2,7 @@
 import { matchesContentSearch } from "@/lib/content-search"
 import { classificationParent } from "@/lib/classification"
 import { useClassifications } from "@/hooks/useClassifications"
-import { blogField } from "@/lib/blog-content"
+import { blogField, blogPlainText } from "@/lib/blog-content"
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
@@ -37,14 +37,6 @@ const categoryIcons = [
   FileText,
 ]
 
-function excerpt(content: string) {
-  return content
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ")
-    .trim()
-}
 
 export function BlogListing({
   posts,
@@ -71,7 +63,7 @@ export function BlogListing({
         (post) =>
           (!mainCategory || (post.main_category || classificationParent(post.category)) === mainCategory) &&
           (!category || post.category === category) &&
-          matchesContentSearch(search, blogField(post, "title"), excerpt(blogField(post, "content")), post.keywords)
+          matchesContentSearch(search, blogField(post, "title"), blogPlainText(blogField(post, "content")), post.keywords)
       ),
     [posts, category, search, mainCategory]
   )
@@ -92,7 +84,7 @@ export function BlogListing({
     Math.max(
       1,
       Math.ceil(
-        excerpt(blogField(post, "content")).split(/\s+/).length / 180
+        blogPlainText(blogField(post, "content")).split(/\s+/).length / 180
       )
     )
   const date = (post: ListingPost) => {
@@ -176,7 +168,7 @@ export function BlogListing({
                 </h2>
                 {metadata(featured, true)}
                 <p className={styles.featuredExcerpt}>
-                  {excerpt(blogField(featured, "content"))}
+                  {blogPlainText(blogField(featured, "content"))}
                 </p>
                 <Link
                   className={styles.readButton}
@@ -294,7 +286,7 @@ export function BlogListing({
                           {blogField(post, "title")}
                         </Link>
                       </h3>
-                      <p>{excerpt(blogField(post, "content"))}</p>
+                      <p>{blogPlainText(blogField(post, "content"))}</p>
                       {metadata(post)}
                       <Link
                         className={styles.textLink}
