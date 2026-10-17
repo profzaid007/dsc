@@ -476,7 +476,7 @@ export default function PlanBuilderPage({
           </h1>
           <p className="text-muted-foreground">
             {lang === "ar"
-              ? "إنشاء خطة لقضية محددة"
+              ? "إنشاء خطة لحالة محددة"
               : "Create a plan for a specific case"}
           </p>
         </div>
@@ -513,14 +513,14 @@ export default function PlanBuilderPage({
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "اختيار القضية *" : "Case Selection *"}
+                {lang === "ar" ? "اختيار الحالة *" : "Case Selection *"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
-                placeholder={lang === "ar" ? "اختر قضية..." : "Select a case..."}
+                placeholder={lang === "ar" ? "اختر حالة..." : "Select a case..."}
                 disabled={!!editAssignmentId}
               />
             </CardContent>

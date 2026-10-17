@@ -511,7 +511,7 @@ export default function AllocationsPage() {
               </h1>
               <p className="text-muted-foreground">
                 {lang === "ar"
-                  ? "تخصيص القضايا للخبراء"
+                  ? "تخصيص الحالات للخبراء"
                   : "Allocate cases to experts"}
               </p>
             </div>
@@ -538,7 +538,7 @@ export default function AllocationsPage() {
             </h1>
             <p className="text-muted-foreground">
               {lang === "ar"
-                ? "تخصيص القضايا للخبراء"
+                ? "تخصيص الحالات للخبراء"
                 : "Allocate cases to experts"}
             </p>
           </div>
@@ -626,11 +626,11 @@ export default function AllocationsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "اختيار القضية" : "Select Case"}
+                {lang === "ar" ? "اختيار الحالة" : "Select Case"}
               </CardTitle>
               <CardDescription>
                 {lang === "ar"
-                  ? "اختر القضية التي تريد تخصيص الخبراء لها"
+                  ? "اختر الحالة التي تريد تخصيص الخبراء لها"
                   : "Choose the case you want to allocate experts to"}
               </CardDescription>
             </CardHeader>
@@ -641,7 +641,7 @@ export default function AllocationsPage() {
                   value={selectedCase}
                   onChange={setSelectedCase}
                   placeholder={
-                    lang === "ar" ? "اختر قضية..." : "Select a case..."
+                    lang === "ar" ? "اختر حالة..." : "Select a case..."
                   }
                 />
               </div>
@@ -678,11 +678,11 @@ export default function AllocationsPage() {
                 <div className="py-12 text-center">
                   <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <h3 className="mb-2 text-lg font-medium">
-                    {lang === "ar" ? "لم يتم اختيار قضية" : "No case selected"}
+                    {lang === "ar" ? "لم يتم اختيار حالة" : "No case selected"}
                   </h3>
                   <p className="text-muted-foreground">
                     {lang === "ar"
-                      ? "يرجى اختيار قضية أولاً لعرض الخبراء المخصصين"
+                      ? "يرجى اختيار حالة أولاً لعرض الخبراء المخصصين"
                       : "Please select a case first to view assigned experts"}
                   </p>
                 </div>
@@ -696,7 +696,7 @@ export default function AllocationsPage() {
                   </h3>
                   <p className="mb-4 text-muted-foreground">
                     {lang === "ar"
-                      ? "لم يتم تخصيص خبراء لهذه القضية بعد"
+                      ? "لم يتم تخصيص خبراء لهذه الحالة بعد"
                       : "No experts have been assigned to this case yet"}
                   </p>
                   <Button

@@ -48,11 +48,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  Table,
-  TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table"
 import {
@@ -137,6 +133,9 @@ export default function AdminCaseDetailPage({
   const { bankDetails } = usePaymentSettings()
 
   const [showAssignModal, setShowAssignModal] = useState(false)
+  const [assignKind, setAssignKind] = useState<"tool" | "assessment">("tool")
+  const [assessmentReload, setAssessmentReload] = useState(0)
+  const [assessmentCount, setAssessmentCount] = useState(0)
   const [selectedToolId, setSelectedToolId] = useState<string>("")
   const [isAssigning, setIsAssigning] = useState(false)
   const [assignTab, setAssignTab] = useState<"templates" | "caseSpecific">(
@@ -442,7 +441,7 @@ export default function AdminCaseDetailPage({
           <TabsTrigger value="assigned">
             {lang === "ar" ? "الأدوات والمقاييس" : "Tools & assessments"}
             <Badge variant="secondary" className="ms-2">
-              {caseAssignments.length}
+              {caseAssignments.length + assessmentCount}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="case-file">
@@ -882,7 +881,6 @@ export default function AdminCaseDetailPage({
         </TabsContent>
 
         <TabsContent value="assigned" id="case-assignments">
-          <CaseAssessments caseId={profile.id} />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -896,50 +894,13 @@ export default function AdminCaseDetailPage({
                     : "Manage assignments for this case"}
                 </CardDescription>
               </div>
-              <Button onClick={() => setShowAssignModal(true)}>
+              <Button onClick={() => { setAssignKind("tool"); setShowAssignModal(true) }}>
                 <Plus className="me-2 h-4 w-4" />
-                {lang === "ar" ? "تعيين أداة" : "Assign Tool"}
+                {lang === "ar" ? "تعيين أداة أو مقياس" : "Assign tool or assessment"}
               </Button>
             </CardHeader>
             <CardContent>
-              {caseAssignments.length === 0 ? (
-                <div className="py-8 text-center">
-                  <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="mb-2 text-lg font-medium">
-                    {lang === "ar"
-                      ? "لا توجد مهام مكلف بها"
-                      : "No tasks assigned"}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {lang === "ar"
-                      ? 'انقر على "تعيين أداة" لإضافة مهمة لهذه الحالة'
-                      : 'Click "Assign Tool" to add a task for this case'}
-                  </p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>
-                        {lang === "ar" ? "التعيين" : "Assignment"}
-                      </TableHead>
-                      <TableHead>{lang === "ar" ? "النوع" : "Type"}</TableHead>
-                      <TableHead>
-                        {lang === "ar" ? "الحالة" : "Status"}
-                      </TableHead>
-                      <TableHead>
-                        {lang === "ar" ? "مرئي للمستخدم" : "Visible to User"}
-                      </TableHead>
-                      <TableHead>
-                        {lang === "ar" ? "تاريخ التعيين" : "Assigned Date"}
-                      </TableHead>
-                      <TableHead className="text-right">
-                        {lang === "ar" ? "الإجراءات" : "Actions"}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {caseAssignments.map((assignment) => {
+              <CaseAssessments key={`${profile.id}-${assessmentReload}`} caseId={profile.id} mode="list" onCountChange={setAssessmentCount} assignmentRows={caseAssignments.length ? <>{caseAssignments.map((assignment) => {
                       const toolType = toolTypes.find(
                         (t) => t.id === assignment.type
                       )
@@ -1005,10 +966,7 @@ export default function AdminCaseDetailPage({
                           </TableCell>
                         </TableRow>
                       )
-                    })}
-                  </TableBody>
-                </Table>
-              )}
+                    })}</> : undefined} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -1080,7 +1038,7 @@ export default function AdminCaseDetailPage({
           <Card className="mx-4 w-full max-w-2xl">
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "تعيين أداة" : "Assign Tool"}
+                {lang === "ar" ? "تعيين أداة أو مقياس" : "Assign tool or assessment"}
               </CardTitle>
               <CardDescription>
                 {lang === "ar"
@@ -1089,6 +1047,11 @@ export default function AdminCaseDetailPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-4 flex gap-2">
+                <Button variant={assignKind === "tool" ? "default" : "outline"} onClick={() => setAssignKind("tool")}>{lang === "ar" ? "أداة" : "Tool"}</Button>
+                <Button variant={assignKind === "assessment" ? "default" : "outline"} onClick={() => setAssignKind("assessment")}>{lang === "ar" ? "مقياس / تقييم" : "Assessment"}</Button>
+              </div>
+              {assignKind === "assessment" ? <CaseAssessments caseId={profile.id} mode="assign" onAssigned={() => { setAssessmentReload(v => v + 1); setShowAssignModal(false) }} /> : <>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                 {/* Case-specific tools - direct create */}
                 {toolTypeOrder
@@ -1213,10 +1176,11 @@ export default function AdminCaseDetailPage({
               {allowedToolTypeIds.length > 0 && (
                 <p className="mt-4 text-sm text-muted-foreground">
                   {lang === "ar"
-                    ? "يتم عرض أنواع الأدوات بناءً على أدوار الخبراء المخصصين لهذه القضية."
+                    ? "يتم عرض أنواع الأدوات بناءً على أدوار الخبراء المخصصين لهذه الحالة."
                     : "Tool types shown are based on the assigned experts' roles for this case."}
                 </p>
               )}
+              </>}
             </CardContent>
             <CardContent className="flex justify-end pt-0">
               <Button

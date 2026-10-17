@@ -223,10 +223,10 @@ export default function OneToOneMeetingNewPage({
           <p className="text-muted-foreground">
             {editAssignmentId
               ? lang === "ar"
-                ? "تحديث الاجتماع لقضية محددة"
+                ? "تحديث الاجتماع لحالة محددة"
                 : "Update the meeting for a specific case"
               : lang === "ar"
-                ? "إنشاء اجتماع لقضية محددة"
+                ? "إنشاء اجتماع لحالة محددة"
                 : "Create a meeting for a specific case"}
           </p>
         </div>
@@ -260,20 +260,20 @@ export default function OneToOneMeetingNewPage({
           <Card>
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "اختر قضية *" : "Select Case *"}
+                {lang === "ar" ? "اختر حالة *" : "Select Case *"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
-                placeholder={lang === "ar" ? "اختر قضية..." : "Select a case..."}
+                placeholder={lang === "ar" ? "اختر حالة..." : "Select a case..."}
                 disabled={!!editAssignmentId}
               />
               {!selectedCaseId && (
                 <p className="mt-2 text-sm text-destructive">
                   {lang === "ar"
-                    ? "يرجى اختيار قضية للمتابعة"
+                    ? "يرجى اختيار حالة للمتابعة"
                     : "Please select a case to continue"}
                 </p>
               )}

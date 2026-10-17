@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
@@ -15,18 +15,20 @@ type CaseData = {
 }
 const selectStyle =
   "h-10 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
-export function CaseAssessments({ caseId }: { caseId: string }) {
+type CaseAssessmentProps = { caseId: string; mode?: "all" | "assign" | "list"; assignmentRows?: ReactNode; onAssigned?: () => void; onCountChange?: (count: number) => void }
+export function CaseAssessments(props: CaseAssessmentProps) {
+  const { caseId } = props
   const { currentUser, isLoading } = useAuth()
   if (isLoading) return null
   const professional =
     currentUser && ["admin", "super_admin", "expert"].includes(currentUser.role)
   return professional ? (
-    <ProfessionalCaseAssessments key={caseId} caseId={caseId} />
+    <ProfessionalCaseAssessments key={caseId} {...props} />
   ) : (
     <ClientAssessmentList caseId={caseId} />
   )
 }
-function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
+function ProfessionalCaseAssessments({ caseId, mode = "all", assignmentRows, onAssigned, onCountChange }: CaseAssessmentProps) {
   const { lang } = useLang()
   const t = (ar: string, en: string) => (lang === "ar" ? ar : en)
   const [data, setData] = useState<CaseData | null>(null),
@@ -55,7 +57,7 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
       signal: controller.signal,
     })
       .then((r) => {
-        if (active) setData(r)
+        if (active) { setData(r); onCountChange?.(r.sessions.length) }
       })
       .catch((e) => {
         if (active) setError(getErrorMessage(e))
@@ -64,7 +66,7 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
       active = false
       controller.abort()
     }
-  }, [caseId, reload])
+  }, [caseId, reload, onCountChange])
   useEffect(
     () => () => {
       // Invalidate in-flight report requests when this case panel unmounts.
@@ -94,6 +96,7 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
             }
           : d
       )
+      onAssigned?.()
       setNotice(
         t(
           "تم إرسال المقياس إلى حساب العميل داخل الموقع.",
@@ -134,10 +137,10 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
   }
   return (
     <section
-      className="space-y-4 rounded-lg border bg-white p-5"
+      className="space-y-4"
       dir={lang === "ar" ? "rtl" : "ltr"}
     >
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      {mode === "all" && <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-primary">
             {t("المقاييس والتقييمات", "Assessments")}
@@ -152,7 +155,7 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
         <Button variant="outline" onClick={() => setReload((v) => v + 1)}>
           {t("تحديث الحالة", "Refresh status")}
         </Button>
-      </header>
+      </header>}
       {error && (
         <p role="alert" className="rounded bg-red-50 p-3 text-red-800">
           {error}
@@ -166,7 +169,7 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
       {!data && !error && (
         <p role="status">{t("جارٍ تحميل المقاييس…", "Loading assessments…")}</p>
       )}
-      {data?.canAssign && (
+      {mode !== "list" && data?.canAssign && (
         <fieldset
           disabled={busy}
           className="space-y-3 border-s-4 border-primary bg-slate-50 p-4"
@@ -177,8 +180,8 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
           {!data.assessments.length ? (
             <p>
               {t(
-                "لا توجد مقاييس منشورة. احفظ المقياس واختبره ثم انشره أولًا. مقياس الصحة النفسية يبقى مسودة حتى اكتمال معايير تفسيره.",
-                "No published assessments are available. Save, test and publish an assessment first. The mental health scale remains a draft until interpretation criteria are complete."
+                "لا توجد مقاييس منشورة. احفظ المقياس واختبره ثم انشره أولًا.",
+                "No published assessments are available. Save, test and publish an assessment first."
               )}
             </p>
           ) : (
@@ -251,12 +254,12 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
           )}
         </fieldset>
       )}
-      {data &&
-        (!data.sessions.length ? (
+      {mode !== "assign" && (data || assignmentRows) &&
+        (!data?.sessions.length && !assignmentRows ? (
           <p className="rounded border border-dashed p-4 text-slate-600">
             {t(
-              "لم تُرسل مقاييس لهذه الحالة بعد.",
-              "No assessments have been assigned to this case."
+              "لا توجد تعيينات لهذه الحالة بعد.",
+              "No assignments have been added to this case."
             )}
           </p>
         ) : (
@@ -265,10 +268,11 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
               <thead>
                 <tr>
                   {[
-                    t("المقياس", "Assessment"),
-                    t("الإصدار", "Version"),
+                    t("التعيين", "Assignment"),
+                    t("النوع", "Type"),
                     t("الحالة", "Status"),
-                    t("الإرسال", "Assigned"),
+                    t("مرئي للمستخدم", "Visible to user"),
+                    t("تاريخ التعيين", "Assigned date"),
                     t("التقرير", "Report"),
                   ].map((h) => (
                     <th key={h} className="p-2 text-start">
@@ -278,11 +282,13 @@ function ProfessionalCaseAssessments({ caseId }: { caseId: string }) {
                 </tr>
               </thead>
               <tbody>
-                {data.sessions.map((s) => (
+                {assignmentRows}
+                {data?.sessions.map((s) => (
                   <tr key={s.id} className="border-t">
-                    <td className="p-2 font-medium">{s.snapshot.name}</td>
-                    <td className="p-2">{s.snapshot.version}</td>
+                    <td className="p-2 font-medium">{s.snapshot.name} · {s.snapshot.version}</td>
+                    <td className="p-2">{t("مقياس / تقييم", "Assessment")}</td>
                     <td className="p-2">{status(s)}</td>
+                    <td className="p-2">{s.recipient ? t("نعم", "Yes") : t("لا", "No")}</td>
                     <td className="p-2">{s.assigned_at || s.created}</td>
                     <td className="p-2">
                       <Button
