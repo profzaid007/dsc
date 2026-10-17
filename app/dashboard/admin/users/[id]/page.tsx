@@ -9,6 +9,7 @@ import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
 import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { t } from "@/lib/i18n"
+import { expertDisplayName } from "@/lib/expert-display-name"
 import { toast } from "sonner"
 import {
   Card,
@@ -411,7 +412,7 @@ export default function AdminUserDetailPage({
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-primary">{user.name}</h1>
+          <h1 className="text-2xl font-bold text-primary">{user.role === "expert" ? expertDisplayName(expertProfile, lang, user.name) : user.name}</h1>
           <p className="text-muted-foreground">{user.email}</p>
         </div>
         {canResetPassword && (

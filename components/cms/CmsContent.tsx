@@ -39,6 +39,7 @@ export function CmsContent({ html, lang, className }: CmsContentProps) {
         "[&_h1]:my-6 [&_h1]:text-3xl [&_h1]:font-bold " +
         "[&_h2]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold " +
         "[&_h3]:my-3 [&_h3]:text-xl [&_h3]:font-semibold " +
+        "[&_video]:max-w-full [&_video]:h-auto [&_video]:aspect-video " +
         "[&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg " +
         "[&_table]:block [&_table]:w-max [&_table]:max-w-full [&_table]:overflow-x-auto " +
         "[&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 " +

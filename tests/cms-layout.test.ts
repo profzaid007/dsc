@@ -108,3 +108,14 @@ test("anchors retain safe navigation and rich-text sanitization remains strict",
   assert.ok(!rich.includes("display:grid"))
   assert.ok(rich.includes("color:#123456"))
 })
+
+
+test("rich-text articles preserve playable uploaded videos without active content", () => {
+  const html = sanitizeCmsContent('<video src="https://test.spcloud.pro/api/files/blog_pages/post/video.mp4" controls playsinline poster="https://example.com/poster.jpg" onerror="alert(1)"><source src="https://example.com/video.webm" type="video/webm"></video><script>alert(2)</script>')
+  assert.ok(html.includes("<video"))
+  assert.ok(html.includes("controls"))
+  assert.ok(html.includes("playsinline"))
+  assert.ok(html.includes('type="video/webm"'))
+  assert.ok(!html.includes("alert("))
+  assert.ok(!sanitizeCmsContent('<video src="javascript:alert(1)"></video>').includes("javascript:"))
+})

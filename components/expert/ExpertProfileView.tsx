@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatDate } from "@/lib/format-date"
 import { t } from "@/lib/i18n"
+import { expertDisplayName } from "@/lib/expert-display-name"
 import { useLang } from "@/lib/lang-context"
 import {
   ageGroupLabel,
@@ -125,7 +126,7 @@ export function ExpertProfileView({
 
       {/* Hero */}
       <ProfileHero
-        name={name}
+        name={expertDisplayName(profile, lang, name)}
         photoUrl={photoUrl}
         action={
           onEdit && hideHeading ? (

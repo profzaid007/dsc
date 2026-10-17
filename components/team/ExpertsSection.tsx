@@ -55,7 +55,9 @@ export function ExpertsSection({ experts }: ExpertsSectionProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {experts.map((expert) => (
+            {experts.map((expert) => {
+              const name = (lang === "ar" ? expert.publicNameAr : expert.publicNameEn) || expert.publicNameEn || expert.publicNameAr || expert.name
+              return (
               <Card
                 key={expert.id}
                 className="group overflow-hidden p-0 text-center transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
@@ -77,7 +79,7 @@ export function ExpertsSection({ experts }: ExpertsSectionProps) {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={expert.photoUrl}
-                            alt={expert.name}
+                            alt={name}
                             className="h-full w-full object-cover"
                           />
                         ) : (
@@ -86,7 +88,7 @@ export function ExpertsSection({ experts }: ExpertsSectionProps) {
                               className="text-3xl font-bold md:text-4xl"
                               style={{ color: "var(--dsc-navy)" }}
                             >
-                              {initials(expert.name) || "?"}
+                              {initials(name) || "?"}
                             </span>
                           </div>
                         )}
@@ -99,7 +101,7 @@ export function ExpertsSection({ experts }: ExpertsSectionProps) {
                       className="text-lg font-bold"
                       style={{ color: "var(--dsc-navy)" }}
                     >
-                      {expert.name}
+                      {name}
                     </h3>
 
                     {expert.degree && (
@@ -147,7 +149,8 @@ export function ExpertsSection({ experts }: ExpertsSectionProps) {
                   </CardContent>
                 </div>
               </Card>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

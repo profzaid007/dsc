@@ -1,8 +1,11 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { toast } from "sonner"
-import { getErrorMessage } from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
+import { boundedFullList } from "@/lib/bounded-records"
+import { expertDisplayName } from "@/lib/expert-display-name"
+import type { ExpertProfile } from "@/types/expert"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
@@ -164,7 +167,7 @@ export function UserManagement({
   const access = usePermissions()
   const moduleName = expertsOnly ? "experts" : "users"
   const {
-    users,
+    users: accountUsers,
     isLoading: isUsersLoading,
     addUser,
     updateUser,
@@ -175,6 +178,23 @@ export function UserManagement({
   const { profiles, isLoading: isProfilesLoading } = useProfiles(
     access.can("cases.read")
   )
+
+  const [expertNames, setExpertNames] = useState<ExpertProfile[]>([])
+  useEffect(() => {
+    if (!expertsOnly) return
+    let active = true
+    boundedFullList<ExpertProfile>(pb.collection("expert_profiles"), {
+      fields: "id,user,public_name_ar,public_name_en",
+    }).then(records => { if (active) setExpertNames(records) })
+      .catch(() => { if (active) setExpertNames([]) })
+    return () => { active = false }
+  }, [expertsOnly])
+  const users = useMemo(() => {
+    const names = new Map(expertNames.map(profile => [profile.user, profile]))
+    return accountUsers.map(user => expertsOnly
+      ? { ...user, name: expertDisplayName(names.get(user.id), lang, user.name) }
+      : user)
+  }, [accountUsers, expertNames, expertsOnly, lang])
 
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<string>("name")

@@ -121,6 +121,27 @@ export function RichTextEditor({
             lastSyncedInitialContent.current = params.data
             onChangeRef.current?.(params.data)
           },
+          onVideoUploadBefore: async ({ info }) => {
+            if (!(info.files instanceof FileList)) return true
+            const file = info.files[0]
+            const upload = onImageUploadRef.current
+            if (!file || !upload) {
+              toast.error(lang === "ar" ? "أدخل رابط فيديو منشورًا على الإنترنت." : "Enter an online video URL.")
+              return false
+            }
+            try {
+              const url = await upload(file)
+              const video = instance!.$.plugins.video
+              const element = document.createElement("video")
+              element.controls = true
+              element.playsInline = true
+              video.create(element, url, info.inputWidth, info.inputHeight, info.align, info.isUpdate, { name: file.name, size: file.size }, true)
+              video.modal.close()
+            } catch (error) {
+              toast.error(getErrorMessage(error))
+            }
+            return false
+          },
           onImageUploadBefore: async (params) => {
             const { info } = params
             const uploadHandler = onImageUploadRef.current
@@ -271,12 +292,16 @@ export function RichTextEditor({
         : mode === "custom"
           ? storeCmsLayout(content)
           : content
+    if (/(?:src|href)\s*=\s*["']\/?(?:[a-z]:[\\/]|file:)/i.test(currentContent)) {
+      toast.error(lang === "ar" ? "يوجد ملف مرتبط بمسار على جهازك. ارفع الملف أو استخدم رابطًا منشورًا قبل الحفظ." : "A file uses a local computer path. Upload it or use an online URL before saving.")
+      return
+    }
     try {
       await onSave(currentContent)
     } catch (error) {
       toast.error(getErrorMessage(error))
     }
-  }, [content, mode, onSave])
+  }, [content, mode, onSave, lang])
 
   const switchMode = (next: "visual" | "html" | "custom") => {
     if (next === mode) return
