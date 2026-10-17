@@ -1,4 +1,5 @@
 "use client"
+import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
 import { use, useState } from "react"
 import Link from "next/link"
@@ -164,6 +165,7 @@ export default function ExpertCaseDetailPage({
           </CardContent>
         </Card>
       ))}
+      <CaseAssessments caseId={profile.id} />
       <CaseFeedback caseId={profile.id} ownerId={profile.user} />
     </div>
   )

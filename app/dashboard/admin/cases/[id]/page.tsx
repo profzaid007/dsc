@@ -1,6 +1,7 @@
 "use client"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
+import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
 
 import { use, useEffect, useState } from "react"
@@ -1063,6 +1064,7 @@ export default function AdminCaseDetailPage({
           </Card>
         </TabsContent>
       </Tabs>
+      <CaseAssessments caseId={profile.id} />
       <CaseFeedback caseId={profile.id} ownerId={profile.user} />
 
       {showAssignModal && (

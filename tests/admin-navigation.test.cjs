@@ -13,7 +13,7 @@ function load(file, context){
   'next/image':{__esModule:true,default:()=>null},
   '@/hooks/useUiTranslation':{useUiTranslation:()=>x=>x},
   '@/lib/lang-context':{useLang:()=>({lang:'ar',toggleLang(){}})},
-  '@/hooks/useAuth':{useAuth:()=>({isAuthenticated:true,isAdmin:true,currentUser:{name:'Admin',role:'admin'},logout(){}})},
+  '@/hooks/useAuth':{useAuth:()=>({isAuthenticated:context.auth !== false,isAdmin:context.admin !== false,currentUser:{name:'Admin',role:'admin'},logout(){}})},
   '@/hooks/usePermissions':{usePermissions:()=>({isSuperAdmin:context.super,can:()=>context.cms})},
   '@/hooks/usePortals':{usePortals:()=>({portals:[]})},
   '@/hooks/useUnreadMessages':{useUnreadMessages:()=>0},
@@ -51,4 +51,29 @@ test('dashboard sidebar removes management entry points and logout and switches 
  context.path='/dashboard/admin/security'
  html=renderToStaticMarkup(React.createElement(DashboardSidebar))
  assert.ok(html.includes('Security sections'))
+})
+
+
+test('logged-in main navigation replaces public links and retains Home',()=>{
+ const {Navbar}=load('components/layout/Navbar.tsx',{path:'/about-us',super:true,cms:true})
+ const html=renderToStaticMarkup(React.createElement(Navbar))
+ assert.ok(html.includes('الرئيسية'))
+ for(const label of ['من نحن','المدونة','الفعاليات','اتصل بنا','إنشاء حساب']) assert.equal(html.includes(label),false)
+ const nav=html.match(/<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
+ for(const label of ['لوحة التحكم','إدارة الأمان','إدارة المحتوى','تسجيل الخروج']) assert.ok(nav.includes(label))
+ assert.equal((html.match(/href="\/dashboard"/g)||[]).length,1)
+})
+
+test('guests see public navigation without account management actions',()=>{
+ const {Navbar}=load('components/layout/Navbar.tsx',{path:'/about-us',auth:false,admin:false,super:false,cms:false})
+ const html=renderToStaticMarkup(React.createElement(Navbar))
+ for(const label of ['الرئيسية','من نحن','المدونة','اتصل بنا','إنشاء حساب']) assert.ok(html.includes(label))
+ for(const label of ['لوحة التحكم','إدارة الأمان','إدارة المحتوى','تسجيل الخروج']) assert.equal(html.includes(label),false)
+})
+
+
+test('login page retains all public navigation links',()=>{
+ const {Navbar}=load('components/layout/Navbar.tsx',{path:'/login',auth:false,admin:false,super:false,cms:false})
+ const html=renderToStaticMarkup(React.createElement(Navbar))
+ for(const label of ['الرئيسية','من نحن','المدونة','الفعاليات','اتصل بنا']) assert.ok(html.includes(label))
 })

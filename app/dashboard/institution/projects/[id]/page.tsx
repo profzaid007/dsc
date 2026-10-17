@@ -1,4 +1,5 @@
 "use client"
+import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
 
 import { use, useEffect, useState } from "react"
@@ -683,6 +684,7 @@ export default function ProfileDetailPage({
               </Card>
             </TabsContent>
           </Tabs>
+          <CaseAssessments caseId={profile.id} />
           <CaseFeedback caseId={profile.id} ownerId={profile.user} />
         </div>
       </PaymentGate>

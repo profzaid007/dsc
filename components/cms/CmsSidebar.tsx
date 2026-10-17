@@ -82,13 +82,13 @@ export function CmsSidebar() {
   return (
     <aside
       className={cn(
-        "hidden shrink-0 flex-col border-e bg-white transition-all duration-300 md:flex",
+        "hidden shrink-0 flex-col border-e border-white/10 bg-primary text-primary-foreground transition-all duration-300 md:flex",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
       <div
         className={cn(
-          "flex h-14 items-center border-b",
+          "flex h-14 items-center border-b border-white/10",
           isCollapsed ? "justify-center px-2" : "justify-between px-4"
         )}
       >
@@ -96,6 +96,7 @@ export function CmsSidebar() {
         <Button
           variant="ghost"
           size="icon"
+          className="text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
           onClick={toggleCollapsed}
           aria-label={
             isCollapsed
@@ -125,8 +126,8 @@ export function CmsSidebar() {
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isCollapsed && "justify-center px-0",
                 isActive
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                  ? "bg-white/20 text-primary-foreground"
+                  : "text-primary-foreground hover:bg-white/10",
                 item.disabled && "pointer-events-none opacity-50"
               )}
               title={isCollapsed ? t(item.label, lang) : undefined}
@@ -134,7 +135,7 @@ export function CmsSidebar() {
               {item.icon}
               {!isCollapsed && t(item.label, lang)}
               {!isCollapsed && item.disabled && (
-                <span className="ms-auto rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">
+                <span className="ms-auto rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-primary-foreground">
                   {t({ en: "Soon", ar: "قريباً" }, lang)}
                 </span>
               )}

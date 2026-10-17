@@ -4,9 +4,9 @@ routerAdd('GET','/api/dsc/message-contacts',(e)=>{
  if(u.getString('role')==='admin')policy.requirePermission(e.app,u,'messages.read');
  const role=u.getString('role');let filter;
  if(role==='expert')filter='is_active = true && (role = "admin" || role = "super_admin")';
- else if(role==='admin'||role==='super_admin')filter='is_active = true && role = "expert"';
+ else if(role==='admin'||role==='super_admin')filter='is_active = true && id != {:self}';
  else throw new ForbiddenError('Only experts and administrators can use internal messages.');
- const rows=e.app.findRecordsByFilter('users',filter,'name',500,0);
+ const rows=e.app.findRecordsByFilter('users',filter,'name',0,0,{self:u.id});
  return e.json(200,rows.map(r=>({id:r.id,name:r.getString('name'),role:r.getString('role')})));
 },$apis.requireAuth('users'));
 

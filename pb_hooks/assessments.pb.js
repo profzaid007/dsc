@@ -1,0 +1,9 @@
+routerAdd("GET","/api/dsc/assessments",e=>require(__hooks+"/lib/assessments-api.js")(e,"list"),$apis.requireAuth("users"));
+routerAdd("GET","/api/dsc/assessments/{id}",e=>require(__hooks+"/lib/assessments-api.js")(e,"get"),$apis.requireAuth("users"));
+routerAdd("POST","/api/dsc/assessments/save",e=>require(__hooks+"/lib/assessments-api.js")(e,"save"),$apis.requireAuth("users"),$apis.bodyLimit(6000000));
+routerAdd("POST","/api/dsc/assessments/{id}/preview",e=>require(__hooks+"/lib/assessments-api.js")(e,"preview"),$apis.requireAuth("users"));
+routerAdd("POST","/api/dsc/assessments/{id}/publish",e=>require(__hooks+"/lib/assessments-api.js")(e,"publish"),$apis.requireAuth("users"));
+routerAdd("POST","/api/dsc/assessments/{id}/clone",e=>require(__hooks+"/lib/assessments-api.js")(e,"clone"),$apis.requireAuth("users"));
+routerAdd("POST","/api/dsc/assessment-sessions",e=>require(__hooks+"/lib/assessments-api.js")(e,"start"),$apis.requireAuth("users"));
+routerAdd("GET","/api/dsc/assessment-sessions/{id}",e=>require(__hooks+"/lib/assessments-api.js")(e,"session"),$apis.requireAuth("users"));
+routerAdd("POST","/api/dsc/assessment-sessions/{id}/submit",e=>require(__hooks+"/lib/assessments-api.js")(e,"submit"),$apis.requireAuth("users"));

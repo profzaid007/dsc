@@ -37,13 +37,13 @@ export function Navbar() {
 
   const isManagementRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/cms")
   const isPortal = pathname.startsWith("/portal/")
-  const isAppRoute = isManagementRoute || pathname === "/login"
+  const isAppRoute = isManagementRoute
 
   const portalId = isPortal ? pathname.split("/portal/")[1] : null
   const portal = portalId ? getPortalById(portalId) : null
 
   const [consultOpen, setConsultOpen] = useState(false)
-  const headerActionClass = "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-[#ffb347] transition-colors hover:bg-white/15 hover:text-[#ffc777]"
+  const headerActionClass = "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-[#c2410c] transition-colors hover:bg-orange-50 hover:text-[#9a3412]"
 
   const headerText = portal ? t(portal.portalName, lang) : "DSC"
   const subheading = portal
@@ -84,12 +84,12 @@ export function Navbar() {
             </div>
 
             {/* Center: Nav links (desktop) */}
-            {!isAppRoute && (
+            {(isAuthenticated || !isAppRoute) && (
               <nav
                 className="col-start-2 hidden flex-nowrap items-center justify-center gap-0 2xl:flex"
                 aria-label={ui("Main navigation")}
               >
-                {NAV_LINKS.map((item, i) => {
+                {(isAuthenticated ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map((item, i) => {
                   const isActive = pathname === item.href
                   return (
                     <Link
@@ -105,14 +105,22 @@ export function Navbar() {
                     </Link>
                   )
                 })}
+                {isAuthenticated && (
+                  <div className="flex items-center rounded-xl bg-white px-2 py-1">
+                    <Link href="/dashboard" className={headerActionClass}><LayoutDashboard className="h-4 w-4" />{lang === "ar" ? "لوحة التحكم" : "Dashboard"}</Link>
+                    {isAdmin && permissions.isSuperAdmin && <Link href="/dashboard/admin/security" aria-current={pathname.startsWith("/dashboard/admin/security") ? "page" : undefined} className={headerActionClass}><ShieldCheck className="h-4 w-4" />{lang === "ar" ? "إدارة الأمان" : "Security management"}</Link>}
+                    {isAdmin && permissions.can("cms.read") && <Link href="/cms" aria-current={pathname.startsWith("/cms") ? "page" : undefined} className={headerActionClass}><FileText className="h-4 w-4" />{lang === "ar" ? "إدارة المحتوى" : "Content management"}</Link>}
+                    <button onClick={() => { logout(); router.push("/login") }} className={headerActionClass}><LogOut className="h-4 w-4" />{lang === "ar" ? "تسجيل الخروج" : "Logout"}</button>
+                  </div>
+                )}
               </nav>
             )}
 
             {/* Right: Language + Auth + Consult */}
-            <div className={`col-start-3 flex min-w-0 flex-nowrap items-center justify-end gap-2 ${isAuthenticated ? "rounded-xl bg-[#0a3d62] px-2 py-1 text-white" : ""}`}>
+            <div className="col-start-3 flex min-w-0 flex-nowrap items-center justify-end gap-2">
               <button
                 onClick={toggleLang}
-                className={isAuthenticated ? headerActionClass : "min-h-11 shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-[#0a3d62]/5 hover:text-[#0076a3]"}
+                className="min-h-11 shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-[#0a3d62]/5 hover:text-[#0076a3]"
               >
                 {t({ en: "العربية", ar: "English" }, lang)}
               </button>
@@ -138,12 +146,7 @@ export function Navbar() {
 
               {isAuthenticated && (
                 <>
-                  <nav aria-label={lang === "ar" ? "إدارة النظام" : "System management"} className="hidden items-center 2xl:flex">
-                    <Link href="/dashboard" className={headerActionClass}><LayoutDashboard className="h-4 w-4" />{lang === "ar" ? "لوحة التحكم" : "Dashboard"}</Link>
-                    {isAdmin && permissions.isSuperAdmin && <Link href="/dashboard/admin/security" aria-current={pathname.startsWith("/dashboard/admin/security") ? "page" : undefined} className={headerActionClass}><ShieldCheck className="h-4 w-4" />{lang === "ar" ? "إدارة الأمان" : "Security management"}</Link>}
-                    {isAdmin && permissions.can("cms.read") && <Link href="/cms" aria-current={pathname.startsWith("/cms") ? "page" : undefined} className={headerActionClass}><FileText className="h-4 w-4" />{lang === "ar" ? "إدارة المحتوى" : "Content management"}</Link>}
-                    <button onClick={() => { logout(); router.push("/login") }} className={headerActionClass}><LogOut className="h-4 w-4" />{lang === "ar" ? "تسجيل الخروج" : "Logout"}</button>
-                  </nav>
+
                   <div className="hidden items-center gap-2 rounded-full border px-3 py-1.5 text-sm 2xl:flex">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{currentUser?.name?.charAt(0)?.toUpperCase() || "U"}</span>
                     <span className="max-w-[120px] truncate font-medium">{currentUser?.name || ""}</span>
@@ -190,7 +193,7 @@ export function Navbar() {
         {mobileMenuOpen && (
           <nav id="public-mobile-navigation" aria-label={lang === "ar" ? "التنقل الرئيسي" : "Main navigation"} className="max-h-[75dvh] overflow-y-auto border-t border-gray-200 2xl:hidden">
             <div className="flex flex-col gap-1 px-4 py-3">
-              {NAV_LINKS.map((item, i) => {
+              {(isAuthenticated ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map((item, i) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
@@ -247,7 +250,7 @@ export function Navbar() {
                   asChild
                   variant="ghost"
                   size="sm"
-                  className={headerActionClass + " justify-start bg-[#0a3d62] hover:bg-[#125479]"}
+                  className={headerActionClass + " justify-start bg-white hover:bg-orange-50"}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Link href="/dashboard">
@@ -258,17 +261,17 @@ export function Navbar() {
               )}
 
               {isAuthenticated && isAdmin && permissions.isSuperAdmin && (
-                <Link href="/dashboard/admin/security" onClick={() => setMobileMenuOpen(false)} className={headerActionClass + " bg-[#0a3d62] hover:bg-[#125479]"}>
+                <Link href="/dashboard/admin/security" onClick={() => setMobileMenuOpen(false)} className={headerActionClass + " bg-white hover:bg-orange-50"}>
                   <ShieldCheck className="h-4 w-4" />{lang === "ar" ? "إدارة الأمان" : "Security management"}
                 </Link>
               )}
 
-              {isAdmin && permissions.can("cms.read") && (
+              {isAuthenticated && isAdmin && permissions.can("cms.read") && (
                 <Button
                   asChild
                   variant="ghost"
                   size="sm"
-                  className={headerActionClass + " justify-start bg-[#0a3d62] hover:bg-[#125479]"}
+                  className={headerActionClass + " justify-start bg-white hover:bg-orange-50"}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Link href="/cms">
@@ -287,7 +290,7 @@ export function Navbar() {
                       logout()
                       router.push("/")
                     }}
-                    className="flex min-h-11 w-full items-center gap-2 rounded-full px-4 py-2.5 text-sm text-gray-600 hover:bg-[#0a3d62]/5 transition-colors text-left"
+                    className={headerActionClass + " bg-white hover:bg-orange-50"}
                   >
                     <LogOut className="h-4 w-4" />
                     {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
