@@ -28,17 +28,17 @@ export function ExpertPublicDetailsFields({
   const { lang } = useLang()
   const fields = [
     {
-      key: "publicNameEn",
-      en: "Full name (English)",
-      ar: "الاسم الكامل بالإنجليزية",
-      dir: "ltr",
-      max: 100,
-    },
-    {
       key: "publicNameAr",
       en: "Full name (Arabic)",
       ar: "الاسم الكامل بالعربية",
       dir: "rtl",
+      max: 100,
+    },
+    {
+      key: "publicNameEn",
+      en: "Full name (English)",
+      ar: "الاسم الكامل بالإنجليزية",
+      dir: "ltr",
       max: 100,
     },
     {

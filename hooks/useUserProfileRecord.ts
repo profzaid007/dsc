@@ -1,6 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useLang } from "@/lib/lang-context"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { ROLE_PROFILE_COLLECTION, type AnyUserProfile } from "@/types/account-profile"
 import type { UserRole } from "@/types/user"
@@ -72,6 +73,9 @@ function nullableFields(fields: Record<string, string>): Record<string, string |
 }
 
 export function useUserProfileRecord(userId?: string, role?: UserRole) {
+  const { lang } = useLang()
+  const generation = useRef(0)
+  const activeRequest = useRef<AbortController | null>(null)
   const [profile, setProfile] = useState<AnyUserProfile | null>(null)
   const [fileToken, setFileToken] = useState("")
   const [isLoading, setIsLoading] = useState(true)
@@ -82,35 +86,64 @@ export function useUserProfileRecord(userId?: string, role?: UserRole) {
   const isRoleKnown = Boolean(role)
 
   const load = useCallback(async () => {
+    const current = ++generation.current
+    activeRequest.current?.abort()
+    activeRequest.current = null
+    setProfile(null)
+    setLoadError("")
     if (!isRoleKnown) {
-      // Waiting on the users list; load() re-runs once the role arrives.
+      setIsLoading(true)
       return
     }
     if (!userId || !collectionName) {
-      setProfile(null)
       setIsLoading(false)
       return
     }
     setIsLoading(true)
-    setLoadError("")
+    const controller = new AbortController()
+    activeRequest.current = controller
+    let timedOut = false
+    let timeout: ReturnType<typeof setTimeout> | undefined
     try {
-      const record = await pb
-        .collection(collectionName)
-        .getFirstListItem(pb.filter("user = {:value0}", { value0: userId }))
-      setProfile(record as unknown as AnyUserProfile)
+      const deadline = new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => {
+          timedOut = true
+          controller.abort()
+          reject(new Error("Profile request timed out"))
+        }, 15_000)
+      })
+      const request = pb.collection(collectionName).getFirstListItem(
+        pb.filter("user = {:value0}", { value0: userId }),
+        {requestKey:null, signal:controller.signal}
+      )
+      const record = await Promise.race([request, deadline])
+      if (generation.current === current) setProfile(record as unknown as AnyUserProfile)
     } catch (error) {
-      setProfile(null)
-      const status = (error as { status?: number }).status
-      if (status !== 404) {
-        setLoadError(getErrorMessage(error))
+      if (generation.current !== current) return
+      const status = (error as {status?:number}).status
+      if (timedOut) {
+        setLoadError(lang === "ar" ? "استغرق تحميل الملف وقتاً طويلاً. يرجى إعادة المحاولة." : "The profile request timed out. Please try again.")
+      } else if (status !== 404) {
+        setLoadError(getErrorMessage(error, lang))
       }
     } finally {
-      setIsLoading(false)
+      if (timeout) clearTimeout(timeout)
+      if (generation.current === current) {
+        activeRequest.current = null
+        setIsLoading(false)
+      }
     }
-  }, [userId, collectionName, isRoleKnown])
+  }, [userId, collectionName, isRoleKnown, lang])
 
   useEffect(() => {
-    load()
+    void load()
+    return () => {
+      // This ref is a request counter: invalidate even a manual reload on unmount.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      generation.current++
+      activeRequest.current?.abort()
+      activeRequest.current = null
+    }
   }, [load])
 
   useEffect(() => {

@@ -69,6 +69,7 @@ export function BlogListing({
   )
   const featuredPosts = filtered.slice(0, 4)
   const featured = featuredPosts[slide % Math.max(featuredPosts.length, 1)]
+  const latestPosts = filtered.filter(post => post.id !== featured?.id)
   const Arrow = arabic ? ArrowLeft : ArrowRight
   const Chevron = arabic ? ChevronLeft : ChevronRight
   const label = (post: ListingPost) => {
@@ -192,7 +193,7 @@ export function BlogListing({
               {photo(featured, styles.featuredPhoto)}
             </section>
           )}
-          <section className={styles.latest} id="latest-articles">
+          {(!featured || latestPosts.length > 0) && <section className={styles.latest} id="latest-articles">
             <div className={styles.sectionHeading}>
               <h2>
                 {category
@@ -266,7 +267,7 @@ export function BlogListing({
               </div>
             ) : (
               <div className={styles.cards}>
-                {filtered.slice(0, showAll ? undefined : 3).map((post) => (
+                {latestPosts.slice(0, showAll ? undefined : 3).map((post) => (
                   <article key={post.id} className={styles.card}>
                     <Link
                       href={`/blog/${post.slug}`}
@@ -300,7 +301,7 @@ export function BlogListing({
                 ))}
               </div>
             )}
-          </section>
+          </section>}
         </div>
         <aside className={styles.sidebar}>
           <section className={styles.panel}>

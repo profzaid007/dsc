@@ -385,7 +385,7 @@ export default function AdminUserDetailPage({
 
   // The users list has to resolve before the role is known, so hold the
   // skeleton rather than reporting a missing user mid-fetch.
-  if (isUsersLoading || (!user && isRoleProfileLoading)) {
+  if (isUsersLoading) {
     return <ProfileSkeleton expert={false} />
   }
 
@@ -469,8 +469,11 @@ export default function AdminUserDetailPage({
           {isRoleProfileLoading ? (
             <ProfileSkeleton expert={user.role === "expert"} />
           ) : roleLoadError ? (
-            <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
-              {roleLoadError}
+            <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+              <p>{roleLoadError}</p>
+              <Button variant="outline" className="mt-3" onClick={() => void reloadRoleProfile()}>
+                {lang === "ar" ? "إعادة المحاولة" : "Retry"}
+              </Button>
             </div>
           ) : isEditing && user.role === "expert" && expertDraft ? (
             <ExpertProfileEditor
