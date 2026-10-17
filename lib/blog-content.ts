@@ -34,3 +34,10 @@ export function blogPlainText(html: string): string {
   }
   return document.children.map(text).join(" ").replace(/\s+/gu, " ").trim()
 }
+
+/** PocketBase ignores unknown fields: check before clearing the legacy category. */
+export function assertBlogClassificationSchema(record: Record<string, unknown>) {
+  if (!["main_category", "keywords"].every(field => Object.prototype.hasOwnProperty.call(record, field))) {
+    throw new Error("يلزم تحديث قاعدة بيانات الخادم لحفظ التصنيف والكلمات المفتاحية. لم تُحفظ التغييرات ولم يُمسح التصنيف القديم. / Update the server database before saving classifications and keywords.")
+  }
+}

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { blogField, blogContentLang, blogContentPayload, blogPlainText } from "../lib/blog-content"
+import { blogField, blogContentLang, blogContentPayload, blogPlainText, assertBlogClassificationSchema } from "../lib/blog-content"
 
 test("a single authored version reads the same in both interface languages", () => {
   const saved = blogContentPayload("عنوان عربي", "<p>نص عربي</p>")
@@ -29,4 +29,10 @@ test("summaries preserve paragraph separation and render encoded markup as text"
   assert.equal(blogPlainText('<p>First</p><p>Second &lt;example&gt; &#38; third</p>'), 'First Second <example> & third')
   assert.equal(blogPlainText(''), '')
   assert.equal(blogPlainText('<style>p{color:red}</style><p>Visible'), 'Visible')
+})
+
+test("old backend schema cannot silently discard selected classification and keywords", () => {
+  assert.throws(() => assertBlogClassificationSchema({category:"autism"}), /Update the server database/)
+  assert.throws(() => assertBlogClassificationSchema({main_category:"medical"}), /Update the server database/)
+  assert.doesNotThrow(() => assertBlogClassificationSchema({main_category:"", keywords:""}))
 })

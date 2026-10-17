@@ -1,6 +1,6 @@
 "use client"
 import { ClassificationFields } from "@/components/form/ClassificationFields"
-import { classificationParent } from "@/lib/classification"
+import { classificationParent, mainCategoryKey } from "@/lib/classification"
 import { blogField, blogContentLang, blogContentPayload } from "@/lib/blog-content"
 
 
@@ -88,7 +88,7 @@ export default function CmsBlogEditorPage() {
         slug: rawRecord.slug as string,
         title_en: rawRecord.title_en as string,
         title_ar: rawRecord.title_ar as string | undefined,
-        main_category: rawRecord.main_category as string,
+        main_category: mainCategoryKey(String(rawRecord.main_category || cats.find(c => c.key === rawRecord.category)?.main_category || classificationParent(String(rawRecord.category || "")))),
         category: rawRecord.category as string,
         keywords: rawRecord.keywords !== undefined ? String(rawRecord.keywords || "") : (cats.find(c => c.key === rawRecord.category)?.label_ar || cats.find(c => c.key === rawRecord.category)?.label_en || String(rawRecord.category || "")),
         content_en: rawRecord.content_en as string,
@@ -134,6 +134,9 @@ export default function CmsBlogEditorPage() {
           author_name: authorName,
         })
         setPage(updated)
+        setMainCategory(updated.main_category || "")
+        setKeywords(updated.keywords || "")
+        setCategory(updated.category)
         setEnTitle(blogField(updated, "title"))
         setEnContent(blogField(updated, "content"))
         // If slug changed, redirect to new slug

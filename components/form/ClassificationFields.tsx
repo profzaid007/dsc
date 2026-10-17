@@ -31,6 +31,9 @@ export function ClassificationFields({
           <option value="">
             {lang === "ar" ? "اختر التصنيف" : "Select category"}
           </option>
+          {main && !MAIN_CLASSIFICATIONS.some(c => c.key === main) && (
+            <option value={main}>{main}</option>
+          )}
           {MAIN_CLASSIFICATIONS.map((c) => (
             <option key={c.key} value={c.key}>
               {c[lang]}

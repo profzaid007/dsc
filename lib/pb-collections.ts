@@ -1,3 +1,4 @@
+import { assertBlogClassificationSchema } from "./blog-content"
 import { boundedFullList } from "@/lib/bounded-records"
 import pb from "./pb"
 import type { User } from "@/types/user"
@@ -763,6 +764,10 @@ export const blogPagesCollection = {
   },
 
   async update(id: string, data: Partial<BlogPage>): Promise<BlogPage> {
+    if (data.main_category !== undefined || data.keywords !== undefined) {
+      const existing = await pb.collection("blog_pages").getOne(id, { requestKey: null })
+      assertBlogClassificationSchema(existing)
+    }
     const result = await pb.collection("blog_pages").update(id, data)
     const author_name = extractAuthorFromRecord(result)
     return {
