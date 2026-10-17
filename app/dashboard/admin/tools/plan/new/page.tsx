@@ -63,6 +63,7 @@ export default function PlanBuilderPage({
   const [typeError, setTypeError] = useState<string>("")
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
+  const [hasCaseContext, setHasCaseContext] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
   const hasInitialized = useRef(false)
 
@@ -146,6 +147,7 @@ export default function PlanBuilderPage({
         const params = await searchParams
         const editId = params?.edit
         const caseIdFromUrl = params?.caseId
+        setHasCaseContext(Boolean(caseIdFromUrl || editId))
 
         // Edit mode - load existing assignment
         if (editId) {
@@ -299,7 +301,7 @@ export default function PlanBuilderPage({
           name_ar: toolName.ar,
           config,
         })
-        router.push(`/dashboard/admin/assignments/${editAssignmentId}`)
+        router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
       } else {
         // Create case document directly in case_tools (no tool template)
         await assignTool({
@@ -313,7 +315,7 @@ export default function PlanBuilderPage({
           status: "pending",
         })
 
-        router.push("/dashboard/admin/assignments")
+        router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
       }
     } catch (error) {
       console.error(editAssignmentId ? "Failed to update plan:" : "Failed to create plan:", error)
@@ -325,7 +327,7 @@ export default function PlanBuilderPage({
 
   const handleCancel = () => {
     if (editAssignmentId) {
-      router.push(`/dashboard/admin/assignments/${editAssignmentId}`)
+      router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
     } else {
       // Reset form
       setSelectedCaseId("")
@@ -518,6 +520,7 @@ export default function PlanBuilderPage({
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
+                readOnly={hasCaseContext}
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
                 placeholder={lang === "ar" ? "اختر حالة..." : "Select a case..."}

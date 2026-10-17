@@ -47,6 +47,7 @@ export default function AttachmentRequestBuilderPage({
   const [typeError, setTypeError] = useState<string>("")
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
+  const [hasCaseContext, setHasCaseContext] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
 
   const [formData, setFormData] = useState({
@@ -88,6 +89,7 @@ export default function AttachmentRequestBuilderPage({
       try {
         const params = await searchParams
         const caseIdFromUrl = params?.caseId
+        setHasCaseContext(Boolean(caseIdFromUrl))
         if (caseIdFromUrl) {
           handleCaseSelect(caseIdFromUrl)
         }
@@ -165,7 +167,7 @@ export default function AttachmentRequestBuilderPage({
       })
 
       // Redirect to assignments page
-      router.push(`/dashboard/admin/assignments`)
+      router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
     } catch (error) {
       console.error(
         "Failed to create attachment request and assignment:",
@@ -237,6 +239,7 @@ export default function AttachmentRequestBuilderPage({
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
+                readOnly={hasCaseContext}
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
                 placeholder={lang === "ar" ? "اختر حالة..." : "Select a case..."}

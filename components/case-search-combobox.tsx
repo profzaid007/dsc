@@ -26,6 +26,7 @@ interface CaseSearchComboboxProps {
   placeholder?: string
   emptyMessage?: string
   className?: string
+  readOnly?: boolean
   disabled?: boolean
   enabled?: boolean
 }
@@ -36,6 +37,7 @@ export function CaseSearchCombobox({
   placeholder = "Select a case...",
   emptyMessage = "No cases found.",
   className,
+  readOnly = false,
   disabled = false,
   enabled = true,
 }: CaseSearchComboboxProps) {
@@ -45,6 +47,12 @@ export function CaseSearchCombobox({
   const { profiles } = useProfiles(enabled)
 
   const selectedCase = profiles.find((p) => p.id === value)
+
+  if (readOnly) return (
+    <div className={cn("flex min-h-8 items-center rounded-lg border bg-muted/30 px-3 py-2 text-sm", className)} aria-live="polite">
+      {selectedCase?.name || value || ui(placeholder)}
+    </div>
+  )
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

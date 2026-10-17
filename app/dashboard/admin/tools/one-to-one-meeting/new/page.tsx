@@ -37,6 +37,7 @@ export default function OneToOneMeetingNewPage({
   const [editAssignmentId, setEditAssignmentId] = useState<string>("")
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
+  const [hasCaseContext, setHasCaseContext] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
   const hasInitialized = useRef(false)
 
@@ -93,6 +94,7 @@ export default function OneToOneMeetingNewPage({
         const params = await searchParams
         const editId = params?.edit
         const caseIdFromUrl = params?.caseId
+        setHasCaseContext(Boolean(caseIdFromUrl || editId))
 
         if (editId) {
           setEditAssignmentId(editId)
@@ -148,7 +150,7 @@ export default function OneToOneMeetingNewPage({
           name_ar: toolName.ar,
           config,
         })
-        router.push(`/dashboard/admin/assignments/${editAssignmentId}`)
+        router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
       } else {
         await assignTool({
           case: selectedCaseId,
@@ -160,7 +162,7 @@ export default function OneToOneMeetingNewPage({
           is_visible_to_user: true,
           status: "pending",
         })
-        router.push("/dashboard/admin/assignments")
+        router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
       }
     } catch (error) {
       console.error(editAssignmentId ? "Failed to update meeting:" : "Failed to create meeting:", error)
@@ -172,7 +174,7 @@ export default function OneToOneMeetingNewPage({
 
   const handleCancel = () => {
     if (editAssignmentId) {
-      router.push(`/dashboard/admin/assignments/${editAssignmentId}`)
+      router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
     } else {
       setSelectedCaseId("")
       setToolName({ en: "", ar: "" })
@@ -265,6 +267,7 @@ export default function OneToOneMeetingNewPage({
             </CardHeader>
             <CardContent>
               <CaseSearchCombobox
+                readOnly={hasCaseContext}
                 value={selectedCaseId}
                 onChange={handleCaseSelect}
                 placeholder={lang === "ar" ? "اختر حالة..." : "Select a case..."}
