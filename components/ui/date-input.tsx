@@ -49,6 +49,7 @@ export function DateInput({
   if (readOnly) {
     return (
       <Input
+        fieldWidth="short"
         id={id}
         readOnly
         value={value ? formatDate(value) : ""}
@@ -82,7 +83,7 @@ export function DateInput({
       yearDropdownItemNumber={120}
       minDate={toPickerDate(minDate)}
       maxDate={toPickerDate(maxDate)}
-      customInput={<Input className={cn("cursor-pointer", className)} />}
+      customInput={<Input fieldWidth="short" className={cn("cursor-pointer", className)} />}
     />
   )
 }

@@ -308,7 +308,7 @@ export function ParentRegistrationForm({
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label>
                 {t({ en: "Name", ar: "الاسم" }, lang)}
@@ -432,7 +432,7 @@ export function ParentRegistrationForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label>
                 {t({ en: "Country of Residence", ar: "بلد الإقامة" }, lang)}

@@ -184,7 +184,7 @@ export function PaymentGate({
             </p>
             <div className="space-y-2 text-sm">
               {bankDetails.bank_name && (
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "البنك" : "Bank"}
                   </span>
@@ -192,7 +192,7 @@ export function PaymentGate({
                 </div>
               )}
               {bankDetails.beneficiary && (
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "اسم المستفيد" : "Beneficiary"}
                   </span>
@@ -200,7 +200,7 @@ export function PaymentGate({
                 </div>
               )}
               {bankDetails.account_number && (
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "رقم الحساب" : "Account number"}
                   </span>
@@ -208,7 +208,7 @@ export function PaymentGate({
                 </div>
               )}
               {bankDetails.iban && (
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">{ui("IBAN")}</span>
                   <span className="font-medium" dir="ltr">
                     {bankDetails.iban}

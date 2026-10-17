@@ -118,7 +118,7 @@ export function LectureForm({
         <CardContent className="space-y-4">
           <ClassificationFields required={!initialData} main={formData.main_category || ""} keywords={formData.keywords || ""} disabled={isSubmitting}
             onChange={(main, keywords) => setFormData({ ...formData, main_category: main, keywords, subcategory: "" })} />
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="titleEn">{ui("Title (English) *")}</Label>
               <Input
@@ -153,7 +153,7 @@ export function LectureForm({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="descEn">{ui("Description (English) *")}</Label>
               <Textarea
@@ -206,7 +206,7 @@ export function LectureForm({
           <CardTitle>{ui("Speaker Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="speakerNameEn">{ui("Speaker Name (English) *")}</Label>
               <Input
@@ -231,7 +231,7 @@ export function LectureForm({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="speakerRoleEn">{ui("Speaker Role/Title (English)")}</Label>
               <Input
@@ -261,7 +261,7 @@ export function LectureForm({
           <CardTitle>{ui("Schedule & Location")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="dateTime">{ui("Date & Time *")}</Label>
               <Input
@@ -276,7 +276,7 @@ export function LectureForm({
               <Label htmlFor="duration">{ui("Duration (minutes) *")}</Label>
               <Input
                 id="duration"
-                type="number"
+                fieldWidth="short" type="number"
                 min={15}
                 max={480}
                 value={formData.duration}
@@ -291,7 +291,7 @@ export function LectureForm({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="attendanceMode">{lang === "ar" ? "طريقة الحضور" : "Attendance mode"}</Label>
               <Select value={formData.schedule.mode || "in_person"} disabled={isSubmitting}

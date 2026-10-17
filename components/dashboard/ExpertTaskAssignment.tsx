@@ -111,7 +111,7 @@ export function ExpertTaskAssignment({
                 ? "أضف الخبراء إلى الحالة أولًا من صفحة إسناد الحالات."
                 : "First add experts to this case on the case allocation page."}
             </p>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="dsc-form-grid">
               <div>
                 <Label htmlFor="task-specialty">
                   {ar ? "التخصص" : "Specialization"}

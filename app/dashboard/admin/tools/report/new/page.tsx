@@ -318,7 +318,7 @@ export default function ReportBuilderPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
@@ -353,7 +353,7 @@ export default function ReportBuilderPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>{lang === "ar" ? "اسم الطفل" : "Child Name"}</Label>
                   <Input

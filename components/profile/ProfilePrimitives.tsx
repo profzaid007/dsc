@@ -68,7 +68,7 @@ export function SectionCard({
         </div>
       </CardHeader>
       <Separator />
-      <CardContent className="grid gap-5 sm:grid-cols-2">{children}</CardContent>
+      <CardContent className="dsc-form-grid">{children}</CardContent>
     </Card>
   )
 }

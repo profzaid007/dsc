@@ -19,7 +19,7 @@ export function ClassificationFields({
   const { lang } = useLang()
   const { main: MAIN_CLASSIFICATIONS } = useClassifications()
   return (
-    <fieldset disabled={disabled} className="grid min-w-0 gap-4 sm:grid-cols-2">
+    <fieldset disabled={disabled} className="dsc-form-grid">
       <label className="space-y-2 text-sm font-medium">
         <span>{lang === "ar" ? "التصنيف الرئيسي" : "Main category"}</span>
         <select

@@ -147,8 +147,8 @@ export default function ProfileDetailPage({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <TabsContent value="overview" className="dsc-detail-cards">
+          <div className="dsc-detail-grid">
             {profile.portal_type === "Attending Training" ? (
               <Card>
                 <CardHeader>
@@ -157,7 +157,7 @@ export default function ProfileDetailPage({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex justify-between">
+                  <div className="dsc-detail-row">
                     <span className="text-muted-foreground">
                       {lang === "ar" ? "نوع الخدمة" : "Service Type"}
                     </span>
@@ -165,7 +165,7 @@ export default function ProfileDetailPage({
                       {lang === "ar" ? "حضور تدريب" : "Attending Training"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="dsc-detail-row">
                     <span className="text-muted-foreground">
                       {lang === "ar" ? "نوع المشكلة" : "Issue Type"}
                     </span>
@@ -175,7 +175,7 @@ export default function ProfileDetailPage({
                         (lang === "ar" ? "حضور تدريب" : "Attending Training")}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="dsc-detail-row">
                     <span className="text-muted-foreground">
                       {lang === "ar" ? "الحالة" : "Status"}
                     </span>
@@ -223,7 +223,7 @@ export default function ProfileDetailPage({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex justify-between">
+                    <div className="dsc-detail-row">
                       <span className="text-muted-foreground">
                         {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
                       </span>
@@ -233,7 +233,7 @@ export default function ProfileDetailPage({
                           : "—"}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="dsc-detail-row">
                       <span className="text-muted-foreground">
                         {lang === "ar" ? "الجنس" : "Gender"}
                       </span>
@@ -249,7 +249,7 @@ export default function ProfileDetailPage({
                             : "—"}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="dsc-detail-row">
                       <span className="text-muted-foreground">
                         {lang === "ar" ? "الصف الدراسي" : "Grade"}
                       </span>

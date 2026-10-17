@@ -172,7 +172,7 @@ export function UserProfileEditor({
           </CardDescription>
         </CardHeader>
         <Separator />
-        <CardContent className="grid gap-5 sm:grid-cols-2">
+        <CardContent className="dsc-form-grid">
           <div className="space-y-2">
             <Label htmlFor="user-name">
               {t({ en: "Name", ar: "الاسم" }, lang)}
@@ -241,7 +241,7 @@ export function UserProfileEditor({
               </div>
             </CardHeader>
             <Separator />
-            <CardContent className="grid gap-5 sm:grid-cols-2">
+            <CardContent className="dsc-form-grid">
               {section.fields.map((field) => (
                 <div
                   key={field.field}

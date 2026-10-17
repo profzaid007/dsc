@@ -413,7 +413,7 @@ export default function CmsBlogEditorPage() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="post-slug">{t({ en: "URL slug", ar: "معرف الرابط" }, lang)}</Label>
-          <Input id="post-slug" dir="auto" value={postSlug} disabled={saving}
+          <Input fieldWidth="medium" id="post-slug" dir="auto" value={postSlug} disabled={saving}
             onChange={(e) => setPostSlug(e.target.value)} />
         </div>
         <RichTextEditor key={resetKey}

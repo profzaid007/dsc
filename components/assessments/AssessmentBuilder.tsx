@@ -115,7 +115,7 @@ function Num({
 }) {
   return (
     <Input
-      type="number"
+      fieldWidth="short" type="number"
       step="any"
       value={Number.isFinite(value) ? value : 0}
       onChange={(e) => onChange(Number(e.target.value))}
@@ -135,7 +135,7 @@ function PopulationFields({
     <div className="grid gap-3 sm:grid-cols-5">
       <Field label={t("أقل عمر", "Minimum age")}>
         <Input
-          type="number"
+          fieldWidth="short" type="number"
           value={value.minAge ?? ""}
           onChange={(e) =>
             onChange({
@@ -147,7 +147,7 @@ function PopulationFields({
       </Field>
       <Field label={t("أعلى عمر", "Maximum age")}>
         <Input
-          type="number"
+          fieldWidth="short" type="number"
           value={value.maxAge ?? ""}
           onChange={(e) =>
             onChange({
@@ -2079,7 +2079,7 @@ export default function AssessmentBuilder() {
                 <div className="grid gap-3 sm:grid-cols-4">
                   <Field label={t("العمر", "Age")}>
                     <Input
-                      type="number"
+                      fieldWidth="short" type="number"
                       min="0"
                       disabled={tab === 7 && !!session}
                       value={population.age ?? ""}

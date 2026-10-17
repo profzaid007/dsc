@@ -258,7 +258,7 @@ export default function AttachmentRequestBuilderPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
@@ -320,13 +320,13 @@ export default function AttachmentRequestBuilderPage({
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>
                     {lang === "ar" ? "الحد الأقصى للملفات" : "Maximum Files"}
                   </Label>
                   <Input
-                    type="number"
+                    fieldWidth="short" type="number"
                     min={1}
                     max={20}
                     value={formData.maxFiles}
@@ -351,7 +351,7 @@ export default function AttachmentRequestBuilderPage({
                       : "Maximum File Size (MB)"}
                   </Label>
                   <Input
-                    type="number"
+                    fieldWidth="short" type="number"
                     min={1}
                     max={100}
                     value={formData.maxFileSize}
@@ -439,19 +439,19 @@ export default function AttachmentRequestBuilderPage({
               </div>
 
               <div className="grid gap-2 text-sm">
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "الحد الأقصى للملفات:" : "Max Files:"}
                   </span>
                   <span>{formData.maxFiles}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "الحد الأقصى للحجم:" : "Max Size:"}
                   </span>
                   <span>{formData.maxFileSize} MB</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "إجباري:" : "Required:"}
                   </span>

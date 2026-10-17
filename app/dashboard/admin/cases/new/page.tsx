@@ -349,7 +349,7 @@ export default function AdminNewCasePage() {
               </Label>
               <Input
                 id="payment_amount"
-                type="number"
+                fieldWidth="short" type="number"
                 min="0"
                 step="0.01"
                 value={paymentAmount}

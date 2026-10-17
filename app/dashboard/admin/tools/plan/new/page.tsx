@@ -532,7 +532,7 @@ export default function PlanBuilderPage({
               <CardTitle>{lang === "ar" ? "اسم الخطة *" : "Plan Name *"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
@@ -571,7 +571,7 @@ export default function PlanBuilderPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>{lang === "ar" ? "اسم الطفل" : "Child Name"}</Label>
                   <Input
@@ -593,7 +593,7 @@ export default function PlanBuilderPage({
                   />
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>{lang === "ar" ? "تاريخ البداية" : "Start Date"}</Label>
                   <DateInput

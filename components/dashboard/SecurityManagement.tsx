@@ -356,7 +356,7 @@ export function SecurityManagement() {
                     {role ? (
                       <form onSubmit={saveRole} className="space-y-5">
                         <fieldset disabled={busy} className="space-y-5">
-                          <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="dsc-form-grid">
                             {(
                               [
                                 ["key", "Role key", "مفتاح الدور"],

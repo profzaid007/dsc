@@ -207,7 +207,7 @@ function ProfessionalCaseAssessments({ caseId, mode = "all", assignmentRows, onA
                 <label className="grid gap-1 text-sm">
                   {t("العمر (اختياري)", "Age (optional)")}
                   <Input
-                    type="number"
+                    fieldWidth="short" type="number"
                     min="0"
                     max="150"
                     value={person.age ?? ""}

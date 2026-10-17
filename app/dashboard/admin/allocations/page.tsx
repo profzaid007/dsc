@@ -1042,7 +1042,7 @@ export default function AllocationsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="dsc-form-grid">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
                   {lang === "ar" ? "اسم الدور (إنجليزي)" : "Role Name (EN)"}
@@ -1118,7 +1118,7 @@ export default function AllocationsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="dsc-form-grid">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
                   {lang === "ar" ? "اسم الدور (إنجليزي)" : "Role Name (EN)"}

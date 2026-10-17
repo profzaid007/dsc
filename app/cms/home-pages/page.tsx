@@ -151,7 +151,7 @@ export default function CmsHomePagesListPage() {
 
       {isSuperAdmin && showCreate && (
         <div className="rounded-md border bg-gray-50 p-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="slug">
                 {t({ en: "URL Slug", ar: "معرف الرابط (Slug)" }, lang)}

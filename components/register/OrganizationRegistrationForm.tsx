@@ -354,7 +354,7 @@ export function OrganizationRegistrationForm({
           )}
 
           {isCareFoundation && (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="dsc-form-grid">
               {foundationNameField}
 
             </div>
@@ -365,7 +365,7 @@ export function OrganizationRegistrationForm({
               <legend className="px-2 text-base font-semibold">
                 {t({ en: "Responsible Person", ar: "الشخص المسؤول" }, lang)}
               </legend>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="dsc-form-grid">
                 {nameField}
             <div className="space-y-2">
               <Label htmlFor="responsible-title">{t({ en: "Title", ar: "المسمى الوظيفي" }, lang)}</Label>
@@ -377,7 +377,7 @@ export function OrganizationRegistrationForm({
             </fieldset>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="dsc-form-grid">
             {!isCareFoundation && nameField}
 
             {!isCareFoundation && foundationNameField}
@@ -440,7 +440,7 @@ export function OrganizationRegistrationForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label>
                 {t({ en: "Organization Type", ar: "نوع المؤسسة" }, lang)}

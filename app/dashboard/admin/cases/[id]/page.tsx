@@ -449,7 +449,7 @@ export default function AdminCaseDetailPage({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
+        <TabsContent value="overview" className="dsc-detail-cards">
           {isAdmin && (
             <Card className="mb-6">
               <CardHeader>
@@ -476,7 +476,7 @@ export default function AdminCaseDetailPage({
                 )}
 
                 {owner ? (
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+                  <div className="dsc-inline-summary rounded-lg border p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                         <User className="h-5 w-5 text-primary" />
@@ -678,7 +678,7 @@ export default function AdminCaseDetailPage({
                   </div>
                 )}
 
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+                <div className="dsc-inline-summary rounded-lg border p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1 space-y-2">
                       <Label htmlFor="payment_amount">
@@ -686,7 +686,7 @@ export default function AdminCaseDetailPage({
                       </Label>
                       <Input
                         id="payment_amount"
-                        type="number"
+                        fieldWidth="short" type="number"
                         min="0"
                         step="0.01"
                         aria-describedby="case-fee-help"
@@ -811,7 +811,7 @@ export default function AdminCaseDetailPage({
               </CardContent>
             </Card>
           )}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="dsc-detail-grid">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -820,7 +820,7 @@ export default function AdminCaseDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
                   </span>
@@ -830,7 +830,7 @@ export default function AdminCaseDetailPage({
                       : "—"}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "الجنس" : "Gender"}
                   </span>
@@ -846,7 +846,7 @@ export default function AdminCaseDetailPage({
                         : profile.gender}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="dsc-detail-row">
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "الصف الدراسي" : "Grade"}
                   </span>

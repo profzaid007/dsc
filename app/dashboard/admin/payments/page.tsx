@@ -321,7 +321,7 @@ export default function AdminPaymentsPage() {
                               <div className="flex flex-col items-end gap-2">
                                 <div className="flex items-center gap-2">
                                   <Input
-                                    type="number"
+                                    fieldWidth="short" type="number"
                                     min="0"
                                     step="0.01"
                                     value={amountInputs[profile.id] || ""}

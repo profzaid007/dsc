@@ -653,7 +653,7 @@ export default function TakeSurveyToolPage({
         )}
         {question.answerType === "number" && (
           <Input
-            type="number"
+            fieldWidth="short" type="number"
             placeholder="0"
             value={value as string | number | undefined}
             onChange={(e) => handleAnswer(question.id, Number(e.target.value))}

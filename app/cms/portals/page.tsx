@@ -446,7 +446,7 @@ export default function CmsPortalsPage() {
                 </Label>
                 <Input
                   id="portal-order"
-                  type="number"
+                  fieldWidth="short" type="number"
                   min={0}
                   step={1}
                   value={draft.order}

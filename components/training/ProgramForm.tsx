@@ -149,7 +149,7 @@ export function ProgramForm({
           <CardTitle>{ui("Basic Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="titleEn">{ui("Title (English) *")}</Label>
               <Input
@@ -190,7 +190,7 @@ export function ProgramForm({
           <CardTitle>{ui("Trainer Information")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="trainerNameEn">{ui("Trainer Name (English)")}</Label>
               <Input
@@ -212,7 +212,7 @@ export function ProgramForm({
               />
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="trainerRoleEn">{ui("Role (English)")}</Label>
               <Input
@@ -234,7 +234,7 @@ export function ProgramForm({
               />
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="coordinator">{ui("Coordinator")}</Label>
               <Input
@@ -273,7 +273,7 @@ export function ProgramForm({
           <CardTitle>{ui("Schedule & Settings")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="location">{ui("Location")}</Label>
               <Input
@@ -289,7 +289,7 @@ export function ProgramForm({
               <Label htmlFor="duration">{ui("Duration (days)")}</Label>
               <Input
                 id="duration"
-                type="number"
+                fieldWidth="short" type="number"
                 min={1}
                 value={formData.duration}
                 onChange={(e) =>
@@ -302,12 +302,12 @@ export function ProgramForm({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="maxParticipants">{ui("Max Participants")}</Label>
               <Input
                 id="maxParticipants"
-                type="number"
+                fieldWidth="short" type="number"
                 min={1}
                 value={formData.maxParticipants || ""}
                 onChange={(e) =>
@@ -374,7 +374,7 @@ export function ProgramForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="startDate">{ui("Start Date")}</Label>
               <DateInput
@@ -455,7 +455,7 @@ export function ProgramForm({
           <CardTitle>{ui("Links & Resources")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="meetingLink">{ui("Meeting Link")}</Label>
               <Input
@@ -489,7 +489,7 @@ export function ProgramForm({
           <CardTitle>{ui("Goals & Notes")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label htmlFor="goalsEn">{ui("Goals (English)")}</Label>
               <Textarea

@@ -132,7 +132,7 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="dsc-form-grid">
             <div>
               <span className="text-sm font-medium text-muted-foreground">
                 {lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}

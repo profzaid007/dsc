@@ -365,7 +365,7 @@ export function ExpertApplicationForm({
               />
               {fieldErrorNode("name")}
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>
                     {t({ en: "Country of Residence", ar: "بلد الإقامة" }, lang)}
@@ -407,7 +407,7 @@ export function ExpertApplicationForm({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>
                     {t(
@@ -475,7 +475,7 @@ export function ExpertApplicationForm({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>
                     {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
@@ -604,7 +604,7 @@ export function ExpertApplicationForm({
 
           {step === 2 && (
             <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>
                     {t({ en: "Age Group", ar: "الفئة العمرية" }, lang)}

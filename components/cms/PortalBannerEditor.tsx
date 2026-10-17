@@ -81,7 +81,7 @@ export function PortalBannerEditor({
       </CardHeader>
       <CardContent>
         <form onSubmit={save} className="space-y-5">
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="dsc-form-grid">
             {(["en", "ar"] as const).map((language) => (
               <div
                 key={language}

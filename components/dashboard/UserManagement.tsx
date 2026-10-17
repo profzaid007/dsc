@@ -844,7 +844,7 @@ export function UserManagement({
                       required
                     />
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="dsc-form-grid">
                     <div className="space-y-2">
                       <Label htmlFor="password">
                         {lang === "ar" ? "كلمة المرور" : "Password"}{" "}
@@ -887,7 +887,7 @@ export function UserManagement({
                       />
                     </div>
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="dsc-form-grid">
                     <div className="space-y-2">
                       <Label htmlFor="role">
                         {lang === "ar" ? "الدور" : "Role"}

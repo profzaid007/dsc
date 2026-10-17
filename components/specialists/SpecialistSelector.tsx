@@ -48,7 +48,7 @@ export function SpecialistSelector({ value, onChange, disabled = false }: {
 
   if (loading) return <p role="status">{ar ? "جارٍ تحميل الأدوار..." : "Loading roles..."}</p>
   if (error) return <div role="alert" className="space-y-2"><p>{error}</p><Button type="button" variant="outline" onClick={() => void refresh()}>{ar ? "إعادة المحاولة" : "Retry"}</Button></div>
-  return <div className="grid gap-4 sm:grid-cols-2" dir={ar ? "rtl" : "ltr"}>
+  return <div className="dsc-form-grid" dir={ar ? "rtl" : "ltr"}>
     <fieldset disabled={disabled} className="space-y-3 rounded-lg border p-4">
       <legend className="px-2 font-semibold">{ar ? "مجموعة الأدوار" : "Role Group"}</legend>
       {ALLOCATION_ROLE_GROUPS.filter(group => available.some(role => role.role_group === group.id)).map(group => (

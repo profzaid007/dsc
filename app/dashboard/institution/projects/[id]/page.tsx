@@ -336,8 +336,8 @@ export default function ProfileDetailPage({
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview">
-              <div className="grid gap-6 lg:grid-cols-2">
+            <TabsContent value="overview" className="dsc-detail-cards">
+              <div className="dsc-detail-grid">
                 {profile.portal_type === "Attending Training" ? (
                   <Card>
                     <CardHeader>
@@ -659,7 +659,7 @@ export default function ProfileDetailPage({
                         .map((assignment) => (
                           <div
                             key={assignment.id}
-                            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"
+                            className="dsc-inline-summary rounded-lg border p-4"
                           >
                             <div>
                               <p className="min-w-0 font-medium [overflow-wrap:anywhere]">

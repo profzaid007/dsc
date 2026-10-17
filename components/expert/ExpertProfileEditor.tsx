@@ -292,7 +292,7 @@ export function ExpertProfileEditor({
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-5 sm:grid-cols-2">
+        <CardContent className="dsc-form-grid">
           <ExpertPublicDetailsFields
             namesOnly
             values={draft}
@@ -414,7 +414,7 @@ export function ExpertProfileEditor({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-5 sm:grid-cols-2">
+        <CardContent className="dsc-form-grid">
           <div className="space-y-2">
             <Label htmlFor="profile-degree">
               {t(
@@ -508,7 +508,7 @@ export function ExpertProfileEditor({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-5 sm:grid-cols-2">
+        <CardContent className="dsc-form-grid">
           <div className="sm:col-span-2">
             <SpecialistSelector value={draft.specialistRoles} onChange={(specialistRoles) => patch({ specialistRoles })} disabled={isSaving} />
           </div>

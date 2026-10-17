@@ -1124,7 +1124,7 @@ export default function AdminTrainingProgramDetailPage({
                       {lang === "ar" ? "الإحصائيات" : "Analytics"}
                     </h4>
                     <ul className="space-y-2 text-sm">
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "إجمالي التسجيلات:" : "Total registrations:"}
                         </span>
@@ -1132,7 +1132,7 @@ export default function AdminTrainingProgramDetailPage({
                           {stats?.totalRegistered ?? 0}
                         </span>
                       </li>
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "المكتملون:" : "Total completed:"}
                         </span>
@@ -1140,7 +1140,7 @@ export default function AdminTrainingProgramDetailPage({
                           {stats?.totalCompleted ?? 0}
                         </span>
                       </li>
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "نسبة الإكمال:" : "Completion rate:"}
                         </span>
@@ -1148,7 +1148,7 @@ export default function AdminTrainingProgramDetailPage({
                           {stats?.attendanceRate ?? 0}%
                         </span>
                       </li>
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "عدد الجلسات:" : "Sessions:"}
                         </span>
@@ -1156,7 +1156,7 @@ export default function AdminTrainingProgramDetailPage({
                           {program.schedule.sessions.length}
                         </span>
                       </li>
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "الحد الأقصى:" : "Max participants:"}
                         </span>
@@ -1171,7 +1171,7 @@ export default function AdminTrainingProgramDetailPage({
                       {lang === "ar" ? "معلومات البرنامج" : "Program Info"}
                     </h4>
                     <ul className="space-y-2 text-sm">
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "العنوان:" : "Title:"}
                         </span>
@@ -1179,7 +1179,7 @@ export default function AdminTrainingProgramDetailPage({
                           {program.title[lang]}
                         </span>
                       </li>
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "المدرب:" : "Trainer:"}
                         </span>
@@ -1187,7 +1187,7 @@ export default function AdminTrainingProgramDetailPage({
                           {program.trainer.name[lang]}
                         </span>
                       </li>
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "تاريخ البدء:" : "Start date:"}
                         </span>
@@ -1195,7 +1195,7 @@ export default function AdminTrainingProgramDetailPage({
                           {formatDate(program.schedule.startDate)}
                         </span>
                       </li>
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "المدة:" : "Duration:"}
                         </span>
@@ -1204,7 +1204,7 @@ export default function AdminTrainingProgramDetailPage({
                           {lang === "ar" ? "أيام" : "days"}
                         </span>
                       </li>
-                      <li className="flex justify-between">
+                      <li className="dsc-detail-row">
                         <span className="text-muted-foreground">
                           {lang === "ar" ? "الموقع:" : "Location:"}
                         </span>

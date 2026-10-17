@@ -84,7 +84,7 @@ export function ExpertPublicDetailsFields({
           lang
         )}
       </p></>}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="dsc-form-grid">
         {fields.filter((field) => namesOnly ? field.key.startsWith("publicName") : omitNames ? !field.key.startsWith("publicName") : true).map((field) => (
           <div key={field.key} className="space-y-2">
             <Label htmlFor={`expert-${field.key}`}>
