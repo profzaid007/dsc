@@ -10,7 +10,7 @@ function clientSession(app,u,id){
 }
 function clientDto(app,s,full=true){
  const d=h.json(s,'snapshot',{}),c=app.findRecordById('cases',s.getString('case'))
- const out={id:s.id,case:c.id,caseName:c.getString('name'),name:d.name,version:d.version,language:d.language,instructions:d.instructions,status:s.getString('status'),created:s.getString('created'),submitted_at:s.getString('submitted_at'),questions:[],answers:{},minAnswered:d.minAnswered,requireAll:d.missingPolicy==='reject'}
+ const out={id:s.id,case:c.id,caseName:c.getString('name'),name:d.name,version:d.version,language:d.language,instructions:d.instructions,referencePeriod:d.referencePeriod||"",respondentNotice:d.respondentNotice||"",status:s.getString('status'),created:s.getString('created'),submitted_at:s.getString('submitted_at'),questions:[],answers:{},minAnswered:d.minAnswered,requireAll:d.missingPolicy==='reject'}
  if(full){
   out.questions=d.questions.map(q=>({id:q.id,order:q.order,text:q.text,options:d.answerSets.find(a=>a.id===q.answerSet).options.map(o=>({id:o.id,label:o.label}))})).sort((a,b)=>a.order-b.order)
   const response=h.find(app,'assessment_responses','session = {:id}',{id:s.id})[0];out.answers=response?h.json(response,'answers',{}):{}

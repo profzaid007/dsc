@@ -138,6 +138,9 @@ function validateDefinition(d) {
     for (const v of [d.description, d.audience, d.instructions, d.language, d.type])
         if (typeof v !== "string" || v.length > 12000)
             fail("Invalid assessment text");
+    for (const v of [d.referencePeriod, d.respondentNotice])
+        if (v !== undefined && (typeof v !== "string" || v.length > 12000))
+            fail("Invalid introduction text");
     if (!finite(d.duration) || d.duration < 0 || d.duration > 1440)
         fail("Invalid duration");
     if (!["reject", "omit", "zero"].includes(d.missingPolicy) || !["higher_problem", "higher_better", "middle"].includes(d.direction))

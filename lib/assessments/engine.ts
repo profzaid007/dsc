@@ -73,6 +73,7 @@ function validateRule(rule: Rule, names: string[]) {
 export function validateDefinition(d: Definition): void {
   if (!d || typeof d !== "object" || !text(d.name, 200) || !code(d.code) || !text(d.version, 40)) fail("Name, valid code and version are required / الاسم والرمز والإصدار مطلوبة")
   for (const v of [d.description, d.audience, d.instructions, d.language, d.type]) if (typeof v !== "string" || v.length > 12000) fail("Invalid assessment text")
+  for (const v of [d.referencePeriod, d.respondentNotice]) if (v !== undefined && (typeof v !== "string" || v.length > 12000)) fail("Invalid introduction text")
   if (!finite(d.duration) || d.duration < 0 || d.duration > 1440) fail("Invalid duration")
   if (!["reject", "omit", "zero"].includes(d.missingPolicy) || !["higher_problem", "higher_better", "middle"].includes(d.direction)) fail("Invalid missing-answer policy or direction")
   for (const key of ["dimensions", "answerSets", "questions", "indicators", "bands", "alerts"] as const) if (!Array.isArray(d[key]) || d[key].length > (key === "questions" ? 2000 : 500)) fail("Invalid or excessive " + key)

@@ -1,6 +1,8 @@
 "use client"
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import AnswerMatrix from "./AnswerMatrix"
+import AssessmentInstructions from "./AssessmentInstructions"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { useLang } from "@/lib/lang-context"
 import { Button } from "@/components/ui/button"
@@ -258,10 +260,13 @@ export default function ClientAssessments({
             <h1 className="my-2 text-3xl font-bold text-primary">
               {session.name}
             </h1>
-            <p className="whitespace-pre-wrap text-slate-700">
-              {session.instructions}
-            </p>
           </header>
+          <AssessmentInstructions
+            lang={lang}
+            instructions={session.instructions}
+            referencePeriod={session.referencePeriod}
+            respondentNotice={session.respondentNotice}
+          />
           {locked ? (
             <p
               role="status"
@@ -319,59 +324,23 @@ export default function ClientAssessments({
             }}
             className="space-y-4"
           >
-            {session.questions
-              .slice()
-              .sort((a, b) => a.order - b.order)
-              .map((q) => (
-                <fieldset
-                  disabled={busy || locked}
-                  key={q.id}
-                  className="rounded-lg border bg-white p-5"
-                >
-                  <legend className="px-2 font-bold">
-                    {q.order}. {q.text}
-                  </legend>
-                  <div className="grid gap-2">
-                    {q.options.map((o) => (
-                      <label
-                        key={o.id}
-                        className={`flex min-h-11 cursor-pointer items-start gap-3 rounded border p-3 ${answers[q.id] === o.id ? "border-primary bg-sky-50" : "border-slate-200"}`}
-                      >
-                        <input
-                          type="radio"
-                          className="mt-1 accent-primary"
-                          name={`question-${q.id}`}
-                          value={o.id}
-                          checked={answers[q.id] === o.id}
-                          onChange={() => {
-                            setAnswers((a) => ({ ...a, [q.id]: o.id }))
-                            setDirty(true)
-                            setNotice("")
-                            setError("")
-                          }}
-                        />
-                        <span>{o.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {answers[q.id] && !locked && (
-                    <button
-                      type="button"
-                      className="mt-2 text-sm text-slate-600 underline"
-                      onClick={() => {
-                        setAnswers((a) => {
-                          const next = { ...a }
-                          delete next[q.id]
-                          return next
-                        })
-                        setDirty(true)
-                      }}
-                    >
-                      {t("مسح الإجابة", "Clear answer")}
-                    </button>
-                  )}
-                </fieldset>
-              ))}
+            <AnswerMatrix
+              questions={session.questions}
+              answers={answers}
+              disabled={busy || locked}
+              lang={lang}
+              onChange={(question, option) => {
+                setAnswers((a) => {
+                  const next = { ...a }
+                  if (option) next[question] = option
+                  else delete next[question]
+                  return next
+                })
+                setDirty(true)
+                setNotice("")
+                setError("")
+              }}
+            />
             {!locked && (
               <footer className="flex flex-wrap gap-3 border-t pt-4">
                 <Button

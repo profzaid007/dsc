@@ -1,6 +1,8 @@
 "use client"
 import { useEffect, useState, type ReactNode } from "react"
 import Link from "next/link"
+import AnswerMatrix from "./AnswerMatrix"
+import AssessmentInstructions from "./AssessmentInstructions"
 import { previewQuestions } from "./import-questions"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { useLang } from "@/lib/lang-context"
@@ -899,18 +901,33 @@ export default function AssessmentBuilder() {
                   />
                 </Field>
               </div>
-              {(["description", "instructions"] as const).map((k) => (
+              {(
+                [
+                  "description",
+                  "instructions",
+                  "referencePeriod",
+                  "respondentNotice",
+                ] as const
+              ).map((k) => (
                 <Field
                   key={k}
                   label={
                     k === "description"
                       ? t("الوصف", "Description")
-                      : t("التعليمات", "Instructions")
+                      : k === "instructions"
+                        ? t(
+                            "المقدمة والتعليمات",
+                            "Introduction and instructions"
+                          )
+                        : k === "referencePeriod"
+                          ? t("الفترة الزمنية المرجعية", "Reference period")
+                          : t("تنبيه للمجيب", "Notice to respondent")
                   }
                 >
                   <textarea
                     className="min-h-24 rounded border p-3"
-                    value={definition[k]}
+                    maxLength={12000}
+                    value={definition[k] ?? ""}
                     onChange={(e) =>
                       change({ ...definition, [k]: e.target.value })
                     }
@@ -2036,6 +2053,18 @@ export default function AssessmentBuilder() {
                   </div>
                 </div>
               )}
+              <AssessmentInstructions
+                lang={lang}
+                instructions={
+                  (tab === 7 ? session?.snapshot : definition)?.instructions
+                }
+                referencePeriod={
+                  (tab === 7 ? session?.snapshot : definition)?.referencePeriod
+                }
+                respondentNotice={
+                  (tab === 7 ? session?.snapshot : definition)?.respondentNotice
+                }
+              />
               <fieldset
                 disabled={
                   busy ||
@@ -2078,33 +2107,35 @@ export default function AssessmentBuilder() {
                     </Field>
                   ))}
                 </div>
-                {(tab === 7
-                  ? (session?.snapshot.questions ?? [])
-                  : definition.questions
-                )
-                  .slice()
-                  .sort((a, b) => a.order - b.order)
-                  .map((q) => (
-                    <Field key={q.id} label={`${q.order}. ${q.text}`}>
-                      <Select
-                        value={answers[q.id] ?? ""}
-                        onChange={(v) => {
-                          setAnswers({ ...answers, [q.id]: v })
-                          setResult(null)
-                        }}
-                        options={[
-                          { value: "", label: t("لم تُجب", "Not answered") },
-                          ...(
-                            (tab === 7
-                              ? session?.snapshot
-                              : definition
-                            )?.answerSets.find((s) => s.id === q.answerSet)
-                              ?.options ?? []
-                          ).map((o) => ({ value: o.id, label: o.label })),
-                        ]}
-                      />
-                    </Field>
-                  ))}
+                <AnswerMatrix
+                  lang={lang}
+                  disabled={
+                    busy ||
+                    session?.status === "completed" ||
+                    !!session?.recipient
+                  }
+                  questions={(tab === 7
+                    ? (session?.snapshot.questions ?? [])
+                    : definition.questions
+                  ).map((q) => ({
+                    ...q,
+                    options:
+                      (tab === 7 ? session?.snapshot : definition)?.answerSets
+                        .find((set) => set.id === q.answerSet)
+                        ?.options.map((o) => ({ id: o.id, label: o.label })) ??
+                      [],
+                  }))}
+                  answers={answers}
+                  onChange={(question, option) => {
+                    setAnswers((a) => {
+                      const next = { ...a }
+                      if (option) next[question] = option
+                      else delete next[question]
+                      return next
+                    })
+                    setResult(null)
+                  }}
+                />
               </fieldset>
               {tab === 6 && (
                 <Button

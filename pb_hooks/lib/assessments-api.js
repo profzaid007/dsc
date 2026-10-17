@@ -53,6 +53,7 @@ function run(e,action){
   manage(e,b.id?"tools.update":"tools.create")
   const d=b.definition
   if(!d||typeof d!=="object"||typeof d.name!=="string"||!d.name.trim()||d.name.length>200||typeof d.code!=="string"||!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(d.code)||typeof d.version!=="string"||!d.version.trim()||d.version.length>40||!Array.isArray(d.questions)||d.questions.length>2000||JSON.stringify(d).length>4000000)throw new BadRequestError("Name, code and version are required; maximum 2000 questions")
+  for(const v of [d.referencePeriod,d.respondentNotice])if(v!==undefined&&(typeof v!=="string"||v.length>12000))throw new BadRequestError("Invalid introduction text")
   let saved
   e.app.runInTransaction(app=>{
    const r=b.id?row(app,b.id):new Record(app.findCollectionByNameOrId("assessments"))
