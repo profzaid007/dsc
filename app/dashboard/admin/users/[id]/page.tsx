@@ -222,6 +222,13 @@ export default function AdminUserDetailPage({
     const isExpert = user.role === "expert"
     try {
       if (isExpert && expertDraft) {
+        if (!expertDraft.publicNameAr.trim() || !expertDraft.publicNameEn.trim()) {
+          toast.error(t({
+            ar: "يجب إدخال اسم الخبير بالعربية والإنجليزية قبل الحفظ.",
+            en: "Both Arabic and English expert names are required before saving.",
+          }, lang))
+          return
+        }
         if (!expertDraft.name.trim()) {
           setFieldErrors({
             name: t(

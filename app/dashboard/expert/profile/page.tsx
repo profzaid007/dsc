@@ -73,6 +73,13 @@ export default function ExpertProfilePage() {
   const handleSubmit = async () => {
     if (!draft) return
 
+    if (!draft.publicNameAr.trim() || !draft.publicNameEn.trim()) {
+      toast.error(t({
+        ar: "يجب إدخال اسم الخبير بالعربية والإنجليزية قبل الحفظ.",
+        en: "Both Arabic and English expert names are required before saving.",
+      }, lang))
+      return
+    }
     if (!draft.name.trim()) {
       setFieldErrors({
         name: t(

@@ -419,7 +419,7 @@ export default function CmsBlogEditorPage() {
         <RichTextEditor key={resetKey}
           title={t({ en: "Content", ar: "المحتوى" }, lang)}
           initialContent={enContent} onSave={handleContentSave} isSaving={saving}
-          onImageUpload={handleImageUpload} onDiscard={handleDiscard}
+          onImageUpload={handleImageUpload} maxMediaSizeMB={50} onDiscard={handleDiscard}
           onChange={setEnContent}
           direction={blogContentLang(enContent || enTitle) === "ar" ? "rtl" : "ltr"} />
       </div>

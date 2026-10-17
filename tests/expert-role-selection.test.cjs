@@ -28,3 +28,27 @@ test("creating, editing and clearing roles persists IDs without creating case al
   assert.deepEqual(JSON.parse(writes.at(-1).data.get("specialist_roles")), [])
   assert.equal(writes.some(write => write.name === "case_experts"), false)
 })
+
+
+test("cleared public names remain empty when reopening the profile", () => {
+  const draft = hook.draftFromProfile({ public_name_ar: "", public_name_en: "Expert" }, "اسم الحساب")
+  assert.equal(draft.publicNameAr, "")
+  assert.equal(draft.publicNameEn, "Expert")
+  assert.equal(hook.draftFromProfile({ public_name_en: "" }, "Account").publicNameEn, "")
+})
+
+test("saving requires both names and rejects missing names before any database writes", async () => {
+  const draft = { ...hook.emptyDraft(), publicNameEn: "Expert", publicNameAr: "خبير" }
+  for (const invalid of [
+    { ...draft, publicNameAr: "" },
+    { ...draft, publicNameEn: "   " },
+    { ...draft, publicNameAr: "", publicNameEn: "" },
+  ]) {
+    const count = writes.length
+    await assert.rejects(() => hook.saveExpertProfileFor(invalid, "expert", "profile"), /Both Arabic and English/)
+    assert.equal(writes.length, count)
+  }
+  await hook.saveExpertProfileFor(draft, "expert", "profile")
+  assert.equal(writes.at(-1).data.get("public_name_ar"), "خبير")
+  assert.equal(writes.at(-1).data.get("public_name_en"), "Expert")
+})

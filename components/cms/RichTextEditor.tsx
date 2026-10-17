@@ -34,6 +34,7 @@ interface RichTextEditorProps {
   onDiscard?: () => void
   onImageUpload?: (file: File) => Promise<string>
   onChange?: (html: string) => void
+  maxMediaSizeMB?: number
   direction?: "ltr" | "rtl"
 }
 
@@ -45,6 +46,7 @@ export function RichTextEditor({
   onImageUpload,
   onDiscard,
   onChange,
+  maxMediaSizeMB,
   direction = "ltr",
 }: RichTextEditorProps) {
   const { lang } = useLang()
@@ -52,6 +54,16 @@ export function RichTextEditor({
   const editorRef = useRef<SunEditor.Instance | null>(null)
   const onImageUploadRef = useRef(onImageUpload)
   const onChangeRef = useRef(onChange)
+  const mediaLimitRef = useRef({ maxMediaSizeMB, lang })
+  useEffect(() => { mediaLimitRef.current = { maxMediaSizeMB, lang } }, [maxMediaSizeMB, lang])
+  const exceedsMediaLimit = (file: File) => {
+    const { maxMediaSizeMB: limit, lang: currentLang } = mediaLimitRef.current
+    if (!limit || file.size <= limit * 1024 * 1024) return false
+    toast.error(currentLang === "ar"
+      ? `الحد الأعلى لحجم الملف هو ${limit} ميجابايت. اختر ملفًا أصغر.`
+      : `The maximum file size is ${limit} MB. Choose a smaller file.`)
+    return true
+  }
   const lastSyncedInitialContent = useRef<string>("")
   const [content, setContent] = useState(() => cmsLayoutSource(initialContent))
   const [mode, setMode] = useState<"visual" | "html" | "custom">(() =>
@@ -124,6 +136,7 @@ export function RichTextEditor({
           onVideoUploadBefore: async ({ info }) => {
             if (!(info.files instanceof FileList)) return true
             const file = info.files[0]
+            if (file && exceedsMediaLimit(file)) return false
             const upload = onImageUploadRef.current
             if (!file || !upload) {
               toast.error(lang === "ar" ? "أدخل رابط فيديو منشورًا على الإنترنت." : "Enter an online video URL.")
@@ -156,6 +169,7 @@ export function RichTextEditor({
               return true
             }
 
+            if (exceedsMediaLimit(info.files[0])) return false
             try {
               const url = await uploadHandler(info.files[0])
               const imagePlugin = instance!.$.plugins.image
@@ -357,6 +371,13 @@ export function RichTextEditor({
 
   return (
     <div className="flex flex-col gap-4">
+      {onImageUpload && maxMediaSizeMB && (
+        <p className="text-sm text-muted-foreground" role="note">
+          {lang === "ar"
+            ? `الحد الأعلى لحجم كل صورة أو فيديو مرفوع: ${maxMediaSizeMB} ميجابايت.`
+            : `Maximum upload size per image or video: ${maxMediaSizeMB} MB.`}
+        </p>
+      )}
       {title && (
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">{title}</h2>
