@@ -4,7 +4,7 @@ import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { use, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { DataError } from "@/components/ui/data-error"
 import { ExpertTaskAssignment } from "@/components/dashboard/ExpertTaskAssignment"
 import { PageLoader } from "@/components/ui/page-loader"
@@ -64,6 +64,9 @@ export default function AssignmentDetailPage({
 }: AssignmentDetailPageProps) {
   const { id: assignmentId } = use(params)
   const router = useRouter()
+  const pathname = usePathname()
+  const casePath = pathname.match(/^\/dashboard\/admin\/cases\/([^/]+)\/tasks\//)
+  const backHref = casePath ? `/dashboard/admin/cases/${casePath[1]}#case-assignments` : "/dashboard/admin/cases"
   const { lang } = useLang()
   const {
     assignments,
@@ -116,7 +119,7 @@ export default function AssignmentDetailPage({
         <h2 className="mb-4 text-xl font-medium">
           {lang === "ar" ? "لم يتم العثور على المهمة" : "Assignment not found"}
         </h2>
-        <Button onClick={() => router.push("/dashboard/admin/assignments")}>
+        <Button onClick={() => router.push(backHref)}>
           {lang === "ar" ? "العودة إلى المهام" : "Back to Assignments"}
         </Button>
       </div>
@@ -134,7 +137,7 @@ export default function AssignmentDetailPage({
             ? "تم حذف الحالة المرتبطة بهذه المهمة."
             : "The linked case for this assignment was deleted."}
         </p>
-        <Button onClick={() => router.push("/dashboard/admin/assignments")}>
+        <Button onClick={() => router.push(backHref)}>
           {lang === "ar" ? "العودة إلى المهام" : "Back to Assignments"}
         </Button>
       </div>
@@ -540,7 +543,7 @@ export default function AssignmentDetailPage({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push("/dashboard/admin/assignments")}
+            onClick={() => router.push(backHref)}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

@@ -3,10 +3,8 @@
 import { use, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
-import { useAssignments } from "@/hooks/useAssignments"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useLang } from "@/lib/lang-context"
-import { toolTypesCollection } from "@/lib/pb-collections"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { SurveyPreview } from "@/components/tool-renderers/SurveyPreview"
 import {
@@ -18,7 +16,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Edit, Trash2, UserPlus, FileText } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, FileText } from "lucide-react"
 import Link from "next/link"
 import type { SurveyConfig } from "@/types/tool"
 import type { AssignmentStatus } from "@/types/assignment"
@@ -53,10 +51,8 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
   const router = useRouter()
   const { lang } = useLang()
   const { getToolById, deleteTool } = useTools()
-  const { assignTool } = useAssignments()
   const { fetchToolTypes, getToolTypeByKey } = useToolTypes()
   const [selectedCaseId, setSelectedCaseId] = useState("")
-  const [isAssigning, setIsAssigning] = useState(false)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -83,29 +79,6 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
 
   const Icon = getToolTypeMeta("survey")?.icon || FileText
   const toolTypeLabel = getToolTypeLabel(getToolTypeByKey("survey"), lang)
-
-  const handleAssign = async () => {
-    if (!selectedCaseId || !tool) return
-    setIsAssigning(true)
-    try {
-      // Get the tool_type ID for this tool
-      const toolType = await toolTypesCollection.getByName("survey")
-
-      await assignTool({
-        case: selectedCaseId,
-        type: toolType.id,
-        name_en: tool.name.en,
-        name_ar: tool.name.ar,
-        is_not_template: false,
-        config: tool.config,
-        status: "pending",
-        is_visible_to_user: true,
-      })
-      setSelectedCaseId("")
-    } finally {
-      setIsAssigning(false)
-    }
-  }
 
   const handleDelete = async () => {
     if (confirm(lang === "ar" ? "هل أنت متأكد من حذف هذه الأداة؟" : "Are you sure you want to delete this tool?")) {
@@ -270,66 +243,17 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
         </CardContent>
       </Card>
 
-      {/* Quick Assign Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            {lang === "ar" ? "إسناد سريع" : "Quick Assign"}
-          </CardTitle>
-          <CardDescription>
-            {lang === "ar"
-              ? "إسناد هذه الأداة إلى قضية"
-              : "Assign this tool to a case"}
-          </CardDescription>
+          <CardTitle>{lang === "ar" ? "التعيين من الحالة" : "Assign from a case"}</CardTitle>
+          <CardDescription>{lang === "ar" ? "تُعيّن الأدوات والمقاييس من صفحة الحالة. اختر الحالة ثم افتح أدوات الحالة ومقاييسها." : "Assign tools and assessments from the case page. Select a case, then open its tools and assessments."}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-4">
-            <div className="flex-1">
-              <label className="mb-2 block text-sm font-medium">
-                {lang === "ar" ? "اختر قضية" : "Select Case"}
-              </label>
-              <CaseSearchCombobox
-                value={selectedCaseId}
-                onChange={setSelectedCaseId}
-                placeholder={
-                  lang === "ar"
-                    ? "ابحث واختر قضية..."
-                    : "Search and select a case..."
-                }
-              />
-            </div>
-            <Button
-              onClick={handleAssign}
-              disabled={!selectedCaseId || isAssigning}
-            >
-              {isAssigning
-                ? lang === "ar"
-                  ? "جارٍ الإسناد..."
-                  : "Assigning..."
-                : lang === "ar"
-                  ? "إسناد إلى قضية"
-                  : "Assign to Case"}
-            </Button>
-          </div>
+        <CardContent className="flex items-end gap-4">
+          <div className="flex-1"><CaseSearchCombobox value={selectedCaseId} onChange={setSelectedCaseId} /></div>
+          <Button disabled={!selectedCaseId} onClick={() => router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)}>{lang === "ar" ? "فتح تعيينات الحالة" : "Open case assignments"}</Button>
         </CardContent>
       </Card>
 
-      {/* Note: Assignments are tracked in the global Assignments page */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{lang === "ar" ? "المهام" : "Assignments"}</CardTitle>
-          <CardDescription>
-            {lang === "ar" ? "عرض جميع المهام في صفحة " : "View all assignments in the "}
-            <Link
-              href="/dashboard/admin/assignments"
-              className="text-primary hover:underline"
-            >
-              {lang === "ar" ? "المهام" : "Assignments page"}
-            </Link>
-          </CardDescription>
-        </CardHeader>
-      </Card>
     </div>
   )
 }

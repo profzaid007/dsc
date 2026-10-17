@@ -318,8 +318,8 @@ export default function AssignmentsPage() {
               <p className="text-muted-foreground">
                 {assignments.length === 0
                   ? lang === "ar"
-                    ? "لم يتم تعيين أي أدوات للحالات بعد. انتقل إلى إحدى الأدوات واستخدم التعيين السريع."
-                    : "No tools have been assigned to cases yet. Go to a tool and use Quick Assign."
+                    ? "لم يتم تعيين أي أدوات للحالات بعد. افتح الحالة ثم تبويب التعيينات لإضافة أداة أو مقياس."
+                    : "No tools have been assigned yet. Open a case and its Assignments tab to add a tool or assessment."
                   : lang === "ar"
                     ? "لا توجد تعيينات تطابق عوامل التصفية."
                     : "No assignments match your filters."}

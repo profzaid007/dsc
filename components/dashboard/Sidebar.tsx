@@ -59,11 +59,6 @@ const adminNavigation: NavItem[] = [
     icon: Wrench,
   },
   {
-    name: { en: "Assignments", ar: "التعيينات" },
-    href: "/dashboard/admin/assignments",
-    icon: ClipboardList,
-  },
-  {
     name: { en: "Allocations", ar: "التخصيصات" },
     href: "/dashboard/admin/allocations",
     icon: UserCheck,

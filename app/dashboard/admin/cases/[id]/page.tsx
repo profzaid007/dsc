@@ -112,6 +112,13 @@ export default function AdminCaseDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id: caseId } = use(params)
+  const [activeTab, setActiveTab] = useState("overview")
+  useEffect(() => {
+    const openTab = () => { if (window.location.hash === "#case-assignments") setActiveTab("assigned") }
+    openTab()
+    window.addEventListener("hashchange", openTab)
+    return () => window.removeEventListener("hashchange", openTab)
+  }, [caseId])
   const access = usePermissions()
   const router = useRouter()
   const { lang } = useLang()
@@ -427,13 +434,13 @@ export default function AdminCaseDetailPage({
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">
             {lang === "ar" ? "نظرة عامة" : "Overview"}
           </TabsTrigger>
           <TabsTrigger value="assigned">
-            {lang === "ar" ? "المكلف بها" : "Assigned"}
+            {lang === "ar" ? "الأدوات والمقاييس" : "Tools & assessments"}
             <Badge variant="secondary" className="ms-2">
               {caseAssignments.length}
             </Badge>
@@ -874,7 +881,8 @@ export default function AdminCaseDetailPage({
           </div>
         </TabsContent>
 
-        <TabsContent value="assigned">
+        <TabsContent value="assigned" id="case-assignments">
+          <CaseAssessments caseId={profile.id} />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -980,7 +988,7 @@ export default function AdminCaseDetailPage({
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Link
-                                href={`/dashboard/admin/assignments/${assignment.id}`}
+                                href={`/dashboard/admin/cases/${profile.id}/tasks/${assignment.id}`}
                               >
                                 <Button variant="ghost" size="sm">
                                   <Eye className="h-4 w-4" />
@@ -1064,7 +1072,7 @@ export default function AdminCaseDetailPage({
           </Card>
         </TabsContent>
       </Tabs>
-      <CaseAssessments caseId={profile.id} />
+
       <CaseFeedback caseId={profile.id} ownerId={profile.user} />
 
       {showAssignModal && (
