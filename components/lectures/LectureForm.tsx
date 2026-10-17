@@ -1,6 +1,7 @@
 "use client"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 
+import { EventImageField } from "@/components/form/EventImageField"
 import { ClassificationFields } from "@/components/form/ClassificationFields"
 import { useLang } from "@/lib/lang-context"
 import React, { useState } from "react"
@@ -79,23 +80,9 @@ export function LectureForm({
     description: { ...emptyForm.description, ...initialData?.description },
   }))
 
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | undefined>(
-    () => {
-      const thumb = initialData?.thumbnail
-      return typeof thumb === "string" ? thumb : undefined
-    }
-  )
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await onSubmit(formData)
-  }
-
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setFormData({ ...formData, thumbnail: file })
-    setThumbnailPreview(URL.createObjectURL(file))
+    await onSubmit({...formData, schedule:{...formData.schedule, mode:formData.schedule.mode || "in_person"}})
   }
 
   const updateSpeaker = (
@@ -211,6 +198,9 @@ export function LectureForm({
         </CardContent>
       </Card>
 
+      <EventImageField value={formData.thumbnail} disabled={isSubmitting}
+        onChange={file => setFormData(previous => ({...previous, thumbnail:file}))} />
+
       <Card>
         <CardHeader>
           <CardTitle>{ui("Speaker Information")}</CardTitle>
@@ -303,13 +293,24 @@ export function LectureForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="location">{ui("Location *")}</Label>
+              <Label htmlFor="attendanceMode">{lang === "ar" ? "طريقة الحضور" : "Attendance mode"}</Label>
+              <Select value={formData.schedule.mode || "in_person"} disabled={isSubmitting}
+                onValueChange={value => setFormData(previous => ({...previous, schedule:{...previous.schedule, mode:value as "in_person" | "online"}}))}>
+                <SelectTrigger id="attendanceMode"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="in_person">{lang === "ar" ? "حضوري" : "In person"}</SelectItem>
+                  <SelectItem value="online">{lang === "ar" ? "عبر الشبكة" : "Online"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location">{lang === "ar" ? "المكان" : "Location"}{formData.schedule.mode !== "online" ? " *" : ""}</Label>
               <Input
                 id="location"
                 value={formData.schedule.location}
                 onChange={(e) => updateSchedule("location", e.target.value)}
                 placeholder={ui("e.g., Main Conference Hall")}
-                required
+                required={formData.schedule.mode !== "online"}
               />
             </div>
           </div>
@@ -342,28 +343,7 @@ export function LectureForm({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{ui("Thumbnail Image")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {thumbnailPreview && (
-            <div className="relative h-48 w-full overflow-hidden rounded-lg bg-muted">
-              <img
-                src={thumbnailPreview}
-                alt={ui("Thumbnail preview")}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          )}
-          <Input
-            id="thumbnail"
-            type="file"
-            accept="image/*"
-            onChange={handleThumbnailChange}
-          />
-        </CardContent>
-      </Card>
+
 
       <Card>
         <CardHeader>

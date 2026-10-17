@@ -54,13 +54,17 @@ export function useTraining() {
 
   // Program CRUD
   const addProgram = async (data: CreateProgramInput) => {
-    const newProgram = await trainingProgramsCollection.create(data)
+    const { thumbnail, ...rest } = data
+    const file = thumbnail instanceof File ? thumbnail : undefined
+    const newProgram = await trainingProgramsCollection.create(rest, file)
     setPrograms((prev) => [...prev, newProgram])
     return newProgram.id
   }
 
   const updateProgram = async (id: string, data: UpdateProgramInput) => {
-    const updated = await trainingProgramsCollection.update(id, data)
+    const { thumbnail, ...rest } = data
+    const file = thumbnail instanceof File ? thumbnail : undefined
+    const updated = await trainingProgramsCollection.update(id, rest, file)
     setPrograms((prev) => prev.map((p) => (p.id === id ? updated : p)))
   }
 

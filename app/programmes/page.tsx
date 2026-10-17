@@ -127,7 +127,7 @@ export default function ProgrammesPage() {
         subcategory: l.subcategory || "",
         presenterKey: l.speaker.name.en || l.speaker.name.ar,
         location: l.schedule.location,
-        mode: "",
+        mode: l.schedule.mode || "in_person",
         start: parseDate(l.schedule.dateTime),
         end: new Date(
           parseDate(l.schedule.dateTime).getTime() + l.duration * 60000
@@ -184,9 +184,9 @@ export default function ProgrammesPage() {
         : t("In progress", "قيد التنفيذ")
   const modeLabel = (s: string) =>
     s === "online"
-      ? t("Online", "عبر الإنترنت")
+      ? t("Online", "عبر الشبكة")
       : s === "hybrid"
-        ? t("Hybrid", "حصوري وعبر الشبكة")
+        ? t("Hybrid", "حضوري وعبر الشبكة")
         : t("In person", "حضوري")
   const typeEvents = events.filter(
     (event) => !filters.kind || event.kind === filters.kind

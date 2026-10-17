@@ -1,6 +1,7 @@
 "use client"
 
-import { usePathname, useRouter } from "next/navigation"
+import { SecuritySidebar } from "./SecuritySidebar"
+import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { useUnreadMessages } from "@/hooks/useUnreadMessages"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -15,7 +16,6 @@ import {
   LayoutDashboard,
   Users,
   Wrench,
-  LogOut,
   FolderKanban,
   ClipboardList,
   GraduationCap,
@@ -46,8 +46,6 @@ type NavItem = {
 }
 
 const adminNavigation: NavItem[] = [
-  { name: { en: "Security management", ar: "إدارة الأمان" }, href: "/dashboard/admin/security", icon: BadgeCheck, superAdminOnly: true },
-  { name: { en: "Content management", ar: "إدارة المحتوى" }, href: "/cms", icon: FileText },
   { name: { en: "Messages", ar: "الرسائل" }, href: "/dashboard/messages", icon: MessageSquare },
   { name: { en: "Database backups", ar: "النسخ الاحتياطية" }, href: "/dashboard/admin/backups", icon: FolderKanban, superAdminOnly: true },
   {
@@ -228,12 +226,10 @@ function renderNavItem(
 
 export function DashboardSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
   const { lang } = useLang()
   const {
     currentUser,
     isAdmin,
-    logout,
     isLoading: isAuthLoading,
   } = useAuth()
 
@@ -265,11 +261,6 @@ export function DashboardSidebar() {
     })
   }
 
-  const handleLogout = () => {
-    logout()
-    router.push("/login")
-  }
-
   const dashboardHref = isAdmin
     ? "/dashboard/admin"
     : isExpert
@@ -294,6 +285,8 @@ export function DashboardSidebar() {
             ? { en: role === "care_foundation" ? "Care Foundation Dashboard" : "Parent Dashboard", ar: "لوحة التحكم" }
             : { en: "Dashboard", ar: "لوحة التحكم" }
 
+  if (pathname.startsWith("/dashboard/admin/security")) return <SecuritySidebar />
+
   return (
     <>
     <div className="w-full bg-primary text-primary-foreground md:hidden">
@@ -317,9 +310,7 @@ export function DashboardSidebar() {
           {(isAdmin ? adminNavigation : isExpert ? expertNavigation : isOrganization ? organizationNavigation : isIndividual ? individualNavigation : isParent ? parentNavigation : [])
             .filter(canNavigate)
             .map((item) => renderNavItem(withUnread(item), pathname, lang))}
-          <Button variant="ghost" className="min-h-11 w-full justify-start text-white hover:bg-white/10 hover:text-white" onClick={handleLogout}>
-            <LogOut className="h-4 w-4" />{lang === "ar" ? "تسجيل الخروج" : "Logout"}
-          </Button>
+
         </nav>
       )}
     </div>
@@ -485,18 +476,7 @@ export function DashboardSidebar() {
             )}
           </div>
         )}
-        <Button
-          variant="ghost"
-          size={isCollapsed ? "icon" : "sm"}
-          className={cn(
-            "text-primary-foreground/70 hover:bg-white/10 hover:text-white",
-            isCollapsed ? "w-full justify-center" : "w-full justify-start"
-          )}
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          {!isCollapsed && (lang === "ar" ? "تسجيل الخروج" : "Logout")}
-        </Button>
+
       </div>
     </aside>
     </>

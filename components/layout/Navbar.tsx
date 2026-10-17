@@ -4,7 +4,7 @@ import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText, UserPlus, ChevronDown, LogOut } from "lucide-react"
+import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText, UserPlus, ChevronDown, LogOut, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
@@ -36,8 +36,9 @@ export function Navbar() {
   const router = useRouter()
   const accountRef = useRef<HTMLDivElement>(null)
 
+  const isManagementRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/cms")
   const isPortal = pathname.startsWith("/portal/")
-  const isAppRoute = pathname.startsWith("/dashboard") || pathname === "/login"
+  const isAppRoute = isManagementRoute || pathname === "/login"
 
   const portalId = isPortal ? pathname.split("/portal/")[1] : null
   const portal = portalId ? getPortalById(portalId) : null
@@ -182,7 +183,7 @@ export function Navbar() {
                         </Link>
                       )}
                       <div className="my-1 border-t" />
-                      <button
+                      {!isManagementRoute && <button
                         onClick={() => {
                           setAccountPopoverOpen(false)
                           logout()
@@ -192,7 +193,7 @@ export function Navbar() {
                       >
                         <LogOut className="h-4 w-4" />
                         {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
-                      </button>
+                      </button>}
                     </div>
                   )}
                 </div>
@@ -231,6 +232,14 @@ export function Navbar() {
               <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
             </div>
           </div>
+          {isAuthenticated && isManagementRoute && (
+            <nav aria-label={lang === "ar" ? "إدارة النظام" : "System management"} className="flex flex-wrap items-center gap-2 border-t px-4 py-2 sm:px-6">
+              <Link href="/dashboard" className="flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm hover:bg-accent"><LayoutDashboard className="h-4 w-4" />{lang === "ar" ? "لوحة التحكم" : "Dashboard"}</Link>
+              {isAdmin && permissions.isSuperAdmin && <Link href="/dashboard/admin/security" aria-current={pathname.startsWith("/dashboard/admin/security") ? "page" : undefined} className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm ${pathname.startsWith("/dashboard/admin/security") ? "bg-accent font-semibold" : "hover:bg-accent"}`}><ShieldCheck className="h-4 w-4" />{lang === "ar" ? "إدارة الأمان" : "Security management"}</Link>}
+              {isAdmin && permissions.can("cms.read") && <Link href="/cms" aria-current={pathname.startsWith("/cms") ? "page" : undefined} className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm ${pathname.startsWith("/cms") ? "bg-accent font-semibold" : "hover:bg-accent"}`}><FileText className="h-4 w-4" />{lang === "ar" ? "إدارة المحتوى" : "Content management"}</Link>}
+              <button onClick={() => { logout(); router.push("/login") }} className="ms-auto flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm hover:bg-accent"><LogOut className="h-4 w-4" />{lang === "ar" ? "تسجيل الخروج" : "Logout"}</button>
+            </nav>
+          )}
         </header>
 
         {/* Mobile menu (dropdown) */}
@@ -319,7 +328,7 @@ export function Navbar() {
                 </Button>
               )}
 
-              {isAuthenticated && (
+              {isAuthenticated && !isManagementRoute && (
                 <>
                   <div className="my-1 border-t" />
                   <button

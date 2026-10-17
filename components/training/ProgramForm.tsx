@@ -1,6 +1,7 @@
 "use client"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 
+import { EventImageField } from "@/components/form/EventImageField"
 import { ClassificationFields } from "@/components/form/ClassificationFields"
 import { useClassifications } from "@/hooks/useClassifications"
 import { useLang } from "@/lib/lang-context"
@@ -181,6 +182,9 @@ export function ProgramForm({
         </CardContent>
       </Card>
 
+      <EventImageField value={formData.thumbnail} disabled={isSubmitting}
+        onChange={file => setFormData(previous => ({...previous, thumbnail:file}))} />
+
       <Card>
         <CardHeader>
           <CardTitle>{ui("Trainer Information")}</CardTitle>
@@ -243,7 +247,7 @@ export function ProgramForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="type">{ui("Type")}</Label>
+              <Label htmlFor="type">{lang === "ar" ? "طريقة الحضور" : "Attendance mode"}</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) =>
@@ -254,9 +258,9 @@ export function ProgramForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="online">{ui("Online")}</SelectItem>
-                  <SelectItem value="in_person">{ui("In-Person")}</SelectItem>
-                  <SelectItem value="hybrid">{ui("Hybrid")}</SelectItem>
+                  <SelectItem value="in_person">{lang === "ar" ? "حضوري" : "In person"}</SelectItem>
+                  <SelectItem value="online">{lang === "ar" ? "عبر الشبكة" : "Online"}</SelectItem>
+                  {formData.type === "hybrid" && <SelectItem value="hybrid" disabled>{lang === "ar" ? "حضوري وعبر الشبكة (قيمة سابقة)" : "Hybrid (previous value)"}</SelectItem>}
                 </SelectContent>
               </Select>
             </div>

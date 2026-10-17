@@ -40,9 +40,9 @@ import {
 import { toast } from "sonner"
 
 const typeLabels = {
-  online: { en: "Online", ar: "عبر الإنترنت" },
+  online: { en: "Online", ar: "عبر الشبكة" },
   in_person: { en: "In-Person", ar: "حضوري" },
-  hybrid: { en: "Hybrid", ar: "حصوري وعبر الشبكة" },
+  hybrid: { en: "Hybrid", ar: "حضوري وعبر الشبكة" },
 }
 
 const statusLabels = {

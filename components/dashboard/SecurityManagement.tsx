@@ -188,6 +188,34 @@ export function SecurityManagement() {
       setBusy(false)
     }
   }
+  useEffect(() => {
+    const guard = (event: Event) => {
+      if (busy) event.preventDefault()
+    }
+    const sync = () => {
+      const key = window.location.hash.slice(1)
+      const next = ["roles", "users", "audit"].includes(key) ? key : "roles"
+      if (next === tab) return
+      if (busy || (dirty && !leave())) {
+        window.history.replaceState(null, "", `#${tab}`)
+        window.dispatchEvent(new HashChangeEvent("hashchange"))
+        return
+      }
+      setTab(next)
+      setRole(null)
+      setUser(null)
+      setQuery("")
+      if (next === "audit" && access.isSuperAdmin) void auditPage(1)
+    }
+    sync()
+    window.addEventListener("dsc:security-section-request", guard)
+    window.addEventListener("hashchange", sync)
+    return () => {
+      window.removeEventListener("dsc:security-section-request", guard)
+      window.removeEventListener("hashchange", sync)
+    }
+  }, [tab, busy, dirty, access.isSuperAdmin]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (access.isLoading)
     return <p role="status">{t("Loading access…", "جارٍ تحميل الصلاحيات…")}</p>
   if (!access.isSuperAdmin)
@@ -230,33 +258,7 @@ export function SecurityManagement() {
           {t("Manage users", "إدارة المستخدمين")}
         </Link>
       </header>
-      <nav
-        aria-label={t("Security sections", "أقسام الأمان")}
-        className="flex flex-wrap gap-2 border-b pb-3"
-      >
-        {[
-          ["roles", "Roles & permissions", "الأدوار والصلاحيات"],
-          ["users", "User access", "وصول المستخدمين"],
-          ["audit", "Audit history", "سجل التدقيق"],
-        ].map(([key, en, arabic]) => (
-          <Button
-            key={key}
-            variant={tab === key ? "default" : "outline"}
-            disabled={busy}
-            onClick={() => {
-              if (leave()) {
-                setTab(key)
-                setRole(null)
-                setUser(null)
-                setQuery("")
-                if (key === "audit") void auditPage(1)
-              }
-            }}
-          >
-            {t(en, arabic)}
-          </Button>
-        ))}
-      </nav>
+
       {error && (
         <div
           role="alert"

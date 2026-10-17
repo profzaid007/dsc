@@ -18,6 +18,7 @@ const PUBLIC_LECTURES_PUBLIC_COLLECTION = "public_lectures_public"
 function getThumbnailUrl(record: Record<string, unknown>): string | undefined {
   const thumbnail = record.thumbnail
   if (!thumbnail) return undefined
+  if (typeof thumbnail === "string") return pb.files.getUrl(record as never, thumbnail)
   if (Array.isArray(thumbnail) && thumbnail.length > 0) {
     return pb.files.getUrl(record as never, thumbnail[0] as string)
   }

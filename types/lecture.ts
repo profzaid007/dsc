@@ -11,6 +11,7 @@ export interface SpeakerInfo {
 }
 
 export interface ScheduleInfo {
+  mode?: "in_person" | "online"
   dateTime: string
   location: string
 }

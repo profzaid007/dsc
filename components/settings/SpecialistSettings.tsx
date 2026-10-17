@@ -467,8 +467,8 @@ export function SpecialistSettings({
                   <th scope="col">
                     <span className="sr-only">{ar ? "أيقونة" : "Icon"}</span>
                   </th>
-                  <th scope="col">{ui("Name (English)")}</th>
                   <th scope="col">الاسم (العربية)</th>
+                  <th scope="col">{ui("Name (English)")}</th>
                   <th scope="col">{ar ? "المفتاح" : "Key"}</th>
                   <th scope="col">{ar ? "الأدوار" : "Roles"}</th>
                   <th scope="col">{ar ? "الحالة" : "Status"}</th>
@@ -482,8 +482,8 @@ export function SpecialistSettings({
                     <tr key={c.id}>
                       <td>{i + 1}</td>
                       <td>{categoryIcon(c.id)}</td>
-                      <td>{c.name_en}</td>
                       <td dir="rtl">{c.name_ar}</td>
+                      <td>{c.name_en}</td>
                       <td>
                         <code dir="ltr">{mainCategoryKey(c.key)}</code>
                       </td>
