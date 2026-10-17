@@ -36,7 +36,6 @@ import { cn } from "@/lib/utils"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
-import PocketBase from "pocketbase"
 import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
 import {
   ageGroupLabel,
@@ -75,7 +74,6 @@ export function ExpertApplicationForm({
   const profilePhotoInputRef = useRef<HTMLInputElement>(null)
 
   // user fields
-  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirm, setPasswordConfirm] = useState("")
@@ -110,6 +108,8 @@ export function ExpertApplicationForm({
 
   // Booleans
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const submissionKey = useRef<string | null>(null)
+  const submitting = useRef(false)
   const [error, setError] = useState("")
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [step, setStep] = useState<1 | 2>(1)
@@ -195,6 +195,7 @@ export function ExpertApplicationForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting.current) return
     setError("")
 
     if (!validate()) return
@@ -223,24 +224,13 @@ export function ExpertApplicationForm({
       return
     }
 
+    submitting.current = true
     setIsSubmitting(true)
 
     try {
-      const cleanName = name.trim()
       const cleanEmail = normalizeEmail(email)
-      if (iban.trim()) {
-        // Do not create an account if the backend cannot securely persist its IBAN.
-        const config = await pb.send<{ iban: boolean }>(
-          "/api/dsc/expert-registration-config",
-          { method: "GET" }
-        )
-        if (!config.iban)
-          throw new Error(
-            lang === "ar"
-              ? "حفظ IBAN غير متاح حالياً"
-              : "IBAN storage is not configured"
-          )
-      }
+      const config = await pb.send<{iban:boolean; atomic:boolean}>("/api/dsc/expert-registration-config", {method:"GET", requestKey:null})
+      if (!config.atomic || (iban.trim() && !config.iban)) throw new Error(lang === "ar" ? "التسجيل غير متاح مؤقتاً حتى تحديث الخادم. لم يتم إنشاء حساب." : "Registration requires a server update. No account was created.")
 
       const userFormData = new FormData()
       const extraFormData = new FormData()
@@ -250,24 +240,11 @@ export function ExpertApplicationForm({
       userFormData.set("emailVisibility", "true")
       userFormData.set("password", password)
       userFormData.set("passwordConfirm", passwordConfirm)
-      userFormData.set("name", cleanName)
       userFormData.set("role", "expert")
       userFormData.set("is_active", "false")
       if (iban.trim()) userFormData.set("expert_iban", normalizeIban(iban))
 
-      // Create user record
-      const user = await pb.collection("users").create(userFormData)
-
-      const profileClient = pb.authStore.isValid
-        ? pb
-        : new PocketBase(pb.baseURL)
-      if (!profileClient.authStore.isValid)
-        await profileClient
-          .collection("users")
-          .authWithPassword(cleanEmail, password)
-
-      // Extra fields
-      extraFormData.set("user", user.id)
+      // Collect the complete application before sending a single atomic request.
       if (profilePhoto) extraFormData.append("profile_photo", profilePhoto)
 
       extraFormData.set("country_of_residence", residence)
@@ -310,17 +287,23 @@ export function ExpertApplicationForm({
       extraFormData.set("availability", availability)
       extraFormData.set("fee", fee)
 
-      // Create extra record
-      await profileClient.collection("expert_profiles").create(extraFormData)
-
-      const response = await fetch("/api/expert-application", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${profileClient.authStore.token}`,
-        },
-        body: JSON.stringify({}),
-      })
+      const profile = Object.fromEntries([...extraFormData.entries()].filter(([,value]) => typeof value === "string")) as Record<string, unknown>
+      profile.age_group = ageGroup
+      profile.specialist_roles = specialistRoles
+      userFormData.set("profile", JSON.stringify(profile))
+      if (!submissionKey.current) submissionKey.current = crypto.randomUUID()
+      userFormData.set("submission_key", submissionKey.current)
+      if (profilePhoto) userFormData.append("profile_photo", profilePhoto)
+      files.forEach(file => userFormData.append("cv", file))
+      const result = await pb.send<{id:string;token:string;success:boolean}>("/api/dsc/expert-register", {method:"POST", body:userFormData, requestKey:null})
+      // Notification delivery cannot turn a committed application into a failed registration.
+      let notificationFailed = false
+      try {
+        const response = await fetch("/api/expert-application", {
+          method:"POST", headers:{"Content-Type":"application/json", Authorization:`Bearer ${result.token}`}, body:JSON.stringify({}), signal:AbortSignal.timeout(10_000),
+        })
+        notificationFailed = !response.ok
+      } catch { notificationFailed = true }
 
       toast.success(
         t(
@@ -334,7 +317,7 @@ export function ExpertApplicationForm({
 
       if (onSuccess) {
         onSuccess()
-      } else if (!response.ok) {
+      } else if (notificationFailed) {
         router.push("/login?expert_pending=1&warn=1")
       } else {
         router.push("/login?expert_pending=1")
@@ -348,6 +331,7 @@ export function ExpertApplicationForm({
         setError(getErrorMessage(err, lang))
       }
     } finally {
+      submitting.current = false
       setIsSubmitting(false)
     }
   }
@@ -377,7 +361,6 @@ export function ExpertApplicationForm({
                 onChange={(change) => {
                   const next = { ...publicDetails, ...change }
                   setPublicDetails(next)
-                  setName(next.publicNameAr || next.publicNameEn)
                 }}
               />
               {fieldErrorNode("name")}

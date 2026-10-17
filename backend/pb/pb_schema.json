@@ -2160,6 +2160,15 @@
         "cascadeDelete": false,
         "minSelect": 0,
         "maxSelect": 100
+      },
+      {
+        "name": "submission_key",
+        "type": "text",
+        "max": 64,
+        "hidden": true,
+        "required": false,
+        "min": 0,
+        "pattern": ""
       }
     ],
     "indexes": [

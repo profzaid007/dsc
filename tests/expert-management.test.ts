@@ -41,6 +41,7 @@ class BankRecord {
 }
 runInNewContext(readFileSync("pb_hooks/expert-registration.pb.js", "utf8"), {
   routerAdd: () => {},
+  $apis: { bodyLimit: () => () => {} },
   onRecordCreateRequest: (callback: typeof hook) => {
     hook = callback
   },

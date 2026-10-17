@@ -1,9 +1,11 @@
 routerAdd("GET", "/api/dsc/expert-registration-config", (e) => {
   e.app.findCollectionByNameOrId("expert_bank_details")
-  return e.json(200, { iban: true })
+  return e.json(200, { iban: true, atomic: !!e.app.findCollectionByNameOrId("expert_profiles").fields.getByName("submission_key") })
 })
 
 onRecordCreateRequest((e) => {
+  if (e.requestInfo().body.role === "expert" && (!e.auth || !e.auth.getBool("is_active") || !["admin", "super_admin"].includes(e.auth.getString("role"))))
+    throw new BadRequestError("Submit a complete expert application through the registration form")
   const value = e.requestInfo().body.expert_iban
   if (!value) return e.next()
   if (e.record.getString("role") !== "expert" || typeof value !== "string")
@@ -30,3 +32,6 @@ onRecordCreateRequest((e) => {
     txApp.save(bank)
   })
 }, "users")
+
+// Both records and all uploads commit together; a profile/bank validation error rolls back the account.
+routerAdd("POST", "/api/dsc/expert-register", e => require(`${__hooks}/lib/expert-submission.js`)(e), $apis.bodyLimit(40 * 1024 * 1024))

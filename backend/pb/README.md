@@ -77,3 +77,21 @@ Notes:
   `--automigrate=false`, then exporting (Settings → Export collections).
 - See `docs/schema-reconciliation.md` for how the old and fork schemas were
   merged and why specific fields/rules look the way they do.
+
+
+### Atomic expert applications and failed-attempt cleanup (test instance)
+
+Run `apply-expert-submission-test.sh` on the server as root after uploading it.
+It targets only `pb_dsc_test.service`, takes a stopped-database backup and a hooks backup,
+applies the submission-key migration and the one-time failed-attempt cleanup, installs
+the registration hook and helper, then restarts and checks health. It does not change SSH.
+The cleanup deletes inactive expert users only when no expert profile and no operational
+relation references exist; partial bank details for those deleted users are removed too.
+Linked incomplete accounts are retained and counted in the migration output. Active users,
+non-experts and submitted profiles are preserved. Keep the printed backup path.
+
+Deploy these backend changes before releasing the new registration form. The form checks
+`expert-registration-config.atomic` before writing anything, and will refuse registration
+until the server is ready. A single transaction stores the user, profile, files and optional
+bank details. A private submission key makes retries with the same credentials idempotent.
+Notification errors do not undo or report failure for a committed application.

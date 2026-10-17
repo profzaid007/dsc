@@ -1,5 +1,6 @@
 "use client"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
+import { boundedFullList } from "@/lib/bounded-records"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 
@@ -156,6 +157,17 @@ export function ExpertApprovalPage() {
     null
   )
   const [profileLoading, setProfileLoading] = useState(false)
+  const [submittedUsers, setSubmittedUsers] = useState<Set<string> | null>(null)
+  const [submissionError, setSubmissionError] = useState("")
+  useEffect(() => {
+    if (!access.can("experts.read")) return
+    let active = true
+    void boundedFullList(pb.collection("expert_profiles"), {fields:"id,user", requestKey:null})
+      .then(profiles => { if (active) {setSubmittedUsers(new Set(profiles.map(p => String(p.user)))); setSubmissionError("")} })
+      .catch(error => { if (active) setSubmissionError(getErrorMessage(error, lang)) })
+    return () => {active = false}
+  }, [users, lang, access.isLoading]) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   useEffect(() => {
     let cancelled = false
@@ -178,7 +190,6 @@ export function ExpertApprovalPage() {
     }
     let cancelled = false
     // Loading flags are intentionally reset when selecting a new application.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfileLoading(true)
     pb.collection("expert_profiles")
       .getFirstListItem(
@@ -199,7 +210,7 @@ export function ExpertApprovalPage() {
   }, [selectedUser])
 
   const pendingExperts = users.filter(
-    (u) => u.role === "expert" && !u.is_active
+    (u) => u.role === "expert" && !u.is_active && submittedUsers?.has(u.id)
   )
 
   const getFileUrl = (record: RecordModel, filename: string) => {
@@ -214,6 +225,8 @@ export function ExpertApprovalPage() {
     setApprovingId(user.id)
     setActionError("")
     try {
+      // Recheck before approval so a stale list cannot approve a failed attempt.
+      await pb.collection("expert_profiles").getFirstListItem(pb.filter("user = {:id}", {id:user.id}), {requestKey:null})
       await updateUser(user.id, { is_active: true })
 
       const loginUrl = `${window.location.origin}/login`
@@ -306,13 +319,13 @@ export function ExpertApprovalPage() {
         </p>
       </div>
 
-      {actionError && (
+      {(actionError || submissionError) && (
         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-          {actionError}
+          {actionError || submissionError}
         </div>
       )}
 
-      {isLoading ? (
+      {isLoading || (!submittedUsers && !submissionError) ? (
         <SkeletonTable rows={5} />
       ) : pendingExperts.length === 0 ? (
         <Card>
