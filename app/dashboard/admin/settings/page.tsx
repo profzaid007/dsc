@@ -6,7 +6,7 @@ import Link from "next/link"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
-import { ArrowLeft, List, Landmark, Users, Wrench } from "lucide-react"
+import { ArrowLeft, List, Landmark, Users, Wrench, DatabaseBackup } from "lucide-react"
 import {
   Card,
   CardDescription,
@@ -16,6 +16,20 @@ import {
 import { Button } from "@/components/ui/button"
 
 const settingsCards = [
+  {
+    title: { en: "Tools", ar: "الأدوات" },
+    description: { en: "Manage tools, templates and assessment definitions", ar: "إدارة الأدوات والقوالب وبناء المقاييس والتقييمات" },
+    href: "/dashboard/admin/tools",
+    icon: Wrench,
+    permission: "tools.read",
+  },
+  {
+    title: { en: "Database backups", ar: "النسخ الاحتياطية لقاعدة البيانات" },
+    description: { en: "Create and download database backups", ar: "إنشاء النسخ الاحتياطية لقاعدة البيانات وتنزيلها" },
+    href: "/dashboard/admin/backups",
+    icon: DatabaseBackup,
+    superAdminOnly: true,
+  },
   {
     title: { en: "Classifications", ar: "التصنيفات" },
     description: {
@@ -109,7 +123,7 @@ export default function SettingsPage() {
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {settingsCards
-          .filter(() => access.can("settings.read"))
+          .filter((card) => card.superAdminOnly ? isSuperAdmin : access.can(card.permission || "settings.read"))
           .map((card) => (
             <Link key={card.href} href={card.href}>
               <Card className="cursor-pointer transition-all hover:shadow-md">

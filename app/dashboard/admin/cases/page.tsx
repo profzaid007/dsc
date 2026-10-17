@@ -446,13 +446,6 @@ export default function AdminCasesPage() {
                             {lang === "ar" ? "عرض" : "View"}
                           </Button>
                         </SmartLink>
-                        <Link
-                          href={`/dashboard/admin/cases/${encodeURIComponent(profile.id)}#case-allocations`}
-                        >
-                          <Button variant="outline" size="sm">
-                            {lang === "ar" ? "تعيين" : "Assign"}
-                          </Button>
-                        </Link>
                         <Button
                           variant="destructive"
                           size="sm"

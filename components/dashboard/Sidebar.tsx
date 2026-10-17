@@ -15,7 +15,6 @@ import { SmartLink } from "@/components/smart-link"
 import {
   LayoutDashboard,
   Users,
-  Wrench,
   FolderKanban,
   ClipboardList,
   GraduationCap,
@@ -46,16 +45,10 @@ type NavItem = {
 
 const adminNavigation: NavItem[] = [
   { name: { en: "Messages", ar: "الرسائل" }, href: "/dashboard/messages", icon: MessageSquare },
-  { name: { en: "Database backups", ar: "النسخ الاحتياطية" }, href: "/dashboard/admin/backups", icon: FolderKanban, superAdminOnly: true },
   {
     name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/admin/cases",
     icon: Users,
-  },
-  {
-    name: { en: "Tools", ar: "الأدوات" },
-    href: "/dashboard/admin/tools",
-    icon: Wrench,
   },
   {
     name: { en: "Training", ar: "التدريب" },
