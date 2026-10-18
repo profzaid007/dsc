@@ -985,3 +985,11 @@ test("concurrent privileged-account edits leave an active Super Admin", async ()
       200
     )
 })
+
+test("expert name saves accept ordinary changes while permission-field writes stay denied", async () => {
+  const route = records("users") + "/" + ids.expert
+  const saved = await request(route, "PATCH", { name: "Updated expert name" }, expertToken)
+  assert.equal(saved.status, 200, JSON.stringify(saved.body))
+  const denied = await request(route, "PATCH", { security_permissions: ["users.delete"] }, expertToken)
+  assert.ok([400, 403, 404].includes(denied.status))
+})

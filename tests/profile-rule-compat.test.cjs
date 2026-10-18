@@ -33,3 +33,16 @@ test("migration fixes both save stages without altering other rules or records",
   assert.equal(collections.expert_profiles.listRule, 'original')
   assert.equal(collections.expert_profiles.updateRule, '(@request.body.user:isset = false || @request.body.user = user)')
 })
+const permissionMigration = 'pb_migrations/1794000100_user_permission_rule_compat.js'
+test('user permission compatibility repair denies direct permission submissions and preserves other guards', () => {
+  let up
+  vm.runInNewContext(fs.readFileSync(permissionMigration, 'utf8'), { migrate: callback => { up = callback } })
+  const prefix = '(id = @request.auth.id || @request.auth.role = "super_admin") && '
+  const users = { updateRule: { toString: () => prefix + '@request.body.security_permissions:changed = false' }, viewRule: 'unchanged' }
+  let writes = 0
+  const app = { findCollectionByNameOrId: name => { assert.equal(name, 'users'); return users }, save: () => writes++ }
+  up(app); up(app)
+  assert.equal(users.updateRule, prefix + '@request.body.security_permissions:isset = false')
+  assert.equal(users.viewRule, 'unchanged')
+  assert.equal(writes, 1)
+})

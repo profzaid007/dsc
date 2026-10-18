@@ -460,7 +460,7 @@ function installSecurity(app, policy) {
       c.updateRule =
         "(" +
         c.updateRule +
-        ") && @request.body.security_permissions:changed = false"
+        ") && @request.body.security_permissions:isset = false"
       c.createRule =
         "(" +
         c.createRule +
