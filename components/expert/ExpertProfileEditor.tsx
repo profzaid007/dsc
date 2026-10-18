@@ -530,40 +530,11 @@ export function ExpertProfileEditor({
                   }
                   className="h-auto min-h-10 w-full justify-between"
                 >
-                  <div className="flex flex-wrap gap-1">
-                    {draft.specialization.length > 0 ? (
-                      draft.specialization.map((value) => (
-                        <Badge
-                          key={value}
-                          variant="secondary"
-                          className="flex items-center gap-1"
-                        >
-                          {specializationLabel(value, lang)}
-                          <X
-                            className="h-3 w-3 cursor-pointer"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              patch({
-                                specialization: draft.specialization.filter(
-                                  (item) => item !== value
-                                ),
-                              })
-                            }}
-                          />
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t(
-                          {
-                            en: "Select the services you provide...",
-                            ar: "اختر الخدمات التي تقدمها...",
-                          },
-                          lang
-                        )}
-                      </span>
-                    )}
-                  </div>
+                  <span className="min-w-0 truncate">
+                    {draft.specialization.length > 0
+                      ? draft.specialization.map(value => specializationLabel(value, lang)).join(", ")
+                      : t({ en: "Select the services you provide...", ar: "اختر الخدمات التي تقدمها..." }, lang)}
+                  </span>
                   <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -621,6 +592,25 @@ export function ExpertProfileEditor({
                 </Command>
               </PopoverContent>
             </Popover>
+            {draft.specialization.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {draft.specialization.map(value => (
+                  <Badge key={value} variant="secondary" className="gap-1 whitespace-normal">
+                    {specializationLabel(value, lang)}
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
+                      aria-label={`${t({ en: "Remove", ar: "إزالة" }, lang)} ${specializationLabel(value, lang)}`}
+                      onClick={() => patch({ specialization: draft.specialization.filter(item => item !== value) })}
+                    ><X className="h-4 w-4" aria-hidden="true" /></button>
+                  </Badge>
+                ))}
+                <Button type="button" variant="ghost" disabled={isSaving} onClick={() => patch({ specialization: [] })}>
+                  {t({ en: "Clear all services", ar: "إزالة جميع الخدمات" }, lang)}
+                </Button>
+              </div>
+            )}
             {errorFor("specialization_type")}
           </div>
 
