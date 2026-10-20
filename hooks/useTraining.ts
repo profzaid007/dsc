@@ -108,8 +108,7 @@ export function useTraining() {
     const now = new Date()
     return programs
       .filter(
-        (p) =>
-          new Date(p.schedule.endDate) < now || p.status === "completed"
+        (p) => new Date(p.schedule.endDate) < now || p.status === "completed"
       )
       .sort(
         (a, b) =>
@@ -137,14 +136,7 @@ export function useTraining() {
       status: "registered",
     })
     setRegistrations((prev) => [...prev, newRegistration])
-    await trainingProgramsCollection.incrementRegistrations(programId, 1)
-    setPrograms((prev) =>
-      prev.map((p) =>
-        p.id === programId
-          ? { ...p, currentRegistrations: p.currentRegistrations + 1 }
-          : p
-      )
-    )
+    await loadData()
     return newRegistration.id
   }
 
@@ -152,22 +144,14 @@ export function useTraining() {
     const registration = registrations.find((r) => r.id === registrationId)
     if (!registration) return
 
-    const updated = await trainingRegistrationsCollection.update(registrationId, {
-      status: "cancelled",
-    })
+    const updated = await trainingRegistrationsCollection.update(
+      registrationId,
+      {
+        status: "cancelled",
+      }
+    )
 
-    if (registration.programId) {
-      setPrograms((prev) =>
-        prev.map((p) =>
-          p.id === registration.programId
-            ? {
-                ...p,
-                currentRegistrations: Math.max(0, p.currentRegistrations - 1),
-              }
-            : p
-        )
-      )
-    }
+    await loadData()
 
     setRegistrations((prev) =>
       prev.map((r) => (r.id === registrationId ? updated : r))
@@ -178,10 +162,14 @@ export function useTraining() {
     registrationId: string,
     status: TrainingRegistration["status"]
   ) => {
-    const updated = await trainingRegistrationsCollection.update(registrationId, { status } as unknown as Partial<TrainingRegistration>)
+    const updated = await trainingRegistrationsCollection.update(
+      registrationId,
+      { status } as unknown as Partial<TrainingRegistration>
+    )
     setRegistrations((prev) =>
       prev.map((r) => (r.id === registrationId ? updated : r))
     )
+    await loadData()
     return updated
   }
 
@@ -191,18 +179,7 @@ export function useTraining() {
 
     await trainingRegistrationsCollection.delete(registrationId)
 
-    if (registration.programId && registration.status !== "cancelled") {
-      setPrograms((prev) =>
-        prev.map((p) =>
-          p.id === registration.programId
-            ? {
-                ...p,
-                currentRegistrations: Math.max(0, p.currentRegistrations - 1),
-              }
-            : p
-        )
-      )
-    }
+    await loadData()
 
     setRegistrations((prev) => prev.filter((r) => r.id !== registrationId))
   }
@@ -221,7 +198,9 @@ export function useTraining() {
   }
 
   const getUserRegistrations = (userId: string) => {
-    return registrations.filter((r) => r.userId === userId && r.status !== "cancelled")
+    return registrations.filter(
+      (r) => r.userId === userId && r.status !== "cancelled"
+    )
   }
 
   // Certificates
@@ -233,11 +212,11 @@ export function useTraining() {
     return certificates.find((c) => c.id === id)
   }
 
-  const addCertificate = async (
-    data: CreateCertificateInput,
-    file?: File
-  ) => {
-    const newCertificate = await trainingCertificatesCollection.create(data, file)
+  const addCertificate = async (data: CreateCertificateInput, file?: File) => {
+    const newCertificate = await trainingCertificatesCollection.create(
+      data,
+      file
+    )
     setCertificates((prev) => [...prev, newCertificate])
     return newCertificate.id
   }
@@ -248,9 +227,7 @@ export function useTraining() {
     file?: File
   ) => {
     const updated = await trainingCertificatesCollection.update(id, data, file)
-    setCertificates((prev) =>
-      prev.map((c) => (c.id === id ? updated : c))
-    )
+    setCertificates((prev) => prev.map((c) => (c.id === id ? updated : c)))
     return updated
   }
 

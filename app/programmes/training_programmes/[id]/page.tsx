@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, useRef, use } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -84,6 +84,7 @@ export default function TrainingProgrammeDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
+  const submissionKey = useRef(crypto.randomUUID())
   const { lang } = useLang()
   const { currentUser } = useAuth()
   const [program, setProgram] = useState<TrainingProgram | null>(null)
@@ -183,28 +184,26 @@ export default function TrainingProgrammeDetailPage({
       const cleanEmail = normalizeEmail(enrollForm.email)
       const cleanContact = enrollForm.contactNumber.trim()
 
-      const user = await pb.collection("users").create({
-        email: cleanEmail,
-        password: enrollForm.password,
-        passwordConfirm: enrollForm.password,
-        name: cleanName,
-        contact_number: cleanContact,
-        role: "individual",
-        emailVisibility: true,
-      })
-
-      await casesCollection.create({
-        user: user.id,
-        name: program.title[lang],
-        service_type: program.title[lang],
-        portal_type: "Attending Training",
-        training_link: program.meetingLink || "",
-        program_id: id,
-        program_status: "enrolled",
-        user_details: {
-          name: cleanName,
-          email: cleanEmail,
-          contact: cleanContact,
+      await pb.send("/api/dsc/register", {
+        method: "POST",
+        body: {
+          submission_key: submissionKey.current,
+          program_id: id,
+          user: {
+            email: cleanEmail,
+            password: enrollForm.password,
+            passwordConfirm: enrollForm.confirmPassword,
+            name: cleanName,
+            contact_number: cleanContact,
+            role: "individual",
+          },
+          profile: {
+            collection: "individual_profiles",
+            gender: enrollForm.gender,
+            date_of_birth: enrollForm.dateOfBirth,
+            notes: enrollForm.notes,
+          },
+          cases: [],
         },
       })
 
@@ -230,20 +229,10 @@ export default function TrainingProgrammeDetailPage({
     setEnrollSuccess("")
     setIsEnrolling(true)
     try {
-      const created = await casesCollection.create({
-        user: currentUser.id,
-        name: program.title[lang],
-        service_type: program.title[lang],
-        portal_type: "Attending Training",
-        training_link: program.meetingLink || "",
-        program_id: id,
-        program_status: "enrolled",
-        user_details: {
-          name: currentUser.name,
-          email: currentUser.email,
-          contact: currentUser.contact_number,
-        },
-      })
+      const created = await pb.send<{ id: string }>(
+        `/api/dsc/programs/${id}/enroll`,
+        { method: "POST" }
+      )
       setEnrolledCaseId(created.id)
       setEnrollSuccess(
         lang === "ar"

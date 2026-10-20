@@ -45,7 +45,7 @@ const req = (body: unknown, headers: Record<string, string> = {}) =>
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(body),
   })
-assert.throws(
+await assert.rejects(
   () => guardMessaging(req({}, { Origin: "https://evil.example" })),
   (e: unknown) => e instanceof RequestError && e.status === 403
 )
@@ -76,7 +76,10 @@ let invalidToken = false
 let permissions = ["messages.create"]
 globalThis.fetch = async (input) => {
   const url = String(input instanceof Request ? input.url : input)
-  if (url.includes("/api/dsc/security/me")) return Response.json({ permissions })
+  if (url.includes("/api/dsc/messaging-quota"))
+    return Response.json({ allowed: true })
+  if (url.includes("/api/dsc/security/me"))
+    return Response.json({ permissions })
   if (url.includes("/auth-refresh"))
     return Response.json(
       invalidToken
@@ -107,11 +110,16 @@ try {
   role = "admin"
   permissions = []
   await assert.rejects(
-    messagingUser(req({}, { Authorization: "Bearer admin-without-grant" }), true),
+    messagingUser(
+      req({}, { Authorization: "Bearer admin-without-grant" }),
+      true
+    ),
     (e: unknown) => e instanceof RequestError && e.status === 403
   )
   await assert.rejects(
-    messagingUser(req({}, { Authorization: "Bearer notification-without-grant" })),
+    messagingUser(
+      req({}, { Authorization: "Bearer notification-without-grant" })
+    ),
     (e: unknown) => e instanceof RequestError && e.status === 403
   )
   permissions = ["messages.create"]

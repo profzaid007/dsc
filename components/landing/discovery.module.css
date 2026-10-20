@@ -16,7 +16,7 @@
   margin-bottom: 32px;
 }
 .eyebrow {
-  color: #8a702f;
+  color: #806527;
   font-size: 10px;
   text-transform: uppercase;
   font-weight: 700;
@@ -95,7 +95,7 @@
   margin-bottom: 10px;
 }
 .portal p {
-  color: #6a7980;
+  color: #52656f;
   font-size: 13px;
   line-height: 1.65;
   margin-bottom: 21px;
@@ -118,7 +118,9 @@
   color: var(--portal-color);
   margin-top: auto;
 }
-.portalActions .explore { margin-top: 0; }
+.portalActions .explore {
+  margin-top: 0;
+}
 .services {
   margin-top: 38px;
   padding-top: 28px;
@@ -136,7 +138,7 @@
   font-weight: 650;
 }
 .servicesHeading > span {
-  color: #7b888e;
+  color: #52656f;
   font-size: 12px;
 }
 .serviceGrid {
@@ -168,7 +170,7 @@
 }
 .service p {
   font-size: 12px;
-  color: #6a7980;
+  color: #52656f;
   line-height: 1.7;
   margin-bottom: 15px;
 }
@@ -176,7 +178,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  color: var(--portal-color);
+  color: #0a3d62;
   font-size: 11px;
   font-weight: 650;
   margin-top: auto;
@@ -282,7 +284,10 @@
   }
 }
 
-.portal h3, .portal p { overflow-wrap: anywhere; }
+.portal h3,
+.portal p {
+  overflow-wrap: anywhere;
+}
 
 .portalWithPicture {
   --card-padding: 24px;
@@ -309,5 +314,7 @@
   background: #fffffff0;
 }
 @media (max-width: 1000px) {
-  .portalWithPicture { --card-padding: 20px; }
+  .portalWithPicture {
+    --card-padding: 20px;
+  }
 }

@@ -1,4 +1,5 @@
 "use client"
+import { DataError } from "@/components/ui/data-error"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { useState, useEffect, useRef } from "react"
@@ -56,7 +57,13 @@ export default function AdminToolsPage() {
   const { lang } = useLang()
   const { currentUser } = useAuth()
   const isExpert = currentUser?.role === "expert"
-  const { tools, deleteTool, isLoading: isToolsLoading } = useTools()
+  const {
+    tools,
+    deleteTool,
+    isLoading: isToolsLoading,
+    loadError: toolsLoadError,
+    refresh: retryTools,
+  } = useTools()
   const {
     toolTypes,
     fetchToolTypes,
@@ -113,12 +120,21 @@ export default function AdminToolsPage() {
   const handleDelete = async (toolId: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (confirm(lang === "ar" ? "هل أنت متأكد من حذف هذه الأداة؟" : "Are you sure you want to delete this tool?")) {
+    if (
+      confirm(
+        lang === "ar"
+          ? "هل أنت متأكد من حذف هذه الأداة؟"
+          : "Are you sure you want to delete this tool?"
+      )
+    ) {
       await deleteTool(toolId)
     }
   }
 
   const isLoading = isToolsLoading || isToolTypesLoading
+
+  if (toolsLoadError)
+    return <DataError message={toolsLoadError} onRetry={retryTools} />
 
   if (isLoading) {
     return (
@@ -132,7 +148,13 @@ export default function AdminToolsPage() {
               {lang === "ar" ? "إدارة قوالب الأدوات" : "Manage tool templates"}
             </p>
           </div>
-          <Link href="/dashboard/admin/tools/assessments" className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary">{lang === "ar" ? "بناء المقاييس والتقييمات" : "Assessment builder"}</Link><Link href="/dashboard/admin/tools/new">
+          <Link
+            href="/dashboard/admin/tools/assessments"
+            className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary"
+          >
+            {lang === "ar" ? "بناء المقاييس والتقييمات" : "Assessment builder"}
+          </Link>
+          <Link href="/dashboard/admin/tools/new">
             <Button disabled={!access.can("tools.create")}>
               <Plus className="me-2 h-4 w-4" />
               {lang === "ar" ? "أداة جديدة" : "New Tool"}
@@ -155,7 +177,13 @@ export default function AdminToolsPage() {
             {lang === "ar" ? "إدارة قوالب الأدوات" : "Manage tool templates"}
           </p>
         </div>
-        <Link href="/dashboard/admin/tools/assessments" className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary">{lang === "ar" ? "بناء المقاييس والتقييمات" : "Assessment builder"}</Link><Link href="/dashboard/admin/tools/new">
+        <Link
+          href="/dashboard/admin/tools/assessments"
+          className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary"
+        >
+          {lang === "ar" ? "بناء المقاييس والتقييمات" : "Assessment builder"}
+        </Link>
+        <Link href="/dashboard/admin/tools/new">
           <Button disabled={!access.can("tools.create")}>
             <Plus className="me-2 h-4 w-4" />
             {lang === "ar" ? "أداة جديدة" : "New Tool"}
@@ -225,8 +253,18 @@ export default function AdminToolsPage() {
                 ? "أنشئ أداتك الأولى للبدء"
                 : "Create your first tool to get started"}
             </p>
-            <Link href="/dashboard/admin/tools/assessments" className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary">{lang === "ar" ? "بناء المقاييس والتقييمات" : "Assessment builder"}</Link><Link href="/dashboard/admin/tools/new">
-              <Button disabled={!access.can("tools.create")}>{lang === "ar" ? "إنشاء أداة" : "Create Tool"}</Button>
+            <Link
+              href="/dashboard/admin/tools/assessments"
+              className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary"
+            >
+              {lang === "ar"
+                ? "بناء المقاييس والتقييمات"
+                : "Assessment builder"}
+            </Link>
+            <Link href="/dashboard/admin/tools/new">
+              <Button disabled={!access.can("tools.create")}>
+                {lang === "ar" ? "إنشاء أداة" : "Create Tool"}
+              </Button>
             </Link>
           </CardContent>
         </Card>
@@ -285,7 +323,8 @@ export default function AdminToolsPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          disabled={!access.can("tools.update")} onClick={(e) => {
+                          disabled={!access.can("tools.update")}
+                          onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
                             router.push(
@@ -298,7 +337,8 @@ export default function AdminToolsPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          disabled={!access.can("tools.delete")} onClick={(e) => handleDelete(tool.id, e)}
+                          disabled={!access.can("tools.delete")}
+                          onClick={(e) => handleDelete(tool.id, e)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>

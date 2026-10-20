@@ -1,4 +1,5 @@
 "use client"
+import { DataError } from "@/components/ui/data-error"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { use, useState, useEffect, useRef } from "react"
@@ -73,6 +74,8 @@ export default function SurveyBuilderPage({
     updateTool,
     getToolById,
     isLoading: isToolsLoading,
+    loadError: toolsLoadError,
+    refresh: retryTools,
   } = useTools()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
@@ -101,16 +104,36 @@ export default function SurveyBuilderPage({
     {
       id: generateId(),
       value: "very_satisfied",
-      label: "Very Satisfied", labelAr: "راضٍ جدًا",
+      label: "Very Satisfied",
+      labelAr: "راضٍ جدًا",
       order: 0,
     },
-    { id: generateId(), value: "satisfied", label: "Satisfied", labelAr: "راضٍ", order: 1 },
-    { id: generateId(), value: "neutral", label: "Neutral", labelAr: "محايد", order: 2 },
-    { id: generateId(), value: "unsatisfied", label: "Unsatisfied", labelAr: "غير راضٍ", order: 3 },
+    {
+      id: generateId(),
+      value: "satisfied",
+      label: "Satisfied",
+      labelAr: "راضٍ",
+      order: 1,
+    },
+    {
+      id: generateId(),
+      value: "neutral",
+      label: "Neutral",
+      labelAr: "محايد",
+      order: 2,
+    },
+    {
+      id: generateId(),
+      value: "unsatisfied",
+      label: "Unsatisfied",
+      labelAr: "غير راضٍ",
+      order: 3,
+    },
     {
       id: generateId(),
       value: "very_unsatisfied",
-      label: "Very Unsatisfied", labelAr: "غير راضٍ جدًا",
+      label: "Very Unsatisfied",
+      labelAr: "غير راضٍ جدًا",
       order: 4,
     },
   ])
@@ -150,7 +173,11 @@ export default function SurveyBuilderPage({
     setOptions([...options, newOption])
   }
 
-  const updateOption = (id: string, field: "label" | "labelAr", value: string) => {
+  const updateOption = (
+    id: string,
+    field: "label" | "labelAr",
+    value: string
+  ) => {
     setOptions(options.map((o) => (o.id === id ? { ...o, [field]: value } : o)))
   }
 
@@ -284,16 +311,28 @@ export default function SurveyBuilderPage({
       <div key={option.id} className="flex items-center gap-2">
         <div className="grid flex-1 gap-2 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label htmlFor={`option-${option.id}-en`}>{ui("Option (EN)")}</Label>
-            <Input id={`option-${option.id}-en`} dir="ltr"
-              placeholder={ui("English option")} value={option.label}
-              onChange={(e) => updateOption(option.id, "label", e.target.value)} />
+            <Label htmlFor={`option-${option.id}-en`}>
+              {ui("Option (EN)")}
+            </Label>
+            <Input
+              id={`option-${option.id}-en`}
+              dir="ltr"
+              placeholder={ui("English option")}
+              value={option.label}
+              onChange={(e) => updateOption(option.id, "label", e.target.value)}
+            />
           </div>
           <div className="space-y-1">
             <Label htmlFor={`option-${option.id}-ar`}>الخيار (AR)</Label>
-            <Input id={`option-${option.id}-ar`} dir="rtl"
-              placeholder="نص الخيار بالعربية" value={option.labelAr || ""}
-              onChange={(e) => updateOption(option.id, "labelAr", e.target.value)} />
+            <Input
+              id={`option-${option.id}-ar`}
+              dir="rtl"
+              placeholder="نص الخيار بالعربية"
+              value={option.labelAr || ""}
+              onChange={(e) =>
+                updateOption(option.id, "labelAr", e.target.value)
+              }
+            />
           </div>
         </div>
         <Button
@@ -307,6 +346,9 @@ export default function SurveyBuilderPage({
       </div>
     )
   }
+
+  if (toolsLoadError)
+    return <DataError message={toolsLoadError} onRetry={retryTools} />
 
   if (isLoading) {
     return (

@@ -1,5 +1,6 @@
 "use client"
 
+import { DataError } from "@/components/ui/data-error"
 import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
@@ -93,7 +94,13 @@ export default function MultipleChoiceBuilderPage({
 }: MultipleChoiceBuilderPageProps = {}) {
   const router = useRouter()
   const { lang } = useLang()
-  const { updateTool, getToolById, isLoading: isToolsLoading } = useTools()
+  const {
+    updateTool,
+    getToolById,
+    isLoading: isToolsLoading,
+    loadError: toolsLoadError,
+    refresh: retryTools,
+  } = useTools()
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
   const { toolTypes, fetchToolTypes } = useToolTypes()
@@ -556,6 +563,9 @@ export default function MultipleChoiceBuilderPage({
       </div>
     )
   }
+
+  if (toolsLoadError)
+    return <DataError message={toolsLoadError} onRetry={retryTools} />
 
   if (isLoading) {
     return (

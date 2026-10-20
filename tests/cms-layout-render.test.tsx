@@ -60,6 +60,7 @@ test("ordinary rich text retains its existing host rendering and sanitizer", () 
 
 test("reopening a stored layout selects custom mode and exposes the unchanged source", () => {
   const router = {
+    bfcacheId: "test",
     refresh() {},
     push() {},
     replace() {},

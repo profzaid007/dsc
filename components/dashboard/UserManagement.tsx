@@ -7,6 +7,7 @@ import { boundedFullList } from "@/lib/bounded-records"
 import { expertDisplayName } from "@/lib/expert-display-name"
 import type { ExpertProfile } from "@/types/expert"
 import { usePermissions } from "@/hooks/usePermissions"
+import { DataError } from "@/components/ui/data-error"
 import { useUsers } from "@/hooks/useUsers"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
@@ -174,6 +175,8 @@ export function UserManagement({
     deleteUser,
     getDeletionBlockers,
     refresh,
+    loadError: usersLoadError,
+    refresh: retryUsers,
   } = useUsers()
   const { profiles, isLoading: isProfilesLoading } = useProfiles(
     access.can("cases.read")
@@ -185,15 +188,27 @@ export function UserManagement({
     let active = true
     boundedFullList<ExpertProfile>(pb.collection("expert_profiles"), {
       fields: "id,user,public_name_ar,public_name_en",
-    }).then(records => { if (active) setExpertNames(records) })
-      .catch(() => { if (active) setExpertNames([]) })
-    return () => { active = false }
+    })
+      .then((records) => {
+        if (active) setExpertNames(records)
+      })
+      .catch(() => {
+        if (active) setExpertNames([])
+      })
+    return () => {
+      active = false
+    }
   }, [expertsOnly])
   const users = useMemo(() => {
-    const names = new Map(expertNames.map(profile => [profile.user, profile]))
-    return accountUsers.map(user => expertsOnly
-      ? { ...user, name: expertDisplayName(names.get(user.id), lang, user.name) }
-      : user)
+    const names = new Map(expertNames.map((profile) => [profile.user, profile]))
+    return accountUsers.map((user) =>
+      expertsOnly
+        ? {
+            ...user,
+            name: expertDisplayName(names.get(user.id), lang, user.name),
+          }
+        : user
+    )
   }, [accountUsers, expertNames, expertsOnly, lang])
 
   const [searchQuery, setSearchQuery] = useState("")
@@ -388,6 +403,9 @@ export function UserManagement({
       setIsDeleting(false)
     }
   }
+
+  if (usersLoadError)
+    return <DataError message={usersLoadError} onRetry={retryUsers} />
 
   if (isLoading) {
     return (

@@ -6,6 +6,8 @@ import { getErrorMessage } from "@/lib/pb"
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { useProfiles } from "@/hooks/useProfiles"
+import { useAssessmentCounts } from "@/hooks/useAssessmentCounts"
+import { DataError } from "@/components/ui/data-error"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useLang } from "@/lib/lang-context"
 import {
@@ -77,6 +79,11 @@ export default function AdminCasesPage() {
   } = useProfiles()
   const { assignments, isLoading: isAssignmentsLoading } = useAssignments()
 
+  const {
+    sessions: assessmentSessions,
+    error: assessmentError,
+    reload: reloadAssessments,
+  } = useAssessmentCounts(access.can("assignments.read"))
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const removeCase = async (profile: Profile) => {
     if (
@@ -146,8 +153,23 @@ export default function AdminCasesPage() {
       else if (a.status === "in_progress") counts[a.case].in_progress++
       else if (a.status === "completed") counts[a.case].completed++
     })
+    assessmentSessions.forEach((session) => {
+      const count = (counts[session.case] ||= {
+        total: 0,
+        pending: 0,
+        assigned: 0,
+        in_progress: 0,
+        completed: 0,
+      })
+      count.total += session.count
+      if (session.status === "submitted" || session.status === "completed")
+        count.completed += session.count
+      else if (session.status === "in_progress")
+        count.in_progress += session.count
+      else count.pending += session.count
+    })
     return counts
-  }, [assignments])
+  }, [assignments, assessmentSessions])
 
   const isLoading = isProfilesLoading || isAssignmentsLoading
 
@@ -217,6 +239,9 @@ export default function AdminCasesPage() {
 
   return (
     <div className="space-y-6">
+      {assessmentError && (
+        <DataError message={assessmentError} onRetry={reloadAssessments} />
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-primary">
@@ -355,6 +380,11 @@ export default function AdminCasesPage() {
                   <CaseStatusBadge status={profile.status} />
                   <p className="text-sm break-words text-muted-foreground">
                     {lang === "ar" ? "المستخدم" : "User"}:{" "}
+                    {profile.expand?.user?.email || ""}
+                    <br />
+                    {formatDate(profile.date_of_birth || "")} ·{" "}
+                    {profile.gender || "—"}
+                    <br />
                     {profile.expand?.user?.name || "—"}
                   </p>
                   <p className="text-sm text-muted-foreground">

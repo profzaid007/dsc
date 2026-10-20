@@ -19,7 +19,56 @@ export function takeQuota(key: string, limit: number, now = Date.now()) {
   entry.count++
   buckets.set(key, entry)
 }
-export function guardMessaging(request: Request) {
+/** Redis executes increment and expiry atomically, shared by every application instance. */
+export async function sharedQuota(key: string, limit: number) {
+  const url = process.env.UPSTASH_REDIS_REST_URL,
+    token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) {
+    if (
+      process.env.NODE_ENV !== "production" &&
+      process.env.DSC_LOCAL_BACKEND === "true"
+    ) {
+      takeQuota(key, limit)
+      return
+    }
+    const [, scope, ...identity] = key.split(":")
+    const backend =
+      process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090"
+    const response = await fetch(backend + "/api/dsc/messaging-quota", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scope, identity: identity.join(":") }),
+      signal: AbortSignal.timeout(5000),
+    })
+    if (response.status === 429)
+      throw new RequestError("Too many requests. Please try again later.", 429)
+    if (!response.ok)
+      throw new RequestError("Messaging quota service unavailable", 503)
+    return
+  }
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify([
+      "EVAL",
+      "local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],60) end; return n",
+      "1",
+      "dsc:" + key,
+    ]),
+    signal: AbortSignal.timeout(5000),
+  })
+  if (!response.ok)
+    throw new RequestError("Messaging quota service unavailable", 503)
+  const data = await response.json()
+  if (data.error || typeof data.result !== "number")
+    throw new RequestError("Messaging quota service unavailable", 503)
+  if (data.result > limit)
+    throw new RequestError("Too many requests. Please try again later.", 429)
+}
+export async function guardMessaging(request: Request) {
   const origin = request.headers.get("origin")
   if (origin && origin !== new URL(request.url).origin)
     throw new RequestError("Invalid origin", 403)
@@ -31,12 +80,23 @@ export function guardMessaging(request: Request) {
   )
     throw new RequestError("JSON required", 415)
   // A process-wide ceiling also applies when no trusted proxy supplies a client IP.
-  takeQuota("messaging:global", 30)
+  await sharedQuota("messaging:global", 30)
   const ip =
     process.env.DSC_TRUST_PROXY === "true"
       ? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       : undefined
-  takeQuota("messaging:client:" + (ip || "unknown"), 5)
+  const platformIp =
+    process.env.NETLIFY === "true"
+      ? request.headers.get("x-nf-client-connection-ip")
+      : undefined
+  if (ip || platformIp)
+    await sharedQuota(
+      "messaging:client:" +
+        createHash("sha256")
+          .update(ip || platformIp!)
+          .digest("hex"),
+      5
+    )
 }
 export async function readMessagingBody(
   request: Request,
@@ -86,7 +146,7 @@ export async function messagingUser(
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "")
   if (!token || token.length > 4096)
     throw new RequestError("Authentication required", 401)
-  takeQuota(
+  await sharedQuota(
     "messaging:token:" + createHash("sha256").update(token).digest("hex"),
     5
   )

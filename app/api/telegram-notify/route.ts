@@ -8,7 +8,7 @@ import {
 } from "@/lib/messaging-security"
 export async function POST(request: Request) {
   try {
-    guardMessaging(request)
+    await guardMessaging(request)
     await messagingUser(request)
     const text = messageString(await readMessagingBody(request), "text", 4000)
     if (localMessagingDisabled())

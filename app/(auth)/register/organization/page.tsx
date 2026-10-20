@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { OrganizationRegistrationForm } from "@/components/register/OrganizationRegistrationForm"
 import { RegistrationHeading } from "@/components/register/RegistrationHeading"
 
@@ -10,4 +11,13 @@ export default function OrganizationRegisterPage() {
       <OrganizationRegistrationForm />
     </div>
   )
+}
+
+export async function generateMetadata() {
+  return {
+    title:
+      (await cookies()).get("lang")?.value === "ar"
+        ? "تسجيل مؤسسة"
+        : "Organization registration",
+  }
 }

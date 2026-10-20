@@ -12,7 +12,7 @@ import {
 
 export async function POST(request: Request) {
   try {
-    guardMessaging(request)
+    await guardMessaging(request)
     const raw = await readMessagingBody(request)
     const lang = raw.lang === "ar" ? "ar" : "en"
     const values = Object.fromEntries(

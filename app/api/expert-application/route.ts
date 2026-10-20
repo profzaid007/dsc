@@ -11,7 +11,7 @@ import {
 } from "@/lib/messaging-security"
 export async function POST(request: Request) {
   try {
-    guardMessaging(request)
+    await guardMessaging(request)
     const user = await messagingUser(request, false, true)
     if (user.role !== "expert" || user.is_active === true)
       throw new RequestError("Access denied", 403)

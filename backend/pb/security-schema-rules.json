@@ -58,7 +58,7 @@
       "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && (user = @request.auth.id || (@collection.case_experts.case_id ?= id && @collection.case_experts.expert_id ?= @request.auth.id)))",
       "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && (user = @request.auth.id || (@collection.case_experts.case_id ?= id && @collection.case_experts.expert_id ?= @request.auth.id)))",
       "createRule": "",
-      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id && @request.body.user:changed = false && @request.body.is_paid:changed = false && @request.body.payment_amount:changed = false && (@request.body.status:changed = false || @request.body.status = \"under_review\"))",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && user = @request.auth.id && (@request.body.user:isset = false || @request.body.user = user) && (@request.body.is_paid:isset = false || @request.body.is_paid = is_paid) && (@request.body.payment_amount:isset = false || @request.body.payment_amount = payment_amount) && ((@request.body.status:isset = false || @request.body.status = status) || @request.body.status = \"under_review\"))",
       "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
     },
     "files": {
@@ -80,7 +80,7 @@
       "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && ((case.user = @request.auth.id && is_visible_to_user = true) || (@collection.case_experts.case_id ?= case && @collection.case_experts.expert_id ?= @request.auth.id && (assigned_expert = \"\" || assigned_expert = @request.auth.id))))",
       "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.id != \"\" && ((case.user = @request.auth.id && is_visible_to_user = true) || (@collection.case_experts.case_id ?= case && @collection.case_experts.expert_id ?= @request.auth.id && (assigned_expert = \"\" || assigned_expert = @request.auth.id))))",
       "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
-      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.role = \"expert\" && @request.auth.is_active = true && assigned_expert = @request.auth.id && @request.body.case:changed = false && @request.body.type:changed = false && @request.body.config:changed = false && @request.body.assigned_expert:changed = false && @request.body.specialization:changed = false && @request.body.task_brief:changed = false && @request.body.is_visible_to_user:changed = false)",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\") || (@request.auth.role = \"expert\" && @request.auth.is_active = true && assigned_expert = @request.auth.id && (@request.body.case:isset = false || @request.body.case = case) && (@request.body.type:isset = false || @request.body.type = type) && (@request.body.config:isset = false || @request.body.config = config) && (@request.body.assigned_expert:isset = false || @request.body.assigned_expert = assigned_expert) && (@request.body.specialization:isset = false || @request.body.specialization = specialization) && (@request.body.task_brief:isset = false || @request.body.task_brief = task_brief) && (@request.body.is_visible_to_user:isset = false || @request.body.is_visible_to_user = is_visible_to_user))",
       "deleteRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
     },
     "files": {
@@ -92,7 +92,7 @@
       "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && ((@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")) || case.user = @request.auth.id || (@collection.case_experts.case_id ?= case && @collection.case_experts.expert_id ?= @request.auth.id))",
       "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && ((@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")) || case.user = @request.auth.id || (@collection.case_experts.case_id ?= case && @collection.case_experts.expert_id ?= @request.auth.id))",
       "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && author = @request.auth.id && case.user = @request.auth.id",
-      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && author = @request.auth.id && case.user = @request.auth.id && @request.body.author:changed = false && @request.body.case:changed = false",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && author = @request.auth.id && case.user = @request.auth.id && (@request.body.author:isset = false || @request.body.author = author) && (@request.body.case:isset = false || @request.body.case = case)",
       "deleteRule": null
     },
     "files": {}
@@ -239,7 +239,7 @@
       "listRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (sender = @request.auth.id || recipient = @request.auth.id)",
       "viewRule": "@request.auth.id != \"\" && @request.auth.is_active = true && (sender = @request.auth.id || recipient = @request.auth.id)",
       "createRule": "@request.auth.id != \"\" && @request.auth.is_active = true && sender = @request.auth.id && read = false && recipient.is_active = true && ((@request.auth.role = \"expert\" && (recipient.role = \"admin\" || recipient.role = \"super_admin\")) || ((@request.auth.id != \"\" && @request.auth.is_active = true && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")) && recipient.role = \"expert\"))",
-      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && recipient = @request.auth.id && @request.body.sender:changed = false && @request.body.recipient:changed = false && @request.body.body:changed = false",
+      "updateRule": "@request.auth.id != \"\" && @request.auth.is_active = true && recipient = @request.auth.id && (@request.body.sender:isset = false || @request.body.sender = sender) && (@request.body.recipient:isset = false || @request.body.recipient = recipient) && (@request.body.body:isset = false || @request.body.body = body)",
       "deleteRule": null
     },
     "files": {}
@@ -258,8 +258,8 @@
   },
   "programs": {
     "rules": {
-      "listRule": "is_public = true || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
-      "viewRule": "is_public = true || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "listRule": "(is_public = true && (status = 'published' || status = 'in_progress' || status = 'completed')) || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "viewRule": "(is_public = true && (status = 'published' || status = 'in_progress' || status = 'completed')) || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
       "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
       "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
       "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"
@@ -270,8 +270,8 @@
   },
   "public_lectures": {
     "rules": {
-      "listRule": "is_public = true || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
-      "viewRule": "is_public = true || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "listRule": "(is_public = true && (status = 'published' || status = 'in_progress' || status = 'completed')) || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
+      "viewRule": "(is_public = true && (status = 'published' || status = 'in_progress' || status = 'completed')) || (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
       "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
       "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")",
       "deleteRule": "@request.auth.id != \"\" && (@request.auth.role = \"admin\" || @request.auth.role = \"super_admin\")"

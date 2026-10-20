@@ -3,9 +3,7 @@ import { useClassifications } from "@/hooks/useClassifications"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 
-import {
-  allocationRowsForSave,
-} from "@/lib/allocation-role-groups"
+import { allocationRowsForSave } from "@/lib/allocation-role-groups"
 import { boundedFullList } from "@/lib/bounded-records"
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { DataError } from "@/components/ui/data-error"
@@ -163,7 +161,13 @@ function ExpertCombobox({
   )
 }
 
-export function CaseAllocations({ caseId }: { caseId: string }) {
+export function CaseAllocations({
+  caseId,
+  onSaved,
+}: {
+  caseId: string
+  onSaved?: () => void
+}) {
   const selectedCase = caseId
   const { groups: ALLOCATION_ROLE_GROUPS } = useClassifications()
   const ui = useUiTranslation()
@@ -327,6 +331,7 @@ export function CaseAllocations({ caseId }: { caseId: string }) {
     try {
       await updateRole(editingRole.id, roleNameEn, roleNameAr)
       await refreshAllocations()
+      onSaved?.()
       toast.success(
         lang === "ar" ? "تم حفظ الإسنادات" : "Case allocations saved"
       )
@@ -468,6 +473,7 @@ export function CaseAllocations({ caseId }: { caseId: string }) {
         body: { rows: allocationRowsForSave(rows, roleMgmtRoles) },
       })
       await refreshAllocations()
+      onSaved?.()
     } catch (error) {
       console.error("Failed to save allocations:", error)
       toast.error(
@@ -492,7 +498,6 @@ export function CaseAllocations({ caseId }: { caseId: string }) {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-
             <div>
               <h2 className="text-xl font-bold text-primary">
                 {lang === "ar" ? "نموذج التخصيص" : "Allocation Form"}
@@ -517,7 +522,6 @@ export function CaseAllocations({ caseId }: { caseId: string }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-
           <div>
             <h2 className="text-xl font-bold text-primary">
               {lang === "ar" ? "نموذج التخصيص" : "Allocation Form"}

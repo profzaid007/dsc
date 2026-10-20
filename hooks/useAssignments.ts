@@ -1,5 +1,6 @@
 "use client"
 
+import { useRequestGuard } from "@/hooks/useRequestGuard"
 import { useState, useEffect, useCallback } from "react"
 import { caseToolsCollection } from "@/lib/pb-collections"
 import type { CaseTool } from "@/types/assignment"
@@ -12,7 +13,12 @@ export function useAssignments(caseId?: string) {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState("")
 
+  const beginRequest = useRequestGuard(caseId || "all")
+
   const fetchAssignments = useCallback(async () => {
+    const isCurrent = beginRequest()
+    setAssignments([])
+
     setIsLoading(true)
     setLoadError("")
     try {
@@ -22,15 +28,17 @@ export function useAssignments(caseId?: string) {
       } else {
         data = await caseToolsCollection.getAll()
       }
+      if (!isCurrent()) return
       setAssignments(data)
     } catch (error) {
+      if (!isCurrent()) return
       console.error("Failed to fetch assignments:", error)
       setLoadError(getErrorMessage(error))
       toast.error(getErrorMessage(error))
     } finally {
-      setIsLoading(false)
+      if (isCurrent()) setIsLoading(false)
     }
-  }, [caseId])
+  }, [caseId, beginRequest])
 
   useEffect(() => {
     // Fetch external records when the selected scope changes.

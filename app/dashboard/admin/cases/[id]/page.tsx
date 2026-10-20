@@ -48,10 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  TableCell,
-  TableRow,
-} from "@/components/ui/table"
+import { TableCell, TableRow } from "@/components/ui/table"
 import {
   ArrowLeft,
   User,
@@ -111,7 +108,11 @@ export default function AdminCaseDetailPage({
   const { id: caseId } = use(params)
   const [activeTab, setActiveTab] = useState("overview")
   useEffect(() => {
-    const openTab = () => { if (window.location.hash === "#case-assignments") setActiveTab("assigned"); if (window.location.hash === "#case-allocations") setActiveTab("allocations") }
+    const openTab = () => {
+      if (window.location.hash === "#case-assignments") setActiveTab("assigned")
+      if (window.location.hash === "#case-allocations")
+        setActiveTab("allocations")
+    }
     openTab()
     window.addEventListener("hashchange", openTab)
     return () => window.removeEventListener("hashchange", openTab)
@@ -144,6 +145,7 @@ export default function AdminCaseDetailPage({
   )
   const [toolTypeFilter, setToolTypeFilter] = useState<string>("all")
   const [confirmToolType, setConfirmToolType] = useState<string | null>(null)
+  const [allocationRevision, setAllocationRevision] = useState(0)
   const [allowedToolTypeIds, setAllowedToolTypeIds] = useState<string[]>([])
   const [linkMode, setLinkMode] = useState<"existing" | "new">("existing")
   const [linkUserId, setLinkUserId] = useState("")
@@ -376,7 +378,7 @@ export default function AdminCaseDetailPage({
       }
     }
     fetchAllowedToolTypes()
-  }, [caseId, currentUser, isExpert])
+  }, [caseId, currentUser, isExpert, allocationRevision])
 
   const handleAssignTool = async () => {
     if (!selectedToolId) return
@@ -434,7 +436,11 @@ export default function AdminCaseDetailPage({
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="overview">
             {lang === "ar" ? "نظرة عامة" : "Overview"}
@@ -445,7 +451,11 @@ export default function AdminCaseDetailPage({
               {caseAssignments.length + assessmentCount}
             </Badge>
           </TabsTrigger>
-          {access.can("allocations.read") && <TabsTrigger value="allocations">{lang === "ar" ? "تخصيص الخبراء" : "Expert allocation"}</TabsTrigger>}
+          {access.can("allocations.read") && (
+            <TabsTrigger value="allocations">
+              {lang === "ar" ? "تخصيص الخبراء" : "Expert allocation"}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="case-file">
             {lang === "ar" ? "ملف الحالة" : "Case File"}
           </TabsTrigger>
@@ -688,7 +698,8 @@ export default function AdminCaseDetailPage({
                       </Label>
                       <Input
                         id="payment_amount"
-                        fieldWidth="short" type="number"
+                        fieldWidth="short"
+                        type="number"
                         min="0"
                         step="0.01"
                         aria-describedby="case-fee-help"
@@ -896,84 +907,115 @@ export default function AdminCaseDetailPage({
                     : "Manage assignments for this case"}
                 </CardDescription>
               </div>
-              <Button onClick={() => { setAssignKind("tool"); setShowAssignModal(true) }}>
+              <Button
+                onClick={() => {
+                  setAssignKind("tool")
+                  setShowAssignModal(true)
+                }}
+              >
                 <Plus className="me-2 h-4 w-4" />
-                {lang === "ar" ? "تعيين أداة أو مقياس" : "Assign tool or assessment"}
+                {lang === "ar"
+                  ? "تعيين أداة أو مقياس"
+                  : "Assign tool or assessment"}
               </Button>
             </CardHeader>
             <CardContent>
-              <CaseAssessments key={`${profile.id}-${assessmentReload}`} caseId={profile.id} mode="list" onCountChange={setAssessmentCount} assignmentRows={caseAssignments.length ? <>{caseAssignments.map((assignment) => {
-                      const toolType = toolTypes.find(
-                        (t) => t.id === assignment.type
-                      )
-                      const toolTypeName = toolType?.key || "custom"
-                      const Icon =
-                        getToolTypeMeta(toolTypeName)?.icon || FileText
+              <CaseAssessments
+                key={`${profile.id}-${assessmentReload}`}
+                caseId={profile.id}
+                mode="list"
+                onCountChange={setAssessmentCount}
+                assignmentRows={
+                  caseAssignments.length ? (
+                    <>
+                      {caseAssignments.map((assignment) => {
+                        const toolType = toolTypes.find(
+                          (t) => t.id === assignment.type
+                        )
+                        const toolTypeName = toolType?.key || "custom"
+                        const Icon =
+                          getToolTypeMeta(toolTypeName)?.icon || FileText
 
-                      return (
-                        <TableRow key={assignment.id}>
-                          <TableCell className="font-medium">
-                            {assignment.name_en ||
-                              (lang === "ar"
-                                ? "تعيين بدون اسم"
-                                : "Unnamed Assignment")}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Icon className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs">
-                                {getToolTypeLabel(toolType, lang)}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={statusColors[assignment.status]}>
-                              {statusLabels[assignment.status]?.[lang] ||
+                        return (
+                          <TableRow key={assignment.id}>
+                            <TableCell className="font-medium">
+                              {assignment.name_en ||
                                 (lang === "ar"
-                                  ? "حالة غير معروفة"
-                                  : "Unknown status")}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {assignment.is_visible_to_user
-                              ? lang === "ar"
-                                ? "نعم"
-                                : "Yes"
-                              : lang === "ar"
-                                ? "لا"
-                                : "No"}
-                          </TableCell>
-                          <TableCell>
-                            {formatDate(
-                              assignment.assigned_at || assignment.created
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Link
-                                href={`/dashboard/admin/cases/${profile.id}/tasks/${assignment.id}`}
+                                  ? "تعيين بدون اسم"
+                                  : "Unnamed Assignment")}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Icon className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-xs">
+                                  {getToolTypeLabel(toolType, lang)}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={statusColors[assignment.status]}
                               >
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="h-4 w-4" />
+                                {statusLabels[assignment.status]?.[lang] ||
+                                  (lang === "ar"
+                                    ? "حالة غير معروفة"
+                                    : "Unknown status")}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {assignment.is_visible_to_user
+                                ? lang === "ar"
+                                  ? "نعم"
+                                  : "Yes"
+                                : lang === "ar"
+                                  ? "لا"
+                                  : "No"}
+                            </TableCell>
+                            <TableCell>
+                              {formatDate(
+                                assignment.assigned_at || assignment.created
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Link
+                                  href={`/dashboard/admin/cases/${profile.id}/tasks/${assignment.id}`}
+                                >
+                                  <Button variant="ghost" size="sm">
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </Link>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    deleteAssignment(assignment.id)
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
-                              </Link>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteAssignment(assignment.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}</> : undefined} />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </>
+                  ) : undefined
+                }
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
-        {access.can("allocations.read") && <TabsContent value="allocations" id="case-allocations"><CaseAllocations key={profile.id} caseId={profile.id} /></TabsContent>}
+        {access.can("allocations.read") && (
+          <TabsContent value="allocations" id="case-allocations">
+            <CaseAllocations
+              key={profile.id}
+              caseId={profile.id}
+              onSaved={() => setAllocationRevision((value) => value + 1)}
+            />
+          </TabsContent>
+        )}
         <TabsContent value="case-file">
           <Card>
             <CardHeader>
@@ -1041,7 +1083,9 @@ export default function AdminCaseDetailPage({
           <Card className="mx-4 w-full max-w-2xl">
             <CardHeader>
               <CardTitle>
-                {lang === "ar" ? "تعيين أداة أو مقياس" : "Assign tool or assessment"}
+                {lang === "ar"
+                  ? "تعيين أداة أو مقياس"
+                  : "Assign tool or assessment"}
               </CardTitle>
               <CardDescription>
                 {lang === "ar"
@@ -1051,139 +1095,170 @@ export default function AdminCaseDetailPage({
             </CardHeader>
             <CardContent>
               <div className="mb-4 flex gap-2">
-                <Button variant={assignKind === "tool" ? "default" : "outline"} onClick={() => setAssignKind("tool")}>{lang === "ar" ? "أداة" : "Tool"}</Button>
-                <Button variant={assignKind === "assessment" ? "default" : "outline"} onClick={() => setAssignKind("assessment")}>{lang === "ar" ? "مقياس / تقييم" : "Assessment"}</Button>
+                <Button
+                  variant={assignKind === "tool" ? "default" : "outline"}
+                  onClick={() => setAssignKind("tool")}
+                >
+                  {lang === "ar" ? "أداة" : "Tool"}
+                </Button>
+                <Button
+                  variant={assignKind === "assessment" ? "default" : "outline"}
+                  onClick={() => setAssignKind("assessment")}
+                >
+                  {lang === "ar" ? "مقياس / تقييم" : "Assessment"}
+                </Button>
               </div>
-              {assignKind === "assessment" ? <CaseAssessments caseId={profile.id} mode="assign" onAssigned={() => { setAssessmentReload(v => v + 1); setShowAssignModal(false) }} /> : <>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {/* Case-specific tools - direct create */}
-                {toolTypeOrder
-                  .filter((key) =>
-                    ["plan", "report", "attachment_request"].includes(key)
-                  )
-                  .filter((key) => {
-                    const toolType = toolTypes.find((item) => item.key === key)
-                    if (!toolType) return false
-                    if (isExpert)
-                      return allowedToolTypeIds.includes(toolType.id)
-                    return (
-                      allowedToolTypeIds.length === 0 ||
-                      allowedToolTypeIds.includes(toolType.id)
-                    )
-                  })
-                  .map((key) => {
-                    const toolType = toolTypes.find((item) => item.key === key)
-                    const meta = getToolTypeMeta(key)
-                    if (!toolType || !meta) return null
-
-                    return (
-                      <div
-                        key={toolType.id}
-                        className="flex flex-col items-center gap-3 rounded-lg border p-4"
-                      >
-                        <meta.icon className="h-8 w-8 text-muted-foreground" />
-                        <span className="font-medium">
-                          {getToolTypeLabel(toolType, lang)}
-                        </span>
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            router.push(
-                              `/dashboard/admin/tools/${meta.route}/new?caseId=${caseId}`
-                            )
-                            setShowAssignModal(false)
-                          }}
-                        >
-                          {lang === "ar" ? "إنشاء" : "Create"}
-                        </Button>
-                      </div>
-                    )
-                  })}
-
-                {/* Template-based tools - show template list or create new */}
-                {toolTypeOrder
-                  .filter((key) => ["survey", "multiple_answer"].includes(key))
-                  .filter((key) => {
-                    const toolType = toolTypes.find((item) => item.key === key)
-                    if (!toolType) return false
-                    if (isExpert)
-                      return allowedToolTypeIds.includes(toolType.id)
-                    return (
-                      allowedToolTypeIds.length === 0 ||
-                      allowedToolTypeIds.includes(toolType.id)
-                    )
-                  })
-                  .map((key) => {
-                    const toolType = toolTypes.find((item) => item.key === key)
-                    const meta = getToolTypeMeta(key)
-                    if (!toolType || !meta) return null
-
-                    const typeTools = tools.filter((t) => {
-                      const toolTypeObj = toolTypes.find(
-                        (tt) => tt.id === t.type
+              {assignKind === "assessment" ? (
+                <CaseAssessments
+                  caseId={profile.id}
+                  mode="assign"
+                  onAssigned={() => {
+                    setAssessmentReload((v) => v + 1)
+                    setShowAssignModal(false)
+                  }}
+                />
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {/* Case-specific tools - direct create */}
+                    {toolTypeOrder
+                      .filter((key) =>
+                        ["plan", "report", "attachment_request"].includes(key)
                       )
-                      return toolTypeObj?.key === key
-                    })
+                      .filter((key) => {
+                        const toolType = toolTypes.find(
+                          (item) => item.key === key
+                        )
+                        if (!toolType) return false
+                        if (isExpert)
+                          return allowedToolTypeIds.includes(toolType.id)
+                        return (
+                          allowedToolTypeIds.length === 0 ||
+                          allowedToolTypeIds.includes(toolType.id)
+                        )
+                      })
+                      .map((key) => {
+                        const toolType = toolTypes.find(
+                          (item) => item.key === key
+                        )
+                        const meta = getToolTypeMeta(key)
+                        if (!toolType || !meta) return null
 
-                    return (
-                      <div
-                        key={toolType.id}
-                        className="flex flex-col items-center gap-3 rounded-lg border p-4"
-                      >
-                        <meta.icon className="h-8 w-8 text-muted-foreground" />
-                        <span className="font-medium">
-                          {getToolTypeLabel(toolType, lang)}
-                        </span>
-                        <div className="flex gap-2">
-                          {typeTools.length > 0 && (
-                            <Select
-                              onValueChange={(toolId) => {
-                                setSelectedToolId(toolId)
-                                setConfirmToolType(key)
+                        return (
+                          <div
+                            key={toolType.id}
+                            className="flex flex-col items-center gap-3 rounded-lg border p-4"
+                          >
+                            <meta.icon className="h-8 w-8 text-muted-foreground" />
+                            <span className="font-medium">
+                              {getToolTypeLabel(toolType, lang)}
+                            </span>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                router.push(
+                                  `/dashboard/admin/tools/${meta.route}/new?caseId=${caseId}`
+                                )
+                                setShowAssignModal(false)
                               }}
                             >
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue
-                                  placeholder={
-                                    lang === "ar" ? "قوالب" : "Templates"
-                                  }
-                                />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {typeTools.map((tool) => (
-                                  <SelectItem key={tool.id} value={tool.id}>
-                                    {tool.name.en}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              router.push(
-                                `/dashboard/admin/tools/${meta.route}/new?caseId=${caseId}`
-                              )
-                              setShowAssignModal(false)
-                            }}
-                          >
-                            {lang === "ar" ? "جديد" : "New"}
-                          </Button>
-                        </div>
-                      </div>
-                    )
-                  })}
-              </div>
+                              {lang === "ar" ? "إنشاء" : "Create"}
+                            </Button>
+                          </div>
+                        )
+                      })}
 
-              {allowedToolTypeIds.length > 0 && (
-                <p className="mt-4 text-sm text-muted-foreground">
-                  {lang === "ar"
-                    ? "يتم عرض أنواع الأدوات بناءً على أدوار الخبراء المخصصين لهذه الحالة."
-                    : "Tool types shown are based on the assigned experts' roles for this case."}
-                </p>
+                    {/* Template-based tools - show template list or create new */}
+                    {toolTypeOrder
+                      .filter((key) =>
+                        ["survey", "multiple_answer"].includes(key)
+                      )
+                      .filter((key) => {
+                        const toolType = toolTypes.find(
+                          (item) => item.key === key
+                        )
+                        if (!toolType) return false
+                        if (isExpert)
+                          return allowedToolTypeIds.includes(toolType.id)
+                        return (
+                          allowedToolTypeIds.length === 0 ||
+                          allowedToolTypeIds.includes(toolType.id)
+                        )
+                      })
+                      .map((key) => {
+                        const toolType = toolTypes.find(
+                          (item) => item.key === key
+                        )
+                        const meta = getToolTypeMeta(key)
+                        if (!toolType || !meta) return null
+
+                        const typeTools = tools.filter((t) => {
+                          const toolTypeObj = toolTypes.find(
+                            (tt) => tt.id === t.type
+                          )
+                          return toolTypeObj?.key === key
+                        })
+
+                        return (
+                          <div
+                            key={toolType.id}
+                            className="flex flex-col items-center gap-3 rounded-lg border p-4"
+                          >
+                            <meta.icon className="h-8 w-8 text-muted-foreground" />
+                            <span className="font-medium">
+                              {getToolTypeLabel(toolType, lang)}
+                            </span>
+                            <div className="flex gap-2">
+                              {typeTools.length > 0 && (
+                                <Select
+                                  onValueChange={(toolId) => {
+                                    setSelectedToolId(toolId)
+                                    setConfirmToolType(key)
+                                  }}
+                                >
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue
+                                      placeholder={
+                                        lang === "ar" ? "قوالب" : "Templates"
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {typeTools.map((tool) => (
+                                      <SelectItem key={tool.id} value={tool.id}>
+                                        {tool.name.en}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  router.push(
+                                    `/dashboard/admin/tools/${meta.route}/new?caseId=${caseId}`
+                                  )
+                                  setShowAssignModal(false)
+                                }}
+                              >
+                                {lang === "ar" ? "جديد" : "New"}
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+
+                  {allowedToolTypeIds.length > 0 && (
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      {lang === "ar"
+                        ? "يتم عرض أنواع الأدوات بناءً على أدوار الخبراء المخصصين لهذه الحالة."
+                        : "Tool types shown are based on the assigned experts' roles for this case."}
+                    </p>
+                  )}
+                </>
               )}
-              </>}
             </CardContent>
             <CardContent className="flex justify-end pt-0">
               <Button

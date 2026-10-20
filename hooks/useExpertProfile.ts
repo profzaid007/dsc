@@ -1,4 +1,5 @@
 "use client"
+import { useRequestGuard } from "@/hooks/useRequestGuard"
 import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
 import { useCallback, useEffect, useState } from "react"
@@ -74,7 +75,8 @@ export function draftFromProfile(
     name,
     countryOfResidence: toText(profile.country_of_residence),
     city: toText(profile.city),
-    whatsappCountryCode: toText(profile.whatsapp_country_code) || DEFAULT_COUNTRY_CODE,
+    whatsappCountryCode:
+      toText(profile.whatsapp_country_code) || DEFAULT_COUNTRY_CODE,
     whatsappNumber: toText(profile.whatsapp_number),
     highestAcademicDegree: toText(profile.highest_academic_degree),
     degreeTitle: toText(profile.degree_title),
@@ -86,8 +88,18 @@ export function draftFromProfile(
     fee: toText(profile.fee),
     availability: toText(profile.availability),
     bio: toText(profile.bio),
-    publicNameEn: profile.public_name_en == null ? (!/[\u0600-\u06ff]/.test(name) ? name : "") : toText(profile.public_name_en),
-    publicNameAr: profile.public_name_ar == null ? (/[\u0600-\u06ff]/.test(name) ? name : "") : toText(profile.public_name_ar),
+    publicNameEn:
+      profile.public_name_en == null
+        ? !/[\u0600-\u06ff]/.test(name)
+          ? name
+          : ""
+        : toText(profile.public_name_en),
+    publicNameAr:
+      profile.public_name_ar == null
+        ? /[\u0600-\u06ff]/.test(name)
+          ? name
+          : ""
+        : toText(profile.public_name_ar),
     publicQualificationEn: toText(profile.public_qualification_en),
     publicQualificationAr: toText(profile.public_qualification_ar),
     publicSpecialtyEn: toText(profile.public_specialty_en),
@@ -147,8 +159,9 @@ function expertProfileFormData(
   // separately. `specialization_type` became a single text field: the chosen
   // option keys are stored as one comma-separated string, which every reader
   // (`toStringList`, team/approval `toList`) splits back into a list.
-  draft.ageGroup.forEach((value) => formData.append("age_group", value));
-  formData.set("specialization_type", draft.specialization.join(", "));
+  if (!draft.ageGroup.length) formData.set("age_group", "")
+  draft.ageGroup.forEach((value) => formData.append("age_group", value))
+  formData.set("specialization_type", draft.specialization.join(", "))
 
   formData.set("consultation_mode", draft.consultationMode)
   formData.set("fee", draft.fee.trim())
@@ -193,13 +206,19 @@ export async function saveExpertProfileFor(
   if (draft.shortBioEn.length > 250 || draft.shortBioAr.length > 250)
     throw new Error("Each short biography must be at most 250 characters.")
   if (!draft.publicNameAr.trim() || !draft.publicNameEn.trim())
-    throw new Error("يجب إدخال اسم الخبير بالعربية والإنجليزية قبل الحفظ. / Both Arabic and English expert names are required.")
-  await pb.collection("users").update(userId, { name: draft.publicNameAr.trim() || draft.publicNameEn.trim() })
+    throw new Error(
+      "يجب إدخال اسم الخبير بالعربية والإنجليزية قبل الحفظ. / Both Arabic and English expert names are required."
+    )
   const formData = expertProfileFormData(draft, userId, profileId)
   const collection = pb.collection("expert_profiles")
   const saved = profileId
     ? await collection.update(profileId, formData)
     : await collection.create(formData)
+  if (pb.authStore?.record?.id === userId)
+    pb.authStore.save(pb.authStore.token, {
+      ...pb.authStore.record,
+      name: draft.publicNameAr.trim(),
+    })
   return saved as unknown as ExpertProfile
 }
 
@@ -210,7 +229,12 @@ export function useExpertProfile(userId?: string) {
   const [isSaving, setIsSaving] = useState(false)
   const [loadError, setLoadError] = useState("")
 
+  const beginRequest = useRequestGuard(userId || "")
+
   const load = useCallback(async () => {
+    const isCurrent = beginRequest()
+    setProfile(null)
+
     if (!userId) {
       setIsLoading(false)
       return
@@ -221,8 +245,10 @@ export function useExpertProfile(userId?: string) {
       const record = await pb
         .collection("expert_profiles")
         .getFirstListItem(pb.filter("user = {:value0}", { value0: userId }))
+      if (!isCurrent()) return
       setProfile(record as unknown as ExpertProfile)
     } catch (error) {
+      if (!isCurrent()) return
       // An expert without a profile row is a valid state, not a failure.
       const status = (error as { status?: number }).status
       if (status === 404) {
@@ -232,9 +258,9 @@ export function useExpertProfile(userId?: string) {
         setLoadError(getErrorMessage(error))
       }
     } finally {
-      setIsLoading(false)
+      if (isCurrent()) setIsLoading(false)
     }
-  }, [userId])
+  }, [userId, beginRequest])
 
   useEffect(() => {
     // Begin the external profile fetch when the selected expert changes.
@@ -244,34 +270,39 @@ export function useExpertProfile(userId?: string) {
 
   useEffect(() => {
     let cancelled = false
+    const authIdentity = pb.authStore.record?.id
+    setFileToken("")
     pb.files
       .getToken()
       .then((token) => {
-        if (!cancelled) setFileToken(token)
+        if (!cancelled && pb.authStore.record?.id === authIdentity)
+          setFileToken(token)
       })
       .catch(() => {
-        if (!cancelled) setFileToken("")
+        if (!cancelled && pb.authStore.record?.id === authIdentity)
+          setFileToken("")
       })
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [userId, beginRequest])
 
   const save = useCallback(
     async (draft: ExpertProfileDraft) => {
       if (!userId) throw new Error("No signed-in expert")
+      const isCurrent = beginRequest()
       setIsSaving(true)
       try {
         // Updating users first syncs the PocketBase auth store on a self-update,
         // which keeps the sidebar name in step with the profile.
         const saved = await saveExpertProfileFor(draft, userId, profile?.id)
-        setProfile(saved)
+        if (isCurrent()) setProfile(saved)
         return saved
       } finally {
-        setIsSaving(false)
+        if (isCurrent()) setIsSaving(false)
       }
     },
-    [userId, profile?.id]
+    [userId, profile?.id, beginRequest]
   )
 
   return {

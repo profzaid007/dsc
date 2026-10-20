@@ -1,5 +1,6 @@
 "use client"
 
+import { DataError } from "@/components/ui/data-error"
 import { use, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
@@ -50,7 +51,13 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
   const { id: toolId } = use(params)
   const router = useRouter()
   const { lang } = useLang()
-  const { getToolById, deleteTool } = useTools()
+  const {
+    getToolById,
+    deleteTool,
+    isLoading: toolsLoading,
+    loadError: toolsLoadError,
+    refresh: retryTools,
+  } = useTools()
   const { fetchToolTypes, getToolTypeByKey } = useToolTypes()
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const hasFetched = useRef(false)
@@ -64,6 +71,10 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
   const tool = getToolById(toolId)
   const config = tool?.config as SurveyConfig | undefined
 
+  if (toolsLoadError)
+    return <DataError message={toolsLoadError} onRetry={retryTools} />
+  if (toolsLoading)
+    return <p role="status">{lang === "ar" ? "جارٍ التحميل…" : "Loading…"}</p>
   if (!tool || !config) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -81,7 +92,13 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
   const toolTypeLabel = getToolTypeLabel(getToolTypeByKey("survey"), lang)
 
   const handleDelete = async () => {
-    if (confirm(lang === "ar" ? "هل أنت متأكد من حذف هذه الأداة؟" : "Are you sure you want to delete this tool?")) {
+    if (
+      confirm(
+        lang === "ar"
+          ? "هل أنت متأكد من حذف هذه الأداة؟"
+          : "Are you sure you want to delete this tool?"
+      )
+    ) {
       await deleteTool(toolId)
       router.push("/dashboard/admin/tools")
     }
@@ -245,15 +262,34 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>{lang === "ar" ? "التعيين من الحالة" : "Assign from a case"}</CardTitle>
-          <CardDescription>{lang === "ar" ? "تُعيّن الأدوات والمقاييس من صفحة الحالة. اختر الحالة ثم افتح أدوات الحالة ومقاييسها." : "Assign tools and assessments from the case page. Select a case, then open its tools and assessments."}</CardDescription>
+          <CardTitle>
+            {lang === "ar" ? "التعيين من الحالة" : "Assign from a case"}
+          </CardTitle>
+          <CardDescription>
+            {lang === "ar"
+              ? "تُعيّن الأدوات والمقاييس من صفحة الحالة. اختر الحالة ثم افتح أدوات الحالة ومقاييسها."
+              : "Assign tools and assessments from the case page. Select a case, then open its tools and assessments."}
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex items-end gap-4">
-          <div className="flex-1"><CaseSearchCombobox value={selectedCaseId} onChange={setSelectedCaseId} /></div>
-          <Button disabled={!selectedCaseId} onClick={() => router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)}>{lang === "ar" ? "فتح تعيينات الحالة" : "Open case assignments"}</Button>
+          <div className="flex-1">
+            <CaseSearchCombobox
+              value={selectedCaseId}
+              onChange={setSelectedCaseId}
+            />
+          </div>
+          <Button
+            disabled={!selectedCaseId}
+            onClick={() =>
+              router.push(
+                `/dashboard/admin/cases/${selectedCaseId}#case-assignments`
+              )
+            }
+          >
+            {lang === "ar" ? "فتح تعيينات الحالة" : "Open case assignments"}
+          </Button>
         </CardContent>
       </Card>
-
     </div>
   )
 }

@@ -110,7 +110,7 @@ export function ServiceSearch({ portals }: { portals: Portal[] }) {
                 : "Try autism, anxiety or curriculum design"
             }
             maxLength={120}
-            aria-controls="service-results"
+            aria-controls={query.trim() ? "service-results" : undefined}
           />
           {query && (
             <button

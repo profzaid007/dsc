@@ -1,7 +1,7 @@
 "use client"
 import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { EmailInput } from "@/components/ui/email-input"
@@ -25,11 +25,7 @@ import {
   PortalServiceSelector,
   type PortalServiceValue,
 } from "./PortalServiceSelector"
-import pb, {
-  authWithPassword,
-  getErrorMessage,
-  getFieldErrors,
-} from "@/lib/pb"
+import pb, { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 import {
   EMAIL_INVALID_MESSAGE,
@@ -37,10 +33,10 @@ import {
   normalizeEmail,
 } from "@/lib/validators"
 import { toast } from "sonner"
+import { RegistrationSubmission } from "@/lib/registration-submission"
+import { validRegistrationPhone } from "@/lib/registration-phone"
 
 const OTHER_VALUE = "other"
-
-
 
 export function OrganizationRegistrationForm({
   onSuccess,
@@ -52,6 +48,7 @@ export function OrganizationRegistrationForm({
   const isCareFoundation = accountType === "care_foundation"
   const { lang } = useLang()
   const router = useRouter()
+  const submissionKey = useRef(crypto.randomUUID())
 
   const [name, setName] = useState("")
   const [organizationName, setOrganizationName] = useState("")
@@ -97,7 +94,14 @@ export function OrganizationRegistrationForm({
 
     if (!name.trim()) errs.name = required
     if (!organizationName.trim()) errs.organizationName = required
-    if (!contactNumber.trim()) errs.contactNumber = required
+    if (!validRegistrationPhone(`${countryCode} ${contactNumber}`))
+      errs.contactNumber = t(
+        {
+          en: "Enter a valid international phone number.",
+          ar: "أدخل رقم هاتف دولي صالحًا.",
+        },
+        lang
+      )
     if (!email.trim()) errs.email = required
     else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
     if (!password) errs.password = required
@@ -122,7 +126,10 @@ export function OrganizationRegistrationForm({
       return false
     }
 
-    if (!isCareFoundation && (!portalService.categoryId || !portalService.subCategoryId.trim())) {
+    if (
+      !isCareFoundation &&
+      (!portalService.categoryId || !portalService.subCategoryId.trim())
+    ) {
       setError(
         t(
           {
@@ -135,7 +142,8 @@ export function OrganizationRegistrationForm({
       return false
     }
     if (
-      !isCareFoundation && portalService.categoryId === OTHER_VALUE &&
+      !isCareFoundation &&
+      portalService.categoryId === OTHER_VALUE &&
       !portalService.customCategory.trim()
     ) {
       setError(
@@ -166,7 +174,8 @@ export function OrganizationRegistrationForm({
       const cleanOrganizationName = organizationName.trim()
       const cleanEmail = normalizeEmail(email)
 
-      const user = await pb.collection("users").create({
+      const registration = new RegistrationSubmission(submissionKey.current)
+      const user = registration.user({
         email: cleanEmail,
         password,
         passwordConfirm: password,
@@ -177,9 +186,7 @@ export function OrganizationRegistrationForm({
         emailVisibility: true,
       })
 
-      if (isCareFoundation && !onSuccess) await authWithPassword(cleanEmail, password)
-
-      await pb.collection("organization_profiles").create({
+      registration.profile("organization_profiles", {
         user: user.id,
         organization_name: cleanOrganizationName,
         organization_type: organizationType,
@@ -187,7 +194,9 @@ export function OrganizationRegistrationForm({
         city: city.trim(),
         ...(isCareFoundation ? { address: address.trim() } : {}),
         website: website.trim(),
-        responsible_person_name: isCareFoundation ? cleanName : representativeName.trim(),
+        responsible_person_name: isCareFoundation
+          ? cleanName
+          : representativeName.trim(),
         responsible_person_title: representativeTitle.trim(),
         responsible_person_phone: isCareFoundation
           ? `${countryCode} ${contactNumber.trim()}`.trim()
@@ -195,26 +204,30 @@ export function OrganizationRegistrationForm({
         notes: notes.trim(),
       })
 
-      if (!isCareFoundation) await pb.collection("cases").create({
-        user: user.id,
-        name: cleanOrganizationName,
-        portal_type: portalService.categoryId,
-        service_type: portalService.subCategoryId.trim(),
-        notes: notes.trim(),
-        status: "pending",
-        user_details: {
-          name: user.name,
-          email: user.email,
-          contact: user.contact_number,
-        },
-        case_details: {
-          custom_category:
-            portalService.categoryId === OTHER_VALUE
-              ? portalService.customCategory.trim()
-              : undefined,
-          custom_sub_category: portalService.subCategoryId.trim() || undefined,
-        },
-      })
+      if (!isCareFoundation)
+        registration.case({
+          user: user.id,
+          name: cleanOrganizationName,
+          portal_type: portalService.categoryId,
+          service_type: portalService.subCategoryId.trim(),
+          notes: notes.trim(),
+          status: "pending",
+          user_details: {
+            name: user.name,
+            email: user.email,
+            contact: user.contact_number,
+          },
+          case_details: {
+            custom_category:
+              portalService.categoryId === OTHER_VALUE
+                ? portalService.customCategory.trim()
+                : undefined,
+            custom_sub_category:
+              portalService.subCategoryId.trim() || undefined,
+          },
+        })
+
+      await registration.submit()
 
       toast.success(
         t(
@@ -226,7 +239,7 @@ export function OrganizationRegistrationForm({
       if (onSuccess) {
         onSuccess()
       } else {
-        if (!isCareFoundation) await authWithPassword(cleanEmail, password)
+        await authWithPassword(cleanEmail, password)
         router.push(getDashboardPath(accountType))
       }
     } catch (err) {
@@ -242,100 +255,107 @@ export function OrganizationRegistrationForm({
   }
 
   const foundationNameField = (
-<div className="space-y-2">
-              <Label>
-                {t(isCareFoundation ? { en: "Foundation Name", ar: "اسم مؤسسة الرعاية" } : { en: "Organization Name", ar: "اسم المؤسسة" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
-                autoComplete="organization"
-                aria-invalid={
-                  fieldErrors.organizationName || fieldErrors.organization_name
-                    ? true
-                    : undefined
-                }
-                placeholder={t(
-                  { en: "e.g. ABC Company", ar: "مثال: شركة أبجد" },
-                  lang
-                )}
-              />
-              {fieldErrorNode("organizationName", "organization_name")}
-            </div>
+    <div className="space-y-2">
+      <Label>
+        {t(
+          isCareFoundation
+            ? { en: "Foundation Name", ar: "اسم مؤسسة الرعاية" }
+            : { en: "Organization Name", ar: "اسم المؤسسة" },
+          lang
+        )}
+        <span className="ml-1 text-red-500">*</span>
+      </Label>
+      <Input
+        value={organizationName}
+        onChange={(e) => setOrganizationName(e.target.value)}
+        autoComplete="organization"
+        aria-invalid={
+          fieldErrors.organizationName || fieldErrors.organization_name
+            ? true
+            : undefined
+        }
+        placeholder={t({ en: "e.g. ABC Company", ar: "مثال: شركة أبجد" }, lang)}
+      />
+      {fieldErrorNode("organizationName", "organization_name")}
+    </div>
   )
 
   const nameField = (
-<div className="space-y-2">
-              <Label>
-                {t(isCareFoundation ? { en: "Responsible Person’s Name", ar: "اسم الشخص المسؤول" } : { en: "Name", ar: "الاسم" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-                aria-invalid={fieldErrors.name ? true : undefined}
-                placeholder={t(
-                  { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
-                  lang
-                )}
-              />
-              {fieldErrorNode("name")}
-            </div>
+    <div className="space-y-2">
+      <Label>
+        {t(
+          isCareFoundation
+            ? { en: "Responsible Person’s Name", ar: "اسم الشخص المسؤول" }
+            : { en: "Name", ar: "الاسم" },
+          lang
+        )}
+        <span className="ml-1 text-red-500">*</span>
+      </Label>
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        autoComplete="name"
+        aria-invalid={fieldErrors.name ? true : undefined}
+        placeholder={t(
+          { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
+          lang
+        )}
+      />
+      {fieldErrorNode("name")}
+    </div>
   )
   const mobileField = (
-<div className="space-y-2">
-              <Label>
-                {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <div className="flex gap-2">
-                <Select value={countryCode} onValueChange={setCountryCode}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue placeholder="+962" />
-                  </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-60! max-w-30!">
-                    {COUNTRY_CODES.map((c) => (
-                      <SelectItem key={c.value} value={c.dialCode}>
-                        {t(c.label, lang)} ({c.dialCode})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  value={contactNumber}
-                  onChange={(e) => setContactNumber(e.target.value)}
-                  autoComplete="tel"
-                  inputMode="tel"
-                  aria-invalid={
-                    fieldErrors.contactNumber || fieldErrors.contact_number
-                      ? true
-                      : undefined
-                  }
-                  placeholder={t(
-                    { en: "e.g. 50 000 0000", ar: "مثال: 50 000 0000" },
-                    lang
-                  )}
-                  className="flex-1"
-                />
-              </div>
-              {fieldErrorNode("contactNumber", "contact_number")}
-            </div>
+    <div className="space-y-2">
+      <Label>
+        {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
+        <span className="ml-1 text-red-500">*</span>
+      </Label>
+      <div className="flex gap-2">
+        <Select value={countryCode} onValueChange={setCountryCode}>
+          <SelectTrigger className="w-28">
+            <SelectValue placeholder="+962" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="max-h-60! max-w-30!">
+            {COUNTRY_CODES.map((c) => (
+              <SelectItem key={c.value} value={c.dialCode}>
+                {t(c.label, lang)} ({c.dialCode})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          value={contactNumber}
+          onChange={(e) => setContactNumber(e.target.value)}
+          autoComplete="tel"
+          inputMode="tel"
+          aria-invalid={
+            fieldErrors.contactNumber || fieldErrors.contact_number
+              ? true
+              : undefined
+          }
+          placeholder={t(
+            { en: "e.g. 50 000 0000", ar: "مثال: 50 000 0000" },
+            lang
+          )}
+          className="flex-1"
+        />
+      </div>
+      {fieldErrorNode("contactNumber", "contact_number")}
+    </div>
   )
   const emailField = (
-<div className="space-y-2">
-              <Label>
-                {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <EmailInput
-                value={email}
-                onChange={setEmail}
-                error={fieldErrors.email}
-                placeholder="your@email.com"
-              />
-            </div>
+    <div className="space-y-2">
+      <Label>
+        {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
+        <span className="ml-1 text-red-500">*</span>
+      </Label>
+      <EmailInput
+        value={email}
+        onChange={setEmail}
+        error={fieldErrors.email}
+        placeholder="your@email.com"
+      />
+    </div>
   )
 
   return (
@@ -343,7 +363,15 @@ export function OrganizationRegistrationForm({
       <Card>
         <CardHeader>
           <CardTitle>
-            {t(isCareFoundation ? { en: "Care Foundation Registration", ar: "تسجيل مؤسسة الرعاية" } : { en: "Organization Registration", ar: "تسجيل مؤسسة" }, lang)}
+            {t(
+              isCareFoundation
+                ? {
+                    en: "Care Foundation Registration",
+                    ar: "تسجيل مؤسسة الرعاية",
+                  }
+                : { en: "Organization Registration", ar: "تسجيل مؤسسة" },
+              lang
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -354,10 +382,7 @@ export function OrganizationRegistrationForm({
           )}
 
           {isCareFoundation && (
-            <div className="dsc-form-grid">
-              {foundationNameField}
-
-            </div>
+            <div className="dsc-form-grid">{foundationNameField}</div>
           )}
 
           {isCareFoundation && (
@@ -367,10 +392,21 @@ export function OrganizationRegistrationForm({
               </legend>
               <div className="dsc-form-grid">
                 {nameField}
-            <div className="space-y-2">
-              <Label htmlFor="responsible-title">{t({ en: "Title", ar: "المسمى الوظيفي" }, lang)}</Label>
-              <Input id="responsible-title" value={representativeTitle} onChange={(e) => setRepresentativeTitle(e.target.value)} autoComplete="organization-title" placeholder={t({ en: "e.g. Care Coordinator", ar: "مثال: منسق الرعاية" }, lang)} />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="responsible-title">
+                    {t({ en: "Title", ar: "المسمى الوظيفي" }, lang)}
+                  </Label>
+                  <Input
+                    id="responsible-title"
+                    value={representativeTitle}
+                    onChange={(e) => setRepresentativeTitle(e.target.value)}
+                    autoComplete="organization-title"
+                    placeholder={t(
+                      { en: "e.g. Care Coordinator", ar: "مثال: منسق الرعاية" },
+                      lang
+                    )}
+                  />
+                </div>
                 {mobileField}
                 {emailField}
               </div>
@@ -389,7 +425,7 @@ export function OrganizationRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={password}
@@ -413,30 +449,33 @@ export function OrganizationRegistrationForm({
 
             <div className="space-y-2">
               <Label>
-                {t(
-                  { en: "Confirm Password", ar: "تأكيد كلمة المرور" },
-                  lang
-                )}
-                <span className="text-red-500 ml-1">*</span>
+                {t({ en: "Confirm Password", ar: "تأكيد كلمة المرور" }, lang)}
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                aria-invalid={fieldErrors.confirmPassword || fieldErrors.passwordConfirm ? true : undefined}
+                aria-invalid={
+                  fieldErrors.confirmPassword || fieldErrors.passwordConfirm
+                    ? true
+                    : undefined
+                }
                 placeholder="••••••••"
               />
               {fieldErrorNode("confirmPassword", "passwordConfirm")}
-              {!fieldErrors.confirmPassword && !fieldErrors.passwordConfirm && passwordsMismatch && (
-                <p className="text-xs text-red-500">
-                  {t(
-                    {
-                      en: "Passwords do not match",
-                      ar: "كلمات المرور غير متطابقة",
-                    },
-                    lang
-                  )}
-                </p>
-              )}
+              {!fieldErrors.confirmPassword &&
+                !fieldErrors.passwordConfirm &&
+                passwordsMismatch && (
+                  <p className="text-xs text-red-500">
+                    {t(
+                      {
+                        en: "Passwords do not match",
+                        ar: "كلمات المرور غير متطابقة",
+                      },
+                      lang
+                    )}
+                  </p>
+                )}
             </div>
           </div>
 
@@ -445,9 +484,17 @@ export function OrganizationRegistrationForm({
               <Label>
                 {t({ en: "Organization Type", ar: "نوع المؤسسة" }, lang)}
               </Label>
-              <Select value={organizationType} onValueChange={setOrganizationType}>
+              <Select
+                value={organizationType}
+                onValueChange={setOrganizationType}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t({ en: "Select type...", ar: "اختر النوع..." }, lang)} />
+                  <SelectValue
+                    placeholder={t(
+                      { en: "Select type...", ar: "اختر النوع..." },
+                      lang
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent position="popper">
                   {ORGANIZATION_TYPES.map((c) => (
@@ -460,12 +507,15 @@ export function OrganizationRegistrationForm({
             </div>
 
             <div className="space-y-2">
-              <Label>
-                {t({ en: "Country", ar: "الدولة" }, lang)}
-              </Label>
+              <Label>{t({ en: "Country", ar: "الدولة" }, lang)}</Label>
               <Select value={country} onValueChange={setCountry}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t({ en: "Select country...", ar: "اختر الدولة..." }, lang)} />
+                  <SelectValue
+                    placeholder={t(
+                      { en: "Select country...", ar: "اختر الدولة..." },
+                      lang
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-60!">
                   {COUNTRY_CODES.map((c) => (
@@ -478,23 +528,33 @@ export function OrganizationRegistrationForm({
             </div>
 
             <div className="space-y-2">
-              <Label>
-                {t({ en: "City", ar: "المدينة" }, lang)}
-              </Label>
+              <Label>{t({ en: "City", ar: "المدينة" }, lang)}</Label>
               <Input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. Amman", ar: "مثال: عمّان" },
-                  lang
-                )}
+                placeholder={t({ en: "e.g. Amman", ar: "مثال: عمّان" }, lang)}
               />
             </div>
 
             {isCareFoundation && (
               <div className="space-y-2">
-                <Label htmlFor="foundation-address">{t({ en: "Address", ar: "العنوان" }, lang)}</Label>
-                <Textarea id="foundation-address" value={address} onChange={(e) => setAddress(e.target.value)} autoComplete="street-address" placeholder={t({ en: "Street, building and area", ar: "الشارع والمبنى والمنطقة" }, lang)} rows={2} />
+                <Label htmlFor="foundation-address">
+                  {t({ en: "Address", ar: "العنوان" }, lang)}
+                </Label>
+                <Textarea
+                  id="foundation-address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  autoComplete="street-address"
+                  placeholder={t(
+                    {
+                      en: "Street, building and area",
+                      ar: "الشارع والمبنى والمنطقة",
+                    },
+                    lang
+                  )}
+                  rows={2}
+                />
                 {fieldErrorNode("address")}
               </div>
             )}
@@ -512,64 +572,74 @@ export function OrganizationRegistrationForm({
             </div>
 
             {!isCareFoundation && (
-            <div className="space-y-2">
-              <Label>
-                {t({ en: "Representative Name", ar: "اسم الممثل" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                aria-invalid={!!fieldErrors.representativeName}
-                value={representativeName}
-                onChange={(e) => setRepresentativeName(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
-                  lang
-                )}
-              />
-            </div>
-
+              <div className="space-y-2">
+                <Label>
+                  {t({ en: "Representative Name", ar: "اسم الممثل" }, lang)}
+                  <span className="ml-1 text-red-500">*</span>
+                </Label>
+                <Input
+                  aria-invalid={!!fieldErrors.representativeName}
+                  value={representativeName}
+                  onChange={(e) => setRepresentativeName(e.target.value)}
+                  placeholder={t(
+                    { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
+                    lang
+                  )}
+                />
+              </div>
             )}
-            {!isCareFoundation && (<>
-            <div className="space-y-2">
-              <Label>
-                {t({ en: "Representative Number", ar: "رقم الممثل" }, lang)}
-              </Label>
-              <Input
-                value={representativeNumber}
-                onChange={(e) => setRepresentativeNumber(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. 55 000 0000", ar: "مثال: 55 000 0000" },
-                  lang
-                )}
-              />
-            </div>
+            {!isCareFoundation && (
+              <>
+                <div className="space-y-2">
+                  <Label>
+                    {t({ en: "Representative Number", ar: "رقم الممثل" }, lang)}
+                  </Label>
+                  <Input
+                    value={representativeNumber}
+                    onChange={(e) => setRepresentativeNumber(e.target.value)}
+                    placeholder={t(
+                      { en: "e.g. 55 000 0000", ar: "مثال: 55 000 0000" },
+                      lang
+                    )}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label>
-                {t({ en: "Representative Title", ar: "المسمى الوظيفي للممثل" }, lang)}
-              </Label>
-              <Input
-                value={representativeTitle}
-                onChange={(e) => setRepresentativeTitle(e.target.value)}
-                placeholder={t(
-                  { en: "e.g. HR Manager", ar: "مثال: مدير الموارد البشرية" },
-                  lang
-                )}
-              />
-            </div>
-            </>)}
+                <div className="space-y-2">
+                  <Label>
+                    {t(
+                      {
+                        en: "Representative Title",
+                        ar: "المسمى الوظيفي للممثل",
+                      },
+                      lang
+                    )}
+                  </Label>
+                  <Input
+                    value={representativeTitle}
+                    onChange={(e) => setRepresentativeTitle(e.target.value)}
+                    placeholder={t(
+                      {
+                        en: "e.g. HR Manager",
+                        ar: "مثال: مدير الموارد البشرية",
+                      },
+                      lang
+                    )}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
-          {!isCareFoundation && <PortalServiceSelector
-            value={portalService}
-            onChange={setPortalService}
-            required
-          />}
+          {!isCareFoundation && (
+            <PortalServiceSelector
+              value={portalService}
+              onChange={setPortalService}
+              required
+            />
+          )}
 
           <div className="space-y-2">
-            <Label>
-              {t({ en: "Notes", ar: "ملاحظات" }, lang)}
-            </Label>
+            <Label>{t({ en: "Notes", ar: "ملاحظات" }, lang)}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -584,7 +654,7 @@ export function OrganizationRegistrationForm({
             />
           </div>
 
-          <Button type="submit" className="p-4 w-full" disabled={isSubmitting}>
+          <Button type="submit" className="w-full p-4" disabled={isSubmitting}>
             {isSubmitting
               ? t({ en: "Registering...", ar: "جارٍ التسجيل..." }, lang)
               : t({ en: "Register", ar: "تسجيل" }, lang)}

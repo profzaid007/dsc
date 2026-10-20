@@ -110,6 +110,17 @@ before(async () => {
     path.join(root, "pb_migrations/1792900000_security_management.js"),
     path.join(migrations, "1792900000_security_management.js")
   )
+  for (const name of [
+    "1793600000_expert_submission.js",
+    "1793700500_message_subject_recipients.js",
+    "1794100000_audit_rule_repairs.js",
+    "1794100100_account_registration.js",
+    "1794100200_training_enrollment.js",
+  ])
+    fs.copyFileSync(
+      path.join(root, "pb_migrations", name),
+      path.join(migrations, name)
+    )
   const dataDir = path.join(fixture, "data")
   const migration = spawnSync(
     binary,
@@ -462,28 +473,27 @@ test("customer ownership, public reads and pending expert registration remain sc
     ).status,
     404
   )
-  const create = await request(
-    records("users"),
-    "POST",
-    {
-      email: "pending@fixture.test",
-      password,
-      passwordConfirm: password,
-      name: "Pending expert",
-      role: "expert",
-      is_active: false,
-    },
-    null
+  const form = new FormData()
+  form.set("email", "pending@fixture.test")
+  form.set("password", password)
+  form.set("passwordConfirm", password)
+  form.set("submission_key", "security-fixture-pending-123")
+  form.set(
+    "profile",
+    JSON.stringify({
+      public_name_en: "Pending expert",
+      public_name_ar: "خبير تجريبي",
+      specialist_roles: [],
+      age_group: [],
+    })
   )
+  const created = await fetch(base + "/api/dsc/expert-register", {
+    method: "POST",
+    body: form,
+  })
+  const create = { status: created.status, data: await created.json() }
   assert.equal(create.status, 200, JSON.stringify(create.data))
   const pending = await login("pending@fixture.test")
-  const profile = await request(
-    records("expert_profiles"),
-    "POST",
-    { user: create.data.id },
-    pending
-  )
-  assert.equal(profile.status, 200, JSON.stringify(profile.data))
   assert.equal(
     (await request(records("cases"), "GET", undefined, pending)).status,
     403
@@ -676,7 +686,7 @@ test("event record rules distinguish training from lecture grants", async () => 
     lecture_id: "lecture-fixture",
     user_name: "Lecture attendee",
   })
-  assert.equal(training.status, 200)
+  assert.equal(training.status, 400)
   assert.equal(lecture.status, 200)
   const role = await createRole("lecture-reader", ["lectures.read"])
   await assign(ids.reader, [role.id])
@@ -689,17 +699,6 @@ test("event record rules distinguish training from lecture grants", async () => 
   assert.equal(list.status, 200)
   assert.equal(list.data.items.length, 1)
   assert.equal(list.data.items[0].id, lecture.data.id)
-  assert.equal(
-    (
-      await request(
-        records("event_registrations") + "/" + training.data.id,
-        "GET",
-        undefined,
-        readerToken
-      )
-    ).status,
-    404
-  )
 })
 test("allocation replacement enforces create, update and delete independently", async () => {
   const specialist = await request(records("roles_management"), "POST", {
@@ -988,8 +987,93 @@ test("concurrent privileged-account edits leave an active Super Admin", async ()
 
 test("expert name saves accept ordinary changes while permission-field writes stay denied", async () => {
   const route = records("users") + "/" + ids.expert
-  const saved = await request(route, "PATCH", { name: "Updated expert name" }, expertToken)
+  const saved = await request(
+    route,
+    "PATCH",
+    { name: "Updated expert name" },
+    expertToken
+  )
   assert.equal(saved.status, 200, JSON.stringify(saved.body))
-  const denied = await request(route, "PATCH", { security_permissions: ["users.delete"] }, expertToken)
+  const denied = await request(
+    route,
+    "PATCH",
+    { security_permissions: ["users.delete"] },
+    expertToken
+  )
   assert.ok([400, 403, 404].includes(denied.status))
+})
+
+test("training-only grants manage enrollment without access to clinical cases", async () => {
+  const program = await request(records("programs"), "POST", {
+    name: { en: "Enrollment fixture", ar: "تجربة" },
+    status: "published",
+    is_public: true,
+    max_participants: 3,
+  })
+  assert.equal(program.status, 200, JSON.stringify(program.data))
+  const customer = await request(records("users"), "POST", {
+    email: "training-owner@fixture.test",
+    password,
+    passwordConfirm: password,
+    name: "Training owner",
+    role: "individual",
+    is_active: true,
+  })
+  assert.equal(customer.status, 200, JSON.stringify(customer.data))
+  const owner = await login("training-owner@fixture.test")
+  const enrollment = await request(
+    `/api/dsc/programs/${program.data.id}/enroll`,
+    "POST",
+    {},
+    owner
+  )
+  assert.equal(enrollment.status, 200, JSON.stringify(enrollment.data))
+  const role = await createRole("training-only", [
+    "training.read",
+    "training.update",
+  ])
+  await assign(ids.reader, [role.id])
+  assert.equal(
+    (await request(records("cases"), "GET", undefined, readerToken)).status,
+    403
+  )
+  const list = await request(
+    "/api/dsc/training-registrations",
+    "GET",
+    undefined,
+    readerToken
+  )
+  assert.equal(list.status, 200, JSON.stringify(list.data))
+  assert.ok(list.data.items.some((r) => r.id === enrollment.data.id))
+  assert.ok(
+    list.data.items.every(
+      (r) => !Object.hasOwn(r, "notes") && !Object.hasOwn(r, "case_details")
+    )
+  )
+  const edit = await request(
+    `/api/dsc/training-registrations/${enrollment.data.id}`,
+    "PATCH",
+    { status: "attended" },
+    readerToken
+  )
+  assert.equal(edit.status, 200, JSON.stringify(edit.data))
+  assert.equal(
+    (
+      await request(
+        `/api/dsc/training-registrations/${enrollment.data.id}`,
+        "DELETE",
+        undefined,
+        readerToken
+      )
+    ).status,
+    403
+  )
+  const outsider = await request(
+    "/api/dsc/training-registrations?user=" + ids.reader,
+    "GET",
+    undefined,
+    owner
+  )
+  assert.equal(outsider.status, 200)
+  assert.equal(outsider.data.items.length, 0)
 })

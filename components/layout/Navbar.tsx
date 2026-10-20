@@ -4,7 +4,17 @@ import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Calendar, LayoutDashboard, LogIn, Menu, X, FileText, UserPlus, LogOut, ShieldCheck } from "lucide-react"
+import {
+  Calendar,
+  LayoutDashboard,
+  LogIn,
+  Menu,
+  X,
+  FileText,
+  UserPlus,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
@@ -20,7 +30,7 @@ const NAV_LINKS = [
   { en: "About Us", ar: "من نحن", href: "/about-us" },
   { en: "Blog", ar: "المدونة", href: "/blog" },
   { en: "Events", ar: "الفعاليات", href: "/programmes" },
-  { en: "Contact Us", ar: "اتصل بنا", href: "/contact-us" }
+  { en: "Contact Us", ar: "اتصل بنا", href: "/contact-us" },
 ]
 
 export function Navbar() {
@@ -29,13 +39,15 @@ export function Navbar() {
   const pathname = usePathname()
   const { lang, toggleLang } = useLang()
   const { portals: PORTALS } = usePortals()
-  const getPortalById = (id: string) => PORTALS.find((portal) => portal.id === id)
+  const getPortalById = (id: string) =>
+    PORTALS.find((portal) => portal.id === id)
   const { isAuthenticated, isAdmin, currentUser, logout } = useAuth()
   const permissions = usePermissions()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
 
-  const isManagementRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/cms")
+  const isManagementRoute =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/cms")
   const isPortal = pathname.startsWith("/portal/")
   const isAppRoute = isManagementRoute
 
@@ -43,12 +55,16 @@ export function Navbar() {
   const portal = portalId ? getPortalById(portalId) : null
 
   const [consultOpen, setConsultOpen] = useState(false)
-  const headerActionClass = "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-[#c2410c] transition-colors hover:bg-orange-50 hover:text-[#9a3412]"
+  const headerActionClass =
+    "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-[#c2410c] transition-colors hover:bg-orange-50 hover:text-[#9a3412]"
 
   const headerText = portal ? t(portal.portalName, lang) : "DSC"
   const subheading = portal
     ? t(portal.tagline, lang)
-    : t({ en: "Development Secrets Consultancy", ar: "استشارية أسرار التطور" }, lang)
+    : t(
+        { en: "Development Secrets Consultancy", ar: "استشارية أسرار التطور" },
+        lang
+      )
 
   const accentColor = portal?.accent ?? "#0b1a30"
 
@@ -69,14 +85,14 @@ export function Navbar() {
                     className="object-contain"
                   />
                 </div>
-                <div className="hidden min-w-0 max-w-[15rem] sm:block">
+                <div className="hidden max-w-[15rem] min-w-0 sm:block">
                   <h1
-                    className="text-xl font-bold leading-tight"
+                    className="text-xl leading-tight font-bold"
                     style={{ color: accentColor }}
                   >
                     {headerText}
                   </h1>
-                  <p className="text-[13px] font-semibold text-[#0076a3] leading-tight">
+                  <p className="text-[13px] leading-tight font-semibold text-[#0076a3]">
                     {subheading}
                   </p>
                 </div>
@@ -89,28 +105,74 @@ export function Navbar() {
                 className="col-start-2 hidden flex-nowrap items-center justify-center gap-0 2xl:flex"
                 aria-label={ui("Main navigation")}
               >
-                {(isAuthenticated ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map((item, i) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <Link
-                      key={i}
-                      href={item.href}
-                      className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? "bg-[#0a3d62]/10 text-[#0a3d62]"
-                          : "text-gray-600 hover:bg-[#0a3d62]/5 hover:text-[#0a3d62]"
-                      }`}
-                    >
-                      {t({ en: item.en, ar: item.ar }, lang)}
-                    </Link>
-                  )
-                })}
+                {(isAuthenticated ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map(
+                  (item, i) => {
+                    const isActive = pathname === item.href
+                    return (
+                      <Link
+                        key={i}
+                        href={item.href}
+                        className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                          isActive
+                            ? "bg-[#0a3d62]/10 text-[#0a3d62]"
+                            : "text-gray-600 hover:bg-[#0a3d62]/5 hover:text-[#0a3d62]"
+                        }`}
+                      >
+                        {t({ en: item.en, ar: item.ar }, lang)}
+                      </Link>
+                    )
+                  }
+                )}
                 {isAuthenticated && (
                   <div className="flex items-center rounded-xl bg-white px-2 py-1">
-                    <Link href="/dashboard" className={headerActionClass}><LayoutDashboard className="h-4 w-4" />{lang === "ar" ? "لوحة التحكم" : "Dashboard"}</Link>
-                    {isAdmin && permissions.isSuperAdmin && <Link href="/dashboard/admin/security" aria-current={pathname.startsWith("/dashboard/admin/security") ? "page" : undefined} className={headerActionClass}><ShieldCheck className="h-4 w-4" />{lang === "ar" ? "إدارة الأمان" : "Security management"}</Link>}
-                    {isAdmin && permissions.can("cms.read") && <Link href="/cms" aria-current={pathname.startsWith("/cms") ? "page" : undefined} className={headerActionClass}><FileText className="h-4 w-4" />{lang === "ar" ? "إدارة المحتوى" : "Content management"}</Link>}
-                    <button onClick={() => { logout(); router.push("/login") }} className={headerActionClass}><LogOut className="h-4 w-4" />{lang === "ar" ? "تسجيل الخروج" : "Logout"}</button>
+                    <Link href="/dashboard" className={headerActionClass}>
+                      <LayoutDashboard className="h-4 w-4" />
+                      {lang === "ar" ? "لوحة التحكم" : "Dashboard"}
+                    </Link>
+                    {isAdmin && permissions.isSuperAdmin && (
+                      <Link
+                        href="/dashboard/admin/security"
+                        aria-current={
+                          pathname.startsWith("/dashboard/admin/security")
+                            ? "page"
+                            : undefined
+                        }
+                        className={headerActionClass}
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        {lang === "ar" ? "إدارة الأمان" : "Security management"}
+                      </Link>
+                    )}
+                    {isAdmin && permissions.can("cms.read") && (
+                      <Link
+                        href="/cms"
+                        aria-current={
+                          pathname.startsWith("/cms") ? "page" : undefined
+                        }
+                        className={headerActionClass}
+                      >
+                        <FileText className="h-4 w-4" />
+                        {lang === "ar" ? "إدارة المحتوى" : "Content management"}
+                      </Link>
+                    )}
+                    <button
+                      onClick={async () => {
+                        if (
+                          !window.confirm(
+                            lang === "ar"
+                              ? "هل تريد تسجيل الخروج؟"
+                              : "Log out of your account?"
+                          )
+                        )
+                          return
+                        await logout()
+                        router.push("/login")
+                      }}
+                      className={headerActionClass}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {lang === "ar" ? "تسجيل الخروج" : "Logout"}
+                    </button>
                   </div>
                 )}
               </nav>
@@ -146,10 +208,13 @@ export function Navbar() {
 
               {isAuthenticated && (
                 <>
-
                   <div className="hidden items-center gap-2 rounded-full border px-3 py-1.5 text-sm 2xl:flex">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{currentUser?.name?.charAt(0)?.toUpperCase() || "U"}</span>
-                    <span className="max-w-[120px] truncate font-medium">{currentUser?.name || ""}</span>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                      {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </span>
+                    <span className="max-w-[120px] truncate font-medium">
+                      {currentUser?.name || ""}
+                    </span>
                   </div>
                 </>
               )}
@@ -158,17 +223,17 @@ export function Navbar() {
                 <Button
                   variant="default"
                   size="sm"
-                  className="hidden h-auto max-w-[9.5rem] shrink items-center gap-2 px-5 py-1 whitespace-normal rounded-full 2xl:flex"
+                  className="hidden h-auto max-w-[9.5rem] shrink items-center gap-2 rounded-full px-5 py-1 whitespace-normal 2xl:flex"
                   onClick={() => setConsultOpen(true)}
                 >
                   <Calendar className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 leading-snug text-start">
+                  <span className="min-w-0 text-start leading-snug">
                     {t(SITE_CONTENT.nav.bookConsultation, lang)}
                   </span>
                 </Button>
               )}
 
-              {(
+              {
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-inherit transition-colors hover:bg-black/5 2xl:hidden"
@@ -182,34 +247,43 @@ export function Navbar() {
                     <Menu className="h-5 w-5" />
                   )}
                 </button>
-              )}
+              }
 
-              <BookConsultDialog open={consultOpen} onOpenChange={setConsultOpen} />
+              <BookConsultDialog
+                open={consultOpen}
+                onOpenChange={setConsultOpen}
+              />
             </div>
           </div>
         </header>
 
         {/* Mobile menu (dropdown) */}
         {mobileMenuOpen && (
-          <nav id="public-mobile-navigation" aria-label={lang === "ar" ? "التنقل الرئيسي" : "Main navigation"} className="max-h-[75dvh] overflow-y-auto border-t border-gray-200 2xl:hidden">
+          <nav
+            id="public-mobile-navigation"
+            aria-label={lang === "ar" ? "التنقل الرئيسي" : "Main navigation"}
+            className="max-h-[75dvh] overflow-y-auto border-t border-gray-200 2xl:hidden"
+          >
             <div className="flex flex-col gap-1 px-4 py-3">
-              {(isAuthenticated ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map((item, i) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    key={i}
-                    href={item.href}
-                    className={`flex min-h-11 items-center rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-[#0a3d62]/10 text-[#0a3d62]"
-                        : "text-gray-600 hover:bg-[#0a3d62]/5"
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {t({ en: item.en, ar: item.ar }, lang)}
-                  </Link>
-                )
-              })}
+              {(isAuthenticated ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map(
+                (item, i) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={i}
+                      href={item.href}
+                      className={`flex min-h-11 items-center rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-[#0a3d62]/10 text-[#0a3d62]"
+                          : "text-gray-600 hover:bg-[#0a3d62]/5"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {t({ en: item.en, ar: item.ar }, lang)}
+                    </Link>
+                  )
+                }
+              )}
 
               <div className="my-2 border-t border-gray-100" />
 
@@ -218,7 +292,7 @@ export function Navbar() {
                   <Link
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-[#0a3d62]/5 transition-colors"
+                    className="flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-[#0a3d62]/5"
                   >
                     <LogIn className="h-4 w-4" />
                     {t({ en: "Login", ar: "تسجيل الدخول" }, lang)}
@@ -226,7 +300,7 @@ export function Navbar() {
                   <Link
                     href="/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-[#0a3d62]/5 transition-colors"
+                    className="flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-[#0a3d62]/5"
                   >
                     <UserPlus className="h-4 w-4" />
                     {t({ en: "Create Account", ar: "إنشاء حساب" }, lang)}
@@ -239,7 +313,7 @@ export function Navbar() {
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
-                  <span className="font-medium truncate">
+                  <span className="truncate font-medium">
                     {currentUser?.name || ""}
                   </span>
                 </div>
@@ -250,7 +324,10 @@ export function Navbar() {
                   asChild
                   variant="ghost"
                   size="sm"
-                  className={headerActionClass + " justify-start bg-white hover:bg-orange-50"}
+                  className={
+                    headerActionClass +
+                    " justify-start bg-white hover:bg-orange-50"
+                  }
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Link href="/dashboard">
@@ -261,8 +338,13 @@ export function Navbar() {
               )}
 
               {isAuthenticated && isAdmin && permissions.isSuperAdmin && (
-                <Link href="/dashboard/admin/security" onClick={() => setMobileMenuOpen(false)} className={headerActionClass + " bg-white hover:bg-orange-50"}>
-                  <ShieldCheck className="h-4 w-4" />{lang === "ar" ? "إدارة الأمان" : "Security management"}
+                <Link
+                  href="/dashboard/admin/security"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={headerActionClass + " bg-white hover:bg-orange-50"}
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  {lang === "ar" ? "إدارة الأمان" : "Security management"}
                 </Link>
               )}
 
@@ -271,7 +353,10 @@ export function Navbar() {
                   asChild
                   variant="ghost"
                   size="sm"
-                  className={headerActionClass + " justify-start bg-white hover:bg-orange-50"}
+                  className={
+                    headerActionClass +
+                    " justify-start bg-white hover:bg-orange-50"
+                  }
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Link href="/cms">
@@ -285,12 +370,22 @@ export function Navbar() {
                 <>
                   <div className="my-1 border-t" />
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      if (
+                        !window.confirm(
+                          lang === "ar"
+                            ? "هل تريد تسجيل الخروج؟"
+                            : "Log out of your account?"
+                        )
+                      )
+                        return
                       setMobileMenuOpen(false)
-                      logout()
+                      await logout()
                       router.push("/")
                     }}
-                    className={headerActionClass + " bg-white hover:bg-orange-50"}
+                    className={
+                      headerActionClass + " bg-white hover:bg-orange-50"
+                    }
                   >
                     <LogOut className="h-4 w-4" />
                     {t({ en: "Logout", ar: "تسجيل الخروج" }, lang)}
@@ -301,7 +396,7 @@ export function Navbar() {
               <Button
                 variant="default"
                 size="sm"
-                className="min-h-11 w-fit gap-2 justify-start rounded-full py-5"
+                className="min-h-11 w-fit justify-start gap-2 rounded-full py-5"
                 onClick={() => {
                   setMobileMenuOpen(false)
                   setConsultOpen(true)

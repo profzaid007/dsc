@@ -75,7 +75,12 @@ export function PaymentGate({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const status = profile.status
+  const [uploadedProfile, setUploadedProfile] = useState<Profile | null>(null)
+  const status =
+    uploadedProfile?.id === profile.id &&
+    uploadedProfile.updated >= profile.updated
+      ? uploadedProfile.status
+      : profile.status
   const isStaff =
     currentUser?.role === "admin" ||
     currentUser?.role === "super_admin" ||
@@ -96,10 +101,13 @@ export function PaymentGate({
     setIsSubmitting(true)
     setError(null)
     try {
-      await submitPaymentSlip(profile.id, selectedFile)
+      setUploadedProfile(await submitPaymentSlip(profile.id, selectedFile))
       fetch("/api/telegram-notify", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${pb.authStore.token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${pb.authStore.token}`,
+        },
         body: JSON.stringify({
           text: [
             "*Payment Slip Uploaded - Needs Review*",
@@ -122,8 +130,12 @@ export function PaymentGate({
         icon={<Clock className="h-6 w-6 text-primary" />}
         title={
           lang === "ar"
-            ? noun === "project" ? "مشروعك قيد المراجعة" : "حالتك قيد المراجعة"
-            : noun === "project" ? "Your project is being reviewed" : "Your case is being reviewed"
+            ? noun === "project"
+              ? "مشروعك قيد المراجعة"
+              : "حالتك قيد المراجعة"
+            : noun === "project"
+              ? "Your project is being reviewed"
+              : "Your case is being reviewed"
         }
         description={
           lang === "ar"
@@ -144,8 +156,12 @@ export function PaymentGate({
         icon={<ReceiptText className="h-6 w-6 text-primary" />}
         title={
           lang === "ar"
-            ? noun === "project" ? "مطلوب الدفع لإتمام المشروع" : "مطلوب الدفع لإتمام الحالة"
-            : noun === "project" ? "Payment required to activate your project" : "Payment required to activate your case"
+            ? noun === "project"
+              ? "مطلوب الدفع لإتمام المشروع"
+              : "مطلوب الدفع لإتمام الحالة"
+            : noun === "project"
+              ? "Payment required to activate your project"
+              : "Payment required to activate your case"
         }
         description={
           lang === "ar"
@@ -180,7 +196,9 @@ export function PaymentGate({
           <div className="rounded-lg border p-4">
             <p className="mb-3 flex items-center gap-2 text-sm font-medium">
               <Landmark className="h-4 w-4 text-muted-foreground" />
-              {lang === "ar" ? "بيانات التحويل البنكي" : "Bank transfer details"}
+              {lang === "ar"
+                ? "بيانات التحويل البنكي"
+                : "Bank transfer details"}
             </p>
             <div className="space-y-2 text-sm">
               {bankDetails.bank_name && (
@@ -204,7 +222,9 @@ export function PaymentGate({
                   <span className="text-muted-foreground">
                     {lang === "ar" ? "رقم الحساب" : "Account number"}
                   </span>
-                  <span className="font-medium">{bankDetails.account_number}</span>
+                  <span className="font-medium">
+                    {bankDetails.account_number}
+                  </span>
                 </div>
               )}
               {bankDetails.iban && (

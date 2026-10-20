@@ -1,5 +1,6 @@
 "use client"
 
+import { useRequestGuard } from "@/hooks/useRequestGuard"
 import { useState, useEffect, useCallback } from "react"
 import { toolsCollection } from "@/lib/pb-collections"
 import type { Tool, ToolType, ServiceType } from "@/types/tool"
@@ -9,18 +10,29 @@ import { getErrorMessage } from "@/lib/pb"
 export function useTools() {
   const [tools, setTools] = useState<Tool[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState("")
+
+  const beginRequest = useRequestGuard("tools")
 
   const fetchTools = useCallback(async () => {
+    const isCurrent = beginRequest()
+    setTools([])
+
+    setIsLoading(true)
+    setLoadError("")
     try {
       const data = await toolsCollection.getAll()
+      if (!isCurrent()) return
       setTools(data)
     } catch (error) {
+      if (!isCurrent()) return
+      setLoadError(getErrorMessage(error))
       console.error("Failed to fetch tools:", error)
       toast.error(getErrorMessage(error))
     } finally {
-      setIsLoading(false)
+      if (isCurrent()) setIsLoading(false)
     }
-  }, [])
+  }, [beginRequest])
 
   useEffect(() => {
     fetchTools()
@@ -73,6 +85,7 @@ export function useTools() {
     tools,
     activeTools,
     isLoading,
+    loadError,
     addTool,
     updateTool,
     deleteTool,

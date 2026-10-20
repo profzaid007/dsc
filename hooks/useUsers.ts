@@ -1,5 +1,6 @@
 "use client"
 
+import { useRequestGuard } from "@/hooks/useRequestGuard"
 import { boundedFullList } from "@/lib/bounded-records"
 import { useState, useEffect, useCallback } from "react"
 import pb, { getCurrentUser, getErrorMessage } from "@/lib/pb"
@@ -10,26 +11,37 @@ import { toast } from "sonner"
 export function useUsers(enabled = true) {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState("")
+
+  const beginRequest = useRequestGuard(enabled ? "enabled" : "disabled")
 
   const fetchUsers = useCallback(async () => {
+    const isCurrent = beginRequest()
+    setUsers([])
+
     if (!enabled) {
       setUsers([])
       setIsLoading(false)
       return
     }
     setIsLoading(true)
+    setIsLoading(true)
+    setLoadError("")
     try {
       const data = await boundedFullList(pb.collection("users"), {
         sort: "-created",
       })
+      if (!isCurrent()) return
       setUsers(data as unknown as User[])
     } catch (error) {
+      if (!isCurrent()) return
+      setLoadError(getErrorMessage(error))
       console.error("Failed to fetch users:", error)
       toast.error(getErrorMessage(error))
     } finally {
-      setIsLoading(false)
+      if (isCurrent()) setIsLoading(false)
     }
-  }, [enabled])
+  }, [enabled, beginRequest])
 
   useEffect(() => {
     fetchUsers()
@@ -134,6 +146,7 @@ export function useUsers(enabled = true) {
   return {
     users,
     isLoading,
+    loadError,
     addUser,
     updateUser,
     resetPassword,

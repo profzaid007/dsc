@@ -30,6 +30,7 @@ export function routePermission(path: string): string | null {
           ? "update"
           : "read")
     )
+  if (path === "/dashboard/admin/settings") return null
   if (path === "/dashboard/messages") return "messages.read"
   const section = path.split("/")[3]
   const moduleName =

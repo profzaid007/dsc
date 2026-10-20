@@ -6,6 +6,19 @@ import "react-datepicker/dist/react-datepicker.css"
 import { AppShell } from "@/components/AppShell"
 import { cn } from "@/lib/utils"
 
+export async function generateMetadata() {
+  const lang = (await cookies()).get("lang")?.value
+  return {
+    title: {
+      default:
+        lang === "ar"
+          ? "DSC — استشارية أسرار التطور"
+          : "DSC — Development Secrets Consultancy",
+      template: "%s | DSC",
+    },
+  }
+}
+
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" })
 
 const fontMono = Geist_Mono({
@@ -19,14 +32,18 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const cookieStore = await cookies()
-  const initialLang =
-    cookieStore.get("lang")?.value === "ar" ? "ar" : "en"
+  const initialLang = cookieStore.get("lang")?.value === "ar" ? "ar" : "en"
 
   return (
     <html
       lang={initialLang}
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
+      className={cn(
+        "antialiased",
+        fontMono.variable,
+        "font-sans",
+        geist.variable
+      )}
     >
       <head>
         <link

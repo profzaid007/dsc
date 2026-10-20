@@ -1,5 +1,6 @@
 "use client"
 
+import { useRequestGuard } from "@/hooks/useRequestGuard"
 import { useState, useEffect, useCallback } from "react"
 import { casesCollection, caseExpertsCollection } from "@/lib/pb-collections"
 import type { Profile } from "@/types/profile"
@@ -17,7 +18,14 @@ export function useProfiles(
   const currentUserId: string | undefined = currentUser?.id
   const currentRole: string | undefined = currentUser?.role
 
+  const beginRequest = useRequestGuard(
+    `${currentUserId}:${currentRole}:${enabled}:${scope}`
+  )
+
   const fetchProfiles = useCallback(async () => {
+    const isCurrent = beginRequest()
+    setProfiles([])
+
     if (!enabled) {
       setProfiles([])
       setIsLoading(false)
@@ -48,15 +56,17 @@ export function useProfiles(
       } else {
         data = await casesCollection.getAll()
       }
+      if (!isCurrent()) return
       setProfiles(data)
     } catch (error) {
+      if (!isCurrent()) return
       console.error("Failed to fetch profiles:", error)
       setLoadError(getErrorMessage(error))
       toast.error(getErrorMessage(error))
     } finally {
-      setIsLoading(false)
+      if (isCurrent()) setIsLoading(false)
     }
-  }, [currentUserId, currentRole, enabled, scope])
+  }, [currentUserId, currentRole, enabled, scope, beginRequest])
 
   useEffect(() => {
     // Fetch external records when the selected scope changes.

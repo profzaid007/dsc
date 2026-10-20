@@ -1,7 +1,7 @@
 "use client"
 import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { EmailInput } from "@/components/ui/email-input"
@@ -22,11 +22,7 @@ import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { ChildFormBlock, type ChildFormData } from "./ChildFormBlock"
 import { Plus } from "lucide-react"
-import pb, {
-  authWithPassword,
-  getErrorMessage,
-  getFieldErrors,
-} from "@/lib/pb"
+import pb, { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 import {
   EMAIL_INVALID_MESSAGE,
@@ -34,6 +30,8 @@ import {
   normalizeEmail,
 } from "@/lib/validators"
 import { toast } from "sonner"
+import { RegistrationSubmission } from "@/lib/registration-submission"
+import { validRegistrationPhone } from "@/lib/registration-phone"
 
 const OTHER_VALUE = "other"
 
@@ -62,15 +60,15 @@ function makeEmptyChild(): ChildFormData {
 function hasChildData(child: ChildFormData): boolean {
   return Boolean(
     child.name ||
-      child.date_of_birth ||
-      child.gender ||
-      child.grade ||
-      child.relationship ||
-      child.portalService.categoryId ||
-      child.portalService.subCategoryId ||
-      child.portalService.customCategory ||
-      child.portalService.customSubCategory ||
-      child.notes
+    child.date_of_birth ||
+    child.gender ||
+    child.grade ||
+    child.relationship ||
+    child.portalService.categoryId ||
+    child.portalService.subCategoryId ||
+    child.portalService.customCategory ||
+    child.portalService.customSubCategory ||
+    child.notes
   )
 }
 
@@ -83,6 +81,7 @@ export function ParentRegistrationForm({
 } = {}) {
   const { lang } = useLang()
   const router = useRouter()
+  const submissionKey = useRef(crypto.randomUUID())
 
   const [name, setName] = useState("")
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
@@ -127,7 +126,14 @@ export function ParentRegistrationForm({
     )
 
     if (!name.trim()) errs.name = required
-    if (!contactNumber.trim()) errs.contactNumber = required
+    if (!validRegistrationPhone(`${countryCode} ${contactNumber}`))
+      errs.contactNumber = t(
+        {
+          en: "Enter a valid international phone number.",
+          ar: "أدخل رقم هاتف دولي صالحًا.",
+        },
+        lang
+      )
     if (!email.trim()) errs.email = required
     else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
     if (!password) errs.password = required
@@ -159,10 +165,10 @@ export function ParentRegistrationForm({
         lang
       )
       if (
-        !child.name ||
+        !child.name.trim() ||
         !child.date_of_birth ||
         !child.gender ||
-        !child.relationship
+        !child.relationship.trim()
       ) {
         setError(
           `${childLabel}: ${t(
@@ -222,7 +228,8 @@ export function ParentRegistrationForm({
       const cleanName = name.trim()
       const cleanEmail = normalizeEmail(email)
 
-      const user = await pb.collection("users").create({
+      const registration = new RegistrationSubmission(submissionKey.current)
+      const user = registration.user({
         email: cleanEmail,
         password,
         passwordConfirm: password,
@@ -233,7 +240,7 @@ export function ParentRegistrationForm({
         emailVisibility: true,
       })
 
-      await pb.collection("parent_profiles").create({
+      registration.profile("parent_profiles", {
         user: user.id,
         country_of_residence: residence,
         notes: notes.trim(),
@@ -241,7 +248,7 @@ export function ParentRegistrationForm({
 
       for (const child of children) {
         if (!hasChildData(child)) continue
-        await pb.collection("cases").create({
+        registration.case({
           user: user.id,
           name: child.name.trim(),
           date_of_birth: child.date_of_birth,
@@ -267,6 +274,8 @@ export function ParentRegistrationForm({
           },
         })
       }
+
+      await registration.submit()
 
       toast.success(
         t(
@@ -312,7 +321,7 @@ export function ParentRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Name", ar: "الاسم" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <Input
                 value={name}
@@ -330,14 +339,17 @@ export function ParentRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger className="w-30">
                     <SelectValue placeholder="+962" />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-60! max-w-30">
+                  <SelectContent
+                    position="popper"
+                    className="max-h-60! max-w-30"
+                  >
                     {COUNTRY_CODES.map((c) => (
                       <SelectItem key={c.value} value={c.dialCode}>
                         {t(c.label, lang)} ({c.dialCode})
@@ -368,7 +380,7 @@ export function ParentRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <EmailInput
                 value={email}
@@ -381,7 +393,7 @@ export function ParentRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={password}
@@ -405,30 +417,33 @@ export function ParentRegistrationForm({
 
             <div className="space-y-2 md:col-span-2">
               <Label>
-                {t(
-                  { en: "Confirm Password", ar: "تأكيد كلمة المرور" },
-                  lang
-                )}
-                <span className="text-red-500 ml-1">*</span>
+                {t({ en: "Confirm Password", ar: "تأكيد كلمة المرور" }, lang)}
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                aria-invalid={fieldErrors.confirmPassword || fieldErrors.passwordConfirm ? true : undefined}
+                aria-invalid={
+                  fieldErrors.confirmPassword || fieldErrors.passwordConfirm
+                    ? true
+                    : undefined
+                }
                 placeholder="••••••••"
               />
               {fieldErrorNode("confirmPassword", "passwordConfirm")}
-              {!fieldErrors.confirmPassword && !fieldErrors.passwordConfirm && passwordsMismatch && (
-                <p className="text-xs text-red-500">
-                  {t(
-                    {
-                      en: "Passwords do not match",
-                      ar: "كلمات المرور غير متطابقة",
-                    },
-                    lang
-                  )}
-                </p>
-              )}
+              {!fieldErrors.confirmPassword &&
+                !fieldErrors.passwordConfirm &&
+                passwordsMismatch && (
+                  <p className="text-xs text-red-500">
+                    {t(
+                      {
+                        en: "Passwords do not match",
+                        ar: "كلمات المرور غير متطابقة",
+                      },
+                      lang
+                    )}
+                  </p>
+                )}
             </div>
           </div>
 
@@ -439,7 +454,15 @@ export function ParentRegistrationForm({
               </Label>
               <Select value={residence} onValueChange={setResidence}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t({ en: "Select country of residence...", ar: "اختر بلد الإقامة..." }, lang)} />
+                  <SelectValue
+                    placeholder={t(
+                      {
+                        en: "Select country of residence...",
+                        ar: "اختر بلد الإقامة...",
+                      },
+                      lang
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-60!">
                   {COUNTRY_CODES.map((c) => (
@@ -453,9 +476,7 @@ export function ParentRegistrationForm({
           </div>
 
           <div className="space-y-2">
-            <Label>
-              {t({ en: "Notes", ar: "ملاحظات" }, lang)}
-            </Label>
+            <Label>{t({ en: "Notes", ar: "ملاحظات" }, lang)}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -511,7 +532,7 @@ export function ParentRegistrationForm({
         </div>
       )}
 
-      <Button type="submit" className="p-4 w-full" disabled={isSubmitting}>
+      <Button type="submit" className="w-full p-4" disabled={isSubmitting}>
         {isSubmitting
           ? t({ en: "Registering...", ar: "جارٍ التسجيل..." }, lang)
           : t({ en: "Register", ar: "تسجيل" }, lang)}

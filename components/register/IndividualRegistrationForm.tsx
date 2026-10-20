@@ -1,7 +1,7 @@
 "use client"
 import { DEFAULT_COUNTRY_CODE } from "@/lib/country-codes"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { EmailInput } from "@/components/ui/email-input"
@@ -21,11 +21,7 @@ import {
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
-import pb, {
-  authWithPassword,
-  getErrorMessage,
-  getFieldErrors,
-} from "@/lib/pb"
+import pb, { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 import {
   EMAIL_INVALID_MESSAGE,
@@ -33,6 +29,8 @@ import {
   normalizeEmail,
 } from "@/lib/validators"
 import { toast } from "sonner"
+import { RegistrationSubmission } from "@/lib/registration-submission"
+import { validRegistrationPhone } from "@/lib/registration-phone"
 
 const GENDERS = [
   { label: { en: "Male", ar: "ذكر" }, value: "male" },
@@ -46,6 +44,7 @@ export function IndividualRegistrationForm({
 } = {}) {
   const { lang } = useLang()
   const router = useRouter()
+  const submissionKey = useRef(crypto.randomUUID())
 
   const [name, setName] = useState("")
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
@@ -59,6 +58,7 @@ export function IndividualRegistrationForm({
   const [dateOfBirth, setDateOfBirth] = useState("")
   const [residence, setResidence] = useState("")
   const [emContactName, setEmContactName] = useState("")
+  const [emCountryCode, setEmCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [emContactNumber, setEmContactNumber] = useState("")
   const [notes, setNotes] = useState("")
 
@@ -83,7 +83,14 @@ export function IndividualRegistrationForm({
     )
 
     if (!name.trim()) errs.name = required
-    if (!contactNumber.trim()) errs.contactNumber = required
+    if (!validRegistrationPhone(`${countryCode} ${contactNumber}`))
+      errs.contactNumber = t(
+        {
+          en: "Enter a valid international phone number.",
+          ar: "أدخل رقم هاتف دولي صالحًا.",
+        },
+        lang
+      )
     if (!email.trim()) errs.email = required
     else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
     if (!password) errs.password = required
@@ -102,6 +109,17 @@ export function IndividualRegistrationForm({
         lang
       )
     if (!gender) errs.gender = required
+    if (
+      emContactNumber.trim() &&
+      !validRegistrationPhone(`${emCountryCode} ${emContactNumber}`)
+    )
+      errs.emContactNumber = t(
+        {
+          en: "Enter a valid emergency phone number.",
+          ar: "أدخل رقم طوارئ صالحًا.",
+        },
+        lang
+      )
 
     setFieldErrors(errs)
     if (Object.keys(errs).length > 0) {
@@ -124,7 +142,8 @@ export function IndividualRegistrationForm({
       const cleanName = name.trim()
       const cleanEmail = normalizeEmail(email)
 
-      const user = await pb.collection("users").create({
+      const registration = new RegistrationSubmission(submissionKey.current)
+      const user = registration.user({
         email: cleanEmail,
         password,
         passwordConfirm: password,
@@ -135,15 +154,19 @@ export function IndividualRegistrationForm({
         is_active: true,
       })
 
-      await pb.collection("individual_profiles").create({
+      registration.profile("individual_profiles", {
         user: user.id,
         gender: gender,
         date_of_birth: dateOfBirth,
         country_of_residence: residence,
         emergency_contact_name: emContactName.trim(),
-        emergency_contact_phone: emContactNumber.trim(),
+        emergency_contact_phone: emContactNumber.trim()
+          ? `${emCountryCode} ${emContactNumber.trim()}`
+          : "",
         notes: notes.trim(),
       })
+
+      await registration.submit()
 
       toast.success(
         t(
@@ -189,7 +212,7 @@ export function IndividualRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Name", ar: "الاسم" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <Input
                 value={name}
@@ -207,14 +230,22 @@ export function IndividualRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <div className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
-                  <SelectTrigger className="w-30">
+                  <SelectTrigger
+                    aria-label={
+                      lang === "ar" ? "رمز البلد" : "Country calling code"
+                    }
+                    className="w-30"
+                  >
                     <SelectValue placeholder="e.g. +962" />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-60! max-w-40">
+                  <SelectContent
+                    position="popper"
+                    className="max-h-60! max-w-40"
+                  >
                     {COUNTRY_CODES.map((c) => (
                       <SelectItem key={c.value} value={c.dialCode}>
                         {t(c.label, lang)} ({c.dialCode})
@@ -245,7 +276,7 @@ export function IndividualRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <EmailInput
                 value={email}
@@ -258,7 +289,7 @@ export function IndividualRegistrationForm({
             <div className="space-y-2">
               <Label>
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
-                <span className="text-red-500 ml-1">*</span>
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={password}
@@ -282,42 +313,50 @@ export function IndividualRegistrationForm({
 
             <div className="space-y-2">
               <Label>
-                {t(
-                  { en: "Confirm Password", ar: "تأكيد كلمة المرور" },
-                  lang
-                )}
-                <span className="text-red-500 ml-1">*</span>
+                {t({ en: "Confirm Password", ar: "تأكيد كلمة المرور" }, lang)}
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                aria-invalid={fieldErrors.confirmPassword || fieldErrors.passwordConfirm ? true : undefined}
+                aria-invalid={
+                  fieldErrors.confirmPassword || fieldErrors.passwordConfirm
+                    ? true
+                    : undefined
+                }
                 placeholder="••••••••"
               />
               {fieldErrorNode("confirmPassword", "passwordConfirm")}
-              {!fieldErrors.confirmPassword && !fieldErrors.passwordConfirm && passwordsMismatch && (
-                <p className="text-xs text-red-500">
-                  {t(
-                    {
-                      en: "Passwords do not match",
-                      ar: "كلمات المرور غير متطابقة",
-                    },
-                    lang
-                  )}
-                </p>
-              )}
+              {!fieldErrors.confirmPassword &&
+                !fieldErrors.passwordConfirm &&
+                passwordsMismatch && (
+                  <p className="text-xs text-red-500">
+                    {t(
+                      {
+                        en: "Passwords do not match",
+                        ar: "كلمات المرور غير متطابقة",
+                      },
+                      lang
+                    )}
+                  </p>
+                )}
             </div>
             <div className="space-y-2">
               <Label>
-                {t(
-                  { en: "Gender", ar: "جنس" },
-                  lang
-                )}
-                <span className="text-red-500 ml-1">*</span>
+                {t({ en: "Gender", ar: "جنس" }, lang)}
+                <span className="ml-1 text-red-500">*</span>
               </Label>
               <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger className="w-75">
-                  <SelectValue placeholder={t({en: "e.g. Male", ar: "على سبيل المثا"}, lang)} />
+                <SelectTrigger
+                  aria-label={lang === "ar" ? "الجنس" : "Gender"}
+                  className="w-75"
+                >
+                  <SelectValue
+                    placeholder={t(
+                      { en: "e.g. Male", ar: "على سبيل المثا" },
+                      lang
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-60!">
                   {GENDERS.map((c) => (
@@ -349,8 +388,21 @@ export function IndividualRegistrationForm({
                 {t({ en: "Country of Residence", ar: "بلد الإقامة" }, lang)}
               </Label>
               <Select value={residence} onValueChange={setResidence}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t({ en: "Select country of residence...", ar: "اختر بلد الإقامة..." }, lang)} />
+                <SelectTrigger
+                  aria-label={
+                    lang === "ar" ? "بلد الإقامة" : "Country of residence"
+                  }
+                  className="w-full"
+                >
+                  <SelectValue
+                    placeholder={t(
+                      {
+                        en: "Select country of residence...",
+                        ar: "اختر بلد الإقامة...",
+                      },
+                      lang
+                    )}
+                  />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-60!">
                   {COUNTRY_CODES.map((c) => (
@@ -364,7 +416,13 @@ export function IndividualRegistrationForm({
 
             <div className="space-y-2">
               <Label>
-                {t({ en: "Emergency Contact Name", ar: "اسم جهة الاتصال في الطوارئ" }, lang)}
+                {t(
+                  {
+                    en: "Emergency Contact Name",
+                    ar: "اسم جهة الاتصال في الطوارئ",
+                  },
+                  lang
+                )}
               </Label>
               <Input
                 value={emContactName}
@@ -379,8 +437,30 @@ export function IndividualRegistrationForm({
 
             <div className="space-y-2">
               <Label>
-                {t({ en: "Emergency Contact Number", ar: "رقم جهة الاتصال في الطوارئ" }, lang)}
+                {t(
+                  {
+                    en: "Emergency Contact Number",
+                    ar: "رقم جهة الاتصال في الطوارئ",
+                  },
+                  lang
+                )}
               </Label>
+              <select
+                aria-label={
+                  lang === "ar"
+                    ? "رمز بلد هاتف الطوارئ"
+                    : "Emergency phone country code"
+                }
+                value={emCountryCode}
+                onChange={(e) => setEmCountryCode(e.target.value)}
+                className="h-9 rounded border px-2"
+              >
+                {COUNTRY_CODES.map((c) => (
+                  <option key={c.value} value={c.dialCode}>
+                    {t(c.label, lang)} ({c.dialCode})
+                  </option>
+                ))}
+              </select>
               <Input
                 value={emContactNumber}
                 onChange={(e) => setEmContactNumber(e.target.value)}
@@ -391,13 +471,12 @@ export function IndividualRegistrationForm({
                   lang
                 )}
               />
+              {fieldErrorNode("emContactNumber", "emergency_contact_phone")}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>
-              {t({ en: "Notes", ar: "ملاحظات" }, lang)}
-            </Label>
+            <Label>{t({ en: "Notes", ar: "ملاحظات" }, lang)}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -412,7 +491,11 @@ export function IndividualRegistrationForm({
             />
           </div>
 
-          <Button type="submit" className="mt-10 p-4 w-full" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            className="mt-10 w-full p-4"
+            disabled={isSubmitting}
+          >
             {isSubmitting
               ? t({ en: "Registering...", ar: "جارٍ التسجيل..." }, lang)
               : t({ en: "Register", ar: "تسجيل" }, lang)}

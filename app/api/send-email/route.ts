@@ -11,7 +11,7 @@ import {
 
 export async function POST(request: Request) {
   try {
-    guardMessaging(request)
+    await guardMessaging(request)
     const user = await messagingUser(request, true)
     const body = await readMessagingBody(request, 2_000_000)
     const to = messageString(body, "to", 254)

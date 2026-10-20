@@ -296,7 +296,14 @@ export function ExpertProfileEditor({
           <ExpertPublicDetailsFields
             namesOnly
             values={draft}
-            onChange={(change) => patch({ ...change, name: (change.publicNameAr ?? draft.publicNameAr) || (change.publicNameEn ?? draft.publicNameEn) })}
+            onChange={(change) =>
+              patch({
+                ...change,
+                name:
+                  (change.publicNameAr ?? draft.publicNameAr) ||
+                  (change.publicNameEn ?? draft.publicNameEn),
+              })
+            }
           />
 
           <div className="space-y-2">
@@ -510,7 +517,11 @@ export function ExpertProfileEditor({
         </CardHeader>
         <CardContent className="dsc-form-grid">
           <div className="sm:col-span-2">
-            <SpecialistSelector value={draft.specialistRoles} onChange={(specialistRoles) => patch({ specialistRoles })} disabled={isSaving} />
+            <SpecialistSelector
+              value={draft.specialistRoles}
+              onChange={(specialistRoles) => patch({ specialistRoles })}
+              disabled={isSaving}
+            />
           </div>
           <div className="space-y-2">
             <Label>
@@ -532,8 +543,16 @@ export function ExpertProfileEditor({
                 >
                   <span className="min-w-0 truncate">
                     {draft.specialization.length > 0
-                      ? draft.specialization.map(value => specializationLabel(value, lang)).join(", ")
-                      : t({ en: "Select the services you provide...", ar: "اختر الخدمات التي تقدمها..." }, lang)}
+                      ? draft.specialization
+                          .map((value) => specializationLabel(value, lang))
+                          .join(", ")
+                      : t(
+                          {
+                            en: "Select the services you provide...",
+                            ar: "اختر الخدمات التي تقدمها...",
+                          },
+                          lang
+                        )}
                   </span>
                   <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -594,20 +613,40 @@ export function ExpertProfileEditor({
             </Popover>
             {draft.specialization.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {draft.specialization.map(value => (
-                  <Badge key={value} variant="secondary" className="gap-1 whitespace-normal">
+                {draft.specialization.map((value) => (
+                  <Badge
+                    key={value}
+                    variant="secondary"
+                    className="gap-1 whitespace-normal"
+                  >
                     {specializationLabel(value, lang)}
                     <button
                       type="button"
                       disabled={isSaving}
                       className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
                       aria-label={`${t({ en: "Remove", ar: "إزالة" }, lang)} ${specializationLabel(value, lang)}`}
-                      onClick={() => patch({ specialization: draft.specialization.filter(item => item !== value) })}
-                    ><X className="h-4 w-4" aria-hidden="true" /></button>
+                      onClick={() =>
+                        patch({
+                          specialization: draft.specialization.filter(
+                            (item) => item !== value
+                          ),
+                        })
+                      }
+                    >
+                      <X className="h-4 w-4" aria-hidden="true" />
+                    </button>
                   </Badge>
                 ))}
-                <Button type="button" variant="ghost" disabled={isSaving} onClick={() => patch({ specialization: [] })}>
-                  {t({ en: "Clear all services", ar: "إزالة جميع الخدمات" }, lang)}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={isSaving}
+                  onClick={() => patch({ specialization: [] })}
+                >
+                  {t(
+                    { en: "Clear all services", ar: "إزالة جميع الخدمات" },
+                    lang
+                  )}
                 </Button>
               </div>
             )}
@@ -652,45 +691,19 @@ export function ExpertProfileEditor({
                   aria-invalid={fieldErrors.age_group ? true : undefined}
                   className="h-auto min-h-10 w-full justify-between"
                 >
-                  <div className="flex flex-wrap gap-1">
-                    {draft.ageGroup.length > 0 ? (
-                      draft.ageGroup.map((value) => {
-                        const option = AGE_GROUPS.find(
-                          (item) => item.value === value
-                        )
-                        return (
-                          <Badge
-                            key={value}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {option ? option.label : value}
-                            <X
-                              className="h-3 w-3 cursor-pointer"
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                patch({
-                                  ageGroup: draft.ageGroup.filter(
-                                    (item) => item !== value
-                                  ),
-                                })
-                              }}
-                            />
-                          </Badge>
-                        )
-                      })
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t(
+                  <span className="min-w-0 truncate">
+                    {draft.ageGroup.length
+                      ? draft.ageGroup
+                          .map((value) => ageGroupLabel(value, lang))
+                          .join(", ")
+                      : t(
                           {
                             en: "Select age groups...",
                             ar: "اختر الفئات العمرية...",
                           },
                           lang
                         )}
-                      </span>
-                    )}
-                  </div>
+                  </span>
                   <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -746,6 +759,29 @@ export function ExpertProfileEditor({
                 </Command>
               </PopoverContent>
             </Popover>
+            <div className="flex flex-wrap gap-2">
+              {draft.ageGroup.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={isSaving}
+                  aria-label={
+                    t({ en: "Remove", ar: "إزالة" }, lang) +
+                    " " +
+                    ageGroupLabel(value, lang)
+                  }
+                  className="inline-flex min-h-11 items-center gap-2 rounded border px-3 text-sm"
+                  onClick={() =>
+                    patch({
+                      ageGroup: draft.ageGroup.filter((item) => item !== value),
+                    })
+                  }
+                >
+                  {ageGroupLabel(value, lang)}
+                  <X aria-hidden="true" className="h-4 w-4" />
+                </button>
+              ))}
+            </div>
             {errorFor("age_group")}
           </div>
 
@@ -798,7 +834,11 @@ export function ExpertProfileEditor({
         </CardHeader>
         <CardContent>
           <div className="mb-6">
-            <ExpertPublicDetailsFields omitNames values={draft} onChange={patch} />
+            <ExpertPublicDetailsFields
+              omitNames
+              values={draft}
+              onChange={patch}
+            />
           </div>
           <div className="space-y-5">
             {(

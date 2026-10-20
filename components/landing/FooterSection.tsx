@@ -14,22 +14,32 @@ export function FooterSection() {
   const { portals: PORTALS } = usePortals()
 
   return (
-    <footer id="contact" className="scroll-mt-16" style={{ backgroundColor: "#0b1a30" }}>
+    <footer
+      id="contact"
+      className="scroll-mt-16"
+      style={{ backgroundColor: "#0b1a30" }}
+    >
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-4">
         <div className="grid grid-cols-1 gap-6 min-[480px]:grid-cols-2 md:grid-cols-3 md:gap-x-8 md:gap-y-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <Image src="/logo.svg" alt={ui("DSC Logo")} width={32} height={32} className="object-contain" />
+              <Image
+                src="/logo.svg"
+                alt={ui("DSC Logo")}
+                width={32}
+                height={32}
+                className="object-contain"
+              />
               <div>
                 <span className="text-lg font-bold text-white">DSC</span>
                 <p className="text-xs" style={{ color: "#00a4e4" }}>
                   {t(
-                          {
-                            en: "Development Secrets Consultancy",
-                            ar: "استشارية أسرار التطور",
-                          },
-                          lang
-                        )}
+                    {
+                      en: "Development Secrets Consultancy",
+                      ar: "استشارية أسرار التطور",
+                    },
+                    lang
+                  )}
                 </p>
               </div>
             </div>
@@ -39,7 +49,7 @@ export function FooterSection() {
                 aria-label={ui("WhatsApp")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
+                className="inline-flex h-11 w-11 items-center justify-center text-base text-white/75 transition-colors hover:text-[#00a4e4] md:h-auto md:w-auto"
               >
                 <i className="fab fa-whatsapp" />
               </a>
@@ -48,7 +58,7 @@ export function FooterSection() {
                 aria-label={ui("Facebook")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
+                className="inline-flex h-11 w-11 items-center justify-center text-base text-white/75 transition-colors hover:text-[#00a4e4] md:h-auto md:w-auto"
               >
                 <i className="fab fa-facebook-f" />
               </a>
@@ -57,7 +67,7 @@ export function FooterSection() {
                 aria-label={ui("Instagram")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
+                className="inline-flex h-11 w-11 items-center justify-center text-base text-white/75 transition-colors hover:text-[#00a4e4] md:h-auto md:w-auto"
               >
                 <i className="fab fa-instagram" />
               </a>
@@ -66,7 +76,7 @@ export function FooterSection() {
                 aria-label="X"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
+                className="inline-flex h-11 w-11 items-center justify-center text-base text-white/75 transition-colors hover:text-[#00a4e4] md:h-auto md:w-auto"
               >
                 <i className="fab fa-twitter" />
               </a>
@@ -75,7 +85,7 @@ export function FooterSection() {
                 aria-label={ui("LinkedIn")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 w-11 items-center justify-center text-white/75 hover:text-[#00a4e4] transition-colors text-base md:h-auto md:w-auto"
+                className="inline-flex h-11 w-11 items-center justify-center text-base text-white/75 transition-colors hover:text-[#00a4e4] md:h-auto md:w-auto"
               >
                 <i className="fab fa-linkedin-in" />
               </a>
@@ -83,9 +93,9 @@ export function FooterSection() {
           </div>
 
           <div className="flex min-w-0 flex-col gap-2">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-start md:text-center text-white">
+            <h2 className="text-start text-sm font-semibold tracking-wider text-white uppercase md:text-center">
               {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
-            </h3>
+            </h2>
             <nav className="grid grid-cols-1 gap-y-1 md:grid-cols-2 md:gap-x-4">
               {PORTALS.map((portal, i) => (
                 <Link
@@ -100,9 +110,9 @@ export function FooterSection() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-start text-white md:text-center">
+            <h2 className="text-start text-sm font-semibold tracking-wider text-white uppercase md:text-center">
               {t({ en: "Contact Us", ar: "تواصل معنا" }, lang)}
-            </h3>
+            </h2>
             <div className="grid grid-cols-1 gap-y-1 text-sm text-white/60 md:grid-cols-2 md:gap-x-4">
               <p>
                 <a
@@ -119,30 +129,29 @@ export function FooterSection() {
                   )}
                 </a>
               </p>
-              <p> 
-              <a 
-                href="mailto:support@dsc.ac"
-                className="hover:text-[#00a4e4]"
-              >
-              support@dsc.ac
-              </a>
+              <p>
+                <a
+                  href="mailto:support@dsc.ac"
+                  className="hover:text-[#00a4e4]"
+                >
+                  support@dsc.ac
+                </a>
               </p>
               <p>www.dsc.ac</p>
               <p>
                 {t(
                   {
-                     en: "Amman / Jordan",
-                      ar: "عمان / الأردن",
+                    en: "Amman / Jordan",
+                    ar: "عمان / الأردن",
                   },
                   lang
                 )}
               </p>
             </div>
-
           </div>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-3 text-center text-xs text-white/40 md:mt-3 md:pt-2">
+        <div className="mt-6 border-t border-white/10 pt-3 text-center text-xs text-white/70 md:mt-3 md:pt-2">
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/privacy-policy"

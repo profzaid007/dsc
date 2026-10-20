@@ -35,7 +35,7 @@ module.exports = (e) => {
     )
       return e.next()
     const expertId = e.record.getString("assigned_expert")
-    if (!expertId) return
+    if (!expertId) return e.next()
     const expert = e.app.findRecordById("users", expertId)
     if (expert.getString("role") !== "expert" || !expert.getBool("is_active"))
       throw new BadRequestError("Select an active expert.")
@@ -49,16 +49,19 @@ module.exports = (e) => {
       "user = {:id}",
       { id: expertId }
     )
-    let list = profile.getStringSlice("specialization_type")
-    if (!list.length) {
-      const raw = profile.getString("specialization_type")
-      try {
-        const parsed = JSON.parse(raw)
-        list = Array.isArray(parsed) ? parsed : [parsed]
-      } catch {
-        list = raw ? [raw] : []
-      }
+    const raw = profile.getString("specialization_type")
+    let list
+    try {
+      const parsed = JSON.parse(raw)
+      list = Array.isArray(parsed) ? parsed : [parsed]
+    } catch {
+      list = profile.getStringSlice("specialization_type")
+      if (!list.length) list = [raw]
     }
+    list = list
+      .flatMap((value) => String(value).split(","))
+      .map((value) => value.trim())
+      .filter(Boolean)
     if (!list.includes(e.record.getString("specialization")))
       throw new BadRequestError(
         "The selected expert does not have this specialization."
