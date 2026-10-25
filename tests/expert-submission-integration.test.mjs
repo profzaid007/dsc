@@ -51,13 +51,13 @@ test('expert submission is atomic, retries are idempotent, and cleanup removes o
  }
  async function count(email){return (await(await fetch(base+'/api/collections/users/records?filter='+encodeURIComponent('email = '+JSON.stringify(email)))).json()).totalItems}
  const invalid=await submit('bad@example.test','bad-profile-123456789',{profile:{public_name_ar:''}});assert.equal(invalid.status,400);assert.equal(await count('bad@example.test'),0)
- const badFile=await submit('badfile@example.test','bad-file-123456789',{file:new File(['invalid'],'bad.txt',{type:'text/plain'})});assert.equal(badFile.status,400,JSON.stringify(badFile));assert.equal(await count('badfile@example.test'),0)
+ const badFile=await submit('badfile@example.test','bad-file-123456789',{file:new File(['invalid'],'bad.txt',{type:'text/plain'})});assert.equal(badFile.status,400,JSON.stringify(badFile));assert.equal(await count('badfile@example.test'),0);assert.ok(badFile.body.data.cv,JSON.stringify(badFile))
  const badBank=await submit('badbank@example.test','bad-bank-123456789',{iban:'DE89370400440532013000'});assert.equal(badBank.status,400,JSON.stringify(badBank));assert.equal(await count('badbank@example.test'),0)
  const first=await submit('new@example.test','valid-submit-123456789',{file:new File(['%PDF-1.4 test'],'cv.pdf',{type:'application/pdf'})});assert.equal(first.status,200,JSON.stringify(first));assert.ok(first.body.token);assert.equal(await count('new@example.test'),1)
  const savedUsers=await(await fetch(base+'/api/collections/users/records?filter='+encodeURIComponent('email = "new@example.test"'))).json()
  assert.equal(savedUsers.items[0].role,'expert');assert.equal(savedUsers.items[0].is_active,false)
  const retry=await submit('new@example.test','valid-submit-123456789');assert.equal(retry.status,200,JSON.stringify(retry));assert.equal(retry.body.id,first.body.id);assert.equal(await count('new@example.test'),1)
- const duplicate=await submit('new@example.test','different-submit-12345');assert.equal(duplicate.status,400);assert.equal(await count('new@example.test'),1)
+ const duplicate=await submit('new@example.test','different-submit-12345');assert.equal(duplicate.status,400);assert.equal(await count('new@example.test'),1);assert.ok(duplicate.body.data.email,JSON.stringify(duplicate))
  const bypass=await fetch(base+'/api/collections/users/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'bypass@example.test',password:'TestPassword123!',passwordConfirm:'TestPassword123!',role:'expert'})});assert.equal(bypass.status,400);assert.equal(await count('bypass@example.test'),0)
  }finally{await new Promise(resolve=>{if(server.exitCode!==null)return resolve();server.once('exit',resolve);server.kill()})}
 })

@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
-import pb, { getErrorMessage, getFieldErrors } from "@/lib/pb"
+import pb, { getErrorMessage, getFieldErrors, fieldLabel } from "@/lib/pb"
 import {
   ageGroupLabel,
   consultationModeLabel,
@@ -84,7 +84,8 @@ export function ExpertApplicationForm({
   const [highestAcademicDegree, setHighestAcademicDegree] = useState("")
   const [degreeTitle, setDegreeTitle] = useState("")
   const [fieldOfStudy, setFieldOfStudy] = useState("")
-  const [whatsappCountryCode, setWhatsappCountryCode] = useState(DEFAULT_COUNTRY_CODE)
+  const [whatsappCountryCode, setWhatsappCountryCode] =
+    useState(DEFAULT_COUNTRY_CODE)
   const [whatsappNumber, setWhatsappNumber] = useState("")
   const [ageGroup, setAgeGroup] = useState<string[]>([])
   const [specialization, setSpecialization] = useState<string[]>([])
@@ -113,6 +114,31 @@ export function ExpertApplicationForm({
   const [error, setError] = useState("")
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [step, setStep] = useState<1 | 2>(1)
+
+  const firstStepFields = new Set([
+    "name",
+    "email",
+    "password",
+    "passwordConfirm",
+    "country_of_residence",
+    "city",
+    "whatsapp_country_code",
+    "whatsapp_number",
+    "highest_academic_degree",
+    "degree_title",
+    "field_of_study",
+    "public_name_en",
+    "public_name_ar",
+  ])
+  const errorSummaryRef = useRef<HTMLDivElement>(null)
+  const revealErrors = () =>
+    requestAnimationFrame(() => {
+      errorSummaryRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      })
+      errorSummaryRef.current?.focus({ preventScroll: true })
+    })
 
   const passwordTooShort = password.length > 0 && password.length < 8
   const passwordsMismatch =
@@ -149,7 +175,8 @@ export function ExpertApplicationForm({
       lang
     )
 
-    if (!publicDetails.publicNameAr.trim() || !publicDetails.publicNameEn.trim()) errs.name = required
+    if (!publicDetails.publicNameEn.trim()) errs.public_name_en = required
+    if (!publicDetails.publicNameAr.trim()) errs.public_name_ar = required
     if (!email.trim()) errs.email = required
     else if (!isValidEmail(email)) errs.email = t(EMAIL_INVALID_MESSAGE, lang)
     if (!password) errs.password = required
@@ -179,6 +206,8 @@ export function ExpertApplicationForm({
     setFieldErrors(errs)
     if (Object.keys(errs).length > 0) {
       setError("")
+      setStep(Object.keys(errs).some((key) => firstStepFields.has(key)) ? 1 : 2)
+      revealErrors()
       return false
     }
     return true
@@ -206,6 +235,7 @@ export function ExpertApplicationForm({
             ? "يرجى إدخال رقم IBAN صحيح"
             : "Please enter a valid IBAN",
       })
+      revealErrors()
       return
     }
 
@@ -221,6 +251,7 @@ export function ExpertApplicationForm({
           lang
         )
       )
+      revealErrors()
       return
     }
 
@@ -229,8 +260,16 @@ export function ExpertApplicationForm({
 
     try {
       const cleanEmail = normalizeEmail(email)
-      const config = await pb.send<{iban:boolean; atomic:boolean}>("/api/dsc/expert-registration-config", {method:"GET", requestKey:null})
-      if (!config.atomic || (iban.trim() && !config.iban)) throw new Error(lang === "ar" ? "التسجيل غير متاح مؤقتاً حتى تحديث الخادم. لم يتم إنشاء حساب." : "Registration requires a server update. No account was created.")
+      const config = await pb.send<{ iban: boolean; atomic: boolean }>(
+        "/api/dsc/expert-registration-config",
+        { method: "GET", requestKey: null }
+      )
+      if (!config.atomic || (iban.trim() && !config.iban))
+        throw new Error(
+          lang === "ar"
+            ? "التسجيل غير متاح مؤقتاً حتى تحديث الخادم. لم يتم إنشاء حساب."
+            : "Registration requires a server update. No account was created."
+        )
 
       const userFormData = new FormData()
       const extraFormData = new FormData()
@@ -287,23 +326,43 @@ export function ExpertApplicationForm({
       extraFormData.set("availability", availability)
       extraFormData.set("fee", fee)
 
-      const profile = Object.fromEntries([...extraFormData.entries()].filter(([,value]) => typeof value === "string")) as Record<string, unknown>
+      const profile = Object.fromEntries(
+        [...extraFormData.entries()].filter(
+          ([, value]) => typeof value === "string"
+        )
+      ) as Record<string, unknown>
       profile.age_group = ageGroup
       profile.specialist_roles = specialistRoles
       userFormData.set("profile", JSON.stringify(profile))
       if (!submissionKey.current) submissionKey.current = crypto.randomUUID()
       userFormData.set("submission_key", submissionKey.current)
       if (profilePhoto) userFormData.append("profile_photo", profilePhoto)
-      files.forEach(file => userFormData.append("cv", file))
-      const result = await pb.send<{id:string;token:string;success:boolean}>("/api/dsc/expert-register", {method:"POST", body:userFormData, requestKey:null})
+      files.forEach((file) => userFormData.append("cv", file))
+      const result = await pb.send<{
+        id: string
+        token: string
+        success: boolean
+      }>("/api/dsc/expert-register", {
+        method: "POST",
+        body: userFormData,
+        requestKey: null,
+      })
       // Notification delivery cannot turn a committed application into a failed registration.
       let notificationFailed = false
       try {
         const response = await fetch("/api/expert-application", {
-          method:"POST", headers:{"Content-Type":"application/json", Authorization:`Bearer ${result.token}`}, body:JSON.stringify({}), signal:AbortSignal.timeout(10_000),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${result.token}`,
+          },
+          body: JSON.stringify({}),
+          signal: AbortSignal.timeout(10_000),
         })
         notificationFailed = !response.ok
-      } catch { notificationFailed = true }
+      } catch {
+        notificationFailed = true
+      }
 
       toast.success(
         t(
@@ -326,10 +385,13 @@ export function ExpertApplicationForm({
       const fieldErrs = getFieldErrors(err, lang)
       if (Object.keys(fieldErrs).length > 0) {
         setFieldErrors(fieldErrs)
-        setStep(1)
+        setStep(
+          Object.keys(fieldErrs).some((key) => firstStepFields.has(key)) ? 1 : 2
+        )
       } else {
         setError(getErrorMessage(err, lang))
       }
+      revealErrors()
     } finally {
       submitting.current = false
       setIsSubmitting(false)
@@ -347,9 +409,30 @@ export function ExpertApplicationForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              {error}
+          {(error || Object.keys(fieldErrors).length > 0) && (
+            <div
+              ref={errorSummaryRef}
+              tabIndex={-1}
+              role="alert"
+              className="rounded-lg bg-red-50 p-3 text-sm text-red-600"
+            >
+              {error ||
+                t(
+                  {
+                    en: "Please correct the following fields:",
+                    ar: "يرجى تصحيح الحقول التالية:",
+                  },
+                  lang
+                )}
+              {Object.keys(fieldErrors).length > 0 && (
+                <ul className="mt-2 list-disc space-y-1 ps-5">
+                  {Object.entries(fieldErrors).map(([field, message]) => (
+                    <li key={field}>
+                      <strong>{fieldLabel(field, lang)}:</strong> {message}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 
@@ -737,7 +820,10 @@ export function ExpertApplicationForm({
                 </div>
               </div>
 
-              <SpecialistSelector value={specialistRoles} onChange={setSpecialistRoles} />
+              <SpecialistSelector
+                value={specialistRoles}
+                onChange={setSpecialistRoles}
+              />
 
               <div className="space-y-2">
                 <Label>

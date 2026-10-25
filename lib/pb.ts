@@ -66,6 +66,51 @@ export async function confirmPasswordReset(token: string, password: string) {
 }
 
 const FIELD_LABELS: Record<string, BilingualString> = {
+  passwordConfirm: { en: "Confirm password", ar: "تأكيد كلمة المرور" },
+  country_of_residence: { en: "Country of residence", ar: "بلد الإقامة" },
+  city: { en: "City", ar: "المدينة" },
+  highest_academic_degree: {
+    en: "Highest academic degree",
+    ar: "أعلى درجة علمية",
+  },
+  degree_title: { en: "Degree title", ar: "مسمى الدرجة" },
+  field_of_study: { en: "Field of study", ar: "مجال الدراسة" },
+  age_group: { en: "Age group", ar: "الفئة العمرية" },
+  specialization_type: { en: "Role group", ar: "مجموعة الأدوار" },
+  specialist_roles: { en: "Roles", ar: "الأدوار" },
+  consultation_mode: { en: "Consultation mode", ar: "طريقة الاستشارة" },
+  fee: { en: "Consultation fee", ar: "رسوم الاستشارة" },
+  iban: { en: "IBAN", ar: "رقم الآيبان" },
+  expert_iban: { en: "IBAN", ar: "رقم الآيبان" },
+  availability: { en: "Availability", ar: "أوقات التوفر" },
+  cv: { en: "CV attachment", ar: "مرفق السيرة الذاتية" },
+  profile_photo: { en: "Profile photo", ar: "الصورة الشخصية" },
+  biography: { en: "Biography", ar: "النبذة التعريفية" },
+  whatsapp_country_code: {
+    en: "WhatsApp country code",
+    ar: "رمز دولة الواتساب",
+  },
+  public_name_en: {
+    en: "Public name (English)",
+    ar: "الاسم العام (الإنجليزية)",
+  },
+  public_name_ar: { en: "Public name (Arabic)", ar: "الاسم العام (العربية)" },
+  public_qualification_en: {
+    en: "Qualification (English)",
+    ar: "المؤهل (الإنجليزية)",
+  },
+  public_qualification_ar: {
+    en: "Qualification (Arabic)",
+    ar: "المؤهل (العربية)",
+  },
+  public_specialty_en: { en: "Specialty (English)", ar: "التخصص (الإنجليزية)" },
+  public_specialty_ar: { en: "Specialty (Arabic)", ar: "التخصص (العربية)" },
+  short_bio_en: {
+    en: "Biography (English)",
+    ar: "النبذة التعريفية (الإنجليزية)",
+  },
+  short_bio_ar: { en: "Biography (Arabic)", ar: "النبذة التعريفية (العربية)" },
+
   email: { en: "email address", ar: "البريد الإلكتروني" },
   username: { en: "username", ar: "اسم المستخدم" },
   national_id: { en: "national ID", ar: "الهوية الوطنية" },
@@ -78,7 +123,7 @@ const FIELD_LABELS: Record<string, BilingualString> = {
   password: { en: "Password", ar: "كلمة المرور" },
 }
 
-function fieldLabel(field: string, lang: Lang): string {
+export function fieldLabel(field: string, lang: Lang): string {
   const known = FIELD_LABELS[field]
   if (known) return t(known, lang)
   return field.replace(/_/g, " ")
@@ -294,8 +339,33 @@ function getFieldValidationMessage(
   error: unknown,
   lang: Lang
 ): string | undefined {
-  const messages = Object.values(getFieldErrors(error, lang))
-  return messages[0]
+  const messages = Object.entries(getFieldErrors(error, lang)).map(
+    ([field, message]) => `${fieldLabel(field, lang)}: ${message}`
+  )
+  return messages.length ? messages.join("\n") : undefined
+}
+
+// Custom registration endpoints return actionable explanations in response.message.
+function getRequestValidationMessage(
+  error: unknown,
+  lang: Lang
+): string | undefined {
+  const err = error as {
+    response?: { message?: unknown }
+    data?: { message?: unknown }
+  } | null
+  const message = err?.response?.message ?? err?.data?.message
+  if (
+    typeof message !== "string" ||
+    !message.trim() ||
+    /^(something went wrong|failed to .*|invalid request data)[.!]?$/i.test(
+      message.trim()
+    )
+  )
+    return undefined
+  return lang === "ar"
+    ? `تعذر إرسال الطلب. تفاصيل المشكلة: ${message.trim()}`
+    : message.trim()
 }
 
 export function handlePocketBaseError(
@@ -315,6 +385,7 @@ export function handlePocketBaseError(
   if (details?.status === 400) {
     return (
       getFieldValidationMessage(error, lang) ??
+      getRequestValidationMessage(error, lang) ??
       t(
         {
           en: "Invalid request data. Please check your input.",

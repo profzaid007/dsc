@@ -32,6 +32,12 @@ module.exports = (e) => {
     }
     if (remainder !== 1) throw new BadRequestError("Invalid IBAN checksum")
   }
+  // Preserve PocketBase's field validation map in the custom route response.
+  const save = (app, record) => {
+    try { app.save(record) } catch (error) {
+      throw new BadRequestError("Please correct the highlighted expert application fields.", error.value || error)
+    }
+  }
   let user
   e.app.runInTransaction(app => {
     // Check retry ownership inside the same transaction as the insert.
@@ -49,7 +55,7 @@ module.exports = (e) => {
     user.set("password", password)
     user.set("role", "expert")
     user.set("is_active", false)
-    app.save(user)
+    save(app, user)
     const profile = new Record(app.findCollectionByNameOrId("expert_profiles"))
     for (const field of fields) if (data[field] !== undefined) profile.set(field, data[field])
     profile.set("user", user.id)
@@ -57,12 +63,12 @@ module.exports = (e) => {
     profile.set("submission_key", key)
     profile.set("profile_photo", photos)
     profile.set("cv", cvs)
-    app.save(profile)
+    save(app, profile)
     if (iban) {
       const bank = new Record(app.findCollectionByNameOrId("expert_bank_details"))
       bank.set("user", user.id)
       bank.set("iban", iban)
-      app.save(bank)
+      save(app, bank)
     }
   })
   return e.json(200, {id:user.id, token:user.newAuthToken(), success:true})
