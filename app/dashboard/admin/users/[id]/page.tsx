@@ -4,6 +4,7 @@ import { use, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useUsers } from "@/hooks/useUsers"
+import { UserAssignmentLinks } from "@/components/dashboard/UserAssignmentLinks"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
@@ -222,11 +223,19 @@ export default function AdminUserDetailPage({
     const isExpert = user.role === "expert"
     try {
       if (isExpert && expertDraft) {
-        if (!expertDraft.publicNameAr.trim() || !expertDraft.publicNameEn.trim()) {
-          toast.error(t({
-            ar: "يجب إدخال اسم الخبير بالعربية والإنجليزية قبل الحفظ.",
-            en: "Both Arabic and English expert names are required before saving.",
-          }, lang))
+        if (
+          !expertDraft.publicNameAr.trim() ||
+          !expertDraft.publicNameEn.trim()
+        ) {
+          toast.error(
+            t(
+              {
+                ar: "يجب إدخال اسم الخبير بالعربية والإنجليزية قبل الحفظ.",
+                en: "Both Arabic and English expert names are required before saving.",
+              },
+              lang
+            )
+          )
           return
         }
         if (!expertDraft.name.trim()) {
@@ -419,7 +428,11 @@ export default function AdminUserDetailPage({
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-primary">{user.role === "expert" ? expertDisplayName(expertProfile, lang, user.name) : user.name}</h1>
+          <h1 className="text-2xl font-bold text-primary">
+            {user.role === "expert"
+              ? expertDisplayName(expertProfile, lang, user.name)
+              : user.name}
+          </h1>
           <p className="text-muted-foreground">{user.email}</p>
         </div>
         {canResetPassword && (
@@ -477,9 +490,16 @@ export default function AdminUserDetailPage({
           {isRoleProfileLoading ? (
             <ProfileSkeleton expert={user.role === "expert"} />
           ) : roleLoadError ? (
-            <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+            <div
+              role="alert"
+              className="rounded-lg bg-red-50 p-4 text-sm text-red-600"
+            >
               <p>{roleLoadError}</p>
-              <Button variant="outline" className="mt-3" onClick={() => void reloadRoleProfile()}>
+              <Button
+                variant="outline"
+                className="mt-3"
+                onClick={() => void reloadRoleProfile()}
+              >
                 {lang === "ar" ? "إعادة المحاولة" : "Retry"}
               </Button>
             </div>
@@ -872,6 +892,9 @@ export default function AdminUserDetailPage({
                   )}
                 </ul>
               </div>
+              {deleteBlockers.assignments > 0 && (
+                <UserAssignmentLinks key={user.id} userId={user.id} />
+              )}
               <div className="flex justify-end">
                 <Button variant="outline" onClick={closeDeleteDialog}>
                   {lang === "ar" ? "إغلاق" : "Close"}

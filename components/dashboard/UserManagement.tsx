@@ -9,6 +9,7 @@ import type { ExpertProfile } from "@/types/expert"
 import { usePermissions } from "@/hooks/usePermissions"
 import { DataError } from "@/components/ui/data-error"
 import { useUsers } from "@/hooks/useUsers"
+import { UserAssignmentLinks } from "@/components/dashboard/UserAssignmentLinks"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
 import { t } from "@/lib/i18n"
@@ -1057,6 +1058,12 @@ export function UserManagement({
                   )}
                 </ul>
               </div>
+              {deleteBlockers!.assignments > 0 && (
+                <UserAssignmentLinks
+                  key={deleteTarget!.id}
+                  userId={deleteTarget!.id}
+                />
+              )}
               <div className="flex justify-end">
                 <Button variant="outline" onClick={closeDeleteDialog}>
                   {lang === "ar" ? "إغلاق" : "Close"}
