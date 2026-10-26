@@ -44,7 +44,7 @@ test('expert submission is atomic, retries are idempotent, and cleanup removes o
  assert.ok(healthy,logs)
  const profile={public_name_en:'Expert Name',public_name_ar:'اسم الخبير',short_bio_ar:'نبذة',specialist_roles:[],age_group:['7-12']}
  async function submit(email,key,options={}){
- const body=new FormData();body.set('email',email);body.set('password','TestPassword123!');body.set('passwordConfirm','TestPassword123!');body.set('profile',JSON.stringify({...profile,...options.profile}));body.set('submission_key',key)
+ const body=new FormData();body.set('email',email);body.set('password',options.password || 'TestPassword123!');body.set('passwordConfirm',options.passwordConfirm || options.password || 'TestPassword123!');body.set('profile',JSON.stringify({...profile,...options.profile}));body.set('submission_key',key)
  if(options.file)body.append('cv',options.file)
  if(options.iban)body.set('expert_iban',options.iban)
  const response=await fetch(base+'/api/dsc/expert-register',{method:'POST',body});return {status:response.status,body:await response.json()}
@@ -54,6 +54,14 @@ test('expert submission is atomic, retries are idempotent, and cleanup removes o
  const badFile=await submit('badfile@example.test','bad-file-123456789',{file:new File(['invalid'],'bad.txt',{type:'text/plain'})});assert.equal(badFile.status,400,JSON.stringify(badFile));assert.equal(await count('badfile@example.test'),0);assert.ok(badFile.body.data.cv,JSON.stringify(badFile))
  const badBank=await submit('badbank@example.test','bad-bank-123456789',{iban:'DE89370400440532013000'});assert.equal(badBank.status,400,JSON.stringify(badBank));assert.equal(await count('badbank@example.test'),0)
  const first=await submit('new@example.test','valid-submit-123456789',{file:new File(['%PDF-1.4 test'],'cv.pdf',{type:'application/pdf'})});assert.equal(first.status,200,JSON.stringify(first));assert.ok(first.body.token);assert.equal(await count('new@example.test'),1)
+ for (const [index,password] of ['12345678','00001234','123456789012345678901234','a 123456'].entries()) {
+ const email='numeric'+index+'@example.test'
+ const numeric=await submit(email,'numeric-submit-123456789-'+index,{password});assert.equal(numeric.status,200,JSON.stringify(numeric))
+ const auth=await fetch(base+'/api/collections/users/auth-with-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identity:email,password})});assert.equal(auth.status,200,'Exact submitted password must authenticate')
+ }
+ const mismatch=await submit('mismatch@example.test','mismatch-submit-123456789',{password:'12345678',passwordConfirm:'87654321'});assert.equal(mismatch.status,400);assert.ok(mismatch.body.data.passwordConfirm);assert.equal(await count('mismatch@example.test'),0)
+ const short=await submit('short@example.test','short-submit-123456789',{password:'1234567'});assert.equal(short.status,400);assert.ok(short.body.data.password);assert.equal(await count('short@example.test'),0)
+
  const savedUsers=await(await fetch(base+'/api/collections/users/records?filter='+encodeURIComponent('email = "new@example.test"'))).json()
  assert.equal(savedUsers.items[0].role,'expert');assert.equal(savedUsers.items[0].is_active,false)
  const retry=await submit('new@example.test','valid-submit-123456789');assert.equal(retry.status,200,JSON.stringify(retry));assert.equal(retry.body.id,first.body.id);assert.equal(await count('new@example.test'),1)

@@ -6,8 +6,15 @@ module.exports = (e) => {
   const key = String(body.submission_key || "")
   if (!/^[a-zA-Z0-9-]{16,64}$/.test(key)) throw new BadRequestError("Invalid submission key")
   const email = String(body.email || "").trim().toLowerCase()
-  const password = String(body.password || "")
-  if (password.length < 8 || password !== body.passwordConfirm) throw new BadRequestError("Passwords must match and contain at least 8 characters")
+  // requestInfo parses numeric-looking multipart values. Passwords must remain exact text.
+  const password = e.request.postFormValue("password")
+  const confirmation = e.request.postFormValue("passwordConfirm")
+  if (password.length < 8) throw new BadRequestError("Password must contain at least 8 characters.", {
+    password: new ValidationError("validation_min", "Password must be at least 8 characters.")
+  })
+  if (password !== confirmation) throw new BadRequestError("Password confirmation does not match.", {
+    passwordConfirm: new ValidationError("validation_password_mismatch", "Re-enter the same password in both fields.")
+  })
   if (!String(data.public_name_en || "").trim() || !String(data.public_name_ar || "").trim()) throw new BadRequestError("Both expert names are required")
   const profileCollection = e.app.findCollectionByNameOrId("expert_profiles")
   if (!profileCollection.fields.getByName("submission_key")) throw new BadRequestError("Apply the expert submission migration first")

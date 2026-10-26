@@ -16,7 +16,7 @@ export function SpecialistSelector({ value, onChange, disabled = false }: {
   disabled?: boolean
 }) {
   const { lang } = useLang()
-  const { groups: ALLOCATION_ROLE_GROUPS } = useClassifications()
+  const { groups: ALLOCATION_ROLE_GROUPS, isLoading: groupsLoading, error: groupsError, refresh: refreshGroups } = useClassifications()
   const ar = lang === "ar"
   const [roles, setRoles] = useState<RolesManagement[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,8 +40,10 @@ export function SpecialistSelector({ value, onChange, disabled = false }: {
   const available = roles.filter(role => !role.is_retired || value.includes(role.id))
   const visibleRoles = available.filter(role => groupIds.has(role.role_group!) && `${role.role_name_en} ${role.role_name_ar}`.toLowerCase().includes(search.toLowerCase()))
 
-  if (loading) return <p role="status">{ar ? "جارٍ تحميل الأدوار..." : "Loading roles..."}</p>
-  if (error) return <div role="alert" className="space-y-2"><p>{error}</p><Button type="button" variant="outline" onClick={() => void refresh()}>{ar ? "إعادة المحاولة" : "Retry"}</Button></div>
+  if (loading || groupsLoading) return <p role="status">{ar ? "جارٍ تحميل الأدوار..." : "Loading roles..."}</p>
+  if (error || groupsError) return <div role="alert" className="space-y-2"><p>{error || groupsError}</p><Button type="button" variant="outline" onClick={() => { refreshGroups(); void refresh() }}>{ar ? "إعادة المحاولة" : "Retry"}</Button></div>
+  const missingGroups = available.filter(role => !ALLOCATION_ROLE_GROUPS.some(group => group.id === role.role_group))
+  if (missingGroups.length) return <div role="alert">{ar ? "يلزم تصحيح مجموعات الأدوار في قاعدة البيانات:" : "Role groups need correction in the database:"} {missingGroups.map(role => `${role.id}: ${role.role_group}`).join(", ")}</div>
   return <div className="dsc-form-grid" dir={ar ? "rtl" : "ltr"}>
     <fieldset disabled={disabled} className="space-y-3 rounded-lg border p-4">
       <legend className="px-2 font-semibold">{ar ? "مجموعة الأدوار" : "Role Group"}</legend>

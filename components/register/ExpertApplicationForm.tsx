@@ -214,6 +214,7 @@ export function ExpertApplicationForm({
   }
 
   const handleNext = () => {
+    setError("")
     if (!validate()) return
 
     window.scrollTo({
@@ -224,6 +225,10 @@ export function ExpertApplicationForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (step === 1) {
+      handleNext()
+      return
+    }
     if (submitting.current) return
     setError("")
 

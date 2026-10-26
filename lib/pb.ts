@@ -161,6 +161,10 @@ function minLengthMessage(
  * Unknown codes fall back to the server message (or a generic translated one).
  */
 const VALIDATION_CODE_MESSAGES: Record<string, BilingualString> = {
+  validation_password_mismatch: {
+    en: "Re-enter the same password in both fields.",
+    ar: "أعد إدخال كلمة المرور نفسها في الحقلين.",
+  },
   validation_required: {
     en: "This field is required.",
     ar: "هذا الحقل مطلوب.",
