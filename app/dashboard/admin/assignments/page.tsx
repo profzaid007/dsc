@@ -167,7 +167,7 @@ export default function AssignmentsPage() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-primary">
-                {lang === "ar" ? "التعيينات" : "Assignments"}
+                {lang === "ar" ? "التكليفات" : "Assignments"}
               </h1>
               <p className="text-muted-foreground">
                 {lang === "ar"
@@ -202,7 +202,7 @@ export default function AssignmentsPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              {lang === "ar" ? "التعيينات" : "Assignments"}
+              {lang === "ar" ? "التكليفات" : "Assignments"}
             </h1>
             <p className="text-muted-foreground">
               {lang === "ar"
@@ -300,7 +300,7 @@ export default function AssignmentsPage() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {lang === "ar" ? "جميع التعيينات" : "All Assignments"}
+            {lang === "ar" ? "جميع التكليفات" : "All Assignments"}
           </CardTitle>
           <CardDescription>
             {lang === "ar"
@@ -318,7 +318,7 @@ export default function AssignmentsPage() {
               <p className="text-muted-foreground">
                 {assignments.length === 0
                   ? lang === "ar"
-                    ? "لم يتم تعيين أي أدوات للحالات بعد. افتح الحالة ثم تبويب التعيينات لإضافة أداة أو مقياس."
+                    ? "لم يتم تعيين أي أدوات للحالات بعد. افتح الحالة ثم تبويب التكليفات لإضافة أداة أو مقياس."
                     : "No tools have been assigned yet. Open a case and its Assignments tab to add a tool or assessment."
                   : lang === "ar"
                     ? "لا توجد تعيينات تطابق عوامل التصفية."

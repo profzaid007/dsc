@@ -10,9 +10,9 @@ export interface ExpertProfile {
   highest_academic_degree?: string
   degree_title?: string
   field_of_study?: string
-  age_group?: string[] | string
+  age_group?: string
   /** Stored as one comma-separated string of option keys (single text field). */
-  specialization_type?: string[] | string
+  specialization_type?: string
   consultation_mode?: string
   fee?: string | number
   availability?: string
@@ -25,7 +25,7 @@ export interface ExpertProfile {
   public_specialty_en?: string
   public_specialty_ar?: string
   short_bio_ar?: string
-  cv?: string[] | string
+  cv?: string[]
   created?: string
   updated?: string
 }

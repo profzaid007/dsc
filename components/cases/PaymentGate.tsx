@@ -1,4 +1,5 @@
 "use client"
+import { paymentCaseStatus } from "@/lib/payment-case-status"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 
@@ -81,13 +82,14 @@ export function PaymentGate({
     uploadedProfile.updated >= profile.updated
       ? uploadedProfile.status
       : profile.status
+  const paymentStatus = paymentCaseStatus(status)
   const isStaff =
     currentUser?.role === "admin" ||
     currentUser?.role === "super_admin" ||
     currentUser?.role === "expert"
 
-  // Staff and already-active (or legacy undefined-status) cases pass through
-  if (isStaff || status === "active" || !status) {
+  // Missing status means awaiting payment, never unrestricted access.
+  if (isStaff || paymentStatus === "active") {
     return <>{children}</>
   }
 
@@ -124,7 +126,7 @@ export function PaymentGate({
     }
   }
 
-  if (status === "pending") {
+  if (paymentStatus === "pending") {
     return (
       <Panel
         icon={<Clock className="h-6 w-6 text-primary" />}
@@ -150,7 +152,7 @@ export function PaymentGate({
     )
   }
 
-  if (status === "awaiting_payment") {
+  if (paymentStatus === "awaiting_payment") {
     return (
       <Panel
         icon={<ReceiptText className="h-6 w-6 text-primary" />}
@@ -295,7 +297,7 @@ export function PaymentGate({
     )
   }
 
-  if (status === "under_review") {
+  if (paymentStatus === "under_review") {
     const slipUrl = profile.payment_slip
       ? pb.files.getURL(
           { collectionId: "cases", id: profile.id },

@@ -903,7 +903,7 @@ export default function AdminCaseDetailPage({
                 </CardTitle>
                 <CardDescription>
                   {lang === "ar"
-                    ? "إدارة التعيينات لهذه الحالة"
+                    ? "إدارة التكليفات لهذه الحالة"
                     : "Manage assignments for this case"}
                 </CardDescription>
               </div>

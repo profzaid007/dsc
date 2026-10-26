@@ -37,9 +37,9 @@ function validate(specialties, expert = "expert") {
   context.module.exports(e)
   return continued
 }
-test("unassigned tasks continue and valid comma-separated/JSON specialties are accepted", () => {
+test("unassigned tasks continue and only comma-separated specialties are accepted", () => {
   assert.equal(validate("", ""), 1)
   assert.equal(validate("assessment, therapy"), 1)
-  assert.equal(validate('["assessment","therapy"]'), 1)
+  assert.throws(() => validate('["assessment","therapy"]'), /comma-separated text/)
   assert.throws(() => validate("assessment"), /does not have/)
 })

@@ -19,11 +19,9 @@ export interface BlogPage {
   main_category?: string
   id: string
   slug: string
-  title_en: string
-  title_ar?: string
+  title: string
   category: string
-  content_en: string
-  content_ar?: string
+  content: string
   is_published: boolean
   media: string[]
   thumbnail: string

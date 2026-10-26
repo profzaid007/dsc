@@ -5,13 +5,14 @@ import { blogField, blogContentLang, blogContentPayload, blogPlainText, assertBl
 test("a single authored version reads the same in both interface languages", () => {
   const saved = blogContentPayload("عنوان عربي", "<p>نص عربي</p>")
   assert.equal(blogField(saved, "title"), "عنوان عربي")
-  assert.equal(saved.content_en, saved.content_ar)
+  assert.deepEqual(saved, { title: "عنوان عربي", content: "<p>نص عربي</p>" })
   assert.equal(blogField({ ...saved, ...blogContentPayload("عنوان", "") }, "content"), "")
 })
 
-test("legacy Arabic-only posts remain editable and primary versions stay consistent", () => {
-  assert.equal(blogField({ content_ar: "قديم" }, "content"), "قديم")
-  assert.equal(blogField({ content_en: "Original", content_ar: "ترجمة" }, "content"), "Original")
+test("missing canonical fields are reported instead of reading old language copies", () => {
+  assert.throws(() => blogField({} as {content?: string}, "content"), /Update the blog database schema/)
+  assert.equal(blogField({content: ""}, "content"), "")
+  assert.deepEqual(blogContentPayload("English عنوان", "<p>Mixed نص</p>"), {title: "English عنوان", content: "<p>Mixed نص</p>"})
 })
 
 test("writing direction follows content rather than interface language or HTML markup", () => {

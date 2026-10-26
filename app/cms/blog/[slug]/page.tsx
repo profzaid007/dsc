@@ -49,12 +49,12 @@ export default function CmsBlogEditorPage() {
   const [deleting, setDeleting] = useState(false)
 
   // Form state
-  const [enTitle, setEnTitle] = useState("")
+  const [title, setTitle] = useState("")
   const [postSlug, setPostSlug] = useState("")
   const [category, setCategory] = useState("")
   const [keywords, setKeywords] = useState("")
   const [mainCategory, setMainCategory] = useState("")
-  const [enContent, setEnContent] = useState("")
+  const [content, setContent] = useState("")
   const [isPublished, setIsPublished] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [authorName, setAuthorName] = useState("")
@@ -86,13 +86,11 @@ export default function CmsBlogEditorPage() {
       const data: BlogPage = {
         id: rawRecord.id as string,
         slug: rawRecord.slug as string,
-        title_en: rawRecord.title_en as string,
-        title_ar: rawRecord.title_ar as string | undefined,
+        title: rawRecord.title as string,
         main_category: mainCategoryKey(String(rawRecord.main_category || cats.find(c => c.key === rawRecord.category)?.main_category || classificationParent(String(rawRecord.category || "")))),
         category: rawRecord.category as string,
         keywords: rawRecord.keywords !== undefined ? String(rawRecord.keywords || "") : (cats.find(c => c.key === rawRecord.category)?.label_ar || cats.find(c => c.key === rawRecord.category)?.label_en || String(rawRecord.category || "")),
-        content_en: rawRecord.content_en as string,
-        content_ar: rawRecord.content_ar as string | undefined,
+        content: rawRecord.content as string,
         is_published: rawRecord.is_published as boolean,
         media: (rawRecord.media as string[]) || [],
         thumbnail: thumbFile,
@@ -101,12 +99,12 @@ export default function CmsBlogEditorPage() {
         updated: rawRecord.updated as string,
       }
       setPage(data)
-      setEnTitle(blogField(data, "title"))
+      setTitle(blogField(data, "title"))
       setPostSlug(data.slug)
       setCategory(data.category)
       setKeywords(data.keywords || "")
       setMainCategory(data.main_category || classificationParent(data.category))
-      setEnContent(blogField(data, "content"))
+      setContent(blogField(data, "content"))
       setIsPublished(data.is_published)
       setAuthorName(data.author_name)
       setCategories(cats)
@@ -124,9 +122,9 @@ export default function CmsBlogEditorPage() {
       }
       setSaving(true)
       try {
-        const contentValue = overrideContent ?? enContent
+        const contentValue = overrideContent ?? content
         const updated = await blogPagesCollection.update(page.id, {
-          ...blogContentPayload(enTitle, contentValue),
+          ...blogContentPayload(title, contentValue),
           slug: postSlug,
           keywords,
           category: "",
@@ -137,8 +135,8 @@ export default function CmsBlogEditorPage() {
         setMainCategory(updated.main_category || "")
         setKeywords(updated.keywords || "")
         setCategory(updated.category)
-        setEnTitle(blogField(updated, "title"))
-        setEnContent(blogField(updated, "content"))
+        setTitle(blogField(updated, "title"))
+        setContent(blogField(updated, "content"))
         // If slug changed, redirect to new slug
         if (updated.slug !== slug) {
           router.push(`/cms/blog/${updated.slug}`)
@@ -155,22 +153,22 @@ export default function CmsBlogEditorPage() {
         setSaving(false)
       }
     },
-    [page, enTitle, postSlug, category, keywords, mainCategory, authorName, enContent, slug, router, lang]
+    [page, title, postSlug, category, keywords, mainCategory, authorName, content, slug, router, lang]
   )
 
   const handleContentSave = useCallback(async (html: string) => {
-    setEnContent(html)
+    setContent(html)
     await handleSave(html)
   }, [handleSave])
 
   const handleDiscard = useCallback(() => {
     if (!page) return
-    setEnTitle(blogField(page, "title"))
+    setTitle(blogField(page, "title"))
     setPostSlug(page.slug)
     setCategory(page.category)
     setKeywords(page.keywords || "")
     setMainCategory(page.main_category || classificationParent(page.category))
-    setEnContent(blogField(page, "content"))
+    setContent(blogField(page, "content"))
     setIsPublished(page.is_published)
     setAuthorName(page.author_name)
     setThumbnailUrl(
@@ -260,8 +258,8 @@ export default function CmsBlogEditorPage() {
       !confirm(
         t(
           {
-            en: `Delete "${page.title_en}"? This cannot be undone.`,
-            ar: `حذف "${page.title_en}"؟ لا يمكن التراجع عن هذا.`,
+            en: `Delete "${page.title}"? This cannot be undone.`,
+            ar: `حذف "${page.title}"؟ لا يمكن التراجع عن هذا.`,
           },
           lang
         )
@@ -408,8 +406,8 @@ export default function CmsBlogEditorPage() {
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="post-title">{t({ en: "Title", ar: "العنوان" }, lang)}</Label>
-          <Input id="post-title" dir="auto" value={enTitle} disabled={saving}
-            onChange={(e) => setEnTitle(e.target.value)} />
+          <Input id="post-title" dir="auto" value={title} disabled={saving}
+            onChange={(e) => setTitle(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="post-slug">{t({ en: "URL slug", ar: "معرف الرابط" }, lang)}</Label>
@@ -418,18 +416,18 @@ export default function CmsBlogEditorPage() {
         </div>
         <RichTextEditor key={resetKey}
           title={t({ en: "Content", ar: "المحتوى" }, lang)}
-          initialContent={enContent} onSave={handleContentSave} isSaving={saving}
+          initialContent={content} onSave={handleContentSave} isSaving={saving}
           onImageUpload={handleImageUpload} maxMediaSizeMB={50} onDiscard={handleDiscard}
-          onChange={setEnContent}
-          direction={blogContentLang(enContent || enTitle) === "ar" ? "rtl" : "ltr"} />
+          onChange={setContent}
+          direction={blogContentLang(content || title) === "ar" ? "rtl" : "ltr"} />
       </div>
 
       <CmsPreviewDialog
         open={previewOpen}
         onOpenChange={setPreviewOpen}
-        title={enTitle}
-        html={enContent}
-        lang={blogContentLang(enContent || enTitle)}
+        title={title}
+        html={content}
+        lang={blogContentLang(content || title)}
         path={`/blog/${postSlug}`}
       >
         <div className="mb-8 space-y-2">

@@ -50,18 +50,8 @@ module.exports = (e) => {
       { id: expertId }
     )
     const raw = profile.getString("specialization_type")
-    let list
-    try {
-      const parsed = JSON.parse(raw)
-      list = Array.isArray(parsed) ? parsed : [parsed]
-    } catch {
-      list = profile.getStringSlice("specialization_type")
-      if (!list.length) list = [raw]
-    }
-    list = list
-      .flatMap((value) => String(value).split(","))
-      .map((value) => value.trim())
-      .filter(Boolean)
+    if (/^\s*[\[{]/.test(raw)) throw new BadRequestError("Correct the expert specialization_type record: use comma-separated text.")
+    const list = raw.split(",").map(value => value.trim()).filter(Boolean)
     if (!list.includes(e.record.getString("specialization")))
       throw new BadRequestError(
         "The selected expert does not have this specialization."

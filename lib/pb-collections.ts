@@ -653,13 +653,11 @@ export const blogPagesCollection = {
       return {
         id: item.id as string,
         slug: item.slug as string,
-        title_en: item.title_en as string,
-        title_ar: item.title_ar as string | undefined,
+        title: item.title as string,
         main_category: (item.main_category as string) || "",
         category: item.category as string,
         keywords: item.keywords !== undefined ? String(item.keywords || "") : String(item.category || ""),
-        content_en: item.content_en as string,
-        content_ar: item.content_ar as string | undefined,
+        content: item.content as string,
         is_published: item.is_published as boolean,
         media: (item.media as string[]) || [],
         thumbnail: extractThumbnail(item),
@@ -679,13 +677,11 @@ export const blogPagesCollection = {
       return {
         id: data.id as string,
         slug: data.slug as string,
-        title_en: data.title_en as string,
-        title_ar: data.title_ar as string | undefined,
+        title: data.title as string,
         main_category: (data.main_category as string) || "",
         category: data.category as string,
         keywords: data.keywords !== undefined ? String(data.keywords || "") : String(data.category || ""),
-        content_en: data.content_en as string,
-        content_ar: data.content_ar as string | undefined,
+        content: data.content as string,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
         thumbnail: extractThumbnail(data),
@@ -707,13 +703,11 @@ export const blogPagesCollection = {
       return {
         id: data.id as string,
         slug: data.slug as string,
-        title_en: data.title_en as string,
-        title_ar: data.title_ar as string | undefined,
+        title: data.title as string,
         main_category: (data.main_category as string) || "",
         category: data.category as string,
         keywords: data.keywords !== undefined ? String(data.keywords || "") : String(data.category || ""),
-        content_en: data.content_en as string,
-        content_ar: data.content_ar as string | undefined,
+        content: data.content as string,
         is_published: data.is_published as boolean,
         media: (data.media as string[]) || [],
         thumbnail: extractThumbnail(data),
@@ -730,16 +724,14 @@ export const blogPagesCollection = {
     slug: string
     title: string
     category?: string
-    content_en?: string
+    content?: string
     author_name?: string
   }): Promise<BlogPage> {
-    const lorem =
-      "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>"
     const result = await pb.collection("blog_pages").create({
       slug: data.slug,
-      title_en: data.title,
+      title: data.title,
       category: data.category || "",
-      content_en: data.content_en || lorem,
+      content: data.content ?? "",
       is_published: false,
       author_name: data.author_name || "",
     })
@@ -747,13 +739,11 @@ export const blogPagesCollection = {
     return {
       id: result.id as string,
       slug: result.slug as string,
-      title_en: result.title_en as string,
-      title_ar: result.title_ar as string | undefined,
+      title: result.title as string,
       main_category: (result.main_category as string) || "",
       category: result.category as string,
       keywords: result.keywords !== undefined ? String(result.keywords || "") : String(result.category || ""),
-      content_en: result.content_en as string,
-      content_ar: result.content_ar as string | undefined,
+      content: result.content as string,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
       thumbnail: extractThumbnail(result),
@@ -773,13 +763,11 @@ export const blogPagesCollection = {
     return {
       id: result.id as string,
       slug: result.slug as string,
-      title_en: result.title_en as string,
-      title_ar: result.title_ar as string | undefined,
+      title: result.title as string,
       main_category: (result.main_category as string) || "",
       category: result.category as string,
       keywords: result.keywords !== undefined ? String(result.keywords || "") : String(result.category || ""),
-      content_en: result.content_en as string,
-      content_ar: result.content_ar as string | undefined,
+      content: result.content as string,
       is_published: result.is_published as boolean,
       media: (result.media as string[]) || [],
       thumbnail: extractThumbnail(result),
@@ -807,16 +795,13 @@ export const blogPagesCollection = {
       }
     }
 
-    if (data.title_en !== undefined) formData.append("title_en", data.title_en)
-    if (data.title_ar !== undefined) formData.append("title_ar", data.title_ar)
+    if (data.title !== undefined) formData.append("title", data.title)
     if (data.slug !== undefined) formData.append("slug", data.slug)
     if (data.keywords !== undefined) formData.append("keywords", data.keywords)
     if (data.main_category !== undefined) formData.append("main_category", data.main_category)
     if (data.category !== undefined) formData.append("category", data.category)
-    if (data.content_en !== undefined)
-      formData.append("content_en", data.content_en)
-    if (data.content_ar !== undefined)
-      formData.append("content_ar", data.content_ar)
+    if (data.content !== undefined)
+      formData.append("content", data.content)
     if (data.is_published !== undefined)
       formData.append("is_published", String(data.is_published))
     if (data.author_name !== undefined)

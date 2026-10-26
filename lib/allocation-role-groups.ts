@@ -1,32 +1,14 @@
-import { EXPERT_CLASSIFICATIONS, mainCategoryKey } from "./classification"
-import catalog from "./allocation-role-catalog.json"
+import { EXPERT_CLASSIFICATIONS } from "./classification"
 import type { RolesManagement } from "@/types/expert-role"
 
 // Uses the same professional categories as articles, events and the landing page.
 export const ALLOCATION_ROLE_GROUPS = EXPERT_CLASSIFICATIONS.map(c => ({ id: c.key, en: c.en, ar: c.ar }))
 
-const legacyGroups: Record<string, string> = {
-  physician: "medical",
-  "social specialist": "mental-health",
-  teacher: "education",
-  trainer: "education",
-}
-
-/** Classify existing records without replacing their IDs or tool permissions. */
+/** Missing categories are data errors, not inferred from a role's name. */
 export function normalizeAllocationRole(role: RolesManagement): RolesManagement {
-  if (role.role_group === "psychology") role = { ...role, role_group: mainCategoryKey(role.role_group) }
-  const knownGroup = !!role.role_group && role.role_group !== "dsc-news"
-  if (knownGroup) return role
-  const name = role.role_name_en?.trim().toLowerCase() || ""
-  const match = catalog.find(item =>
-    item.role_name_en.toLowerCase() === name ||
-    (role.role_name_ar?.trim() && item.role_name_ar === role.role_name_ar.trim())
-  )
-  return {
-    ...role,
-    role_group: match?.role_group || legacyGroups[name] || "other",
-    role_order: role.role_order || match?.role_order || 0,
-  }
+  if (!role.role_group?.trim() || ["psychology", "dsc-news"].includes(role.role_group))
+    throw new Error(`Role ${role.id} (${role.role_name_en}) needs a corrected professional category.`)
+  return role
 }
 
 export function allocationRowsForSave(

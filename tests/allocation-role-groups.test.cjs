@@ -18,20 +18,13 @@ new Function("exports", "require", ts.transpileModule(
 const { normalizeAllocationRole, allocationRowsForSave } = exportsState
 const role = (name, extra = {}) => ({ id: "existing-role", role_name_en: name, role_name_ar: "", tool_types: ["survey"], ...extra })
 
-test("legacy seed roles remain selectable with their original IDs and permissions", () => {
-  for (const [name, group] of [["Physician", "medical"], ["Social Specialist", "mental-health"], ["Teacher", "education"], ["Trainer", "education"]]) {
-    const result = normalizeAllocationRole(role(name))
-    assert.equal(result.role_group, group)
-    assert.equal(result.id, "existing-role")
-    assert.deepEqual(result.tool_types, ["survey"])
-  }
+test("missing or obsolete role groups require correction instead of inferred categories", () => {
+ for (const name of ["Physician", "Teacher", "Custom"]) assert.throws(() => normalizeAllocationRole(role(name)), /needs a corrected/)
+ assert.throws(() => normalizeAllocationRole(role("Teacher", {role_group:"psychology"})), /needs a corrected/)
+ const configured = role("Teacher", {role_group:"education"})
+ assert.equal(normalizeAllocationRole(configured), configured)
 })
-test("catalog and custom roles without group metadata do not disappear", () => {
-  assert.equal(normalizeAllocationRole(role("Speech-Language Pathologist")).role_group, "special-needs")
-  assert.equal(normalizeAllocationRole(role("New custom role")).role_group, "other")
-  const configured = role("Custom", { role_group: "leadership", is_retired: true })
-  assert.equal(normalizeAllocationRole(configured), configured)
-})
+
 test("allocation save sends the backend role relation and rejects stale selections", () => {
   const row = { id: "allocation", expert_id: "expert", role: "Teacher" }
   const [payload] = allocationRowsForSave([row], [role("Teacher")])

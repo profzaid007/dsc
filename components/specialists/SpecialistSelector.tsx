@@ -27,24 +27,18 @@ export function SpecialistSelector({ value, onChange, disabled = false }: {
     setLoading(true)
     setError("")
     try {
-      let data: RolesManagement[]
-      try {
-        data = await boundedFullList<RolesManagement>(pb.collection("expert_roles_public"), { requestKey: null })
-      } catch {
-        // Existing installations may already expose their role catalog; API rules still apply.
-        data = await boundedFullList<RolesManagement>(pb.collection("roles_management"), { requestKey: null })
-      }
+      const data = await boundedFullList<RolesManagement>(pb.collection("expert_roles_public"), { requestKey: null })
       setRoles(data.map(normalizeAllocationRole).sort((a, b) => (a.role_order || 0) - (b.role_order || 0)))
     } catch (err) {
-      setError(getErrorMessage(err))
+      setError(`Public role catalog unavailable or requires correction. ${getErrorMessage(err)}`)
     } finally {
       setLoading(false)
     }
   }, [])
   useEffect(() => { void refresh() }, [refresh])
-  const groupIds = new Set([...selectedGroups, ...roles.filter(role => value.includes(role.id)).map(role => role.role_group || "other")])
+  const groupIds = new Set([...selectedGroups, ...roles.filter(role => value.includes(role.id)).map(role => role.role_group!)])
   const available = roles.filter(role => !role.is_retired || value.includes(role.id))
-  const visibleRoles = available.filter(role => groupIds.has(role.role_group || "other") && `${role.role_name_en} ${role.role_name_ar}`.toLowerCase().includes(search.toLowerCase()))
+  const visibleRoles = available.filter(role => groupIds.has(role.role_group!) && `${role.role_name_en} ${role.role_name_ar}`.toLowerCase().includes(search.toLowerCase()))
 
   if (loading) return <p role="status">{ar ? "جارٍ تحميل الأدوار..." : "Loading roles..."}</p>
   if (error) return <div role="alert" className="space-y-2"><p>{error}</p><Button type="button" variant="outline" onClick={() => void refresh()}>{ar ? "إعادة المحاولة" : "Retry"}</Button></div>

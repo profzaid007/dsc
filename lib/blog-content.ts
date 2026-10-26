@@ -1,13 +1,10 @@
 import { parseDocument } from "htmlparser2"
 
-/** Blog posts have one authored version, independent of the interface language.
- * Keep legacy Arabic fields as a fallback without deleting existing translations.
- */
-export function blogField(
-  post: { title_en?: string; title_ar?: string; content_en?: string; content_ar?: string },
-  field: "title" | "content"
-): string {
-  return post[`${field}_en`] || post[`${field}_ar`] || ""
+/** A post stores exactly one authored title and content, independent of UI language. */
+export function blogField(post: { title?: string; content?: string }, field: "title" | "content"): string {
+  const value = post[field]
+  if (typeof value !== "string") throw new Error(`Blog ${field} is missing. Update the blog database schema and correct the affected record.`)
+  return value
 }
 
 export function blogContentLang(html: string): "ar" | "en" {
@@ -16,9 +13,9 @@ export function blogContentLang(html: string): "ar" | "en" {
   return /\p{Script=Arabic}/u.test(firstLetter) ? "ar" : "en"
 }
 
-// Mirror the one authored version into the existing schema for older clients.
+// Store exactly what the author entered, without generating language copies.
 export function blogContentPayload(title: string, content: string) {
-  return { title_en: title, title_ar: title, content_en: content, content_ar: content }
+  return { title, content }
 }
 
 /** Extract article text without exposing document metadata, styles or executable code. */

@@ -12,23 +12,8 @@ function toText(value: unknown): string {
   return ""
 }
 
-/**
- * Normalizes a PocketBase field that may hold an array, a single value, or a
- * comma separated string into a clean list of strings.
- */
-export function toStringList(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => toText(item).trim())
-      .filter((item) => item.length > 0)
-  }
-  const single = toText(value).trim()
-  if (!single) return []
-  return single
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
+import { toStringList, recordStringArray } from "@/lib/expert-list-fields"
+export { toStringList, recordStringArray } from "@/lib/expert-list-fields"
 
 export function emptyDraft(name = ""): ExpertProfileDraft {
   return {
@@ -83,7 +68,7 @@ export function draftFromProfile(
     fieldOfStudy: toText(profile.field_of_study),
     ageGroup: toStringList(profile.age_group),
     specialization: toStringList(profile.specialization_type),
-    specialistRoles: toStringList(profile.specialist_roles),
+    specialistRoles: recordStringArray(profile.specialist_roles),
     consultationMode: toText(profile.consultation_mode),
     fee: toText(profile.fee),
     availability: toText(profile.availability),
@@ -108,7 +93,7 @@ export function draftFromProfile(
     shortBioAr: toText(profile.short_bio_ar),
     newPhoto: null,
     removePhoto: false,
-    keptCv: toStringList(profile.cv),
+    keptCv: recordStringArray(profile.cv),
     newCv: [],
   }
 }
@@ -155,12 +140,7 @@ function expertProfileFormData(
   formData.set("field_of_study", draft.fieldOfStudy.trim())
   formData.set("specialist_roles", JSON.stringify(draft.specialistRoles))
 
-  // `age_group` is still a multi-select field, so each value is appended
-  // separately. `specialization_type` became a single text field: the chosen
-  // option keys are stored as one comma-separated string, which every reader
-  // (`toStringList`, team/approval `toList`) splits back into a list.
-  if (!draft.ageGroup.length) formData.set("age_group", "")
-  draft.ageGroup.forEach((value) => formData.append("age_group", value))
+  formData.set("age_group", draft.ageGroup.join(", "))
   formData.set("specialization_type", draft.specialization.join(", "))
 
   formData.set("consultation_mode", draft.consultationMode)

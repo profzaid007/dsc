@@ -29,41 +29,16 @@ interface ExpertProfileRecord {
 
 const MAX_EXPERTS = 6
 
-/** Normalizes a PocketBase JSON field that may hold an array or a single value. */
-function toList(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.filter(
-      (v): v is string => typeof v === "string" && v.length > 0
-    )
-  }
-  if (typeof value === "string" && value.trim()) {
-    if (value.trim().startsWith("[")) {
-      try { return toList(JSON.parse(value)) } catch { return [] }
-    }
-    // Text fields store arrays as comma-separated values.
-    return value
-      .split(",")
-      .map((v) => v.trim())
-      .filter(Boolean);
-  }
-  return []
-}
+import { toStringList, recordStringArray } from "./expert-list-fields"
 
 export async function getTeamExperts({
   all = false,
-  throwOnError = false,
 }: { all?: boolean; throwOnError?: boolean } = {}): Promise<TeamExpert[]> {
   try {
     const [records, order, specialistRoles] = await Promise.all([
       boundedFullList(pb.collection("experts_public"), { sort: "name" }),
       readExpertOrder().catch(() => []),
-      boundedFullList<RolesManagement>(pb.collection("expert_roles_public")).catch(async error => {
-        // Older deployments may already publish their role catalog. A missing
-        // optional role view must not remove every expert from All categories.
-        if ((error as { status?: number }).status !== 404) throw error
-        return boundedFullList<RolesManagement>(pb.collection("roles_management"))
-          .catch(() => [])
-      }),
+      boundedFullList<RolesManagement>(pb.collection("expert_roles_public")),
     ])
 
     const roleGroups = new Map(specialistRoles.map(role => [role.id, normalizeAllocationRole(role).role_group]))
@@ -78,8 +53,8 @@ export async function getTeamExperts({
           photoUrl: filename
             ? `${pb.baseURL}/api/files/expert_profiles/${record.id}/${encodeURIComponent(filename)}`
             : null,
-          roles: toList(record.specialization_type),
-          specialistCategoryIds: Array.from(new Set(toList(record.specialist_roles).map(id => roleGroups.get(id)).filter((id): id is string => typeof id === "string" && !!id))),
+          roles: toStringList(record.specialization_type, `expert ${record.id}: specialization_type`),
+          specialistCategoryIds: Array.from(new Set(recordStringArray(record.specialist_roles, `expert ${record.id}: specialist_roles`).map(id => roleGroups.get(id)).filter((id): id is string => typeof id === "string" && !!id))),
           degree: record.highest_academic_degree || null,
           fieldOfStudy: record.degree_title || null,
           bio: "",
@@ -94,7 +69,6 @@ export async function getTeamExperts({
         }
       })
   } catch (error) {
-    if (throwOnError) throw error
-    return []
+    throw new Error(`Public expert catalog requires correction: ${error instanceof Error ? error.message : String(error)}`)
   }
 }

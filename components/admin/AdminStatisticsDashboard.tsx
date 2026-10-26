@@ -61,7 +61,7 @@ const metrics = [
   {
     key: "assignments",
     en: "Assignments",
-    ar: "التعيينات",
+    ar: "التكليفات",
     icon: ClipboardList,
     href: "assignments",
   },

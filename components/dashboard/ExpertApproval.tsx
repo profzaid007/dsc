@@ -1,4 +1,5 @@
 "use client"
+import { toStringList as toList } from "@/lib/expert-list-fields"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { boundedFullList } from "@/lib/bounded-records"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -66,21 +67,6 @@ function humanize(value: string): string {
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
-}
-
-function toList(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.filter(
-      (v): v is string => typeof v === "string" && v.length > 0
-    )
-  }
-  if (typeof value === "string" && value.trim()) {
-    return value
-      .split(",")
-      .map((v) => v.trim())
-      .filter(Boolean)
-  }
-  return []
 }
 
 function toFileList(value: unknown): string[] {

@@ -28,7 +28,7 @@ export default function ParentDashboardPage() {
       href: "/dashboard/parent/cases",
     },
     {
-      title: lang === "ar" ? "إجمالي التعيينات" : "Total Assignments",
+      title: lang === "ar" ? "إجمالي التكليفات" : "Total Assignments",
       value: assignments.length,
       icon: ClipboardCheck,
       href: "/dashboard/parent/cases",

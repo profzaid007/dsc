@@ -7,12 +7,12 @@ const {renderToStaticMarkup}=require('react-dom/server')
 function loadPage(content){
  const exports={}
  const mocks={
-  '@/lib/blog-content':{blogField:(p,f)=>p[f+'_en'],blogContentLang:()=> 'ar'},
+  '@/lib/blog-content':{blogField:(p,f)=>p[f],blogContentLang:()=> 'ar'},
   '@/lib/bounded-records':{boundedFullList:async()=>[]},
   'next/link':{default:({children,...props})=>React.createElement('a',props,children)},
   'next/headers':{cookies:async()=>({get:()=>({value:'ar'})})},
   'next/navigation':{notFound:()=>{throw Error('Not found')}},
-  '@/lib/pb':{default:{filter:()=>'',collection:()=>({getFirstListItem:async()=>({id:'post',title_en:'Article',content_en:content,category:'',is_published:true})})}},
+  '@/lib/pb':{default:{filter:()=>'',collection:()=>({getFirstListItem:async()=>({id:'post',title:'Article',content:content,category:'',is_published:true})})}},
   '@/lib/i18n':{t:(labels,lang)=>labels[lang]},
   '@/lib/format-date':{formatDate:()=> '2026-10-17'},
   '@/lib/cms-layout':{isCustomCmsLayout:html=>html.includes('<style>')},

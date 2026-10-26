@@ -1,4 +1,5 @@
 "use client"
+import { recordStringArray } from "@/lib/expert-list-fields"
 
 import {
   BookOpen,
@@ -79,7 +80,7 @@ export function ExpertProfileView({
 
   const photo = profilePhotoName(profile)
   const photoUrl = profileFileUrl(profile, photo, fileToken)
-  const cvFiles = toStringList(profile?.cv)
+  const cvFiles = recordStringArray(profile?.cv)
   // Stored values may be enum keys or free text, so resolve through the label
   // map and fall back for genuine prose. Kept as raw/display pairs so React
   // keys stay unique even when two stored values share a label.

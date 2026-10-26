@@ -5,7 +5,7 @@ export const securityModules = [
   ["experts", "Experts", "الخبراء"],
   ["cases", "Cases", "الحالات"],
   ["tools", "Tools", "الأدوات"],
-  ["assignments", "Assignments", "التعيينات"],
+  ["assignments", "Assignments", "التكليفات"],
   ["allocations", "Allocations", "التخصيصات"],
   ["training", "Training", "التدريب"],
   ["lectures", "Public lectures", "المحاضرات العامة"],

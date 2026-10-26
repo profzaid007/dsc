@@ -388,7 +388,7 @@ export default function AdminCasesPage() {
                     {profile.expand?.user?.name || "—"}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {lang === "ar" ? "التعيينات" : "Assignments"}:{" "}
+                    {lang === "ar" ? "التكليفات" : "Assignments"}:{" "}
                     {assignmentCounts[profile.id]?.total || 0}
                   </p>
                   {renderCaseActions(profile)}
@@ -415,7 +415,7 @@ export default function AdminCasesPage() {
                     <TableHead>{lang === "ar" ? "المستخدم" : "User"}</TableHead>
                     <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
                     <TableHead>
-                      {lang === "ar" ? "التعيينات" : "Assignments"}
+                      {lang === "ar" ? "التكليفات" : "Assignments"}
                     </TableHead>
                     <TableHead className="text-right">
                       {lang === "ar" ? "الإجراءات" : "Actions"}

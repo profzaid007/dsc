@@ -15,6 +15,8 @@ const client = {
     },
   }),
 }
+const lists = {}
+new Function("exports", ts.transpileModule(fs.readFileSync("lib/expert-list-fields.ts", "utf8"), {compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(lists)
 const hook = {}
 new Function(
   "exports",
@@ -23,7 +25,7 @@ new Function(
     compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true },
   }).outputText
 )(hook, (name) =>
-  name === "@/lib/pb"
+  name === "@/lib/expert-list-fields" ? lists : name === "@/lib/pb"
     ? { __esModule: true, default: client }
     : name === "@/lib/country-codes"
       ? { DEFAULT_COUNTRY_CODE: "+962" }

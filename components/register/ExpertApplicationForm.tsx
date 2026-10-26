@@ -294,7 +294,7 @@ export function ExpertApplicationForm({
       extraFormData.set("degree_title", degreeTitle)
       extraFormData.set("field_of_study", fieldOfStudy)
 
-      ageGroup.forEach((v) => extraFormData.append("age_group", v))
+      extraFormData.set("age_group", ageGroup.join(", "))
       // specialization_type is a single text field now: store the selected
       // option keys comma-separated (readers split on commas).
       extraFormData.set("specialization_type", specialization.join(", "))
@@ -331,7 +331,7 @@ export function ExpertApplicationForm({
           ([, value]) => typeof value === "string"
         )
       ) as Record<string, unknown>
-      profile.age_group = ageGroup
+      profile.age_group = ageGroup.join(", ")
       profile.specialist_roles = specialistRoles
       userFormData.set("profile", JSON.stringify(profile))
       if (!submissionKey.current) submissionKey.current = crypto.randomUUID()
