@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 
 import type { Profile } from "@/types/profile"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,7 +19,7 @@ export function ProfileCard({ profile, hrefPrefix = "/dashboard/cases" }: Profil
       <Card className="h-full cursor-pointer transition-all hover:shadow-md">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-lg">{profile.name}</CardTitle>
+            <CardTitle className="text-lg"><CaseName profile={profile} /></CardTitle>
             <CaseStatusBadge status={profile.status} />
           </div>
         </CardHeader>

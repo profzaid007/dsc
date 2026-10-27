@@ -314,8 +314,8 @@ export default function LoginPage() {
               {resetSent
                 ? t(
                     {
-                      en: "If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder).",
-                      ar: "إذا كان هناك حساب مرتبط بهذا البريد، فقد تم إرسال رابط إعادة التعيين. تحقق من بريدك الوارد (ومجلد البريد غير المرغوب).",
+                      en: "Your request has been accepted. If an account matches this email, check your inbox and spam folder for the reset link.",
+                      ar: "تم قبول الطلب. إذا كان البريد مرتبطًا بحساب، فتحقق من البريد الوارد ومجلد الرسائل غير المرغوب فيها لاستلام رابط الاستعادة.",
                     },
                     lang
                   )

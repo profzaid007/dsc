@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { useProtectedFileToken } from "@/hooks/useProtectedFileToken"
 import { surveyOptionLabel } from "@/lib/survey-options"
 
@@ -1252,7 +1253,7 @@ export default function TakeSurveyToolPage({
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-primary">{displayName}</h1>
-            <p className="text-muted-foreground">{profile.name}</p>
+            <p className="text-muted-foreground"><CaseName profile={profile} /></p>
           </div>
         </div>
 
@@ -1742,7 +1743,7 @@ export default function TakeSurveyToolPage({
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-primary">{displayName}</h1>
-          <p className="text-muted-foreground">{profile.name}</p>
+          <p className="text-muted-foreground"><CaseName profile={profile} /></p>
         </div>
       </div>
 

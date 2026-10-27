@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 import { CaseAssessments } from "@/components/assessments/CaseAssessments"
@@ -427,7 +428,7 @@ export default function AdminCaseDetailPage({
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-primary">{profile.name}</h1>
+          <h1 className="text-2xl font-bold text-primary"><CaseName profile={profile} /></h1>
           <p className="text-muted-foreground">
             {lang === "ar"
               ? `أنشئت في ${formatDate(profile.created)}`
@@ -899,7 +900,7 @@ export default function AdminCaseDetailPage({
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <ClipboardList className="h-5 w-5" />
-                  {lang === "ar" ? "المهام المكلف بها" : "Assigned Tasks"}
+                  {lang === "ar" ? "التكليفات" : "Assignments"}
                 </CardTitle>
                 <CardDescription>
                   {lang === "ar"
@@ -1039,8 +1040,8 @@ export default function AdminCaseDetailPage({
                   </h3>
                   <p className="text-muted-foreground">
                     {lang === "ar"
-                      ? "ستظهر المهام المكتملة هنا"
-                      : "Completed tasks will appear here"}
+                      ? "ستظهر التكليفات المكتملة هنا"
+                      : "Completed assignments will appear here"}
                   </p>
                 </div>
               ) : (

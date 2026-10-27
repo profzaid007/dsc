@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { DataError } from "@/components/ui/data-error"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 
@@ -465,7 +466,7 @@ export default function SurveyBuilderPage({
                   <span className="font-medium">
                     {lang === "ar" ? "الحالة:" : "Case:"}
                   </span>
-                  <span>{selectedCase.name}</span>
+                  <span><CaseName profile={selectedCase} /></span>
                 </div>
               </CardContent>
             </Card>

@@ -9,40 +9,46 @@ module.exports = (e) => {
     organization: "organization_profiles",
     care_foundation: "organization_profiles",
   }
-  if (
-    !roles[u.role] ||
-    p.collection !== roles[u.role] ||
-    !Array.isArray(cases) ||
-    cases.length > 30
-  )
-    throw new BadRequestError("Invalid registration")
-  const text = (value, required, max) => {
+  const invalid = (field, code, message) => {
+    throw new BadRequestError(message, { [field]: new ValidationError(code, message) })
+  }
+  if (!roles[u.role]) invalid("role", "registration_account_type", "Select a supported account type.")
+  if (p.collection !== roles[u.role])
+    throw new BadRequestError("The registration form selected the wrong profile type. Reload the form before trying again. No account was created.")
+  if (!Array.isArray(cases) || cases.length > 30)
+    invalid("children", "registration_children_limit", "You can register at most 30 children at a time.")
+  const text = (value, required, max, field) => {
     if (value !== undefined && typeof value !== "string")
-      throw new BadRequestError("Invalid text field")
-    const s = String(value || "").trim()
-    if ((required && !s) || s.length > max)
-      throw new BadRequestError("Missing or invalid registration field")
-    return s
+      invalid(field, "registration_text_type", "Enter text in this field.")
+    const valueText = String(value || "").trim()
+    if (required && !valueText) invalid(field, "validation_required", "This field is required.")
+    if (valueText.length > max)
+      invalid(field, "registration_max_length", "Use no more than " + max + " characters.")
+    return valueText
   }
-  const phone = (value) => {
-    const s = text(value, true, 40).replace(/[\s()\-]/g, "")
-    if (!/^\+[1-9]\d{6,14}$/.test(s))
-      throw new BadRequestError("Enter a valid international telephone number")
-    return s
+  const phone = (value, field) => {
+    const valueText = text(value, true, 40, field).replace(/[\s()\-]/g, "")
+    if (!/^\+[1-9]\d{6,14}$/.test(valueText))
+      invalid(field, "registration_phone", "Enter a phone number with its country code, for example +966501234567.")
+    return valueText
   }
-  const email = text(u.email, true, 254).toLowerCase(),
-    name = text(u.name, true, 200)
+  const email = text(u.email, true, 254, "email").toLowerCase(),
+    name = text(u.name, true, 200, "name")
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    throw new BadRequestError("Invalid email")
-  const password = text(u.password, true, 128)
-  if (password !== u.passwordConfirm || password.length < 8)
-    throw new BadRequestError(
-      "Passwords must match and contain at least 8 characters"
-    )
-  const contact = phone(u.contact_number),
-    key = text(b.submission_key, true, 64)
+    invalid("email", "validation_email", "Enter a valid email address, for example name@example.com.")
+  const password = u.password
+  if (typeof password !== "string" || password.length < 8 || password.length > 128)
+    throw new BadRequestError("Password must contain 8 to 128 characters.", {
+      password: new ValidationError("validation_password_length", "Password must contain 8 to 128 characters.")
+    })
+  if (password !== u.passwordConfirm)
+    throw new BadRequestError("Password confirmation does not match.", {
+      passwordConfirm: new ValidationError("validation_password_mismatch", "Re-enter the same password in both fields.")
+    })
+  const contact = phone(u.contact_number, "contact_number"),
+    key = text(b.submission_key, true, 64, "submission_key")
   if (!/^[a-zA-Z0-9-]{16,64}$/.test(key))
-    throw new BadRequestError("Invalid submission key")
+    throw new BadRequestError("Your registration session is invalid. Reload the form and submit again. No account was created.")
   const fields = {
     individual_profiles: [
       "gender",
@@ -67,12 +73,12 @@ module.exports = (e) => {
     ],
   }
   if (u.role === "individual" && !["male", "female"].includes(p.gender))
-    throw new BadRequestError("Select a gender")
+    invalid("gender", "registration_gender", "Select male or female.")
   if (p.collection === "organization_profiles")
-    text(p.organization_name, true, 200)
+    text(p.organization_name, true, 200, "organization_name")
   if (p.emergency_contact_phone)
-    p.emergency_contact_phone = phone(p.emergency_contact_phone)
-  const date = (value) => {
+    p.emergency_contact_phone = phone(p.emergency_contact_phone, "emergency_contact_phone")
+  const date = (value, field) => {
     if (
       value &&
       (!/^\d{4}-\d{2}-\d{2}$/.test(value) ||
@@ -80,18 +86,27 @@ module.exports = (e) => {
         new Date(value).toISOString().slice(0, 10) !== value ||
         Date.parse(value) > Date.now())
     )
-      throw new BadRequestError("Invalid date of birth")
+      invalid(field, "registration_date", "Enter a valid date of birth that is not in the future.")
   }
-  date(p.date_of_birth)
-  for (const c of cases) {
-    text(c.name, true, 200)
-    text(c.portal_type, true, 200)
-    text(c.service_type, true, 200)
-    date(c.date_of_birth)
+  date(p.date_of_birth, "date_of_birth")
+  for (const [index, c] of cases.entries()) {
+    text(c.name, true, 200, `children.${index}.name`)
+    text(c.portal_type, true, 200, `children.${index}.portal_type`)
+    text(c.service_type, true, 200, `children.${index}.service_type`)
+    date(c.date_of_birth, `children.${index}.date_of_birth`)
     if (u.role === "parent") {
-      text(c.relationship, true, 100)
+      text(c.relationship, true, 100, `children.${index}.relationship`)
       if (!["male", "female"].includes(c.gender))
-        throw new BadRequestError("Select child gender")
+        invalid(`children.${index}.gender`, "registration_gender", "Select male or female.")
+    }
+  }
+  const profileCollection = e.app.findCollectionByNameOrId(p.collection)
+  if (!profileCollection.fields.getByName("submission_key"))
+    throw new BadRequestError("Registration setup is incomplete: " + p.collection + ".submission_key is missing. Apply the account registration migration. No account was created.")
+  const save = (app, record) => {
+    try { app.save(record) }
+    catch (error) {
+      throw new BadRequestError("Please correct the registration fields.", error.value || error)
     }
   }
   let user
@@ -111,7 +126,7 @@ module.exports = (e) => {
         user.getString("role") !== u.role ||
         !user.validatePassword(password)
       )
-        throw new BadRequestError("Invalid registration retry")
+        throw new BadRequestError("This registration session belongs to a different submission. Reload the form; if your account already exists, sign in instead.")
       return
     }
     user = new Record(app.findCollectionByNameOrId("users"))
@@ -125,21 +140,21 @@ module.exports = (e) => {
       emailVisibility: true,
     }))
       user.set(field, value)
-    app.save(user)
+    save(app, user)
     const profile = new Record(app.findCollectionByNameOrId(p.collection))
     for (const field of fields[p.collection])
       if (p[field] !== undefined)
         profile.set(
           field,
-          text(p[field], false, field === "notes" ? 5000 : 300)
+          text(p[field], false, field === "notes" ? 5000 : 300, field)
         )
     profile.set("user", user.id)
     profile.set("submission_key", key)
-    app.save(profile)
+    save(app, profile)
     if (b.program_id) {
       const program = app.findRecordById(
         "programs",
-        text(b.program_id, true, 30)
+        text(b.program_id, true, 30, "program_id")
       )
       const row = new Record(app.findCollectionByNameOrId("cases"))
       const title = program.get("name")
@@ -154,9 +169,9 @@ module.exports = (e) => {
       row.set("program_status", "enrolled")
       row.set("status", "pending")
       row.set("user_details", { name, email, contact })
-      app.save(row)
+      save(app, row)
     }
-    for (const c of cases) {
+    for (const [index, c] of cases.entries()) {
       const row = new Record(app.findCollectionByNameOrId("cases"))
       for (const field of [
         "name",
@@ -169,16 +184,16 @@ module.exports = (e) => {
         "notes",
       ])
         if (c[field] !== undefined)
-          row.set(field, text(c[field], false, field === "notes" ? 5000 : 300))
+          row.set(field, text(c[field], false, field === "notes" ? 5000 : 300, `children.${index}.${field}`))
       row.set("user", user.id)
       row.set("status", "pending")
       row.set("user_details", { name, email, contact })
       const details = c.case_details || {}
       row.set("case_details", {
-        custom_category: text(details.custom_category, false, 200),
-        custom_sub_category: text(details.custom_sub_category, false, 200),
+        custom_category: text(details.custom_category, false, 200, `children.${index}.custom_category`),
+        custom_sub_category: text(details.custom_sub_category, false, 200, `children.${index}.custom_sub_category`),
       })
-      app.save(row)
+      save(app, row)
     }
   })
   return e.json(200, { id: user.id, success: true })

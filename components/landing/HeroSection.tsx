@@ -50,7 +50,7 @@ function ExpertPortrait({ expert }: { expert: TeamExpert }) {
   )
 }
 
-export function HeroSection({ experts: allExperts, categories = [] }: { experts: TeamExpert[]; categories?: SpecialistCategory[] }) {
+export function HeroSection({ experts: allExperts, categories = [], catalogError = "" }: { experts: TeamExpert[]; categories?: SpecialistCategory[]; catalogError?: string }) {
   const [category, setCategory] = useState("all")
   const experts = category === "all" ? allExperts : allExperts.filter(expert => expert.specialistCategoryIds?.includes(category))
   const { lang } = useLang()
@@ -199,7 +199,13 @@ export function HeroSection({ experts: allExperts, categories = [] }: { experts:
             aria-live={rotating ? "off" : "polite"}
             aria-atomic="true"
           >
-            {expert ? (
+            {catalogError ? (
+              <div className={styles.empty} role="alert">
+                <h3>{ar ? "تعذر تحميل دليل الخبراء" : "Expert catalog could not be loaded"}</h3>
+                <p>{ar ? "يلزم تصحيح إعدادات دليل الخبراء على الخادم." : "The server's expert catalog configuration needs correction."}</p>
+                <p>{catalogError}</p>
+              </div>
+            ) : expert ? (
               <article
                 key={expert.id}
                 className={styles.expertCard}

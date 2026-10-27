@@ -246,8 +246,8 @@ function ProfessionalCaseAssessments({ caseId, mode = "all", assignmentRows, onA
               </Button>
               <p className="text-xs text-slate-600">
                 {t(
-                  "يظهر في قائمة «تقييماتي» لدى مالك الحالة. لا يرسل بريدًا أو رسالة خارجية.",
-                  "Appears in the case owner's My assessments list. No external email or message is sent."
+                  "يظهر في قائمة «تكليفاتي» لدى مالك الحالة. لا يرسل بريدًا أو رسالة خارجية.",
+                  "Appears in the case owner's My Assignments list. No external email or message is sent."
                 )}
               </p>
             </>
@@ -258,7 +258,7 @@ function ProfessionalCaseAssessments({ caseId, mode = "all", assignmentRows, onA
         (!data?.sessions.length && !assignmentRows ? (
           <p className="rounded border border-dashed p-4 text-slate-600">
             {t(
-              "لا توجد تعيينات لهذه الحالة بعد.",
+              "لا توجد تكليفات لهذه الحالة بعد.",
               "No assignments have been added to this case."
             )}
           </p>

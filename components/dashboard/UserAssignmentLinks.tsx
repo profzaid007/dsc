@@ -1,4 +1,6 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
+import type { Profile } from "@/types/profile"
 
 import { useEffect, useState } from "react"
 import pb, { getErrorMessage } from "@/lib/pb"
@@ -13,7 +15,7 @@ interface Assignment {
   role_id?: string
   role?: string
   expand?: {
-    case_id?: { name?: string }
+    case_id?: { name?: string; owner_display?: Profile["owner_display"] }
     role_id?: { role_name_en?: string; role_name_ar?: string }
   }
 }
@@ -38,7 +40,7 @@ export function UserAssignmentLinks({ userId }: { userId: string }) {
         filter: pb.filter("expert_id = {:id}", { id: userId }),
         expand: "case_id,role_id",
         fields:
-          "id,case_id,role_id,role,expand.case_id.name,expand.role_id.role_name_en,expand.role_id.role_name_ar",
+          "id,case_id,role_id,role,expand.case_id.name,expand.case_id.owner_display,expand.role_id.role_name_en,expand.role_id.role_name_ar",
         sort: "id",
         requestKey: null,
       })
@@ -117,10 +119,10 @@ export function UserAssignmentLinks({ userId }: { userId: string }) {
                       href={`/dashboard/admin/cases/${encodeURIComponent(assignment.case_id)}#case-allocations`}
                       className="font-medium text-primary underline"
                     >
-                      {caseName}
+                      <CaseName profile={{name:caseName,owner_display:assignment.expand?.case_id?.owner_display}} />
                     </SmartLink>
                   ) : (
-                    <p className="font-medium">{caseName}</p>
+                    <p className="font-medium"><CaseName profile={{name:caseName,owner_display:assignment.expand?.case_id?.owner_display}} /></p>
                   )}
                   <p className="text-muted-foreground">
                     {ar ? "رقم الحالة:" : "Case ID:"}{" "}

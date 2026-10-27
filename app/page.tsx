@@ -8,8 +8,10 @@ import { getTeamExperts } from "@/lib/team-experts"
 export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
-  const [experts, definitions] = await Promise.all([
-    getTeamExperts({ all: true }),
+  const [catalog, definitions] = await Promise.all([
+    getTeamExperts({ all: true })
+      .then(experts => ({ experts, error: "" }))
+      .catch((error: unknown) => ({ experts: [], error: error instanceof Error ? error.message : "Public expert catalog could not be loaded." })),
     getClassificationDefinitions().catch(() => []),
   ])
   const categories: SpecialistCategory[] = definitions
@@ -25,7 +27,7 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* 1. Hero Section */}
-      <HeroSection experts={experts} categories={categories} />
+      <HeroSection experts={catalog.experts} catalogError={catalog.error} categories={categories} />
 
       {/* 3. Portal Discovery */}
       <PortalDiscovery />

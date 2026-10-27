@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
 
@@ -293,7 +294,7 @@ export default function AdminPaymentsPage() {
                               href={`/dashboard/admin/cases/${profile.id}`}
                               className="hover:underline"
                             >
-                              {profile.name}
+                              <CaseName profile={profile} />
                             </Link>
                           </TableCell>
                           <TableCell>

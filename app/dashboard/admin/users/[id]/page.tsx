@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 
 import { use, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
@@ -629,7 +630,7 @@ export default function AdminUserDetailPage({
                     {userCases.map((profile: Profile) => (
                       <TableRow key={profile.id}>
                         <TableCell className="font-medium">
-                          {profile.name}
+                          <CaseName profile={profile} />
                         </TableCell>
                         <TableCell>
                           {profile.date_of_birth

@@ -214,7 +214,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
               >
                 {t({ en: "Contact", ar: "التواصل" }, lang)}
               </label>
-              <div className="flex gap-2">
+              <div dir="ltr" className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger
                     aria-label={t(

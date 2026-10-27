@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
 
@@ -167,8 +168,8 @@ export default function ProfileDetailPage({
               </CardTitle>
               <CardDescription>
                 {lang === "ar"
-                  ? "يمكنك تعديل التفاصيل دون تغيير المدفوعات أو المهام."
-                  : "Update project details while keeping payments and tasks."}
+                  ? "يمكنك تعديل التفاصيل دون تغيير المدفوعات أو التكليفات."
+                  : "Update project details while keeping payments and assignments."}
               </CardDescription>
             </div>
             {!draft && (
@@ -308,7 +309,7 @@ export default function ProfileDetailPage({
             </Button>
             <div className="min-w-0 flex-1">
               <h1 className="min-w-0 text-2xl font-bold text-primary [overflow-wrap:anywhere]">
-                {profile.name}
+                <CaseName profile={profile} />
               </h1>
               <p className="text-muted-foreground">
                 {lang === "ar"
@@ -324,7 +325,7 @@ export default function ProfileDetailPage({
                 {lang === "ar" ? "نظرة عامة" : "Overview"}
               </TabsTrigger>
               <TabsTrigger value="tasks">
-                {lang === "ar" ? "المهام" : "Tasks"}
+                {lang === "ar" ? "التكليفات" : "Assignments"}
                 {roleFilteredAssignments.length > 0 && (
                   <Badge variant="secondary" className="ms-2">
                     {roleFilteredAssignments.length}
@@ -480,12 +481,12 @@ export default function ProfileDetailPage({
                 <CardHeader>
                   <CardTitle className="flex min-w-0 flex-wrap items-center gap-2">
                     <ClipboardList className="h-5 w-5" />
-                    {lang === "ar" ? "المهام المكلف بها" : "Assigned Tasks"}
+                    {lang === "ar" ? "التكليفات" : "Assignments"}
                   </CardTitle>
                   <CardDescription>
                     {lang === "ar"
-                      ? "المهام المكلف بها لهذا المشروع"
-                      : "Tasks assigned to this profile"}
+                      ? "التكليفات لهذا المشروع"
+                      : "Assignments assigned to this profile"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -494,13 +495,13 @@ export default function ProfileDetailPage({
                       <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                       <h3 className="mb-2 text-lg font-medium">
                         {lang === "ar"
-                          ? "لا توجد مهام مكلف بها"
-                          : "No tasks assigned"}
+                          ? "لا توجد تكليفات بعد"
+                          : "No assignments yet"}
                       </h3>
                       <p className="text-muted-foreground">
                         {lang === "ar"
-                          ? "ستظهر المهام هنا بمجرد تكليفها من قبل المشرف"
-                          : "Tasks will appear here once assigned by an admin"}
+                          ? "ستظهر التكليفات هنا بمجرد تكليفها من قبل المشرف"
+                          : "Assignments will appear here once assigned by an admin"}
                       </p>
                     </div>
                   ) : (
@@ -634,8 +635,8 @@ export default function ProfileDetailPage({
                   </CardTitle>
                   <CardDescription>
                     {lang === "ar"
-                      ? "ستكون المهام المكتملة هنا"
-                      : "Completed Tasks will be here"}
+                      ? "ستكون التكليفات المكتملة هنا"
+                      : "Completed Assignments will be here"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -648,8 +649,8 @@ export default function ProfileDetailPage({
                       </h3>
                       <p className="text-muted-foreground">
                         {lang === "ar"
-                          ? "ستظهر المهام المكتملة هنا"
-                          : "Completed tasks will appear here"}
+                          ? "ستظهر التكليفات المكتملة هنا"
+                          : "Completed assignments will appear here"}
                       </p>
                     </div>
                   ) : (

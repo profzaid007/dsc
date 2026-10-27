@@ -18,7 +18,7 @@ function data(record) {
 }
 function list(e) {
   policy.requirePermission(e.app, e.auth, "payments.read")
-  return e.app.findRecordsByFilter("cases", "", "-created", 0, 0).map(data)
+  return e.app.findRecordsByFilter("cases", "", "-created", 0, 0).map(record => ({ ...data(record), owner_display: require(__hooks + "/lib/case-owner-display.js")(e.app, record) }))
 }
 function update(e) {
   const body = e.requestInfo().body
@@ -63,7 +63,7 @@ function update(e) {
         throw new BadRequestError("Invalid payment action.")
     }
     app.save(record)
-    result = data(record)
+    result = { ...data(record), owner_display: require(__hooks + "/lib/case-owner-display.js")(app, record) }
     // Financial audit records omit names, uploads, and case notes.
     const safe = (row) => ({
       status: row.status,

@@ -232,7 +232,7 @@ export function IndividualRegistrationForm({
                 {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
                 <span className="ml-1 text-red-500">*</span>
               </Label>
-              <div className="flex gap-2">
+              <div dir="ltr" className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger
                     aria-label={
@@ -445,6 +445,7 @@ export function IndividualRegistrationForm({
                   lang
                 )}
               </Label>
+              <div dir="ltr" className="flex gap-2">
               <select
                 aria-label={
                   lang === "ar"
@@ -453,7 +454,7 @@ export function IndividualRegistrationForm({
                 }
                 value={emCountryCode}
                 onChange={(e) => setEmCountryCode(e.target.value)}
-                className="h-9 rounded border px-2"
+                className="h-9 w-32 shrink-0 rounded border px-2"
               >
                 {COUNTRY_CODES.map((c) => (
                   <option key={c.value} value={c.dialCode}>
@@ -462,6 +463,7 @@ export function IndividualRegistrationForm({
                 ))}
               </select>
               <Input
+                className="min-w-0 flex-1"
                 value={emContactNumber}
                 onChange={(e) => setEmContactNumber(e.target.value)}
                 autoComplete="off"
@@ -471,6 +473,7 @@ export function IndividualRegistrationForm({
                   lang
                 )}
               />
+              </div>
               {fieldErrorNode("emContactNumber", "emergency_contact_phone")}
             </div>
           </div>

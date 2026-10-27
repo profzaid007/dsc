@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { useState, useEffect, useRef } from "react"
@@ -171,7 +172,7 @@ export default function AssignmentsPage() {
               </h1>
               <p className="text-muted-foreground">
                 {lang === "ar"
-                  ? "إدارة تعيينات الأدوات للحالات"
+                  ? "إدارة تكليفات الأدوات للحالات"
                   : "Manage tool assignments to cases"}
               </p>
             </div>
@@ -206,7 +207,7 @@ export default function AssignmentsPage() {
             </h1>
             <p className="text-muted-foreground">
               {lang === "ar"
-                ? "إدارة تعيينات الأدوات للحالات"
+                ? "إدارة تكليفات الأدوات للحالات"
                 : "Manage tool assignments to cases"}
             </p>
           </div>
@@ -313,7 +314,7 @@ export default function AssignmentsPage() {
             <div className="py-12 text-center">
               <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="mb-2 text-lg font-medium">
-                {lang === "ar" ? "لا توجد تعيينات" : "No assignments found"}
+                {lang === "ar" ? "لا توجد تكليفات" : "No assignments found"}
               </h3>
               <p className="text-muted-foreground">
                 {assignments.length === 0
@@ -321,7 +322,7 @@ export default function AssignmentsPage() {
                     ? "لم يتم تعيين أي أدوات للحالات بعد. افتح الحالة ثم تبويب التكليفات لإضافة أداة أو مقياس."
                     : "No tools have been assigned yet. Open a case and its Assignments tab to add a tool or assessment."
                   : lang === "ar"
-                    ? "لا توجد تعيينات تطابق عوامل التصفية."
+                    ? "لا توجد تكليفات تطابق عوامل التصفية."
                     : "No assignments match your filters."}
               </p>
             </div>
@@ -358,7 +359,7 @@ export default function AssignmentsPage() {
                           href={`/dashboard/cases/${assignment.case}`}
                           className="hover:text-primary hover:underline"
                         >
-                          {getCaseName(assignment.case)}
+                          {(() => { const profile = profiles.find(p => p.id === assignment.case); return profile ? <CaseName profile={profile} /> : assignment.case })()}
                         </SmartLink>
                       </TableCell>
                       <TableCell>

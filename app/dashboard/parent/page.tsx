@@ -22,7 +22,7 @@ export default function ParentDashboardPage() {
 
   const stats = [
     {
-      title: lang === "ar" ? "الأطفال" : "Children",
+      title: lang === "ar" ? "الحالات" : "Cases",
       value: profiles.length,
       icon: Users,
       href: "/dashboard/parent/cases",
@@ -56,7 +56,7 @@ export default function ParentDashboardPage() {
             </p>
           </div>
           <Link href={`/dashboard/parent/cases/new`}>
-            <Button>{lang === "ar" ? "إضافة طفل" : "Add Child"}</Button>
+            <Button>{lang === "ar" ? "إضافة حالة" : "Add Case"}</Button>
           </Link>
         </div>
         <SkeletonStats count={3} />
@@ -82,7 +82,7 @@ export default function ParentDashboardPage() {
           </p>
         </div>
         <Link href={`/dashboard/parent/cases/new`}>
-          <Button>{lang === "ar" ? "إضافة طفل" : "Add Child"}</Button>
+          <Button>{lang === "ar" ? "إضافة حالة" : "Add Case"}</Button>
         </Link>
       </div>
 
@@ -109,15 +109,15 @@ export default function ParentDashboardPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderKanban className="mb-4 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-medium">
-              {lang === "ar" ? "لا يوجد أطفال بعد" : "No children yet"}
+              {lang === "ar" ? "لا توجد حالات بعد" : "No cases yet"}
             </h3>
             <p className="mb-4 text-center text-muted-foreground">
               {lang === "ar"
-                ? "أضف بيانات أول طفل للبدء"
-                : "Add the first child to get started"}
+                ? "أضف أول حالة للبدء"
+                : "Add the first case to get started"}
             </p>
             <Link href={`/dashboard/parent/cases/new`}>
-              <Button>{lang === "ar" ? "إضافة طفل" : "Add Child"}</Button>
+              <Button>{lang === "ar" ? "إضافة حالة" : "Add Case"}</Button>
             </Link>
           </CardContent>
         </Card>

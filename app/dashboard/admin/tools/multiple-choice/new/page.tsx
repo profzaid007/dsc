@@ -1,12 +1,14 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 
 import { DataError } from "@/components/ui/data-error"
-import { use, useState, useEffect } from "react"
+import { use, useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useTools } from "@/hooks/useTools"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
+import { getErrorMessage } from "@/lib/pb"
 import { caseToolsCollection } from "@/lib/pb-collections"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -106,6 +108,9 @@ export default function MultipleChoiceBuilderPage({
   const { toolTypes, fetchToolTypes } = useToolTypes()
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+  const createdTemplateId = useRef<string | null>(null)
+  const submitting = useRef(false)
   const [isLoading, setIsLoading] = useState(false)
 
   // Edit mode detection
@@ -174,16 +179,22 @@ export default function MultipleChoiceBuilderPage({
   }
 
   const handleSubmit = async () => {
-    if (!formData.nameEn || questions.length === 0) return
+    if (submitting.current || !formData.nameEn || questions.length === 0) return
+    submitting.current = true
     setIsSubmitting(true)
+    setSubmitError("")
+    try {
 
     const toolTypes = await fetchToolTypes()
     const type = toolTypes.find((t) => t.key === "multiple_answer")?.id
     if (!type) {
-      setIsSubmitting(false)
-      return
+      throw new Error(lang === "ar" ? "نوع الأداة multiple_answer مفقود. صحح إعدادات أنواع الأدوات على الخادم." : "The multiple_answer tool type is missing. Correct the server tool type settings.")
     }
 
+    const mediaUrls = (record: {media?: unknown;[key:string]:unknown}) => {
+      if (!Array.isArray(record.media) || record.media.some(name => typeof name !== "string")) throw new Error(lang === "ar" ? "تعذر إكمال الحفظ: حقل ملفات الأداة media مفقود أو غير صحيح على الخادم. يلزم تطبيق تحديث قاعدة البيانات." : "Cannot complete saving: the tool media file field is missing or invalid on the server. Apply the database update.")
+      return (record.media as string[]).map(filename => pb.files.getUrl(record as never, filename))
+    }
     const baseQuestions = questions.map((q, idx) => ({ ...q, order: idx }))
     const pendingEntries = Array.from(pendingFiles.entries())
 
@@ -219,9 +230,7 @@ export default function MultipleChoiceBuilderPage({
       mediaFormData.append("config", JSON.stringify(baseConfig))
 
       const record = await pb.collection("tools").update(editId, mediaFormData)
-      const uploadedUrls = (record.media as string[]).map((filename) =>
-        pb.files.getUrl(record, filename)
-      )
+      const uploadedUrls = mediaUrls(record)
 
       finalConfig = buildFinalConfig(uploadedUrls)
 
@@ -279,10 +288,11 @@ export default function MultipleChoiceBuilderPage({
         mediaFormData.append("media", file)
       }
 
-      const record = await pb.collection("tools").create(mediaFormData)
-      const uploadedUrls = (record.media as string[]).map((filename) =>
-        pb.files.getUrl(record, filename)
-      )
+      const record = createdTemplateId.current
+        ? await pb.collection("tools").update(createdTemplateId.current, mediaFormData)
+        : await pb.collection("tools").create(mediaFormData)
+      createdTemplateId.current = record.id
+      const uploadedUrls = mediaUrls(record)
 
       finalConfig = buildFinalConfig(uploadedUrls)
 
@@ -307,6 +317,12 @@ export default function MultipleChoiceBuilderPage({
       }
 
       router.push(`/dashboard/admin/tools`)
+    }
+    } catch (error) {
+      setSubmitError(getErrorMessage(error, lang))
+    } finally {
+      submitting.current = false
+      setIsSubmitting(false)
     }
   }
 
@@ -679,7 +695,7 @@ export default function MultipleChoiceBuilderPage({
                   <span className="font-medium">
                     {lang === "ar" ? "الحالة:" : "Case:"}
                   </span>
-                  <span>{selectedCase.name}</span>
+                  <span><CaseName profile={selectedCase} /></span>
                 </div>
               </CardContent>
             </Card>
@@ -733,6 +749,7 @@ export default function MultipleChoiceBuilderPage({
             </CardContent>
           </Card>
 
+          {submitError && <p role="alert" className="rounded-md bg-red-50 p-3 text-red-800">{submitError}</p>}
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={() => router.back()}>
               {lang === "ar" ? "إلغاء" : "Cancel"}

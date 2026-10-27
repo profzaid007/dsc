@@ -34,11 +34,18 @@ import { toStringList, recordStringArray } from "./expert-list-fields"
 export async function getTeamExperts({
   all = false,
 }: { all?: boolean; throwOnError?: boolean } = {}): Promise<TeamExpert[]> {
+  async function read<T>(collection: string, load: () => Promise<T>): Promise<T> {
+    try { return await load() }
+    catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`${collection} at ${pb.baseURL}: ${message}. Verify that this backend has the required collection/view and public read rules.`)
+    }
+  }
   try {
     const [records, order, specialistRoles] = await Promise.all([
-      boundedFullList(pb.collection("experts_public"), { sort: "name" }),
-      readExpertOrder().catch(() => []),
-      boundedFullList<RolesManagement>(pb.collection("expert_roles_public")),
+      read("experts_public", () => boundedFullList(pb.collection("experts_public"), { sort: "name" })),
+      read("expert_display_settings", () => readExpertOrder()),
+      read("expert_roles_public", () => boundedFullList<RolesManagement>(pb.collection("expert_roles_public"))),
     ])
 
     const roleGroups = new Map(specialistRoles.map(role => [role.id, normalizeAllocationRole(role).role_group]))

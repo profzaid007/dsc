@@ -369,7 +369,7 @@ export function ExpertProfileEditor({
             <Label htmlFor="profile-whatsapp">
               {t({ en: "WhatsApp Number", ar: "رقم الواتساب" }, lang)}
             </Label>
-            <div className="flex gap-2">
+            <div dir="ltr" className="flex gap-2">
               <Select
                 value={draft.whatsappCountryCode}
                 onValueChange={(value) => patch({ whatsappCountryCode: value })}

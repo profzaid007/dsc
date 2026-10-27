@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { toast } from "sonner"
@@ -367,7 +368,7 @@ export default function AdminCasesPage() {
                   key={profile.id}
                   className="min-w-0 space-y-3 rounded-lg border p-3"
                 >
-                  <h3 className="font-semibold break-words">{profile.name}</h3>
+                  <h3 className="font-semibold break-words"><CaseName profile={profile} /></h3>
                   <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                     <span>
                       {lang === "ar" ? "الصف" : "Grade"}: {profile.grade || "—"}
@@ -436,7 +437,7 @@ export default function AdminCasesPage() {
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            {profile.name}
+                            <CaseName profile={profile} />
                           </div>
                         </TableCell>
                         <TableCell>
@@ -474,7 +475,7 @@ export default function AdminCasesPage() {
                             {counts.total === 0 ? (
                               <span className="text-sm text-muted-foreground">
                                 {lang === "ar"
-                                  ? "لا توجد تعيينات"
+                                  ? "لا توجد تكليفات"
                                   : "No assignments"}
                               </span>
                             ) : (

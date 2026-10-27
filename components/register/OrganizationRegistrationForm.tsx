@@ -310,7 +310,7 @@ export function OrganizationRegistrationForm({
         {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
         <span className="ml-1 text-red-500">*</span>
       </Label>
-      <div className="flex gap-2">
+      <div dir="ltr" className="flex gap-2">
         <Select value={countryCode} onValueChange={setCountryCode}>
           <SelectTrigger className="w-28">
             <SelectValue placeholder="+962" />

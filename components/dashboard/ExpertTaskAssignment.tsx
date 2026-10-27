@@ -74,7 +74,7 @@ export function ExpertTaskAssignment({
       setError(
         ar
           ? "اختر التخصص والخبير وأدخل وصفًا من 10 إلى 3000 حرف."
-          : "Select a specialization and expert, and enter a task brief of 10–3000 characters."
+          : "Select a specialization and expert, and enter a assignment brief of 10–3000 characters."
       )
       return
     }
@@ -86,7 +86,7 @@ export function ExpertTaskAssignment({
         specialization: specialty,
         task_brief: brief.trim(),
       })
-      toast.success(ar ? "تم إسناد المهمة" : "Task assigned")
+      toast.success(ar ? "تم إسناد التكليف" : "Assignment assigned to expert")
     } catch (e) {
       setError(getErrorMessage(e, lang))
     } finally {
@@ -98,7 +98,7 @@ export function ExpertTaskAssignment({
     <Card>
       <CardHeader>
         <CardTitle>
-          {ar ? "إسناد المهمة حسب التخصص" : "Assign task by specialization"}
+          {ar ? "إسناد التكليف حسب التخصص" : "Assign by specialization"}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -157,7 +157,7 @@ export function ExpertTaskAssignment({
               </div>
             </div>
             <Label htmlFor="task-brief">
-              {ar ? "وصف المهمة" : "Task brief"}
+              {ar ? "وصف التكليف" : "Assignment brief"}
             </Label>
             <Textarea
               id="task-brief"

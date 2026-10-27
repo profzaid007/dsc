@@ -66,8 +66,14 @@ routerAdd(
   "/api/dsc/security/users/{id}/deletion-check",
   (e) => {
     const p = require(`${__hooks}/lib/security-policy.js`)
-    const user = e.app.findRecordById("users", e.request.pathValue("id"))
     const current = p.freshUser(e.app, e.auth)
+    for (const name of ["security_user_roles", "security_audit_log", "cases", "case_experts"]) {
+      try { e.app.findCollectionByNameOrId(name) }
+      catch { throw new BadRequestError("Account deletion is unavailable because " + name + " is missing from the backend. Apply the security schema update. No account was deleted.") }
+    }
+    const matches = e.app.findRecordsByFilter("users", "id = {:id}", "", 1, 0, {id:e.request.pathValue("id")})
+    if (!matches.length) throw new BadRequestError("This account no longer exists. Refresh the user list.")
+    const user = matches[0]
     const actor = p.requirePermission(
       e.app,
       current,
@@ -105,7 +111,13 @@ routerAdd(
     const p = require(`${__hooks}/lib/security-policy.js`)
     e.app.runInTransaction((app) => {
       const actor = p.requirePermission(app, e.auth, "experts.approve")
-      const user = app.findRecordById("users", e.request.pathValue("id"))
+      try { app.findCollectionByNameOrId("security_audit_log") }
+      catch { throw new BadRequestError("Expert approval is unavailable because security_audit_log is missing. Apply the security audit schema update. No account was approved.") }
+      const matches = app.findRecordsByFilter("users", "id = {:id}", "", 1, 0, {id:e.request.pathValue("id")})
+      if (!matches.length) throw new BadRequestError("This expert account no longer exists. Refresh the expert list before trying again.")
+      const user = matches[0]
+      const profiles = app.findRecordsByFilter("expert_profiles", "user = {:id}", "", 1, 0, {id:user.id})
+      if (!profiles.length) throw new BadRequestError("This expert has no submitted application profile. Approval was not performed.")
       if (user.getString("role") !== "expert" || user.getBool("is_active"))
         throw new BadRequestError(
           "Only pending expert accounts can be approved."

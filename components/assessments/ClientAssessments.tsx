@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import AnswerMatrix from "./AnswerMatrix"
@@ -56,7 +57,7 @@ export function ClientAssessmentList({ caseId }: { caseId?: string }) {
     <section className="space-y-4 rounded-lg border bg-white p-5">
       <header className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-bold text-primary">
-          {t("تقييماتي", "My assessments")}
+          {t("تكليفاتي", "My Assignments")}
         </h2>
         <Button variant="outline" onClick={() => setReload((v) => v + 1)}>
           {t("تحديث", "Refresh")}
@@ -93,7 +94,7 @@ export function ClientAssessmentList({ caseId }: { caseId?: string }) {
               <div>
                 <h3 className="font-bold">{s.name}</h3>
                 <p className="text-sm text-slate-600">
-                  {s.caseName} · {t("الإصدار", "Version")} {s.version} ·{" "}
+                  <CaseName profile={{name:s.caseName,owner_display:s.owner_display}} /> · {t("الإصدار", "Version")} {s.version} ·{" "}
                   {assessmentStatus(s.status, !!s.submitted_at, lang === "ar")}
                 </p>
               </div>
@@ -234,7 +235,7 @@ export default function ClientAssessments({
       className="mx-auto max-w-3xl space-y-5 p-4 md:p-7"
     >
       <Link className="text-sm text-primary" href="/dashboard/assessments">
-        {t("← تقييماتي", "← My assessments")}
+        {t("← تكليفاتي", "← My Assignments")}
       </Link>
       {!session ? (
         <section className="rounded-lg border bg-white p-6">
@@ -255,7 +256,7 @@ export default function ClientAssessments({
         <>
           <header className="border-b pb-5">
             <p className="text-sm text-slate-600">
-              {session.caseName} · {t("الإصدار", "Version")} {session.version}
+              <CaseName profile={{name:session.caseName,owner_display:session.owner_display}} /> · {t("الإصدار", "Version")} {session.version}
             </p>
             <h1 className="my-2 text-3xl font-bold text-primary">
               {session.name}

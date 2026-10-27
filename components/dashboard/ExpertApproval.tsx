@@ -210,10 +210,15 @@ export function ExpertApprovalPage() {
   const handleApprove = async (user: (typeof users)[number]) => {
     setApprovingId(user.id)
     setActionError("")
+    let stage: "profile" | "approval" | "email" | "refresh" = "profile"
+    let approved = false
     try {
       // Recheck before approval so a stale list cannot approve a failed attempt.
       await pb.collection("expert_profiles").getFirstListItem(pb.filter("user = {:id}", {id:user.id}), {requestKey:null})
+      stage = "approval"
       await updateUser(user.id, { is_active: true })
+      approved = true
+      stage = "email"
 
       const loginUrl = `${window.location.origin}/login`
       const approvalEmailTitle =
@@ -266,20 +271,24 @@ export function ExpertApprovalPage() {
         )
       }
 
+      stage = "refresh"
       await refresh()
       setSelectedUser(null)
     } catch (err) {
-      setActionError(
-        getErrorMessage(err, lang) ||
-          t(
-            {
-              en: "Failed to approve. Please try again.",
-              ar: "تعذّر الاعتماد. يرجى المحاولة مرة أخرى.",
-            },
-            lang
-          )
-      )
-      await refresh()
+      const message = getErrorMessage(err, lang)
+      const status = (err as {status?:number})?.status
+      if (approved) {
+        setActionError(lang === "ar"
+          ? `تم اعتماد الحساب، لكن ${stage === "email" ? "تعذر إرسال بريد الإشعار" : "تعذر تحديث القائمة"}. ${message}`
+          : `The account was approved, but ${stage === "email" ? "the notification email could not be sent" : "the list could not be refreshed"}. ${message}`)
+      } else if (stage === "profile" && status === 404) {
+        setActionError(lang === "ar"
+          ? "لم يُعثر على ملف طلب الخبير. لم يتم اعتماد الحساب؛ تحقق من اكتمال طلبه."
+          : "No submitted application profile was found for this expert. The account was not approved; check that the application is complete.")
+      } else {
+        setActionError(lang === "ar" ? `تعذر اعتماد حساب الخبير. ${message}` : `Expert approval failed. ${message}`)
+      }
+      try { await refresh() } catch { /* Preserve the original action error. */ }
     } finally {
       setApprovingId(null)
     }

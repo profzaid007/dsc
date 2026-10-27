@@ -66,6 +66,16 @@ export async function confirmPasswordReset(token: string, password: string) {
 }
 
 const FIELD_LABELS: Record<string, BilingualString> = {
+  contactNumber: { en: "Mobile number", ar: "رقم الجوال" },
+  contact_number: { en: "Mobile number", ar: "رقم الجوال" },
+  children: { en: "Children", ar: "الأطفال" },
+  date_of_birth: { en: "Date of birth", ar: "تاريخ الميلاد" },
+  gender: { en: "Gender", ar: "الجنس" },
+  relationship: { en: "Relationship to child", ar: "صلة القرابة بالطفل" },
+  portal_type: { en: "Service category", ar: "فئة الخدمة" },
+  service_type: { en: "Requested service", ar: "الخدمة المطلوبة" },
+
+  confirmPassword: { en: "Confirm password", ar: "تأكيد كلمة المرور" },
   passwordConfirm: { en: "Confirm password", ar: "تأكيد كلمة المرور" },
   country_of_residence: { en: "Country of residence", ar: "بلد الإقامة" },
   city: { en: "City", ar: "المدينة" },
@@ -116,7 +126,6 @@ const FIELD_LABELS: Record<string, BilingualString> = {
   national_id: { en: "national ID", ar: "الهوية الوطنية" },
   iqama: { en: "iQama number", ar: "رقم الإقامة" },
   phone: { en: "phone number", ar: "رقم الهاتف" },
-  contact_number: { en: "contact number", ar: "رقم الاتصال" },
   whatsapp_number: { en: "WhatsApp number", ar: "رقم الواتساب" },
   name: { en: "name", ar: "الاسم" },
   title: { en: "title", ar: "العنوان" },
@@ -124,6 +133,8 @@ const FIELD_LABELS: Record<string, BilingualString> = {
 }
 
 export function fieldLabel(field: string, lang: Lang): string {
+  const child = field.match(/^children\.(\d+)\.(.+)$/)
+  if (child) return `${lang === "ar" ? "الطفل" : "Child"} ${Number(child[1]) + 1} — ${fieldLabel(child[2], lang)}`
   const known = FIELD_LABELS[field]
   if (known) return t(known, lang)
   return field.replace(/_/g, " ")
@@ -139,7 +150,7 @@ function minLengthMessage(
   serverMessage: unknown,
   lang: Lang
 ): string | undefined {
-  if (field !== "password") return undefined
+  if (field !== "password" || !/short|at least|minimum/i.test(String(serverMessage ?? ""))) return undefined
   const n = String(serverMessage ?? "").match(/at least (\d+)/)?.[1]
   if (!n) {
     return t(
@@ -161,6 +172,17 @@ function minLengthMessage(
  * Unknown codes fall back to the server message (or a generic translated one).
  */
 const VALIDATION_CODE_MESSAGES: Record<string, BilingualString> = {
+  registration_phone: { en: "Enter a phone number with its country code, for example +966501234567.", ar: "أدخل رقم الهاتف مع رمز الدولة، مثل ‎+966501234567." },
+  registration_date: { en: "Enter a valid date of birth that is not in the future.", ar: "أدخل تاريخ ميلاد صحيحًا لا يقع في المستقبل." },
+  registration_gender: { en: "Select male or female.", ar: "اختر ذكرًا أو أنثى." },
+  registration_text_type: { en: "Enter text in this field.", ar: "أدخل نصًا في هذا الحقل." },
+  registration_children_limit: { en: "You can register at most 30 children at a time.", ar: "يمكن تسجيل 30 طفلًا كحد أقصى في المرة الواحدة." },
+  registration_account_type: { en: "Select a supported account type.", ar: "اختر نوع حساب مدعومًا." },
+
+  validation_password_length: {
+    en: "Password must contain 8 to 128 characters.",
+    ar: "يجب أن تتكون كلمة المرور من 8 إلى 128 حرفًا.",
+  },
   validation_password_mismatch: {
     en: "Re-enter the same password in both fields.",
     ar: "أعد إدخال كلمة المرور نفسها في الحقلين.",
@@ -277,7 +299,7 @@ function fieldErrorMessage(
   const v = value as { code?: unknown; message?: unknown }
   const code = String(v.code ?? "")
 
-  if (code === "validation_max_text_constraint") {
+  if (code === "validation_max_text_constraint" || code === "registration_max_length") {
     const maximum = String(v.message ?? "").match(
       /(?:no more than|at most)\s+(\d+)/i
     )?.[1]
@@ -376,6 +398,8 @@ export function handlePocketBaseError(
   error: unknown,
   lang: Lang = getCurrentLang()
 ): string {
+  const responseCode = (error as {response?:{code?:string}} | null)?.response?.code
+  if (responseCode === "password_reset_email_unavailable") return t({en:"Password reset email is unavailable because the server email service is not configured. Contact the administrator.",ar:"تعذر إرسال رابط استعادة كلمة المرور لأن خدمة البريد غير معدّة على الخادم. تواصل مع المسؤول لإعدادها."},lang)
   const details = error as { message?: string; status?: number } | null
   if (details?.message?.includes("fetch")) {
     return t(

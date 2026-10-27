@@ -36,6 +36,7 @@ import { getErrorMessage } from "@/lib/pb"
 
 const OTHER_VALUE = "other"
 const TRAINING_SERVICE_ID = "attending-training"
+const PARENT_SERVICE_IDS = new Set(["1", "2", "4"])
 
 const GRADES = [
   { value: "kg1", label: { en: "KG 1", ar: "روضة 1" } },
@@ -61,6 +62,8 @@ export default function NewProfilePage() {
   const { lang } = useLang()
   const { portals: PORTALS } = usePortals()
   const { addProfile } = useProfiles()
+  const isParent = currentUser?.role === "parent"
+  const servicePortals = isParent ? PORTALS.filter(portal => PARENT_SERVICE_IDS.has(portal.id)) : PORTALS
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -153,6 +156,12 @@ export default function NewProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!currentUser) return
+    if (isParent && !PARENT_SERVICE_IDS.has(portalService.categoryId)) {
+      toast.error(lang === "ar"
+        ? "اختر الاحتياجات الخاصة أو الصحة النفسية أو التعليم والابتكار."
+        : "Choose Special Needs, Mental Health, or Education and Innovation.")
+      return
+    }
 
     if (
       ["parent", "care_foundation"].includes(currentUser.role) &&
@@ -420,19 +429,21 @@ export default function NewProfilePage() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {PORTALS.map((p) => (
+                  {servicePortals.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {lang === "ar"
                         ? p.portalName.ar.replace(/^بوابة /, "")
                         : p.title.en}
                     </SelectItem>
                   ))}
+                  {!isParent && (<>
                   <SelectItem value={TRAINING_SERVICE_ID}>
                     {t({ en: "Attending Training", ar: "حضور تدريب" }, lang)}
                   </SelectItem>
                   <SelectItem value={OTHER_VALUE}>
                     {t({ en: "Other", ar: "أخرى" }, lang)}
                   </SelectItem>
+                  </>)}
                 </SelectContent>
               </Select>
             </div>

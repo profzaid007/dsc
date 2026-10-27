@@ -339,7 +339,7 @@ export default function ContactPage() {
                     >
                       {t({ en: "Phone Number", ar: "رقم الهاتف" }, lang)}
                     </label>
-                    <div className="flex flex-col gap-2 sm:flex-row">
+                    <div dir="ltr" className="flex gap-2">
                       <Select
                         value={countryCode}
                         onValueChange={setCountryCode}

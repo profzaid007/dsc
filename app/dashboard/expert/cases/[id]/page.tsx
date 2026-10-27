@@ -1,4 +1,7 @@
 "use client"
+import { ExpertCreateAssignment } from "@/components/cases/ExpertCreateAssignment"
+import type { MultipleChoiceConfig } from "@/types/tool"
+import { CaseName } from "@/components/cases/CaseName"
 import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
 import { use, useState } from "react"
@@ -42,7 +45,7 @@ function TaskResponse({
         responses: { ...task.responses, expert_note: note.trim() },
         status,
       })
-      toast.success(ar ? "تم تحديث المهمة" : "Task updated")
+      toast.success(ar ? "تم تحديث التكليف" : "Assignment updated")
     } catch (e) {
       setError(getErrorMessage(e, lang))
     } finally {
@@ -69,7 +72,7 @@ function TaskResponse({
           {ar ? "حفظ التقدم" : "Save progress"}
         </Button>
         <Button disabled={saving} onClick={() => submit("completed")}>
-          {ar ? "إكمال المهمة" : "Complete task"}
+          {ar ? "إكمال التكليف" : "Complete assignment"}
         </Button>
       </div>
       {error && (
@@ -134,11 +137,12 @@ export default function ExpertCaseDetailPage({
         {ar ? "العودة إلى الحالات" : "Back to cases"}
       </Link>
       <h1 className="text-2xl font-bold [overflow-wrap:anywhere]">
-        {profile.name}
+        <CaseName profile={profile} />
       </h1>
-      <h2 className="text-lg font-semibold">{ar ? "المهام" : "Tasks"}</h2>
+      <h2 className="text-lg font-semibold">{ar ? "التكليفات" : "Assignments"}</h2>
+      <ExpertCreateAssignment key={profile.id} caseId={profile.id} onCreated={() => { void refreshTasks() }} />
       {!assignments.length && (
-        <p>{ar ? "لا توجد مهام متاحة بعد." : "No tasks available yet."}</p>
+        <p>{ar ? "لا توجد تكليفات متاحة بعد." : "No assignments available yet."}</p>
       )}
       {assignments.map((task) => (
         <Card key={task.id}>
@@ -147,7 +151,7 @@ export default function ExpertCaseDetailPage({
               {(ar ? task.name_ar : task.name_en) ||
                 task.name_en ||
                 task.name_ar ||
-                (ar ? "مهمة" : "Task")}
+                (ar ? "تكليف" : "Assignment")}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               {statuses[task.status]}
@@ -159,6 +163,12 @@ export default function ExpertCaseDetailPage({
             <p className="[overflow-wrap:anywhere] whitespace-pre-wrap">
               {task.task_brief}
             </p>
+            {!task.task_brief && (task.config as Partial<MultipleChoiceConfig> | undefined)?.questions?.map(question => (
+              <div key={question.id} className="space-y-2">
+                <p dir="auto" className="whitespace-pre-wrap">{question.text}</p>
+                {typeof task.responses?.[question.id] === "string" && <div className="rounded-md bg-slate-50 p-3"><p className="text-sm font-semibold">{ar ? "إجابة صاحب الحالة" : "Case owner's answer"}</p><p dir="auto" className="whitespace-pre-wrap">{String(task.responses[question.id])}</p></div>}
+              </div>
+            ))}
             {task.assigned_expert === currentUser?.id && (
               <TaskResponse key={task.id} task={task} save={updateAssignment} />
             )}

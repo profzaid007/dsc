@@ -22,7 +22,7 @@ import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { ChildFormBlock, type ChildFormData } from "./ChildFormBlock"
 import { Plus } from "lucide-react"
-import pb, { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
+import { authWithPassword, getErrorMessage, getFieldErrors, fieldLabel } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 import {
   EMAIL_INVALID_MESSAGE,
@@ -232,7 +232,7 @@ export function ParentRegistrationForm({
       const user = registration.user({
         email: cleanEmail,
         password,
-        passwordConfirm: password,
+        passwordConfirm: confirmPassword,
         name: cleanName,
         contact_number: `${countryCode} ${contactNumber.trim()}`.trim(),
         role: "parent",
@@ -311,9 +311,12 @@ export function ParentRegistrationForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              {error}
+          {(error || Object.keys(fieldErrors).length > 0) && (
+            <div role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              {error || t({en:"Please correct the following fields:",ar:"يرجى تصحيح الحقول التالية:"},lang)}
+              <ul className="mt-2 list-disc ps-5">
+                {Object.entries(fieldErrors).map(([field,message]) => <li key={field}><strong>{fieldLabel(field,lang)}:</strong> {message}</li>)}
+              </ul>
             </div>
           )}
 
@@ -341,7 +344,7 @@ export function ParentRegistrationForm({
                 {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
                 <span className="ml-1 text-red-500">*</span>
               </Label>
-              <div className="flex gap-2">
+              <div dir="ltr" className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
                   <SelectTrigger className="w-30">
                     <SelectValue placeholder="+962" />

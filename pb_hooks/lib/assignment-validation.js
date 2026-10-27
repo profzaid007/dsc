@@ -58,7 +58,7 @@ module.exports = (e) => {
       )
     const brief = e.record.getString("task_brief").trim()
     if (brief.length < 10 || brief.length > 3000)
-      throw new BadRequestError("Task brief must contain 10–3000 characters.")
+      throw new BadRequestError("Assignment brief must contain 10–3000 characters.")
   }
   return e.next()
 }

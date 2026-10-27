@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 
 import { useState } from "react"
@@ -50,7 +51,7 @@ export function CaseSearchCombobox({
 
   if (readOnly) return (
     <div className={cn("flex min-h-8 items-center rounded-lg border bg-muted/30 px-3 py-2 text-sm", className)} aria-live="polite">
-      {selectedCase?.name || value || ui(placeholder)}
+      {selectedCase ? <CaseName profile={selectedCase} /> : value || ui(placeholder)}
     </div>
   )
 
@@ -64,7 +65,7 @@ export function CaseSearchCombobox({
           disabled={disabled || !enabled}
           className={cn("w-full justify-between", className)}
         >
-          {selectedCase ? selectedCase.name : ui(placeholder)}
+          {selectedCase ? <CaseName profile={selectedCase} /> : ui(placeholder)}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -90,7 +91,7 @@ export function CaseSearchCombobox({
                     )}
                   />
                   <div className="flex flex-col">
-                    <span>{profile.name}</span>
+                    <span><CaseName profile={profile} /></span>
                     <span className="text-xs text-muted-foreground">
                       {ui("Grade:")} {profile.grade}
                     </span>

@@ -286,7 +286,7 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
               )
             }
           >
-            {lang === "ar" ? "فتح تعيينات الحالة" : "Open case assignments"}
+            {lang === "ar" ? "فتح تكليفات الحالة" : "Open case assignments"}
           </Button>
         </CardContent>
       </Card>

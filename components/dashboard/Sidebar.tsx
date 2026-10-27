@@ -83,7 +83,7 @@ const adminNavigation: NavItem[] = [
 ]
 
 const organizationNavigation: NavItem[] = [
-  { name: { en: "My assessments", ar: "تقييماتي" }, href: "/dashboard/assessments", icon: ClipboardList },
+  { name: { en: "My Assignments", ar: "تكليفاتي" }, href: "/dashboard/assessments", icon: ClipboardList },
   {
     name: { en: "Projects", ar: "المشاريع" },
     href: "/dashboard/institution/projects",
@@ -107,7 +107,7 @@ const organizationNavigation: NavItem[] = [
 ]
 
 const individualNavigation: NavItem[] = [
-  { name: { en: "My assessments", ar: "تقييماتي" }, href: "/dashboard/assessments", icon: ClipboardList },
+  { name: { en: "My Assignments", ar: "تكليفاتي" }, href: "/dashboard/assessments", icon: ClipboardList },
   {
     name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/individual/cases",
@@ -131,9 +131,9 @@ const individualNavigation: NavItem[] = [
 ]
 
 const parentNavigation: NavItem[] = [
-  { name: { en: "My assessments", ar: "تقييماتي" }, href: "/dashboard/assessments", icon: ClipboardList },
+  { name: { en: "My Assignments", ar: "تكليفاتي" }, href: "/dashboard/assessments", icon: ClipboardList },
   {
-    name: { en: "Children", ar: "الأطفال" },
+    name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/parent/cases",
     icon: Baby,
   },
@@ -141,11 +141,6 @@ const parentNavigation: NavItem[] = [
     name: { en: "Appointments", ar: "المواعيد" },
     href: "/dashboard/parent/appointments",
     icon: Calendar,
-  },
-  {
-    name: { en: "Services", ar: "الخدمات" },
-    href: "/dashboard/parent/services",
-    icon: FolderKanban,
   },
   {
     name: { en: "Reports", ar: "التقارير" },

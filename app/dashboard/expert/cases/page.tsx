@@ -1,4 +1,5 @@
 "use client"
+import { CaseName } from "@/components/cases/CaseName"
 import Link from "next/link"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useLang } from "@/lib/lang-context"
@@ -15,7 +16,7 @@ export default function ExpertCasesPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">
-        {ar ? "الحالات المسندة إليّ" : "My assigned cases"}
+        {ar ? "الحالات المخصصة لي" : "My allocated cases"}
       </h1>
       {!profiles.length ? (
         <p className="text-muted-foreground">
@@ -27,13 +28,13 @@ export default function ExpertCasesPage() {
             <Card key={p.id}>
               <CardHeader>
                 <CardTitle className="[overflow-wrap:anywhere]">
-                  {p.name}
+                  <CaseName profile={p} />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Link href={`/dashboard/expert/cases/${p.id}`}>
                   <Button variant="outline">
-                    {ar ? "عرض الحالة والمهام" : "View case and tasks"}
+                    {ar ? "عرض الحالة والتكليفات" : "View case and assignments"}
                   </Button>
                 </Link>
               </CardContent>

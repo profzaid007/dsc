@@ -117,10 +117,10 @@ export default function AssignmentDetailPage({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <h2 className="mb-4 text-xl font-medium">
-          {lang === "ar" ? "لم يتم العثور على المهمة" : "Assignment not found"}
+          {lang === "ar" ? "لم يتم العثور على التكليف" : "Assignment not found"}
         </h2>
         <Button onClick={() => router.push(backHref)}>
-          {lang === "ar" ? "العودة إلى المهام" : "Back to Assignments"}
+          {lang === "ar" ? "العودة إلى التكليفات" : "Back to Assignments"}
         </Button>
       </div>
     )
@@ -134,11 +134,11 @@ export default function AssignmentDetailPage({
         </h2>
         <p className="mb-4 text-muted-foreground">
           {lang === "ar"
-            ? "تم حذف الحالة المرتبطة بهذه المهمة."
+            ? "تم حذف الحالة المرتبطة بهذا التكليف."
             : "The linked case for this assignment was deleted."}
         </p>
         <Button onClick={() => router.push(backHref)}>
-          {lang === "ar" ? "العودة إلى المهام" : "Back to Assignments"}
+          {lang === "ar" ? "العودة إلى التكليفات" : "Back to Assignments"}
         </Button>
       </div>
     )
@@ -301,7 +301,7 @@ export default function AssignmentDetailPage({
       return (
         <p className="text-muted-foreground">
           {lang === "ar"
-            ? "لا توجد عناصر وسائط في هذه المهمة."
+            ? "لا توجد عناصر وسائط في هذا التكليف."
             : "No media items in this assignment."}
         </p>
       )
@@ -466,7 +466,7 @@ export default function AssignmentDetailPage({
           </h3>
           <p className="text-muted-foreground">
             {lang === "ar"
-              ? "هذه المهمة لا تزال قيد الانتظار. ستظهر الردود هنا بمجرد اكتمال الحالة لها."
+              ? "هذا التكليف لا تزال قيد الانتظار. ستظهر الردود هنا بمجرد اكتمال الحالة لها."
               : "This assignment is still pending. Responses will appear here once the case completes it."}
           </p>
         </div>
@@ -486,7 +486,7 @@ export default function AssignmentDetailPage({
             </h3>
             <p className="text-muted-foreground">
               {lang === "ar"
-                ? "لا توجد بيانات استجابة متاحة لهذه المهمة."
+                ? "لا توجد بيانات استجابة متاحة لهذا التكليف."
                 : "No response data available for this assignment."}
             </p>
           </div>
@@ -549,11 +549,11 @@ export default function AssignmentDetailPage({
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              {lang === "ar" ? "تفاصيل المهمة" : "Assignment Details"}
+              {lang === "ar" ? "تفاصيل التكليف" : "Assignment Details"}
             </h1>
             <p className="text-muted-foreground">
               {lang === "ar"
-                ? "عرض المهمة والردود"
+                ? "عرض التكليف والردود"
                 : "View assignment and responses"}
             </p>
           </div>
@@ -576,7 +576,7 @@ export default function AssignmentDetailPage({
           <div className="flex items-center gap-2">
             <Icon className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">
-              {lang === "ar" ? "معلومات المهمة" : "Assignment Information"}
+              {lang === "ar" ? "معلومات التكليف" : "Assignment Information"}
             </CardTitle>
           </div>
         </CardHeader>
@@ -597,11 +597,11 @@ export default function AssignmentDetailPage({
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                {lang === "ar" ? "المهمة" : "Assignment"}
+                {lang === "ar" ? "التكليف" : "Assignment"}
               </span>
               <p>
                 {assignment.name_en ||
-                  (lang === "ar" ? "مهمة بدون اسم" : "Unnamed Assignment")}
+                  (lang === "ar" ? "تكليف بدون اسم" : "Unnamed Assignment")}
               </p>
             </div>
             <div>

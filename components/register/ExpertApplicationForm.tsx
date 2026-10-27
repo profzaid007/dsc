@@ -581,7 +581,7 @@ export function ExpertApplicationForm({
                   <Label>
                     {t({ en: "WhatsApp Number", ar: "رقم الواتساب" }, lang)}
                   </Label>
-                  <div className="flex gap-2">
+                  <div dir="ltr" className="flex gap-2">
                     <Select
                       value={whatsappCountryCode}
                       onValueChange={setWhatsappCountryCode}

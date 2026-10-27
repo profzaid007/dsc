@@ -16,6 +16,7 @@ export interface Profile {
   id: string
   user: string
   name: string
+  owner_display?: { type: "parent" | "care_foundation"; name: string } | null
   date_of_birth?: string
   gender?: "male" | "female"
   grade?: string

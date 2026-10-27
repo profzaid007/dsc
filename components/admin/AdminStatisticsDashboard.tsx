@@ -80,7 +80,7 @@ const labels: Record<string, [string, string]> = {
   staff: ["Administrators", "المشرفون"],
   expert_approvals: ["Experts awaiting approval", "خبراء بانتظار الموافقة"],
   payment_reviews: ["Payments to review", "مدفوعات تحتاج إلى مراجعة"],
-  pending_assignments: ["Pending assignments", "تعيينات قيد الانتظار"],
+  pending_assignments: ["Pending assignments", "تكليفات قيد الانتظار"],
 }
 const palette = [
   "#0e4868",
@@ -648,7 +648,7 @@ export function DashboardView({
                       <p>
                         {t(
                           "Keep work moving forward",
-                          "تابع المهام التي تتطلب إجراءً"
+                          "تابع التكليفات التي تتطلب إجراءً"
                         )}
                       </p>
                     </div>
@@ -669,7 +669,7 @@ export function DashboardView({
                     <p className={styles.clear}>
                       {t(
                         "You’re all caught up.",
-                        "لا توجد مهام معلّقة حالياً."
+                        "لا توجد تكليفات معلّقة حالياً."
                       )}
                     </p>
                   )}

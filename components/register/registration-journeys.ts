@@ -89,7 +89,7 @@ export const registrationRoles: RegistrationRole[] = [
       step("Create Foundation Account", "إنشاء حساب المؤسسة", "Provide foundation and representative details.", "أضف بيانات المؤسسة ومسؤول التواصل."),
       step("Register Children", "تسجيل الأطفال", "Add a separate record for each child under your care.", "أضف ملفاً مستقلاً لكل طفل تحت رعاية المؤسسة."),
       step("Enroll in Services", "التسجيل في الخدمات", "Select suitable services for each child.", "اختر الخدمات المناسبة لكل طفل."),
-      step("Follow Up", "المتابعة", "Follow assessments, tasks, plans and progress for each child.", "تابع التقييمات والمهام والخطط والتقدم لكل طفل."),
+      step("Follow Up", "المتابعة", "Follow assessments, assignments, plans and progress for each child.", "تابع التقييمات والتكليفات والخطط والتقدم لكل طفل."),
     ],
   },
   {
