@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono, Noto_Sans_Arabic } from "next/font/google"
 import { cookies } from "next/headers"
 
 import "./globals.css"
@@ -21,6 +21,13 @@ export async function generateMetadata() {
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" })
 
+const arabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  variable: "--font-arabic",
+  display: "swap",
+  fallback: ["Tahoma", "Arial", "sans-serif"],
+})
+
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
@@ -42,7 +49,8 @@ export default async function RootLayout({
         "antialiased",
         fontMono.variable,
         "font-sans",
-        geist.variable
+        geist.variable,
+        arabic.variable
       )}
     >
       <head>
