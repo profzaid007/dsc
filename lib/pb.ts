@@ -399,6 +399,8 @@ export function handlePocketBaseError(
   lang: Lang = getCurrentLang()
 ): string {
   const responseCode = (error as {response?:{code?:string}} | null)?.response?.code
+  if (responseCode === "password_reset_email_invalid") return t({en:"Enter a valid email address, such as name@example.com.",ar:"أدخل بريدًا إلكترونيًا صحيحًا، مثل name@example.com"},lang)
+  if (responseCode === "password_reset_email_not_registered") return t({en:"This email address is not registered.",ar:"هذا البريد غير مسجل"},lang)
   if (responseCode === "password_reset_email_unavailable") return t({en:"Password reset email is unavailable because the server email service is not configured. Contact the administrator.",ar:"تعذر إرسال رابط استعادة كلمة المرور لأن خدمة البريد غير معدّة على الخادم. تواصل مع المسؤول لإعدادها."},lang)
   const details = error as { message?: string; status?: number } | null
   if (details?.message?.includes("fetch")) {

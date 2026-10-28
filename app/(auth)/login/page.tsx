@@ -133,7 +133,7 @@ export default function LoginPage() {
       return
     }
     if (!isValidEmail(resetEmail)) {
-      setResetError(t(EMAIL_INVALID_MESSAGE, lang))
+      setResetError(t({en:"Enter a valid email address, such as name@example.com.",ar:"أدخل بريدًا إلكترونيًا صحيحًا، مثل name@example.com"}, lang))
       return
     }
 
@@ -338,7 +338,7 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleForgotSubmit} className="space-y-4" noValidate>
               {resetError && (
-                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                <div role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
                   {resetError}
                 </div>
               )}

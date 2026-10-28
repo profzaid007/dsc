@@ -16,6 +16,10 @@ try:
   try:
    with urllib.request.urlopen(base+'/api/health',timeout=1):break
   except Exception:time.sleep(.1)
- script="""import assert from 'node:assert/strict';const base=process.argv[1];for (const email of ['media-test@example.test','unknown-mail@example.test']){const r=await fetch(base+'/api/collections/users/request-password-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});const d=await r.json();assert.equal(r.status,503);assert.equal(d.code,'password_reset_email_unavailable')}console.log('Verified: unconfigured email returns the same actionable 503 for known and unknown accounts; no reset email sent.');"""
+ script="""import assert from 'node:assert/strict';const base=process.argv[1];
+for(const [email,status,code] of [['not-an-email',400,'password_reset_email_invalid'],['unknown-mail@example.test',404,'password_reset_email_not_registered'],['media-test@example.test',503,'password_reset_email_unavailable']]){
+ const r=await fetch(base+'/api/collections/users/request-password-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});const d=await r.json();assert.equal(r.status,status);assert.equal(d.code,code)
+}
+console.log('Verified: invalid format, unregistered email and unavailable mail service have distinct actionable errors; no email sent.');"""
  r=subprocess.run(['node','--input-type=module','-e',script,base],capture_output=True,text=True);print(r.stdout+r.stderr);assert r.returncode==0
 finally:server.terminate();server.wait(timeout=8);log.close()
