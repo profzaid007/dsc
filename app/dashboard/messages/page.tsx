@@ -1,6 +1,8 @@
 "use client"
 import { useCallback, useEffect, useState } from "react"
 import type { RecordModel } from "pocketbase"
+import Link from "next/link"
+import { MessageAttachments, MessageBody } from "@/components/cases/CaseMessages"
 import { Send, MessageSquare } from "lucide-react"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -19,11 +21,12 @@ export default function MessagesPage() {
   const ar = lang === "ar"
   const access = usePermissions()
   const allowed = currentUser?.role === "expert" || isAdmin && access.can("messages.read")
-  const canSend = currentUser?.role === "expert" || access.can("messages.create")
   const canMarkRead = currentUser?.role === "expert" || access.can("messages.update")
   const [contacts, setContacts] = useState<Contact[]>([])
   const [messages, setMessages] = useState<RecordModel[]>([])
   const [selected, setSelected] = useState("")
+  const selectedContact = contacts.find(item => item.id === selected)
+  const canSend = (currentUser?.role === "expert" || access.can("messages.create")) && (isAdmin || !selectedContact || ["admin", "super_admin"].includes(selectedContact.role))
   const [body, setBody] = useState("")
   const [subject, setSubject] = useState("")
   const [loading, setLoading] = useState(true)
@@ -79,7 +82,7 @@ export default function MessagesPage() {
         {!contacts.length && <p className="mt-4 text-sm text-muted-foreground">{ar ? "لا يوجد مستلمون متاحون حاليًا." : "No recipients are available yet."}</p>}
       </aside>
       <section className="min-w-0 p-4 sm:p-6">{!contact ? <div className="flex min-h-72 flex-col items-center justify-center gap-4 text-center text-muted-foreground"><MessageSquare className="h-10 w-10 text-primary"/><p>{ar ? "اختر شخصًا لعرض المحادثة أو إرسال رسالة." : "Choose a person to view your conversation or send a message."}</p></div> : <>
-        <h2 className="border-b pb-4 text-xl font-semibold text-primary">{contact.name}</h2><div className="my-5 max-h-[55vh] space-y-4 overflow-y-auto pe-2" aria-live="polite">{!thread.length && <p className="py-8 text-center text-sm text-muted-foreground">{ar ? "ابدأ المحادثة برسالتك الأولى." : "Start the conversation with your first message."}</p>}{thread.map(item => <article key={item.id} className={`max-w-[95%] rounded-lg border p-4 sm:max-w-[85%] ${item.sender === currentUser?.id ? "ms-auto border-primary/15 bg-primary/5" : "me-auto bg-slate-50"}`}><p className="mb-2 text-xs font-semibold text-primary">{item.sender === currentUser?.id ? (ar ? "أنت" : "You") : contact.name}</p>{item.subject && <h3 className="mb-2 break-words font-semibold">{item.subject}</h3>}<p className="whitespace-pre-wrap text-sm leading-relaxed [overflow-wrap:anywhere]">{item.body}</p><div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground"><time>{new Date(item.created).toLocaleString(ar ? "ar" : "en")}</time>{item.sender === currentUser?.id && <span>{item.read ? (ar ? "مقروءة" : "Read") : (ar ? "مرسلة" : "Sent")}</span>}</div></article>)}</div>
+        <h2 className="border-b pb-4 text-xl font-semibold text-primary">{contact.name}</h2><div className="my-5 max-h-[55vh] space-y-4 overflow-y-auto pe-2" aria-live="polite">{!thread.length && <p className="py-8 text-center text-sm text-muted-foreground">{ar ? "ابدأ المحادثة برسالتك الأولى." : "Start the conversation with your first message."}</p>}{thread.map(item => <article key={item.id} className={`max-w-[95%] rounded-lg border p-4 sm:max-w-[85%] ${item.sender === currentUser?.id ? "ms-auto border-primary/15 bg-primary/5" : "me-auto bg-slate-50"}`}><p className="mb-2 text-xs font-semibold text-primary">{item.sender === currentUser?.id ? (ar ? "أنت" : "You") : contact.name}</p>{item.subject && <h3 className="mb-2 break-words font-semibold">{item.subject}</h3>}<MessageBody text={item.body} /><MessageAttachments message={item} allowSave={["parent", "individual", "organization", "care_foundation"].includes(selectedContact?.role || "")} />{item.case && <Link className="text-sm text-primary underline" href={`/dashboard/${isAdmin ? "admin" : "expert"}/cases/${item.case}`}>{ar ? "فتح محادثة الحالة والمرفقات" : "Open case conversation and attachments"}</Link>}<div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground"><time>{new Date(item.created).toLocaleString(ar ? "ar" : "en")}</time>{item.sender === currentUser?.id && <span>{item.read ? (ar ? "مقروءة" : "Read") : (ar ? "مرسلة" : "Sent")}</span>}</div></article>)}</div>
         <div className="space-y-3 border-t pt-4"><Label htmlFor="message-subject">{ar ? "عنوان الرسالة" : "Message title"}</Label><Input id="message-subject" value={subject} maxLength={200} required disabled={sending || !canSend} onChange={e => { setSubject(e.target.value); setNotice("") }} /><Label htmlFor="message-body">{ar ? "رسالتك" : "Your message"}</Label><Textarea id="message-body" rows={4} value={body} disabled={sending || !canSend} maxLength={4000} onChange={e => { setBody(e.target.value); setNotice("") }} /><div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-muted-foreground">{body.length}/4000</span><Button onClick={send} disabled={sending || !subject.trim() || !body.trim() || !canSend}><Send className="h-4 w-4"/>{sending ? (ar ? "جارٍ الإرسال…" : "Sending…") : (ar ? "إرسال الرسالة" : "Send message")}</Button></div>{sendError && <p role="alert" className="text-sm text-destructive">{sendError}</p>}{notice && <p role="status" className="text-sm text-green-700">{notice}</p>}</div>
       </>}</section>
     </div>}

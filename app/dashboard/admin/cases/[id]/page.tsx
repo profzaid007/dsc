@@ -1,4 +1,6 @@
 "use client"
+import { CaseDocuments } from "@/components/cases/CaseDocuments"
+import { CaseMessages } from "@/components/cases/CaseMessages"
 import { CaseName } from "@/components/cases/CaseName"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
@@ -442,7 +444,7 @@ export default function AdminCaseDetailPage({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList>
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="overview">
             {lang === "ar" ? "نظرة عامة" : "Overview"}
           </TabsTrigger>
@@ -457,6 +459,7 @@ export default function AdminCaseDetailPage({
               {lang === "ar" ? "تخصيص الخبراء" : "Expert allocation"}
             </TabsTrigger>
           )}
+          <TabsTrigger value="documents">{lang === "ar" ? "المستندات" : "Documents"}</TabsTrigger>
           <TabsTrigger value="case-file">
             {lang === "ar" ? "ملف الحالة" : "Case File"}
           </TabsTrigger>
@@ -895,6 +898,7 @@ export default function AdminCaseDetailPage({
         </TabsContent>
 
         <TabsContent value="assigned" id="case-assignments">
+          <CaseMessages key={caseId} caseId={caseId} />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -1017,6 +1021,7 @@ export default function AdminCaseDetailPage({
             />
           </TabsContent>
         )}
+        <TabsContent value="documents"><CaseDocuments key={caseId} caseId={caseId} /></TabsContent>
         <TabsContent value="case-file">
           <Card>
             <CardHeader>

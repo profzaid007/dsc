@@ -6,6 +6,6 @@ The supplied TTF reports OS/2 weight 5 and Regular style, while CSS selects it a
 
 `tools/build-arabic-webfont.py` creates `public/fonts/mohammad-bold-art-web.woff` from the supplied font. It corrects the bold metadata and PostScript name, normalizes the timestamp and removes TrueType hinting. It verifies that all glyph outlines, the Unicode mapping, Arabic GSUB shaping and copyright entries remain unchanged. The original TTF is retained unchanged.
 
-The application uses the repaired decorative web font first, followed by self-hosted Noto Sans Arabic and system fonts. No OS detection or automatic visual-error detection is used. CSS fallbacks cannot detect malformed visible rendering in a font that loaded successfully.
+Noto Sans Arabic is now the standard Arabic font throughout the application, including the blog, events and registration pages. It is self-hosted through next/font and supports regular and bold text. The decorative font assets are retained for reference but are no longer selected by application styles. English text retains Geist. No OS detection or automatic visual-error detection is used.
 
 TypeScript checks and local visual inspection do not establish macOS compatibility. The affected experts must verify the test deployment on their Macs before this can be declared fixed. Deployment and testing on the affected Macs must be verified separately.

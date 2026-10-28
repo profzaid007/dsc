@@ -69,6 +69,7 @@ const collectionModules = {
   expert_bank_details: "payments",
   cases: "cases",
   case_feedback: "cases",
+  case_documents: "cases",
   tools: "tools",
   tool_types: "tools",
   case_tools: "assignments",

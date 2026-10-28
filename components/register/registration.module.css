@@ -20,7 +20,7 @@
   background:
     radial-gradient(ellipse at 1% 35%, #dff7f7 0, transparent 39%),
     linear-gradient(112deg, #f0faff, #eff6ff 55%, #f7fafb);
-  font-family: "Mohammad Bold Art", Arial, Tahoma, sans-serif;
+  font-family: var(--font-sans);
 }
 .landing::before,
 .landing::after {
@@ -391,11 +391,11 @@
 }
 
 .dialog {
-  font-family: "Mohammad Bold Art", Arial, Tahoma, sans-serif;
+  font-family: var(--font-sans);
 }
 .landing[dir="rtl"],
 .dialog[dir="rtl"] {
-  font-family: "Mohammad Bold Art", Tahoma, Arial, sans-serif;
+  font-family: var(--font-arabic), var(--font-geist-sans), Tahoma, Arial, sans-serif;
 }
 
 .care_foundation {

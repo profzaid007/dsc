@@ -1,4 +1,6 @@
 "use client"
+import { CaseDocuments } from "@/components/cases/CaseDocuments"
+import { CaseMessages } from "@/components/cases/CaseMessages"
 import { CaseName } from "@/components/cases/CaseName"
 import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
@@ -332,7 +334,8 @@ export default function ProfileDetailPage({
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="case-file">
+              <TabsTrigger value="documents">{lang === "ar" ? "المستندات" : "Documents"}</TabsTrigger>
+          <TabsTrigger value="case-file">
                 {lang === "ar" ? "السجل" : "History"}
               </TabsTrigger>
             </TabsList>
@@ -477,6 +480,7 @@ export default function ProfileDetailPage({
             </TabsContent>
 
             <TabsContent value="tasks">
+          <CaseMessages key={id} caseId={id} />
               <Card>
                 <CardHeader>
                   <CardTitle className="flex min-w-0 flex-wrap items-center gap-2">
@@ -626,7 +630,8 @@ export default function ProfileDetailPage({
               </Card>
             </TabsContent>
 
-            <TabsContent value="case-file">
+            <TabsContent value="documents"><CaseDocuments key={id} caseId={id} /></TabsContent>
+        <TabsContent value="case-file">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex min-w-0 flex-wrap items-center gap-2">

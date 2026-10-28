@@ -1,13 +1,5 @@
 routerAdd('GET','/api/dsc/message-contacts',(e)=>{
- const u=e.auth;if(!u||!u.getBool('is_active'))throw new ForbiddenError('An active account is required.');
- const policy=require(`${__hooks}/lib/security-policy.js`);policy.freshUser(e.app,u);
- if(u.getString('role')==='admin')policy.requirePermission(e.app,u,'messages.read');
- const role=u.getString('role');let filter;
- if(role==='expert')filter='is_active = true && (role = "admin" || role = "super_admin")';
- else if(role==='admin'||role==='super_admin')filter='is_active = true && id != {:self}';
- else throw new ForbiddenError('Only experts and administrators can use internal messages.');
- const rows=e.app.findRecordsByFilter('users',filter,'name',0,0,{self:u.id});
- return e.json(200,rows.map(r=>({id:r.id,name:r.getString('name'),role:r.getString('role')})));
+ return e.json(200,require(`${__hooks}/lib/case-messaging.js`).contacts(e));
 },$apis.requireAuth('users'));
 
 routerAdd('GET','/api/dsc/backups',(e)=>{

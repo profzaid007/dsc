@@ -13,7 +13,7 @@ try{
  const ownerRecord=await create('users',{email:`feedback-qa-${Date.now()}@dsc.local`,password:'LocalDSC!2026',passwordConfirm:'LocalDSC!2026',name:'Temporary Feedback QA',role:'individual',is_active:true});
  const owner=await login(ownerRecord.email);
  const caseRecord=await create('cases',{user:ownerRecord.id,name:'Temporary feedback case',status:'pending',service_type:'individual'});
- const message=await create('internal_messages',{sender:expert.authStore.record.id,recipient:admin.authStore.record.id,body:'Temporary private message'},expert);
+ const message=await create('internal_messages',{sender:expert.authStore.record.id,recipient:admin.authStore.record.id,subject:'Private message',body:'Temporary private message'},expert);
  assert.equal((await admin.collection('internal_messages').getOne(message.id)).body,'Temporary private message');
  await denied(()=>other.collection('internal_messages').getOne(message.id));
  await denied(()=>anon.collection('internal_messages').getOne(message.id));
@@ -23,15 +23,15 @@ try{
  assert.equal((await expert.collection('internal_messages').getOne(message.id)).read,true);
  await denied(()=>expert.collection('internal_messages').create({sender:admin.authStore.record.id,recipient:other.authStore.record.id,body:'Spoof'}));
  await denied(()=>expert.collection('internal_messages').create({sender:expert.authStore.record.id,recipient:other.authStore.record.id,body:'Expert to expert'}));
- const contacts=await expert.send('/api/dsc/message-contacts');assert.ok(contacts.length);assert.ok(contacts.every(x=>['admin','super_admin'].includes(x.role)&&!('email' in x)));
- await denied(()=>owner.send('/api/dsc/message-contacts'));
+ const contacts=await expert.send('/api/dsc/message-contacts');assert.ok(contacts.length);assert.ok(contacts.some(x=>['admin','super_admin'].includes(x.role)));assert.ok(contacts.every(x=>!('email' in x)));
+ const ownerContacts=await owner.send('/api/dsc/message-contacts');assert.ok(ownerContacts.every(x=>['admin','super_admin'].includes(x.role)));
  const feedback=await create('case_feedback',{case:caseRecord.id,author:ownerRecord.id,rating:5,comment:''},owner);
  await owner.collection('case_feedback').update(feedback.id,{rating:4,comment:'Helpful support'});
  assert.equal((await admin.collection('case_feedback').getOne(feedback.id)).rating,4);
  await denied(()=>other.collection('case_feedback').getOne(feedback.id));
  const role=(await root.collection('roles_management').getList(1,1)).items[0];
  assert.ok(role,'A local expert assignment role is required');
- await create('case_experts',{case_id:caseRecord.id,expert_id:expert.authStore.record.id,role:role.role_name_en});
+ await create('case_experts',{case_id:caseRecord.id,expert_id:expert.authStore.record.id,role_id:role.id});
  assert.equal((await expert.collection('case_feedback').getOne(feedback.id)).rating,4);
  await denied(()=>expert.collection('case_feedback').update(feedback.id,{rating:1}));
  await denied(()=>owner.collection('case_feedback').update(feedback.id,{author:expert.authStore.record.id}));

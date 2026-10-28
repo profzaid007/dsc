@@ -1,4 +1,6 @@
 "use client"
+import { CaseDocuments } from "@/components/cases/CaseDocuments"
+import { CaseMessages } from "@/components/cases/CaseMessages"
 import { ExpertCreateAssignment } from "@/components/cases/ExpertCreateAssignment"
 import type { MultipleChoiceConfig } from "@/types/tool"
 import { CaseName } from "@/components/cases/CaseName"
@@ -140,6 +142,7 @@ export default function ExpertCaseDetailPage({
         <CaseName profile={profile} />
       </h1>
       <h2 className="text-lg font-semibold">{ar ? "التكليفات" : "Assignments"}</h2>
+      <CaseMessages key={`messages-${profile.id}`} caseId={profile.id} />
       <ExpertCreateAssignment key={profile.id} caseId={profile.id} onCreated={() => { void refreshTasks() }} />
       {!assignments.length && (
         <p>{ar ? "لا توجد تكليفات متاحة بعد." : "No assignments available yet."}</p>
@@ -175,6 +178,7 @@ export default function ExpertCaseDetailPage({
           </CardContent>
         </Card>
       ))}
+      <CaseDocuments key={`documents-${profile.id}`} caseId={profile.id} />
       <CaseAssessments caseId={profile.id} />
       <CaseFeedback caseId={profile.id} ownerId={profile.user} />
     </div>
