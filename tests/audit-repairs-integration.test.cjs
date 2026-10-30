@@ -22,6 +22,7 @@ test("audit repairs: atomic registration, permissions, publication and concurren
   for (const name of [
     "1794100000_audit_rule_repairs.js",
     "1794100100_account_registration.js",
+    "1795000000_parent_city_of_residence.js",
     "1794100200_training_enrollment.js",
     "1794100300_messaging_quotas.js",
   ])
@@ -145,6 +146,7 @@ test("audit repairs: atomic registration, permissions, publication and concurren
         collection:
           role === "parent" ? "parent_profiles" : "organization_profiles",
         organization_name: "Organization",
+        city_of_residence: "Riyadh",
       }
       if (role === "parent")
         data.cases = [
@@ -163,6 +165,8 @@ test("audit repairs: atomic registration, permissions, publication and concurren
         role
       )
     }
+    const parents = await req("/api/collections/parent_profiles/records", "GET", null, admin)
+    assert.equal(parents.data.items.find((p) => p.city_of_residence === "Riyadh")?.city_of_residence, "Riyadh")
     for (let i = 0; i < 5; i++)
       assert.equal(
         (

@@ -90,6 +90,7 @@ export function ParentRegistrationForm({
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [residence, setResidence] = useState("")
+  const [city, setCity] = useState("")
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -243,6 +244,7 @@ export function ParentRegistrationForm({
       registration.profile("parent_profiles", {
         user: user.id,
         country_of_residence: residence,
+        city_of_residence: city.trim(),
         notes: notes.trim(),
       })
 
@@ -475,6 +477,18 @@ export function ParentRegistrationForm({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="parent-city-of-residence">
+                {t({ en: "City of Residence", ar: "مدينة الإقامة" }, lang)}
+              </Label>
+              <Input
+                id="parent-city-of-residence"
+                autoComplete="address-level2"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                maxLength={300}
+              />
             </div>
           </div>
 

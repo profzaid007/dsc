@@ -58,7 +58,7 @@ module.exports = (e) => {
       "emergency_contact_phone",
       "notes",
     ],
-    parent_profiles: ["country_of_residence", "notes"],
+    parent_profiles: ["country_of_residence", "city_of_residence", "notes"],
     organization_profiles: [
       "organization_name",
       "organization_type",
