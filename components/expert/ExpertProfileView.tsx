@@ -80,11 +80,24 @@ export function ExpertProfileView({
 
   const photo = profilePhotoName(profile)
   const photoUrl = profileFileUrl(profile, photo, fileToken)
-  const cvFiles = recordStringArray(profile?.cv)
+  let cvFiles: string[], ageGroups: string[], specializations: string[]
+  try {
+    cvFiles = recordStringArray(profile?.cv, "CV files")
+    ageGroups = toStringList(profile?.age_group, "Age groups")
+    specializations = toStringList(profile?.specialization_type, "Specializations")
+  } catch {
+    return (
+      <div role="alert" className="rounded-lg border border-destructive p-6">
+        {lang === "ar"
+          ? "تعذر عرض الملف: تنسيق بعض بيانات الخبير غير صحيح. يرجى التواصل مع مسؤول النظام لتصحيح البيانات."
+          : "This expert profile contains incorrectly formatted fields. Please contact the administrator to correct the data."}
+      </div>
+    )
+  }
   // Stored values may be enum keys or free text, so resolve through the label
   // map and fall back for genuine prose. Kept as raw/display pairs so React
   // keys stay unique even when two stored values share a label.
-  const specializationEntries = toStringList(profile?.specialization_type).map(
+  const specializationEntries = specializations.map(
     (value) => ({ raw: value, label: specializationLabel(value, lang) })
   )
   const specializationLabels = specializationEntries.map((item) => item.label)
@@ -287,7 +300,7 @@ export function ExpertProfileView({
           label={t({ en: "Age Group", ar: "الفئة العمرية" }, lang)}
         >
           <TagList
-            values={toStringList(profile?.age_group).map((item) =>
+            values={ageGroups.map((item) =>
               ageGroupLabel(item, lang)
             )}
           />
