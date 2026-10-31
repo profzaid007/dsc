@@ -1,5 +1,8 @@
 "use client"
 
+import { useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import { DashboardSidebar } from "@/components/dashboard/Sidebar"
@@ -14,6 +17,11 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
   const { lang } = useLang()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) router.replace("/login")
+  }, [isAuthLoading, isAuthenticated, router])
 
   if (isAuthLoading) {
     return (
@@ -24,7 +32,18 @@ export default function DashboardLayout({
   }
 
   if (!isAuthenticated) {
-    return null
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
+        <p role="status">
+          {lang === "ar"
+            ? "يرجى تسجيل الدخول للمتابعة. جارٍ فتح صفحة تسجيل الدخول…"
+            : "Please sign in to continue. Opening the login page…"}
+        </p>
+        <Link href="/login" className="text-primary underline">
+          {lang === "ar" ? "تسجيل الدخول" : "Sign in"}
+        </Link>
+      </div>
+    )
   }
 
   return (
