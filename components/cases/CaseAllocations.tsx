@@ -418,7 +418,7 @@ export function CaseAllocations({
       const loadedRows: AllocationRow[] = caseAllocations.map((a) => ({
         id: a.id,
         expert_id: a.expert_id,
-        role: a.expand?.role_id?.role_name_en || a.role || "",
+        role: a.expand?.role_id?.role_name_en || "",
       }))
       setRows(loadedRows)
       setOriginalRows(loadedRows)
@@ -427,7 +427,6 @@ export function CaseAllocations({
   )
 
   useEffect(() => {
-    if (isSaving) return
     if (selectedCase) {
       // Synchronize rows when the selected case or its saved allocations change.
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -436,7 +435,7 @@ export function CaseAllocations({
       setRows([])
       setOriginalRows([])
     }
-  }, [selectedCase, loadAllocationsForCase, isSaving])
+  }, [selectedCase, loadAllocationsForCase])
 
   const addRow = () => {
     setRows((prev) => [...prev, { expert_id: "", role: "", role_group: "" }])
@@ -880,7 +879,7 @@ export function CaseAllocations({
                     {roleMgmtRoles.map((role) => {
                       const hasAssignments = allocations.some(
                         (a) =>
-                          a.role_id === role.id || a.role === role.role_name_en
+                          a.role_id === role.id
                       )
                       return (
                         <TableRow key={role.id}>

@@ -4,8 +4,6 @@ export interface CaseExpert {
   expert_id: string
   /** Relation to the `roles_management` record assigned to the expert on this case */
   role_id: string
-  /** Legacy role name retained for existing allocations. */
-  role?: string
   created: string
   updated: string
   expand?: {

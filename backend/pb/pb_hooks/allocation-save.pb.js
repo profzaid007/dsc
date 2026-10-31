@@ -14,19 +14,14 @@ routerAdd(
       if (
         !row ||
         typeof row.expert_id !== "string" ||
-        (typeof row.role !== "string" && typeof row.role_id !== "string")
+        (typeof row.role_id !== "string" || !row.role_id.trim())
       )
         throw new BadRequestError("Select an expert and role.")
       const expert = e.app.findRecordById("users", row.expert_id)
       if (expert.getString("role") !== "expert" || !expert.getBool("is_active"))
         throw new BadRequestError("Select active experts.")
-      const specialist = row.role_id ? e.app.findRecordById("roles_management", row.role_id) : e.app.findFirstRecordByFilter(
-        "roles_management",
-        "role_name_en = {:role}",
-        { role: row.role }
-      )
+      const specialist = e.app.findRecordById("roles_management", row.role_id)
       row.role_id = specialist.id
-      row.role = specialist.getString("role_name_en")
       const key = row.expert_id + ":" + row.role_id
       if (seen[key]) throw new BadRequestError("Duplicate expert and role.")
       seen[key] = true

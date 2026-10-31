@@ -18,6 +18,6 @@ export function allocationRowsForSave(
   return rows.map(row => {
     const role = roles.find(item => item.role_name_en === row.role)
     if (!role) throw new Error("The selected role is no longer available. Refresh and select a role again.")
-    return { ...row, role_id: role.id }
+    return { ...(row.id ? { id: row.id } : {}), expert_id: row.expert_id, role_id: role.id }
   })
 }
