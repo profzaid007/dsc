@@ -123,6 +123,10 @@ function installSecurity(app, policy) {
     throw new Error(
       "Unexpected security_permissions field type; review schema state."
     )
+  if (existingProjection) {
+    existingProjection.values = policy.catalog.map(p => p.key)
+    existingProjection.maxSelect = policy.catalog.length
+  }
   if (!existingProjection)
     users.fields.add(
       new SelectField({

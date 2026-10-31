@@ -107,7 +107,8 @@ before(async () => {
   },()=>{});`
   fs.writeFileSync(path.join(migrations, "1780000000_fixture.js"), bootstrap)
   fs.copyFileSync(
-    path.join(root, "pb_migrations/1792900000_security_management.js"),
+    process.env.SECURITY_TEST_BASE_MIGRATION ||
+      path.join(root, "pb_migrations/1792900000_security_management.js"),
     path.join(migrations, "1792900000_security_management.js")
   )
   for (const name of [
@@ -116,6 +117,7 @@ before(async () => {
     "1794100000_audit_rule_repairs.js",
     "1794100100_account_registration.js",
     "1794100200_training_enrollment.js",
+    "1795100000_general_role_assignment.js",
   ])
     fs.copyFileSync(
       path.join(root, "pb_migrations", name),
@@ -200,7 +202,7 @@ test("migration preserves administrator access and restricts security administra
   assert.equal(
     (await request("/api/dsc/security/state", "GET", undefined, adminToken))
       .status,
-    403
+    200
   )
   assert.equal(
     (await request(records("security_roles"), "GET", undefined, adminToken))
@@ -327,6 +329,103 @@ test("role union, revocation, deactivation, and reactivation apply without login
     403
   )
 })
+test("any account can receive roles; delegation is limited to the actor's capacity", async () => {
+  const role = await createRole("delegation-reader", ["cases.read"])
+  for (const id of [ids.expert, ids.customer]) {
+    await assign(id, [role.id])
+    const token =
+      id === ids.expert ? expertToken : await login("customer@fixture.test")
+    assert.deepEqual(
+      (await request("/api/dsc/security/me", "GET", undefined, token)).data
+        .permissions,
+      ["cases.read"]
+    )
+    assert.equal(
+      (await request(records("cases"), "GET", undefined, token)).status,
+      200
+    )
+    assert.equal(
+      (await request(records("users") + "/" + id)).data.role,
+      id === ids.expert ? "expert" : "individual"
+    )
+    await assign(id, [])
+  }
+  const delegated = await createRole("delegator", [
+    "security.read",
+    "security.assign_roles",
+    "cases.read",
+  ])
+  await assign(ids.reader, [delegated.id])
+  assert.equal(
+    (
+      await request(
+        "/api/dsc/security/users/" + ids.expert + "/roles",
+        "PUT",
+        { roles: [role.id] },
+        readerToken
+      )
+    ).status,
+    200
+  )
+  const administrator = (await state()).roles.find(
+    (r) => r.key === "administrator"
+  )
+  assert.equal(
+    (
+      await request(
+        "/api/dsc/security/users/" + ids.expert + "/roles",
+        "PUT",
+        { roles: [administrator.id] },
+        readerToken
+      )
+    ).status,
+    403
+  )
+  assert.equal(
+    (
+      await request(
+        "/api/dsc/security/users/" + ids.expert + "/roles",
+        "PUT",
+        { roles: [administrator.id] },
+        adminToken
+      )
+    ).status,
+    200
+  )
+  assert.equal(
+    (
+      await request("/api/dsc/security/me", "GET", undefined, expertToken)
+    ).data.permissions.includes("security.assign_roles"),
+    true
+  )
+  assert.equal(
+    (
+      await request(
+        "/api/dsc/security/users/" + ids.expert + "/roles",
+        "PUT",
+        { roles: [] },
+        readerToken
+      )
+    ).status,
+    403
+  )
+  await assign(ids.expert, [])
+  assert.equal(
+    (
+      await request(
+        "/api/dsc/security/users/" + ids.customer + "/roles",
+        "PUT",
+        { roles: [role.id] },
+        expertToken
+      )
+    ).status,
+    403
+  )
+  await assign(ids.reader, [
+    (await state()).roles.find((r) => r.key === "case-reader").id,
+  ])
+})
+
 test("invalid grants, arbitrary role assignments, and deleting assigned/system roles are denied", async () => {
   const body = {
     key: "invalid-role",
@@ -371,8 +470,9 @@ test("invalid grants, arbitrary role assignments, and deleting assigned/system r
         roles: [role.id],
       })
     ).status,
-    400
+    200
   )
+  await assign(ids.customer, [])
   assert.equal(
     (
       await request(
@@ -382,8 +482,9 @@ test("invalid grants, arbitrary role assignments, and deleting assigned/system r
         adminToken
       )
     ).status,
-    403
+    200
   )
+  await assign(ids.admin, [system.id])
   const unused = await createRole("unused-role", [])
   assert.equal(
     (await request("/api/dsc/security/roles/" + unused.id, "DELETE")).status,
@@ -701,8 +802,15 @@ test("event record rules distinguish training from lecture grants", async () => 
   assert.equal(list.data.items[0].id, lecture.data.id)
 })
 test("allocation replacement enforces create, update and delete independently", async () => {
+  const category = await request(
+    records("specialist_role_categories"),
+    "POST",
+    { key: "medical", name_en: "Medicine", name_ar: "الطب" }
+  )
+  assert.equal(category.status, 200, JSON.stringify(category.data))
   const specialist = await request(records("roles_management"), "POST", {
     role_name_en: "Fixture physician",
+    role_group: "medical",
     role_name_ar: "طبيب تجريبي",
   })
   assert.equal(specialist.status, 200, JSON.stringify(specialist.data))

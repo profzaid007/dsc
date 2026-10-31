@@ -17,6 +17,7 @@ const modules = [
   ["settings", "Settings", "الإعدادات"],
   ["messages", "Messages", "الرسائل"],
 ]
+modules.push(["security", "Security", "الأمان"])
 const actions = [
   ["create", "Create", "إنشاء"],
   ["read", "Read", "قراءة"],
@@ -27,6 +28,7 @@ const catalog = []
 for (const m of modules)
   for (const a of actions) {
     // Messaging has no delete operation. Backups are deliberately not delegable.
+    if (m[0] === "security" && a[0] !== "read") continue
     if (m[0] === "messages" && a[0] === "delete") continue
     if (m[0] === "payments" && ["create", "delete"].includes(a[0])) continue
     catalog.push({
@@ -38,6 +40,13 @@ for (const m of modules)
     })
   }
 catalog.push(
+  {
+    key: "security.assign_roles",
+    module: "security",
+    action: "assign_roles",
+    name_en: "Assign security roles",
+    name_ar: "إسناد أدوار الأمان",
+  },
   {
     key: "users.reset_password",
     module: "users",
@@ -72,6 +81,7 @@ const collectionModules = {
   expert_bank_details: "payments",
   cases: "cases",
   case_feedback: "cases",
+  case_documents: "cases",
   tools: "tools",
   tool_types: "tools",
   case_tools: "assignments",
@@ -112,7 +122,6 @@ function freshUser(app, auth) {
 function effective(app, user) {
   if (!user.getBool("is_active")) return []
   if (user.getString("role") === "super_admin") return catalog.map((p) => p.key)
-  if (user.getString("role") !== "admin") return []
   const assignments = app.findRecordsByFilter(
     "security_user_roles",
     "user = {:id} && role.is_active = true",
@@ -180,7 +189,7 @@ function validateGrants(values) {
 }
 function adminRule(permission) {
   return (
-    '(@request.auth.role = "admin" && @request.auth.security_permissions:each ?= "' +
+    '(@request.auth.is_active = true && @request.auth.security_permissions:each ?= "' +
     permission +
     '")'
   )
@@ -356,6 +365,10 @@ function installSecurity(app, policy) {
     throw new Error(
       "Unexpected security_permissions field type; review schema state."
     )
+  if (existingProjection) {
+    existingProjection.values = policy.catalog.map(p => p.key)
+    existingProjection.maxSelect = policy.catalog.length
+  }
   if (!existingProjection)
     users.fields.add(
       new SelectField({

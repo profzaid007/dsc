@@ -34,6 +34,8 @@ export function SecurityManagement() {
   const ar = lang === "ar"
   const t = (en: string, arabic: string) => (ar ? arabic : en)
   const access = usePermissions()
+  const canView = access.can("security.read")
+  const canAssign = access.can("security.assign_roles")
   const [state, setState] = useState<SecurityState | null>(null)
   const [tab, setTab] = useState("roles"),
     [query, setQuery] = useState("")
@@ -68,9 +70,9 @@ export function SecurityManagement() {
     }
   }
   useEffect(() => {
-    if (access.isSuperAdmin) void load()
+    if (canView) void load()
     else if (!access.isLoading) setLoading(false)
-  }, [access.isSuperAdmin, access.isLoading]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [canView, access.isLoading]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!dirty) return
     const handler = (e: BeforeUnloadEvent) => e.preventDefault()
@@ -194,7 +196,11 @@ export function SecurityManagement() {
     }
     const sync = () => {
       const key = window.location.hash.slice(1)
-      const next = ["roles", "users", "audit"].includes(key) ? key : "roles"
+      const next = access.isSuperAdmin
+        ? ["roles", "users", "audit"].includes(key)
+          ? key
+          : "roles"
+        : "users"
       if (next === tab) return
       if (busy || (dirty && !leave())) {
         window.history.replaceState(null, "", `#${tab}`)
@@ -218,12 +224,12 @@ export function SecurityManagement() {
 
   if (access.isLoading)
     return <p role="status">{t("Loading access…", "جارٍ تحميل الصلاحيات…")}</p>
-  if (!access.isSuperAdmin)
+  if (!canView)
     return (
       <div role="alert">
         {t(
-          "Access denied. Super Admin access is required.",
-          "الوصول مرفوض. هذه الصفحة للمشرف العام."
+          "Access denied. Security read permission is required.",
+          "الوصول مرفوض. يلزم إذن قراءة الأمان."
         )}
         {access.error && (
           <Button onClick={access.refresh}>
@@ -600,12 +606,12 @@ export function SecurityManagement() {
                       <>
                         <p className="text-sm text-muted-foreground">
                           {t(
-                            "Security roles apply to admin accounts. Account types remain separate.",
-                            "تطبق أدوار الأمان على حسابات المشرفين، وتبقى أنواع الحسابات مستقلة."
+                            "Any account can receive security roles. You can grant or remove roles within your own permissions.",
+                            "يمكن إسناد أدوار الأمان لأي حساب، ضمن حدود صلاحياتك."
                           )}
                         </p>
                         <fieldset
-                          disabled={busy || user.role !== "admin"}
+                          disabled={busy || !canAssign}
                           className="space-y-3"
                         >
                           {state.roles.map((r) => (
@@ -615,6 +621,10 @@ export function SecurityManagement() {
                             >
                               <input
                                 type="checkbox"
+                                disabled={
+                                  !access.isSuperAdmin &&
+                                  r.permissions.some((p) => !access.can(p))
+                                }
                                 checked={userRoles.includes(r.id)}
                                 onChange={(e) =>
                                   setUserRoles(
@@ -633,7 +643,7 @@ export function SecurityManagement() {
                             </label>
                           ))}
                         </fieldset>
-                        {user.role === "admin" && (
+                        {canAssign && (
                           <Button
                             disabled={busy || !dirty}
                             onClick={() => {

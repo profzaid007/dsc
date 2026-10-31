@@ -1,6 +1,7 @@
 import pb from "@/lib/pb"
 
 export const securityModules = [
+  ["security", "Security", "الأمان"],
   ["users", "Users", "المستخدمون"],
   ["experts", "Experts", "الخبراء"],
   ["cases", "Cases", "الحالات"],

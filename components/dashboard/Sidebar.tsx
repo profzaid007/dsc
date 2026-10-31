@@ -44,7 +44,11 @@ type NavItem = {
 }
 
 const adminNavigation: NavItem[] = [
-  { name: { en: "Messages", ar: "الرسائل" }, href: "/dashboard/messages", icon: MessageSquare },
+  {
+    name: { en: "Messages", ar: "الرسائل" },
+    href: "/dashboard/messages",
+    icon: MessageSquare,
+  },
   {
     name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/admin/cases",
@@ -83,7 +87,11 @@ const adminNavigation: NavItem[] = [
 ]
 
 const organizationNavigation: NavItem[] = [
-  { name: { en: "My Assignments", ar: "تكليفاتي" }, href: "/dashboard/assessments", icon: ClipboardList },
+  {
+    name: { en: "My Assignments", ar: "تكليفاتي" },
+    href: "/dashboard/assessments",
+    icon: ClipboardList,
+  },
   {
     name: { en: "Projects", ar: "المشاريع" },
     href: "/dashboard/institution/projects",
@@ -107,7 +115,11 @@ const organizationNavigation: NavItem[] = [
 ]
 
 const individualNavigation: NavItem[] = [
-  { name: { en: "My Assignments", ar: "تكليفاتي" }, href: "/dashboard/assessments", icon: ClipboardList },
+  {
+    name: { en: "My Assignments", ar: "تكليفاتي" },
+    href: "/dashboard/assessments",
+    icon: ClipboardList,
+  },
   {
     name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/individual/cases",
@@ -131,7 +143,11 @@ const individualNavigation: NavItem[] = [
 ]
 
 const parentNavigation: NavItem[] = [
-  { name: { en: "My Assignments", ar: "تكليفاتي" }, href: "/dashboard/assessments", icon: ClipboardList },
+  {
+    name: { en: "My Assignments", ar: "تكليفاتي" },
+    href: "/dashboard/assessments",
+    icon: ClipboardList,
+  },
   {
     name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/parent/cases",
@@ -150,7 +166,11 @@ const parentNavigation: NavItem[] = [
 ]
 
 const expertNavigation: NavItem[] = [
-  { name: { en: "Messages", ar: "الرسائل" }, href: "/dashboard/messages", icon: MessageSquare },
+  {
+    name: { en: "Messages", ar: "الرسائل" },
+    href: "/dashboard/messages",
+    icon: MessageSquare,
+  },
   {
     name: { en: "Cases", ar: "الحالات" },
     href: "/dashboard/expert/cases",
@@ -199,7 +219,18 @@ function renderNavItem(
     >
       <item.icon className="h-5 w-5 shrink-0" />
       {!isCollapsed && item.name[lang]}
-      {!!item.unread && <span aria-label={lang === "ar" ? `${item.unread} رسائل غير مقروءة` : `${item.unread} unread messages`} className="rounded-full bg-amber-300 px-2 py-0.5 text-xs font-bold text-slate-900">{item.unread}</span>}
+      {!!item.unread && (
+        <span
+          aria-label={
+            lang === "ar"
+              ? `${item.unread} رسائل غير مقروءة`
+              : `${item.unread} unread messages`
+          }
+          className="rounded-full bg-amber-300 px-2 py-0.5 text-xs font-bold text-slate-900"
+        >
+          {item.unread}
+        </span>
+      )}
     </SmartLink>
   )
 }
@@ -207,18 +238,22 @@ function renderNavItem(
 export function DashboardSidebar() {
   const pathname = usePathname()
   const { lang } = useLang()
-  const {
-    currentUser,
-    isAdmin,
-    isLoading: isAuthLoading,
-  } = useAuth()
+  const { currentUser, isAdmin, isLoading: isAuthLoading } = useAuth()
 
   const permissions = usePermissions()
-  const canNavigate = (item: NavItem) => (!item.superAdminOnly || permissions.isSuperAdmin) && (!isAdmin || !routePermission(item.href) || permissions.can(routePermission(item.href)!))
+  const canNavigate = (item: NavItem) =>
+    (!item.superAdminOnly || permissions.isSuperAdmin) &&
+    (!isAdmin ||
+      !routePermission(item.href) ||
+      permissions.can(routePermission(item.href)!))
   const role = currentUser?.role
   const isExpert = role === "expert"
-  const unread = useUnreadMessages(currentUser?.id, isExpert || isAdmin && permissions.can("messages.read"))
-  const withUnread = (item: NavItem): NavItem => item.href === "/dashboard/messages" ? { ...item, unread } : item
+  const unread = useUnreadMessages(
+    currentUser?.id,
+    isExpert || (isAdmin && permissions.can("messages.read"))
+  )
+  const withUnread = (item: NavItem): NavItem =>
+    item.href === "/dashboard/messages" ? { ...item, unread } : item
   const isOrganization = role === "organization"
   const isIndividual = role === "individual"
   const isParent = role === "parent" || role === "care_foundation"
@@ -262,203 +297,312 @@ export function DashboardSidebar() {
         : isIndividual
           ? { en: "My Dashboard", ar: "لوحة التحكم" }
           : isParent
-            ? { en: role === "care_foundation" ? "Care Foundation Dashboard" : "Parent Dashboard", ar: "لوحة التحكم" }
+            ? {
+                en:
+                  role === "care_foundation"
+                    ? "Care Foundation Dashboard"
+                    : "Parent Dashboard",
+                ar: "لوحة التحكم",
+              }
             : { en: "Dashboard", ar: "لوحة التحكم" }
 
-  if (pathname.startsWith("/dashboard/admin/security")) return <SecuritySidebar />
+  if (pathname.startsWith("/dashboard/admin/security"))
+    return <SecuritySidebar />
 
   return (
     <>
-    <div className="w-full bg-primary text-primary-foreground md:hidden">
-      <div className="flex min-h-14 items-center justify-between gap-3 px-4">
-        <SmartLink href={dashboardHref} className="min-w-0 text-sm font-semibold">{dashboardLabel[lang]}</SmartLink>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-11 w-11 shrink-0 text-white hover:bg-white/10 hover:text-white"
-          onClick={() => setMobileMenuPath(mobileOpen ? null : pathname)}
-          aria-expanded={mobileOpen}
-          aria-controls="dashboard-mobile-navigation"
-          aria-label={lang === "ar" ? "قائمة لوحة التحكم" : "Dashboard navigation"}
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+      <div className="w-full bg-primary text-primary-foreground md:hidden">
+        <div className="flex min-h-14 items-center justify-between gap-3 px-4">
+          <SmartLink
+            href={dashboardHref}
+            className="min-w-0 text-sm font-semibold"
+          >
+            {dashboardLabel[lang]}
+          </SmartLink>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 shrink-0 text-white hover:bg-white/10 hover:text-white"
+            onClick={() => setMobileMenuPath(mobileOpen ? null : pathname)}
+            aria-expanded={mobileOpen}
+            aria-controls="dashboard-mobile-navigation"
+            aria-label={
+              lang === "ar" ? "قائمة لوحة التحكم" : "Dashboard navigation"
+            }
+          >
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+        {mobileOpen && (
+          <nav
+            id="dashboard-mobile-navigation"
+            aria-label={
+              lang === "ar" ? "التنقل في لوحة التحكم" : "Dashboard navigation"
+            }
+            className="max-h-[65dvh] space-y-1 overflow-y-auto border-t border-white/15 p-3"
+            onClick={() => setMobileMenuPath(null)}
+          >
+            {permissions.can("security.read") && (
+              <SmartLink href="/dashboard/admin/security#users" className="p-3">
+                {lang === "ar" ? "إدارة الأمان" : "Security management"}
+              </SmartLink>
+            )}
+            {renderNavItem(
+              {
+                name: dashboardLabel,
+                href: dashboardHref,
+                icon: LayoutDashboard,
+              },
+              pathname,
+              lang
+            )}
+            {(isAdmin
+              ? adminNavigation
+              : [
+                  ...(isExpert
+                    ? expertNavigation
+                    : isOrganization
+                      ? organizationNavigation
+                      : isIndividual
+                        ? individualNavigation
+                        : isParent
+                          ? parentNavigation
+                          : []),
+                  ...adminNavigation.filter((item) => {
+                    const key = routePermission(item.href)
+                    return !!key && permissions.can(key)
+                  }),
+                ].filter(
+                  (item, index, all) =>
+                    all.findIndex((other) => other.href === item.href) === index
+                )
+            )
+              .filter(canNavigate)
+              .map((item) => renderNavItem(withUnread(item), pathname, lang))}
+          </nav>
+        )}
       </div>
-      {mobileOpen && (
-        <nav id="dashboard-mobile-navigation" aria-label={lang === "ar" ? "التنقل في لوحة التحكم" : "Dashboard navigation"} className="max-h-[65dvh] space-y-1 overflow-y-auto border-t border-white/15 p-3" onClick={() => setMobileMenuPath(null)}>
-          {renderNavItem({ name: dashboardLabel, href: dashboardHref, icon: LayoutDashboard }, pathname, lang)}
-          {(isAdmin ? adminNavigation : isExpert ? expertNavigation : isOrganization ? organizationNavigation : isIndividual ? individualNavigation : isParent ? parentNavigation : [])
-            .filter(canNavigate)
-            .map((item) => renderNavItem(withUnread(item), pathname, lang))}
-
-        </nav>
-      )}
-    </div>
-    <aside
-      className={cn(
-        "hidden min-h-screen shrink-0 flex-col bg-primary text-primary-foreground transition-all duration-300 md:flex",
-        isCollapsed ? "w-16" : "w-64"
-      )}
-    >
-      <div
+      <aside
         className={cn(
-          "border-b border-primary/20",
-          isCollapsed ? "p-2" : "p-4"
+          "hidden min-h-screen shrink-0 flex-col bg-primary text-primary-foreground transition-all duration-300 md:flex",
+          isCollapsed ? "w-16" : "w-64"
         )}
       >
         <div
           className={cn(
-            "flex items-center",
-            isCollapsed ? "justify-center" : "justify-between"
+            "border-b border-primary/20",
+            isCollapsed ? "p-2" : "p-4"
           )}
         >
-          {!isCollapsed && (
-            <SmartLink href={dashboardHref} className="flex items-center gap-2">
-              <span className="text-xl font-bold">DSC</span>
-            </SmartLink>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleCollapsed}
-            className="text-primary-foreground/70 hover:bg-white/10 hover:text-white"
-            aria-label={
-              isCollapsed
-                ? lang === "ar"
-                  ? "توسيع الشريط الجانبي"
-                  : "Expand sidebar"
-                : lang === "ar"
-                  ? "طي الشريط الجانبي"
-                  : "Collapse sidebar"
-            }
-          >
-            {isCollapsed ? (
-              <PanelLeftOpen className="h-4 w-4" />
-            ) : (
-              <PanelLeftClose className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <nav className={cn("flex-1 space-y-1", isCollapsed ? "p-2" : "p-4")}>
-        {/* Dashboard home */}
-        <SmartLink
-          href={dashboardHref}
-          className={cn(
-            "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
-            isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
-            pathname === dashboardHref
-              ? "bg-white/20 text-white"
-              : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
-          )}
-          title={isCollapsed ? dashboardLabel[lang] : undefined}
-        >
-          <LayoutDashboard className="h-5 w-5 shrink-0" />
-          {!isCollapsed && dashboardLabel[lang]}
-        </SmartLink>
-
-        {/* Role-specific navigation */}
-        {isOrganization && (
-          <>
-            {organizationNavigation.map((item) =>
-              renderNavItem(withUnread(item), pathname, lang, false, isCollapsed)
-            )}
-          </>
-        )}
-
-        {isExpert && (
-          <>
-            {expertNavigation.map((item) =>
-              renderNavItem(withUnread(item), pathname, lang, false, isCollapsed)
-            )}
-          </>
-        )}
-
-        {/* Admin navigation */}
-        {isAdmin && (
-          <>
-            {!isCollapsed && (
-              <div className="pt-4 pb-2">
-                <span className="px-3 text-xs font-medium tracking-wider text-primary-foreground/50 uppercase">
-                  {lang === "ar" ? "مشرف" : "Admin"}
-                </span>
-              </div>
-            )}
-            {adminNavigation.map((item) => {
-              if (!canNavigate(item)) return null
-              return renderNavItem(withUnread(item), pathname, lang, true, isCollapsed)
-            })}
-          </>
-        )}
-
-        {/* Individual navigation */}
-        {isIndividual && (
-          <>
-            {individualNavigation.map((item) =>
-              renderNavItem(withUnread(item), pathname, lang, false, isCollapsed)
-            )}
-          </>
-        )}
-
-        {/* Parent navigation */}
-        {isParent && (
-          <>
-            {parentNavigation.map((item) =>
-              renderNavItem(withUnread(item), pathname, lang, false, isCollapsed)
-            )}
-          </>
-        )}
-      </nav>
-
-      <div
-        className={cn(
-          "border-t border-primary/20",
-          isCollapsed ? "p-2" : "p-4"
-        )}
-      >
-        {isAuthLoading ? (
           <div
             className={cn(
               "flex items-center",
-              isCollapsed ? "justify-center" : "gap-3"
+              isCollapsed ? "justify-center" : "justify-between"
             )}
           >
-            <div className="flex h-9 w-9 animate-pulse items-center justify-center rounded-full bg-white/10">
-              <FolderKanban className="h-5 w-5 shrink-0 opacity-50" />
-            </div>
             {!isCollapsed && (
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <div className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
-                <div className="h-2.5 w-28 animate-pulse rounded bg-white/10" />
-              </div>
+              <SmartLink
+                href={dashboardHref}
+                className="flex items-center gap-2"
+              >
+                <span className="text-xl font-bold">DSC</span>
+              </SmartLink>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleCollapsed}
+              className="text-primary-foreground/70 hover:bg-white/10 hover:text-white"
+              aria-label={
+                isCollapsed
+                  ? lang === "ar"
+                    ? "توسيع الشريط الجانبي"
+                    : "Expand sidebar"
+                  : lang === "ar"
+                    ? "طي الشريط الجانبي"
+                    : "Collapse sidebar"
+              }
+            >
+              {isCollapsed ? (
+                <PanelLeftOpen className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )}
+            </Button>
           </div>
-        ) : (
-          <div
-            className={cn(
-              "mb-3 flex items-center",
-              isCollapsed ? "justify-center" : "gap-3"
-            )}
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-              <FolderKanban className="h-5 w-5 shrink-0" />
-            </div>
-            {!isCollapsed && (
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">
-                  {currentUser?.name}
-                </p>
-                <p className="truncate text-xs text-primary-foreground/70">
-                  {currentUser?.email}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
 
-      </div>
-    </aside>
+        <nav className={cn("flex-1 space-y-1", isCollapsed ? "p-2" : "p-4")}>
+          {/* Dashboard home */}
+          <SmartLink
+            href={dashboardHref}
+            className={cn(
+              "flex items-center gap-3 rounded-lg text-sm font-medium transition-colors",
+              isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2",
+              pathname === dashboardHref
+                ? "bg-white/20 text-white"
+                : "text-primary-foreground/70 hover:bg-white/10 hover:text-white"
+            )}
+            title={isCollapsed ? dashboardLabel[lang] : undefined}
+          >
+            <LayoutDashboard className="h-5 w-5 shrink-0" />
+            {!isCollapsed && dashboardLabel[lang]}
+          </SmartLink>
+
+          {permissions.can("security.read") && (
+            <SmartLink href="/dashboard/admin/security#users" className="p-3">
+              {lang === "ar" ? "إدارة الأمان" : "Security management"}
+            </SmartLink>
+          )}
+          {!isAdmin &&
+            adminNavigation
+              .filter((item) => {
+                const key = routePermission(item.href)
+                return !!key && permissions.can(key)
+              })
+              .map((item) =>
+                renderNavItem(
+                  withUnread(item),
+                  pathname,
+                  lang,
+                  false,
+                  isCollapsed
+                )
+              )}
+          {/* Role-specific navigation */}
+          {isOrganization && (
+            <>
+              {organizationNavigation.map((item) =>
+                renderNavItem(
+                  withUnread(item),
+                  pathname,
+                  lang,
+                  false,
+                  isCollapsed
+                )
+              )}
+            </>
+          )}
+
+          {isExpert && (
+            <>
+              {expertNavigation.map((item) =>
+                renderNavItem(
+                  withUnread(item),
+                  pathname,
+                  lang,
+                  false,
+                  isCollapsed
+                )
+              )}
+            </>
+          )}
+
+          {/* Admin navigation */}
+          {isAdmin && (
+            <>
+              {!isCollapsed && (
+                <div className="pt-4 pb-2">
+                  <span className="px-3 text-xs font-medium tracking-wider text-primary-foreground/50 uppercase">
+                    {lang === "ar" ? "مشرف" : "Admin"}
+                  </span>
+                </div>
+              )}
+              {adminNavigation.map((item) => {
+                if (!canNavigate(item)) return null
+                return renderNavItem(
+                  withUnread(item),
+                  pathname,
+                  lang,
+                  true,
+                  isCollapsed
+                )
+              })}
+            </>
+          )}
+
+          {/* Individual navigation */}
+          {isIndividual && (
+            <>
+              {individualNavigation.map((item) =>
+                renderNavItem(
+                  withUnread(item),
+                  pathname,
+                  lang,
+                  false,
+                  isCollapsed
+                )
+              )}
+            </>
+          )}
+
+          {/* Parent navigation */}
+          {isParent && (
+            <>
+              {parentNavigation.map((item) =>
+                renderNavItem(
+                  withUnread(item),
+                  pathname,
+                  lang,
+                  false,
+                  isCollapsed
+                )
+              )}
+            </>
+          )}
+        </nav>
+
+        <div
+          className={cn(
+            "border-t border-primary/20",
+            isCollapsed ? "p-2" : "p-4"
+          )}
+        >
+          {isAuthLoading ? (
+            <div
+              className={cn(
+                "flex items-center",
+                isCollapsed ? "justify-center" : "gap-3"
+              )}
+            >
+              <div className="flex h-9 w-9 animate-pulse items-center justify-center rounded-full bg-white/10">
+                <FolderKanban className="h-5 w-5 shrink-0 opacity-50" />
+              </div>
+              {!isCollapsed && (
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="h-3.5 w-20 animate-pulse rounded bg-white/10" />
+                  <div className="h-2.5 w-28 animate-pulse rounded bg-white/10" />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "mb-3 flex items-center",
+                isCollapsed ? "justify-center" : "gap-3"
+              )}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                <FolderKanban className="h-5 w-5 shrink-0" />
+              </div>
+              {!isCollapsed && (
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    {currentUser?.name}
+                  </p>
+                  <p className="truncate text-xs text-primary-foreground/70">
+                    {currentUser?.email}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </aside>
     </>
   )
 }

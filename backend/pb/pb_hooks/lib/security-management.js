@@ -58,7 +58,7 @@ function auditPage(e) {
   }
 }
 function state(e) {
-  policy.requireSuper(e.app, e.auth)
+  const actor = policy.requirePermission(e.app, e.auth, "security.read")
   const roles = all(e.app, "security_roles").map((r) => roleData(e.app, r))
   const permissions = all(e.app, "security_permissions").map((r) => ({
     id: r.id,
@@ -79,7 +79,12 @@ function state(e) {
     ),
     permissions: policy.effective(e.app, u),
   }))
-  return { roles, permissions, users, audit: auditPage(e).items }
+  return {
+    roles,
+    permissions,
+    users,
+    audit: actor.getString("role") === "super_admin" ? auditPage(e).items : [],
+  }
 }
 function inputString(body, key, max, required) {
   const value = body[key]
@@ -190,17 +195,34 @@ function assignRoles(e) {
   )
     throw new BadRequestError("Invalid role list.")
   e.app.runInTransaction((app) => {
-    const actor = policy.requireSuper(app, e.auth)
+    const actor = policy.requirePermission(app, e.auth, "security.assign_roles")
     const user = app.findRecordById("users", e.request.pathValue("id"))
-    if (user.getString("role") !== "admin")
-      throw new BadRequestError(
-        "Security roles can only be assigned to staff administrator accounts."
-      )
     for (const id of ids) app.findRecordById("security_roles", id)
     const assignments = all(app, "security_user_roles", "user = {:id}", {
       id: user.id,
     })
     const before = assignments.map((a) => a.getString("role"))
+    if (actor.getString("role") !== "super_admin") {
+      if (user.getString("role") === "super_admin")
+        throw new ForbiddenError(
+          "Only Super Admin can change Super Admin access."
+        )
+      const capacity = policy.effective(app, actor)
+      const changed = ids
+        .filter((id) => !before.includes(id))
+        .concat(before.filter((id) => !ids.includes(id)))
+      for (const id of changed) {
+        if (
+          roleData(
+            app,
+            app.findRecordById("security_roles", id)
+          ).permissions.some((key) => !capacity.includes(key))
+        )
+          throw new ForbiddenError(
+            "You cannot assign or remove a role beyond your own permissions."
+          )
+      }
+    }
     for (const a of assignments) app.delete(a)
     for (const id of ids) {
       const a = new Record(app.findCollectionByNameOrId("security_user_roles"))

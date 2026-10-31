@@ -26,22 +26,34 @@ export function AdminProtectedRoute({
     EXPERT_ALLOWED_PATHS.some(
       (p) => pathname === p || pathname.startsWith(p + "/")
     )
-  const superOnly = /^\/dashboard\/admin\/(security|backups)(\/|$)/.test(
-    pathname
-  )
+  const superOnly = /^\/dashboard\/admin\/(backups)(\/|$)/.test(pathname)
   const required = routePermission(pathname)
   const allowed =
     expert ||
-    (auth.isAdmin &&
+    (auth.isAuthenticated &&
       !access.isLoading &&
       !access.error &&
-      (superOnly ? access.isSuperAdmin : !required || access.can(required)))
+      (superOnly
+        ? access.isSuperAdmin
+        : required
+          ? access.can(required)
+          : auth.isAdmin))
   useEffect(() => {
     if (auth.isLoading) return
     if (!auth.isAuthenticated) router.push("/login")
-    else if (!auth.isAdmin && !expert) router.push("/dashboard")
-  }, [auth.isLoading, auth.isAuthenticated, auth.isAdmin, expert, router])
-  if (auth.isLoading || (auth.isAdmin && access.isLoading))
+    else if (!auth.isAdmin && !expert && !access.isLoading && !allowed)
+      router.push("/dashboard")
+  }, [
+    auth.isLoading,
+    auth.isAuthenticated,
+    auth.isAdmin,
+    expert,
+    access.isLoading,
+    required,
+    allowed,
+    router,
+  ])
+  if (auth.isLoading || access.isLoading)
     return (
       <p role="status">
         {lang === "ar" ? "جارٍ التحقق من الصلاحيات…" : "Checking permissions…"}
