@@ -42,7 +42,7 @@ test('expert submission is atomic, retries are idempotent, and cleanup removes o
  let healthy=false
  for(let i=0;i<100;i++){if(server.exitCode!==null)throw Error(logs);try{if((await fetch(base+'/api/health')).ok){healthy=true;break}}catch{}await new Promise(r=>setTimeout(r,30))}
  assert.ok(healthy,logs)
- const profile={public_name_en:'Expert Name',public_name_ar:'اسم الخبير',short_bio_ar:'نبذة',specialist_roles:[],age_group:['7-12']}
+ const profile={public_name_en:'Expert Name',public_name_ar:'اسم الخبير',short_bio_ar:'ن'.repeat(50),short_bio_en:'A'.repeat(50),specialist_roles:[],age_group:['7-12']}
  async function submit(email,key,options={}){
  const body=new FormData();body.set('email',email);body.set('password',options.password || 'TestPassword123!');body.set('passwordConfirm',options.passwordConfirm || options.password || 'TestPassword123!');body.set('profile',JSON.stringify({...profile,...options.profile}));body.set('submission_key',key)
  if(options.file)body.append('cv',options.file)
@@ -50,6 +50,12 @@ test('expert submission is atomic, retries are idempotent, and cleanup removes o
  const response=await fetch(base+'/api/dsc/expert-register',{method:'POST',body});return {status:response.status,body:await response.json()}
  }
  async function count(email){return (await(await fetch(base+'/api/collections/users/records?filter='+encodeURIComponent('email = '+JSON.stringify(email)))).json()).totalItems}
+ for(const field of ['short_bio_en','short_bio_ar']) {
+  for(const length of [0,49,251]) {
+   const email=field+length+'@example.test';const bad=await submit(email,'bio-validation-'+field+length,{profile:{[field]:'x'.repeat(length)}})
+   assert.equal(bad.status,400,JSON.stringify(bad));assert.equal(await count(email),0)
+  }
+ }
  const invalid=await submit('bad@example.test','bad-profile-123456789',{profile:{public_name_ar:''}});assert.equal(invalid.status,400);assert.equal(await count('bad@example.test'),0)
  const badFile=await submit('badfile@example.test','bad-file-123456789',{file:new File(['invalid'],'bad.txt',{type:'text/plain'})});assert.equal(badFile.status,400,JSON.stringify(badFile));assert.equal(await count('badfile@example.test'),0);assert.ok(badFile.body.data.cv,JSON.stringify(badFile))
  const badBank=await submit('badbank@example.test','bad-bank-123456789',{iban:'DE89370400440532013000'});assert.equal(badBank.status,400,JSON.stringify(badBank));assert.equal(await count('badbank@example.test'),0)

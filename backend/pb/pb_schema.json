@@ -2171,6 +2171,20 @@
         "required": false,
         "min": 0,
         "pattern": ""
+      },
+      {
+        "name": "review_status",
+        "type": "select",
+        "id": "selectreview001",
+        "values": [
+          "pending",
+          "rejected"
+        ],
+        "maxSelect": 1,
+        "required": false,
+        "hidden": false,
+        "presentable": false,
+        "system": false
       }
     ],
     "indexes": [

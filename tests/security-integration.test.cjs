@@ -118,6 +118,7 @@ before(async () => {
     "1794100100_account_registration.js",
     "1794100200_training_enrollment.js",
     "1795100000_general_role_assignment.js",
+    "1795500000_expert_review_status.js",
   ])
     fs.copyFileSync(
       path.join(root, "pb_migrations", name),
@@ -583,6 +584,8 @@ test("customer ownership, public reads and pending expert registration remain sc
     "profile",
     JSON.stringify({
       public_name_en: "Pending expert",
+      short_bio_en: "E".repeat(50),
+      short_bio_ar: "ن".repeat(50),
       public_name_ar: "خبير تجريبي",
       specialist_roles: [],
       age_group: [],
@@ -699,6 +702,15 @@ test("expert approval works with its own grant and only exposes expert user reco
   assert.ok(list.data.items.every((u) => u.role === "expert"))
   const pending = list.data.items.find((u) => !u.is_active)
   assert.ok(pending)
+  const rejectUrl = `/api/dsc/security/experts/${pending.id}/reject`
+  assert.equal((await request(rejectUrl, "POST", {}, expertToken)).status, 403)
+  const rejected = await request(rejectUrl, "POST", {}, readerToken)
+  assert.equal(rejected.status, 200, JSON.stringify(rejected.data))
+  const profileList = await request(records("expert_profiles") + "?filter=" + encodeURIComponent(`user = "${pending.id}"`))
+  const application = profileList.data.items[0]
+  assert.equal(application.review_status, "rejected")
+  assert.equal((await request(records("users") + "/" + pending.id)).data.is_active, false)
+  assert.ok([403, 404].includes((await request(records("expert_profiles") + "/" + application.id, "PATCH", { review_status: "pending" }, readerToken)).status))
   const approval = await request(
     `/api/dsc/security/experts/${pending.id}/approve`,
     "POST",

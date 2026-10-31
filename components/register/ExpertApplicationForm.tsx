@@ -40,7 +40,6 @@ import pb, { getErrorMessage, getFieldErrors, fieldLabel } from "@/lib/pb"
 import {
   ageGroupLabel,
   consultationModeLabel,
-  ACADEMIC_DEGREES,
   AGE_GROUPS,
   CONSULTATION_MODES,
   MAX_ATTACHMENT_BYTES,
@@ -48,7 +47,6 @@ import {
 import {
   SPECIALIZATION_OPTIONS,
   specializationLabel,
-  degreeLabel,
 } from "@/components/team/team-labels"
 import { Check, ChevronsUpDown, Paperclip, X } from "lucide-react"
 import {
@@ -81,9 +79,6 @@ export function ExpertApplicationForm({
   // Extra fields
   const [residence, setResidence] = useState("")
   const [city, setCity] = useState("")
-  const [highestAcademicDegree, setHighestAcademicDegree] = useState("")
-  const [degreeTitle, setDegreeTitle] = useState("")
-  const [fieldOfStudy, setFieldOfStudy] = useState("")
   const [whatsappCountryCode, setWhatsappCountryCode] =
     useState(DEFAULT_COUNTRY_CODE)
   const [whatsappNumber, setWhatsappNumber] = useState("")
@@ -195,11 +190,11 @@ export function ExpertApplicationForm({
         lang
       )
 
-    if (bioEn.length > 250 || bioAr.length > 250)
+    if (bioEn.trim().length < 50 || bioAr.trim().length < 50 || bioEn.length > 250 || bioAr.length > 250)
       errs.biography = t(
         {
-          en: "Each biography must be at most 250 characters.",
-          ar: "يجب ألا تتجاوز كل نبذة 250 حرفًا.",
+          en: "Each biography must contain 50 to 250 characters.",
+          ar: "يجب أن تتكون كل نبذة من 50 إلى 250 حرفًا.",
         },
         lang
       )
@@ -295,9 +290,6 @@ export function ExpertApplicationForm({
       extraFormData.set("city", city)
       extraFormData.set("whatsapp_country_code", whatsappCountryCode)
       extraFormData.set("whatsapp_number", whatsappNumber)
-      extraFormData.set("highest_academic_degree", highestAcademicDegree)
-      extraFormData.set("degree_title", degreeTitle)
-      extraFormData.set("field_of_study", fieldOfStudy)
 
       extraFormData.set("age_group", ageGroup.join(", "))
       // specialization_type is a single text field now: store the selected
@@ -489,74 +481,6 @@ export function ExpertApplicationForm({
                     onChange={(e) => setCity(e.target.value)}
                     placeholder={t(
                       { en: "e.g. Amman", ar: "مثال: عمّان" },
-                      lang
-                    )}
-                  />
-                </div>
-              </div>
-
-              <div className="dsc-form-grid">
-                <div className="space-y-2">
-                  <Label>
-                    {t(
-                      {
-                        en: "Highest Academic Degree",
-                        ar: "أعلى مؤهل أكاديمي",
-                      },
-                      lang
-                    )}
-                  </Label>
-                  <Select
-                    value={highestAcademicDegree}
-                    onValueChange={setHighestAcademicDegree}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder={t(
-                          { en: "Select degree...", ar: "اختر المؤهل..." },
-                          lang
-                        )}
-                      />
-                    </SelectTrigger>
-                    <SelectContent position="popper" className="max-h-60!">
-                      {ACADEMIC_DEGREES.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {degreeLabel(option.value, lang)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>
-                    {t({ en: "Degree Title", ar: "عنوان الشهادة" }, lang)}
-                  </Label>
-                  <Input
-                    value={degreeTitle}
-                    onChange={(e) => setDegreeTitle(e.target.value)}
-                    placeholder={t(
-                      {
-                        en: "e.g. Bachelor of Education",
-                        ar: "مثال: بكالوريوس تربية",
-                      },
-                      lang
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label>
-                    {t({ en: "Field of Study", ar: "مجال الدراسة" }, lang)}
-                  </Label>
-                  <Input
-                    value={fieldOfStudy}
-                    onChange={(e) => setFieldOfStudy(e.target.value)}
-                    placeholder={t(
-                      {
-                        en: "e.g. Special Education",
-                        ar: "مثال: التربية الخاصة",
-                      },
                       lang
                     )}
                   />
@@ -945,7 +869,7 @@ export function ExpertApplicationForm({
               <div className="space-y-2">
                 <Label>
                   {t(
-                    { en: "First Session Fee", ar: "رسوم الجلسة الأولى" },
+                    { en: "First Session Fee", ar: "رسوم الجلسة الأولى (مع ذكر العملة)" },
                     lang
                   )}
                 </Label>
@@ -1053,6 +977,8 @@ export function ExpertApplicationForm({
                     dir={field.dir}
                     value={field.value}
                     onChange={(e) => field.set(e.target.value)}
+                    minLength={50}
+                    required
                     maxLength={250}
                     rows={4}
                     aria-describedby={`${field.key}-count`}
@@ -1064,8 +990,8 @@ export function ExpertApplicationForm({
                     {field.value.length}/250 ·{" "}
                     {t(
                       {
-                        en: "Maximum 250 characters, including spaces and punctuation.",
-                        ar: "250 حرفًا كحد أقصى، بما في ذلك المسافات وعلامات الترقيم.",
+                        en: "50 to 250 characters, including spaces and punctuation.",
+                        ar: "من 50 إلى 250 حرفًا، بما في ذلك المسافات وعلامات الترقيم.",
                       },
                       lang
                     )}

@@ -28,7 +28,7 @@ module.exports = (e) => {
   const cvs = uploaded("cv")
   const fields = ["country_of_residence", "city", "whatsapp_country_code", "whatsapp_number", "highest_academic_degree", "degree_title", "field_of_study", "age_group", "specialization_type", "specialist_roles", "consultation_mode", "public_name_en", "public_name_ar", "public_qualification_en", "public_qualification_ar", "public_specialty_en", "public_specialty_ar", "short_bio_en", "short_bio_ar", "availability", "fee"]
   for (const field of fields) if (!profileCollection.fields.getByName(field)) throw new BadRequestError("Expert profile storage is not configured: " + field)
-  for (const field of ["short_bio_en", "short_bio_ar"]) if (String(data[field] || "").length > 250) throw new BadRequestError("Biography must not exceed 250 characters")
+  for (const field of ["short_bio_en", "short_bio_ar"]) if (String(data[field] || "").trim().length < 50 || String(data[field] || "").length > 250) throw new BadRequestError("Each biography must contain 50 to 250 characters")
   const iban = String(body.expert_iban || "").replace(/\s/g, "").toUpperCase()
   if (iban) {
     if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) throw new BadRequestError("Invalid IBAN")

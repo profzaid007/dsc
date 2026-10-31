@@ -131,11 +131,12 @@ export function ExpertApprovalPage() {
   const ui = useUiTranslation()
 
   const access = usePermissions()
-  const { users, isLoading, updateUser, refresh } = useUsers(
+  const { users, isLoading, updateUser, deleteUser, refresh } = useUsers(
     access.can("experts.read")
   )
   const { lang } = useLang()
   const [approvingId, setApprovingId] = useState<string | null>(null)
+  const [actingId, setActingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState("")
   const [fileToken, setFileToken] = useState("")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -148,8 +149,8 @@ export function ExpertApprovalPage() {
   useEffect(() => {
     if (!access.can("experts.read")) return
     let active = true
-    void boundedFullList(pb.collection("expert_profiles"), {fields:"id,user", requestKey:null})
-      .then(profiles => { if (active) {setSubmittedUsers(new Set(profiles.map(p => String(p.user)))); setSubmissionError("")} })
+    void boundedFullList(pb.collection("expert_profiles"), {fields:"id,user,review_status", requestKey:null})
+      .then(profiles => { if (active) {setSubmittedUsers(new Set(profiles.filter(p => p.review_status !== "rejected").map(p => String(p.user)))); setSubmissionError("")} })
       .catch(error => { if (active) setSubmissionError(getErrorMessage(error, lang)) })
     return () => {active = false}
   }, [users, lang, access.isLoading]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -205,6 +206,23 @@ export function ExpertApprovalPage() {
       filename,
       fileToken ? { token: fileToken } : {}
     )
+  }
+
+  const handleReviewAction = async (user: User, action: "reject" | "delete") => {
+    if (actingId || approvingId) return
+    const message = action === "delete"
+      ? (lang === "ar" ? "حذف حساب هذا الخبير وطلبه نهائياً؟ لا يمكن التراجع عن الحذف." : "Permanently delete this expert account and application? This cannot be undone.")
+      : (lang === "ar" ? "رفض هذا الطلب؟ سيبقى الحساب غير نشط." : "Reject this application? The account will remain inactive.")
+    if (!window.confirm(message)) return
+    setActingId(user.id)
+    setActionError("")
+    try {
+      if (action === "delete") await deleteUser(user.id)
+      else await pb.send(`/api/dsc/security/experts/${user.id}/reject`, { method: "POST" })
+      setSelectedUser(null)
+      await refresh()
+    } catch (error) { setActionError(getErrorMessage(error, lang)) }
+    finally { setActingId(null) }
   }
 
   const handleApprove = async (user: (typeof users)[number]) => {
@@ -399,11 +417,17 @@ export function ExpertApprovalPage() {
                           <Eye className="me-1 h-4 w-4" />
                           {ui("View")}
                         </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleReviewAction(user, "reject")} disabled={!!actingId || !!approvingId || !access.can("experts.approve")}>
+                          {lang === "ar" ? "رفض" : "Reject"}
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleReviewAction(user, "delete")} disabled={!!actingId || !!approvingId || !access.can("experts.delete")}>
+                          {lang === "ar" ? "حذف" : "Delete"}
+                        </Button>
                         <Button
                           size="sm"
                           onClick={() => handleApprove(user)}
                           disabled={
-                            approvingId === user.id ||
+                            !!actingId || !!approvingId ||
                             !access.can("experts.approve")
                           }
                         >
@@ -698,7 +722,7 @@ export function ExpertApprovalPage() {
                 <Button
                   onClick={() => handleApprove(selectedUser)}
                   disabled={
-                    approvingId === selectedUser.id ||
+                    !!actingId || !!approvingId ||
                     !access.can("experts.approve")
                   }
                 >

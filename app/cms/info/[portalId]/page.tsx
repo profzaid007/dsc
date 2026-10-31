@@ -115,7 +115,9 @@ export default function CmsPortalServicesPage() {
 
   const handleReorder = useCallback(
     async (items: InfoPageRecord[]) => {
+      if (savingOrder || !access.can("cms.update")) return
       setSavingOrder(true)
+      setPages(items)
       try {
         await Promise.all(
           items.map((item) =>
@@ -128,11 +130,12 @@ export default function CmsPortalServicesPage() {
           t({ en: "Failed to save order.", ar: "فشل حفظ الترتيب." }, lang),
           { description: getErrorMessage(err) }
         )
+        await loadPages().catch(() => {})
       } finally {
         setSavingOrder(false)
       }
     },
-    [lang]
+    [lang, savingOrder, access, loadPages]
   )
 
   if (portalsLoading) return <PageLoader />
@@ -229,6 +232,7 @@ export default function CmsPortalServicesPage() {
       ) : (
         <DragList
           items={pages}
+          disabled={savingOrder || !access.can("cms.update")}
           onReorder={handleReorder}
           keyExtractor={(p) => p.id}
           containerClassName="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
