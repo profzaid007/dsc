@@ -14,12 +14,14 @@ import {
   UserPlus,
   LogOut,
   ShieldCheck,
+  MessageSquare,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useAuth } from "@/hooks/useAuth"
+import { useUnreadMessages } from "@/hooks/useUnreadMessages"
 import { usePortals } from "@/hooks/usePortals"
 import { SITE_CONTENT } from "@/lib/site-content"
 import Image from "next/image"
@@ -43,6 +45,15 @@ export function Navbar() {
     PORTALS.find((portal) => portal.id === id)
   const { isAuthenticated, isAdmin, currentUser, logout } = useAuth()
   const permissions = usePermissions()
+  const canReadMessages = isAuthenticated && (
+    isAdmin ? permissions.can("messages.read") :
+    ["expert", "parent", "individual", "organization", "care_foundation"].includes(currentUser?.role || "")
+  )
+  const unreadMessages = useUnreadMessages(currentUser?.id, canReadMessages)
+  const messagesLabel = lang === "ar" ? "الرسائل" : "Messages"
+  const messagesAriaLabel = unreadMessages
+    ? (lang === "ar" ? `الرسائل، ${unreadMessages} غير مقروءة` : `Messages, ${unreadMessages} unread`)
+    : messagesLabel
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
 
@@ -186,6 +197,24 @@ export function Navbar() {
               >
                 {t({ en: "العربية", ar: "English" }, lang)}
               </button>
+
+              {canReadMessages && (
+                <Link
+                  href="/dashboard/messages"
+                  aria-label={messagesAriaLabel}
+                  title={messagesLabel}
+                  aria-current={pathname === "/dashboard/messages" ? "page" : undefined}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#0a3d62] transition-colors hover:bg-[#0a3d62]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                  {unreadMessages > 0 && (
+                    <span aria-hidden="true" className="absolute -top-0.5 -end-0.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1 text-[11px] font-bold text-slate-950">
+                      {unreadMessages > 99 ? "99+" : unreadMessages}
+                    </span>
+                  )}
+                </Link>
+              )}
 
               {!isAuthenticated && (
                 <>

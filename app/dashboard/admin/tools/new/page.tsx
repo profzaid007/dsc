@@ -6,13 +6,12 @@ import { useLang } from "@/lib/lang-context"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { ClipboardList } from "lucide-react"
 import {
   getToolTypeLabel,
   getToolTypeMeta,
@@ -64,6 +63,18 @@ export default function NewToolPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Link href="/dashboard/admin/tools/assessments">
+          <Card className="h-full cursor-pointer transition-all hover:shadow-md">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-primary" />
+                <CardTitle>
+                  {lang === "ar" ? "بناء المقاييس والتقييمات" : "Assessment builder"}
+                </CardTitle>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
         {visibleToolTypes.map((tool) => (
           <Link key={tool.id} href={tool.href}>
             <Card className="h-full cursor-pointer transition-all hover:shadow-md">

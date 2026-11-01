@@ -148,12 +148,6 @@ export default function AdminToolsPage() {
               {lang === "ar" ? "إدارة قوالب الأدوات" : "Manage tool templates"}
             </p>
           </div>
-          <Link
-            href="/dashboard/admin/tools/assessments"
-            className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary"
-          >
-            {lang === "ar" ? "بناء المقاييس والتقييمات" : "Assessment builder"}
-          </Link>
           <Link href="/dashboard/admin/tools/new">
             <Button disabled={!access.can("tools.create")}>
               <Plus className="me-2 h-4 w-4" />
@@ -177,12 +171,6 @@ export default function AdminToolsPage() {
             {lang === "ar" ? "إدارة قوالب الأدوات" : "Manage tool templates"}
           </p>
         </div>
-        <Link
-          href="/dashboard/admin/tools/assessments"
-          className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary"
-        >
-          {lang === "ar" ? "بناء المقاييس والتقييمات" : "Assessment builder"}
-        </Link>
         <Link href="/dashboard/admin/tools/new">
           <Button disabled={!access.can("tools.create")}>
             <Plus className="me-2 h-4 w-4" />
@@ -253,14 +241,6 @@ export default function AdminToolsPage() {
                 ? "أنشئ أداتك الأولى للبدء"
                 : "Create your first tool to get started"}
             </p>
-            <Link
-              href="/dashboard/admin/tools/assessments"
-              className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary"
-            >
-              {lang === "ar"
-                ? "بناء المقاييس والتقييمات"
-                : "Assessment builder"}
-            </Link>
             <Link href="/dashboard/admin/tools/new">
               <Button disabled={!access.can("tools.create")}>
                 {lang === "ar" ? "إنشاء أداة" : "Create Tool"}

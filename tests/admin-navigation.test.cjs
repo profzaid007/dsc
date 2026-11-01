@@ -12,11 +12,11 @@ function load(file, context){
   'next/link':{__esModule:true,default:Link},
   'next/image':{__esModule:true,default:()=>null},
   '@/hooks/useUiTranslation':{useUiTranslation:()=>x=>x},
-  '@/lib/lang-context':{useLang:()=>({lang:'ar',toggleLang(){}})},
-  '@/hooks/useAuth':{useAuth:()=>({isAuthenticated:context.auth !== false,isAdmin:context.admin !== false,currentUser:{name:'Admin',role:'admin'},logout(){}})},
+  '@/lib/lang-context':{useLang:()=>({lang:context.lang || 'ar',toggleLang(){}})},
+  '@/hooks/useAuth':{useAuth:()=>({isAuthenticated:context.auth !== false,isAdmin:context.admin !== false,currentUser:{id:'test-user',name:'Admin',role:context.role || 'admin'},logout(){}})},
   '@/hooks/usePermissions':{usePermissions:()=>({isSuperAdmin:context.super,can:()=>context.cms})},
   '@/hooks/usePortals':{usePortals:()=>({portals:[]})},
-  '@/hooks/useUnreadMessages':{useUnreadMessages:()=>0},
+  '@/hooks/useUnreadMessages':{useUnreadMessages:(_id,enabled)=>enabled ? context.unread || 0 : 0},
   '@/lib/i18n':{t:(x,lang)=>x[lang]},
   '@/lib/site-content':{SITE_CONTENT:{nav:{bookConsultation:{ar:'حجز',en:'Book'}}}},
   '../BookConsultDialog':{BookConsultDialog:()=>null},
@@ -41,11 +41,11 @@ test('admin header exposes management and logout actions with their access restr
  const {Navbar}=load('components/layout/Navbar.tsx',{path:'/cms/blog',super:false,cms:false})
  assert.equal(renderToStaticMarkup(React.createElement(Navbar)).includes('إدارة المحتوى'),false)
 })
-test('dashboard sidebar removes management entry points and logout and switches to security sections',()=>{
+test('dashboard sidebar retains the security shortcut, omits CMS and logout, and switches to security sections',()=>{
  const context={path:'/dashboard/admin',super:true,cms:true}
  const {DashboardSidebar}=load('components/dashboard/Sidebar.tsx',context)
  let html=renderToStaticMarkup(React.createElement(DashboardSidebar))
- assert.equal(html.includes('إدارة الأمان'),false)
+ assert.equal(html.includes('إدارة الأمان'),true)
  assert.equal(html.includes('إدارة المحتوى'),false)
  assert.equal(html.includes('تسجيل الخروج'),false)
  context.path='/dashboard/admin/security'
@@ -76,4 +76,21 @@ test('login page retains all public navigation links',()=>{
  const {Navbar}=load('components/layout/Navbar.tsx',{path:'/login',auth:false,admin:false,super:false,cms:false})
  const html=renderToStaticMarkup(React.createElement(Navbar))
  for(const label of ['الرئيسية','من نحن','المدونة','الفعاليات','اتصل بنا']) assert.ok(html.includes(label))
+})
+
+
+test('header message shortcut supports every account type, respects admin access, and announces unread counts',()=>{
+ for(const lang of ['ar','en']) {
+  for(const role of ['expert','parent','individual','organization','care_foundation','admin','super_admin']) {
+   const {Navbar}=load('components/layout/Navbar.tsx',{path:'/dashboard/messages',role,admin:['admin','super_admin'].includes(role),cms:true,lang,unread:3})
+   const html=renderToStaticMarkup(React.createElement(Navbar))
+   assert.ok(html.includes('href="/dashboard/messages"'))
+   assert.ok(html.includes(lang==='ar' ? 'الرسائل، 3 غير مقروءة' : 'Messages, 3 unread'))
+   assert.ok(html.includes('aria-current="page"'))
+  }
+ }
+ for(const context of [{auth:false},{admin:true,cms:false}]) {
+  const {Navbar}=load('components/layout/Navbar.tsx',{path:'/',...context})
+  assert.equal(renderToStaticMarkup(React.createElement(Navbar)).includes('href="/dashboard/messages"'),false)
+ }
 })
