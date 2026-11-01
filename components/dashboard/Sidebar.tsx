@@ -28,6 +28,7 @@ import {
   FileText,
   Calendar,
   MessageSquare,
+  Mail,
   UserCircle,
   StickyNote,
   Baby,
@@ -47,7 +48,7 @@ const adminNavigation: NavItem[] = [
   {
     name: { en: "Messages", ar: "الرسائل" },
     href: "/dashboard/messages",
-    icon: MessageSquare,
+    icon: Mail,
   },
   {
     name: { en: "Cases", ar: "الحالات" },
@@ -169,7 +170,7 @@ const expertNavigation: NavItem[] = [
   {
     name: { en: "Messages", ar: "الرسائل" },
     href: "/dashboard/messages",
-    icon: MessageSquare,
+    icon: Mail,
   },
   {
     name: { en: "Cases", ar: "الحالات" },

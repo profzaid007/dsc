@@ -1,21 +1,16 @@
 "use client"
+
 import { useCallback, useEffect, useState } from "react"
 import type { RecordModel } from "pocketbase"
-import Link from "next/link"
-import { MessageAttachments, MessageBody } from "@/components/cases/CaseMessages"
-import { ReceivedMessages } from "@/components/messages/ReceivedMessages"
-import { Send, MessageSquare } from "lucide-react"
+import { Mailbox } from "@/components/messages/Mailbox"
+import { canMessageContact, type MessageContact } from "@/components/messages/mailbox-model"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import { PageLoader } from "@/components/ui/page-loader"
 import { DataError } from "@/components/ui/data-error"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-type Contact = { id: string; name: string; role: string }
+
 export default function MessagesPage() {
   const { currentUser, isAdmin, isLoading: authLoading } = useAuth()
   const { lang } = useLang()
@@ -24,17 +19,13 @@ export default function MessagesPage() {
   const isParticipant = ["expert", "parent", "individual", "organization", "care_foundation"].includes(currentUser?.role || "")
   const allowed = isParticipant || isAdmin && access.can("messages.read")
   const canMarkRead = isParticipant || access.can("messages.update")
-  const [contacts, setContacts] = useState<Contact[]>([])
+  const canCreate = isParticipant || access.can("messages.create")
+  const [contacts, setContacts] = useState<MessageContact[]>([])
   const [messages, setMessages] = useState<RecordModel[]>([])
-  const [selected, setSelected] = useState("")
-  const selectedContact = contacts.find(item => item.id === selected)
-  const canSend = (isParticipant || access.can("messages.create")) && (isAdmin || !selectedContact || ["admin", "super_admin"].includes(selectedContact.role))
-  const [body, setBody] = useState("")
-  const [subject, setSubject] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [sending, setSending] = useState(false)
-  const [sendError, setSendError] = useState("")
+  const [actionError, setActionError] = useState("")
   const [notice, setNotice] = useState("")
   const refresh = useCallback(async (quiet = false) => {
     if (!currentUser || !allowed) return
@@ -42,62 +33,53 @@ export default function MessagesPage() {
     setError("")
     try {
       const [contactData, records] = await Promise.all([
-        pb.send<{ contacts: Contact[] } | Contact[]>("/api/dsc/message-contacts", { method: "GET", requestKey: null }),
-        pb.collection("internal_messages").getFullList({ sort: "created", requestKey: null }),
+        pb.send<{ contacts: MessageContact[] } | MessageContact[]>("/api/dsc/message-contacts", { method: "GET", requestKey: null }),
+        pb.collection("internal_messages").getFullList({ sort: "-created", requestKey: null }),
       ])
       setContacts(Array.isArray(contactData) ? contactData : contactData.contacts)
       setMessages(records)
     } catch (e) { setError(getErrorMessage(e, lang)) }
     finally { setLoading(false) }
   }, [currentUser, allowed, lang])
-  useEffect(() => { if (!authLoading && allowed) { void refresh(); const timer = setInterval(() => refresh(true), 15000); return () => clearInterval(timer) } }, [refresh, authLoading, allowed])
   useEffect(() => {
-    if (!selected || !currentUser || !canMarkRead) return
-    const unread = messages.filter(item => item.sender === selected && item.recipient === currentUser.id && !item.read)
-    if (!unread.length) return
-    let active = true
-    Promise.all(unread.map(item => pb.collection("internal_messages").update(item.id, { read: true }, { requestKey: null }))).then(() => {
-      if (active) setMessages(items => items.map(item => unread.some(u => u.id === item.id) ? { ...item, read: true } : item))
-      window.dispatchEvent(new Event("messages-updated"))
-    }).catch(e => { if (active) setSendError(getErrorMessage(e, lang)) })
-    return () => { active = false }
-  }, [selected, messages, currentUser, lang, canMarkRead])
-  async function readReceivedMessage(id: string) {
-    if (!canMarkRead) return
+    if (authLoading || !allowed) return
+    const initial = setTimeout(() => void refresh(), 0)
+    const interval = setInterval(() => void refresh(true), 15000)
+    return () => { clearTimeout(initial); clearInterval(interval) }
+  }, [refresh, authLoading, allowed])
+
+  async function readMessage(message: RecordModel) {
+    if (!currentUser || !canMarkRead || message.recipient !== currentUser.id || message.read) return
     try {
-      await pb.collection("internal_messages").update(id, { read: true }, { requestKey: null })
-      setMessages(items => items.map(item => item.id === id ? { ...item, read: true } : item))
+      await pb.collection("internal_messages").update(message.id, { read: true }, { requestKey: null })
+      setMessages(items => items.map(item => item.id === message.id ? { ...item, read: true } : item))
       window.dispatchEvent(new Event("messages-updated"))
-    } catch (e) { setSendError(getErrorMessage(e, lang)) }
+    } catch (e) { setActionError(getErrorMessage(e, lang)) }
   }
-  async function send() {
-    if (!currentUser || !selected || !body.trim() || !subject.trim() || sending || !canSend) return
-    setSending(true); setSendError(""); setNotice("")
+
+  async function send(draft: { recipient: string; subject: string; body: string; caseId: string }) {
+    if (!currentUser || sending || !draft.body.trim() || !draft.subject.trim() || !canMessageContact(contacts.find(contact => contact.id === draft.recipient), isAdmin, canCreate, draft.caseId)) return false
+    setSending(true); setActionError(""); setNotice("")
     try {
-      const record = await pb.collection("internal_messages").create({ sender: currentUser.id, recipient: selected, body: body.trim(), subject: subject.trim(), read: false })
-      setMessages(items => [...items, record]); setBody(""); setSubject(""); setNotice(ar ? "تم إرسال الرسالة." : "Message sent.")
+      const record = await pb.collection("internal_messages").create({ sender: currentUser.id, recipient: draft.recipient, body: draft.body.trim(), subject: draft.subject.trim(), read: false, ...(draft.caseId ? { case: draft.caseId } : {}) })
+      setMessages(items => [...items, record])
+      setNotice(ar ? "تم إرسال الرسالة." : "Message sent.")
       window.dispatchEvent(new Event("messages-updated"))
-    } catch (e) { setSendError(getErrorMessage(e, lang)) }
+      return true
+    } catch (e) { setActionError(getErrorMessage(e, lang)); return false }
     finally { setSending(false) }
   }
+
   if (authLoading || isAdmin && access.isLoading) return <PageLoader />
-  if (!allowed) return <p role="alert">{ar ? "لا يملك حسابك صلاحية الوصول إلى الرسائل." : "Your account does not have access to messages."}</p>
-  const contact = contacts.find(item => item.id === selected)
-  const caseRoute = isAdmin ? "admin/cases" : currentUser?.role === "expert" ? "expert/cases" : currentUser?.role === "parent" ? "parent/cases" : currentUser?.role === "individual" ? "individual/cases" : currentUser?.role === "organization" ? "institution/projects" : "cases"
-  const thread = messages.filter(item => item.sender === selected || item.recipient === selected)
-  return <div className="mx-auto max-w-6xl space-y-6" dir={ar ? "rtl" : "ltr"}>
-    <header><p className="mb-2 text-xs font-semibold uppercase tracking-widest text-amber-700">DSC</p><h1 className="text-3xl font-bold text-primary">{ar ? "الرسائل الداخلية" : "Internal messages"}</h1><p className="mt-2 text-muted-foreground">{ar ? "اقرأ محادثاتك وتواصل مع فريق الإدارة. يظهر عدد الرسائل غير المقروءة بجوار أيقونة الرسائل." : "Read your conversations and contact the administration team. Unread messages appear beside the Messages icon."}</p></header>
+  if (!allowed || !currentUser) return <p role="alert">{ar ? "لا يملك حسابك صلاحية الوصول إلى الرسائل." : "Your account does not have access to messages."}</p>
+  const caseRoute = isAdmin ? "admin/cases" : currentUser.role === "expert" ? "expert/cases" : currentUser.role === "parent" ? "parent/cases" : currentUser.role === "individual" ? "individual/cases" : currentUser.role === "organization" ? "institution/projects" : "cases"
+  return <div className="mx-auto w-full min-w-0 max-w-[1600px] space-y-5" dir={ar ? "rtl" : "ltr"}>
+    <header className="border-b border-[#dce6f2] pb-5">
+      <p className="mb-1 text-sm font-bold text-[#e75b00]">DSC</p>
+      <h1 className="text-3xl font-bold tracking-tight text-[#073b62]">{ar ? "الرسائل الداخلية" : "Internal messages"}</h1>
+      <p className="mt-1 text-sm leading-6 text-[#335674] sm:text-base">{ar ? "اقرأ محادثاتك وتواصل مع فريق الإدارة." : "Read your conversations and contact the administration team."}</p>
+    </header>
     {error && <DataError message={error} onRetry={() => refresh()} />}
-    {sendError && <p role="alert" className="text-sm text-destructive">{sendError}</p>}
-    {!loading && <ReceivedMessages messages={messages} userId={currentUser!.id} contacts={contacts} lang={lang} onRead={readReceivedMessage} />}
-    {loading ? <PageLoader /> : <div className="min-w-0 overflow-hidden rounded-xl border bg-white">
-      <aside className="border-b p-4"><Label htmlFor="message-contact">{ar ? "اختر المستلم" : "Choose a recipient"}</Label><select id="message-contact" value={selected} onChange={e => { setSelected(e.target.value); setBody(""); setSubject(""); setNotice(""); setSendError("") }} className="mt-3 min-h-11 w-full rounded-md border bg-white px-3 text-sm"><option value="">{ar ? "اختر شخصًا…" : "Select a person…"}</option>{contacts.map(item => <option key={item.id} value={item.id}>{item.name}{messages.some(m => m.sender === item.id && m.recipient === currentUser?.id && !m.read) ? (ar ? " — رسائل غير مقروءة" : " — Unread messages") : ""}</option>)}</select>
-        {!contacts.length && <p className="mt-4 text-sm text-muted-foreground">{ar ? "لا يوجد مستلمون متاحون حاليًا." : "No recipients are available yet."}</p>}
-      </aside>
-      <section className="min-w-0 p-4 sm:p-6">{!contact ? <div className="flex min-h-72 flex-col items-center justify-center gap-4 text-center text-muted-foreground"><MessageSquare className="h-10 w-10 text-primary"/><p>{ar ? "اختر شخصًا لعرض المحادثة أو إرسال رسالة." : "Choose a person to view your conversation or send a message."}</p></div> : <>
-        <h2 className="border-b pb-4 text-xl font-semibold text-primary">{contact.name}</h2><div className="my-5 max-h-[55vh] space-y-4 overflow-y-auto pe-2" aria-live="polite">{!thread.length && <p className="py-8 text-center text-sm text-muted-foreground">{ar ? "ابدأ المحادثة برسالتك الأولى." : "Start the conversation with your first message."}</p>}{thread.map(item => <article key={item.id} className={`max-w-[95%] rounded-lg border p-4 sm:max-w-[85%] ${item.sender === currentUser?.id ? "ms-auto border-primary/15 bg-primary/5" : "me-auto bg-slate-50"}`}><p className="mb-2 text-xs font-semibold text-primary">{item.sender === currentUser?.id ? (ar ? "أنت" : "You") : contact.name}</p>{item.subject && <h3 className="mb-2 break-words font-semibold">{item.subject}</h3>}<MessageBody text={item.body} /><MessageAttachments message={item} allowSave={["parent", "individual", "organization", "care_foundation"].includes(selectedContact?.role || "")} />{item.case && <Link className="text-sm text-primary underline" href={`/dashboard/${caseRoute}/${item.case}`}>{ar ? "فتح محادثة الحالة والمرفقات" : "Open case conversation and attachments"}</Link>}<div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground"><time>{new Date(item.created).toLocaleString(ar ? "ar" : "en")}</time>{item.sender === currentUser?.id && <span>{item.read ? (ar ? "مقروءة" : "Read") : (ar ? "مرسلة" : "Sent")}</span>}</div></article>)}</div>
-        <div className="space-y-3 border-t pt-4"><Label htmlFor="message-subject">{ar ? "عنوان الرسالة" : "Message title"}</Label><Input id="message-subject" value={subject} maxLength={200} required disabled={sending || !canSend} onChange={e => { setSubject(e.target.value); setNotice("") }} /><Label htmlFor="message-body">{ar ? "رسالتك" : "Your message"}</Label><Textarea id="message-body" rows={4} value={body} disabled={sending || !canSend} maxLength={4000} onChange={e => { setBody(e.target.value); setNotice("") }} /><div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-muted-foreground">{body.length}/4000</span><Button onClick={send} disabled={sending || !subject.trim() || !body.trim() || !canSend}><Send className="h-4 w-4"/>{sending ? (ar ? "جارٍ الإرسال…" : "Sending…") : (ar ? "إرسال الرسالة" : "Send message")}</Button></div>{sendError && <p role="alert" className="text-sm text-destructive">{sendError}</p>}{notice && <p role="status" className="text-sm text-green-700">{notice}</p>}</div>
-      </>}</section>
-    </div>}
+    {loading ? <PageLoader /> : <Mailbox key={currentUser.id} messages={messages} contacts={contacts} userId={currentUser.id} lang={lang} isAdmin={isAdmin} canCreate={canCreate} caseRoute={caseRoute} sending={sending} actionError={actionError} notice={notice} onRead={readMessage} onSend={send} onClearNotice={() => { setNotice(""); setActionError("") }} />}
   </div>
 }
