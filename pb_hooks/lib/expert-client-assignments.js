@@ -55,4 +55,55 @@ function create(e) {
   })
   return e.json(201,{id})
 }
-module.exports={list,create}
+function createCustom(e) {
+  const body = e.requestInfo().body
+  let id
+  e.app.runInTransaction(app => {
+    const ctx = context(e, app)
+    if (typeof body.type !== "string") throw new BadRequestError("Select a tool type.")
+    const type = app.findRecordById("lookups", body.type)
+    const keys = ["plan", "report", "attachment_request", "survey", "multiple_answer", "one_to_one_meeting"]
+    if (type.getString("type") !== "tool_types" || !keys.includes(type.getString("key"))) throw new BadRequestError("Unsupported tool type.")
+    const en = typeof body.name_en === "string" ? body.name_en.trim() : ""
+    const ar = typeof body.name_ar === "string" ? body.name_ar.trim() : ""
+    if ((!en && !ar) || en.length > 250 || ar.length > 250) throw new BadRequestError("Enter a tool name of up to 250 characters.")
+    const config = body.config
+    if (!config || typeof config !== "object" || Array.isArray(config) || !Object.keys(config).length || JSON.stringify(config).length > 1000000) throw new BadRequestError("Tool configuration is missing or too large.")
+    const r = new Record(app.findCollectionByNameOrId("case_tools"))
+    r.set("case", ctx.c.id); r.set("type", type.id)
+    r.set("name_en", en || ar); r.set("name_ar", ar || en)
+    r.set("config", config); r.set("status", "assigned"); r.set("assigned_at", new Date().toISOString())
+    r.set("is_not_template", true); r.set("is_visible_to_user", true); r.set("responses", {})
+    app.save(r)
+    ctx.policy.audit(app, ctx.expert, "assignment.create", "case_tools", r.id, null, {case: ctx.c.id, type: type.id})
+    id = r.id
+  })
+  return e.json(201, {id})
+}
+function updateCustom(e) {
+  const body = e.requestInfo().body
+  let id
+  e.app.runInTransaction(app => {
+    const ctx = context(e, app)
+    const r = app.findRecordById("case_tools", e.request.pathValue("taskId"))
+    if (r.getString("case") !== ctx.c.id || !r.getBool("is_not_template") || r.getString("status") === "completed") throw new ForbiddenError("This assignment cannot be edited here.")
+    app.findFirstRecordByFilter("security_audit_log", 'actor = {:actor} && action = "assignment.create" && target_type = "case_tools" && target_id = {:id}', {actor:ctx.expert.id, id:r.id})
+    if (body.config !== undefined) {
+      let config = body.config
+      if (typeof config === "string") { try { config = JSON.parse(config) } catch { throw new BadRequestError("Invalid tool configuration.") } }
+      if (!config || typeof config !== "object" || Array.isArray(config) || !Object.keys(config).length || JSON.stringify(config).length > 1000000) throw new BadRequestError("Invalid tool configuration.")
+      r.set("config", config)
+    }
+    for (const key of ["name_en", "name_ar"]) if (body[key] !== undefined) {
+      if (typeof body[key] !== "string" || body[key].trim().length > 250) throw new BadRequestError("Invalid tool name.")
+      r.set(key, body[key].trim())
+    }
+    let files = []
+    if (e.request.header.get("Content-Type").startsWith("multipart/form-data")) files = e.findUploadedFiles("media")
+    if (files.length) r.set("media+", files)
+    app.save(r)
+    id = r.id
+  })
+  return e.json(200, {id})
+}
+module.exports={list,create,createCustom,updateCustom}

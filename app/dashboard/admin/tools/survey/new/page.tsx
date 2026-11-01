@@ -1,4 +1,6 @@
 "use client"
+import { useAuth } from "@/hooks/useAuth"
+import { caseTaskPath } from "@/lib/case-task-path"
 import { CaseName } from "@/components/cases/CaseName"
 import { DataError } from "@/components/ui/data-error"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
@@ -91,7 +93,10 @@ export default function SurveyBuilderPage({
   const caseId = resolvedSearchParams?.caseId
   const isEditMode = !!editId
 
-  const [isTemplate, setIsTemplate] = useState(true)
+  const { currentUser } = useAuth()
+  const isExpert = currentUser?.role === "expert"
+  const [templateSelected, setIsTemplate] = useState(true)
+  const isTemplate = isExpert ? false : templateSelected
 
   const selectedCase = caseId ? getProfileById(caseId) : null
 
@@ -246,7 +251,7 @@ export default function SurveyBuilderPage({
           is_visible_to_user: true,
           status: "pending",
         })
-        router.push(`/dashboard/admin/cases/${caseId}`)
+        router.push(caseTaskPath(caseId))
       } else {
         await addTool({
           name: { en: formData.nameEn, ar: formData.nameAr },
@@ -472,7 +477,7 @@ export default function SurveyBuilderPage({
             </Card>
           )}
 
-          {(caseId || !isEditMode) && (
+          {!isExpert && (caseId || !isEditMode) && (
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-2">

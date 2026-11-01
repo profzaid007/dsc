@@ -1,4 +1,5 @@
 "use client"
+import { caseTaskPath } from "@/lib/case-task-path"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
@@ -150,7 +151,7 @@ export default function OneToOneMeetingNewPage({
           name_ar: toolName.ar,
           config,
         })
-        router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
+        router.push(caseTaskPath(selectedCaseId, editAssignmentId))
       } else {
         await assignTool({
           case: selectedCaseId,
@@ -162,7 +163,7 @@ export default function OneToOneMeetingNewPage({
           is_visible_to_user: true,
           status: "pending",
         })
-        router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
+        router.push(caseTaskPath(selectedCaseId))
       }
     } catch (error) {
       console.error(editAssignmentId ? "Failed to update meeting:" : "Failed to create meeting:", error)
@@ -174,7 +175,7 @@ export default function OneToOneMeetingNewPage({
 
   const handleCancel = () => {
     if (editAssignmentId) {
-      router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
+      router.push(caseTaskPath(selectedCaseId, editAssignmentId))
     } else {
       setSelectedCaseId("")
       setToolName({ en: "", ar: "" })

@@ -30,6 +30,19 @@ const created=await req(path+'/assignments',expert,'POST',{tool_id:tool.id,confi
 const list=await req('/api/dsc/my-assignments',parent);assert.equal(list.status,200);assert.ok(list.data.assignments.some(x=>x.id===id));const recordPath='/api/collections/case_tools/records/'+id;const detail=await req(recordPath,parent);assert.equal(detail.status,200);assert.equal(detail.data.config.questions[0].text,'Write a short paragraph about your day.');assert.equal(detail.data.config.forged,undefined);assert.equal(detail.data.is_not_template,false);assert.equal(detail.data.case,caseId);assert.equal(detail.data.is_visible_to_user,true);assert.equal(detail.data.name_en,'Practice writing');assert.equal(detail.data.name_ar,'');
 assert.equal((await req(recordPath,other)).status,404);assert.equal((await req(recordPath,other,'PATCH',{status:'completed',responses:{answer:'Foreign answer'}})).status,404);
 const answer=await req(recordPath,parent,'PATCH',{status:'completed',responses:{answer:'I finished the tool.'}});assert.equal(answer.status,200);assert.equal((await req(recordPath,parent,'PATCH',{config:{}})).status,404);assert.equal((await req(recordPath,parent,'PATCH',{is_visible_to_user:false})).status,404);assert.equal((await req(recordPath,expert)).data.responses.answer,'I finished the tool.');
+const template=await req('/api/collections/tools/records/'+tool.id,expert);assert.equal(template.status,200);
+const customBody={type:template.data.type,name_ar:'Private custom tool',config:template.data.config,case:'foreign-case',status:'completed'};
+assert.equal((await req(path+'/custom-assignments',foreign,'POST',customBody)).status,403);
+assert.equal((await req(path+'/custom-assignments',parent,'POST',customBody)).status,403);
+const custom=await req(path+'/custom-assignments',expert,'POST',customBody);assert.equal(custom.status,201,JSON.stringify(custom.data));
+const customPath=path+'/custom-assignments/'+custom.data.id;
+const customRecord=await req('/api/collections/case_tools/records/'+custom.data.id,parent);assert.equal(customRecord.status,200);assert.equal(customRecord.data.case,caseId);assert.equal(customRecord.data.status,'assigned');assert.equal(customRecord.data.is_not_template,true);
+assert.equal((await req(customPath,foreign,'POST',{config:template.data.config})).status,403);
+const changed=await req(customPath,expert,'POST',{config:{...template.data.config,privateDraft:true},case:'foreign-case',status:'completed'});assert.equal(changed.status,200,JSON.stringify(changed.data));
+const upload=new FormData();upload.append('media',new Blob(['Private fixture file'],{type:'text/plain'}),'fixture.txt');
+const uploaded=await fetch(base+customPath,{method:'POST',headers:{Authorization:'Bearer '+expert},body:upload});assert.equal(uploaded.status,200,await uploaded.text());
+const savedCustom=await req('/api/collections/case_tools/records/'+custom.data.id,expert);assert.equal(savedCustom.data.config.privateDraft,true);assert.equal(savedCustom.data.case,caseId);assert.equal(savedCustom.data.status,'assigned');assert.equal(savedCustom.data.media.length,1);
+console.log('Verified custom creation, creator-only edits, file upload, parent visibility and rejection of foreign access on a disposable database.');
 console.log('Verified: catalog includes all active tools regardless of role; expert assigns the actual template configuration; parent opens and completes it; expert reads answers. Foreign access, tampered payloads are rejected; allocations without role_id can assign tools.');"""
  r=subprocess.run(['node','--input-type=module','-e',script,base],capture_output=True,text=True);print(r.stdout+r.stderr);assert r.returncode==0
 finally:server.terminate();server.wait(timeout=8);log.close()

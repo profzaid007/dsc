@@ -163,6 +163,7 @@ export default function ExpertCaseDetailPage({
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Button asChild variant="outline"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}>{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>
             <p className="[overflow-wrap:anywhere] whitespace-pre-wrap">
               {task.task_brief}
             </p>

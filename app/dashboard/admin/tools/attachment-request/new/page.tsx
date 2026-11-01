@@ -1,4 +1,5 @@
 "use client"
+import { caseTaskPath } from "@/lib/case-task-path"
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -169,7 +170,7 @@ export default function AttachmentRequestBuilderPage({
 
       // Redirect to assignments page
       toast.success(lang === "ar" ? "تم حفظ طلب المرفقات وإضافته إلى تكليفات الحالة." : "Attachment request saved and added to the case assignments.")
-      router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
+      router.push(caseTaskPath(selectedCaseId))
     } catch (error) {
       console.error(
         "Failed to create attachment request and assignment:",

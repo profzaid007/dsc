@@ -1,7 +1,7 @@
 import { normalizeAllocationRole } from "./allocation-role-groups"
 import { assertBlogClassificationSchema } from "./blog-content"
 import { boundedFullList } from "@/lib/bounded-records"
-import pb from "./pb"
+import pb, { getCurrentUser } from "./pb"
 import type { User } from "@/types/user"
 import type { Profile } from "@/types/profile"
 import type { Tool, BilingualString } from "@/types/tool"
@@ -194,10 +194,22 @@ export const caseToolsCollection = {
   },
 
   async create(data: Partial<CaseTool>): Promise<CaseTool> {
+    if (getCurrentUser()?.role === "expert") {
+      if (!data.case) throw new Error("اختر حالة مخصصة لك. / Select an allocated case.")
+      const result = await pb.send<{ id: string }>(`/api/dsc/expert/cases/${encodeURIComponent(data.case)}/custom-assignments`, {
+        method: "POST", body: { type: data.type, name_en: data.name_en, name_ar: data.name_ar, config: data.config }, requestKey: null,
+      })
+      return pb.collection("case_tools").getOne(result.id)
+    }
     return pb.collection("case_tools").create(data)
   },
 
   async update(id: string, data: Partial<CaseTool>): Promise<CaseTool> {
+    if (getCurrentUser()?.role === "expert" && data.config !== undefined) {
+      const record = await pb.collection("case_tools").getOne(id)
+      await pb.send(`/api/dsc/expert/cases/${encodeURIComponent(record.case)}/custom-assignments/${encodeURIComponent(id)}`, {method:"POST",body:data,requestKey:null})
+      return pb.collection("case_tools").getOne(id)
+    }
     return pb.collection("case_tools").update(id, data)
   },
 
@@ -208,6 +220,14 @@ export const caseToolsCollection = {
     files: File[],
     filesToRemove?: string[]
   ): Promise<CaseTool> {
+    if (getCurrentUser()?.role === "expert" && files.length && !filesToRemove?.length) {
+      const record = await pb.collection("case_tools").getOne(id)
+      const payload = new FormData()
+      files.forEach(file => payload.append("media", file))
+      if (data.config !== undefined) payload.set("config", JSON.stringify(data.config))
+      await pb.send(`/api/dsc/expert/cases/${encodeURIComponent(record.case)}/custom-assignments/${encodeURIComponent(id)}`, {method:"POST",body:payload,requestKey:null})
+      return pb.collection("case_tools").getOne(id)
+    }
     const formData = new FormData()
 
     // Preserve existing media files when adding new ones (PocketBase replaces all if not included)

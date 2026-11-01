@@ -5,6 +5,17 @@ import pb, { getErrorMessage } from "@/lib/pb"
 import { useLang } from "@/lib/lang-context"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import Link from "next/link"
+import { Mail, FileText, Layers, Paperclip, ClipboardList, Calendar, FileBarChart } from "lucide-react"
+
+const builders = [
+  {route:"plan", ar:"خطة", en:"Plan", icon:Layers},
+  {route:"report", ar:"تقرير", en:"Report", icon:FileBarChart},
+  {route:"attachment-request", ar:"طلب مرفقات", en:"Attachment request", icon:Paperclip},
+  {route:"survey", ar:"استبيان", en:"Survey", icon:FileText},
+  {route:"multiple-choice", ar:"اختبار متعدد", en:"Multiple-answer test", icon:ClipboardList},
+  {route:"one-to-one-meeting", ar:"اجتماع فردي", en:"One-to-one meeting", icon:Calendar},
+]
 
 type Tool = {id:string;name_en:string;name_ar:string;description:string;type_en:string;type_ar:string}
 export function ExpertCreateAssignment({ caseId, onCreated }: { caseId: string; onCreated: () => void }) {
@@ -33,6 +44,11 @@ export function ExpertCreateAssignment({ caseId, onCreated }: { caseId: string; 
     {notice&&<p role="status" className="rounded-md bg-green-50 p-3 text-green-900">{notice}</p>}
     {open&&<form id="create-case-assignment" onSubmit={submit} className="space-y-4 rounded-lg border bg-white p-4">
       <h3 className="text-lg font-semibold">{ar?"تكليف الحالة بأداة":"Assign a tool to this case"}</h3>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {builders.map(item => <Button key={item.route} asChild variant="outline" className="h-auto justify-start gap-3 whitespace-normal p-4"><Link href={`/dashboard/admin/tools/${item.route}/new?caseId=${encodeURIComponent(caseId)}`}><item.icon className="size-5 shrink-0" />{ar?item.ar:item.en}</Link></Button>)}
+        <Button asChild variant="outline" className="h-auto justify-start gap-3 p-4"><Link href={`/dashboard/messages?case=${encodeURIComponent(caseId)}&compose=1`}><Mail className="size-5" />{ar?"إرسال رسالة":"Send message"}</Link></Button>
+      </div>
+      <h4 className="border-t pt-4 font-semibold">{ar?"أو اختر من القوالب المفعّلة":"Or select an active template"}</h4>
       <p className="text-sm text-muted-foreground">{ar?"اختر أي أداة مفعلة لتكليف الحالة بها. سيفتح صاحب الحالة الأداة ويكملها من «تكليفاتي».":"Choose any active tool to assign to this case. The case owner can open and complete it from My Assignments."}</p>
       {loading?<p role="status">{ar?"جارٍ تحميل الأدوات…":"Loading tools…"}</p>:<>
         {error&&<p role="alert" className="rounded-md bg-red-50 p-3 text-red-800">{error}</p>}

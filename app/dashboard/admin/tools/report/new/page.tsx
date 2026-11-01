@@ -1,4 +1,5 @@
 "use client"
+import { caseTaskPath } from "@/lib/case-task-path"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -176,7 +177,7 @@ export default function ReportBuilderPage({
           name_ar: reportName.ar,
           config,
         })
-        router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
+        router.push(caseTaskPath(selectedCaseId, editAssignmentId))
       } else {
         // Create case document directly in case_tools (no tool template)
         await assignTool({
@@ -191,7 +192,7 @@ export default function ReportBuilderPage({
         })
 
         // Redirect to assignments page
-        router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
+        router.push(caseTaskPath(selectedCaseId))
       }
     } catch (error) {
       console.error(editAssignmentId ? "Failed to update report:" : "Failed to create report:", error)
@@ -203,7 +204,7 @@ export default function ReportBuilderPage({
 
   const handleCancel = () => {
     if (editAssignmentId) {
-      router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
+      router.push(caseTaskPath(selectedCaseId, editAssignmentId))
     } else {
       // Reset form
       setSelectedCaseId("")

@@ -1,4 +1,6 @@
 "use client"
+import { useAuth } from "@/hooks/useAuth"
+import { caseTaskPath } from "@/lib/case-task-path"
 import { CaseName } from "@/components/cases/CaseName"
 
 import { DataError } from "@/components/ui/data-error"
@@ -120,7 +122,10 @@ export default function MultipleChoiceBuilderPage({
   const caseId = resolvedSearchParams?.caseId
   const isEditMode = !!editId
 
-  const [isTemplate, setIsTemplate] = useState(true)
+  const { currentUser } = useAuth()
+  const isExpert = currentUser?.role === "expert"
+  const [templateSelected, setIsTemplate] = useState(true)
+  const isTemplate = isExpert ? false : templateSelected
   const selectedCase = caseId ? getProfileById(caseId) : null
 
   const [formData, setFormData] = useState({
@@ -274,7 +279,7 @@ export default function MultipleChoiceBuilderPage({
         finalConfig = baseConfig
       }
 
-      router.push(`/dashboard/admin/cases/${caseId}`)
+      router.push(caseTaskPath(caseId))
     } else {
       // Template (with or without case): create in tools, upload media there
       const mediaFormData = new FormData()
@@ -701,7 +706,7 @@ export default function MultipleChoiceBuilderPage({
             </Card>
           )}
 
-          {(caseId || !isEditMode) && (
+          {!isExpert && (caseId || !isEditMode) && (
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-2">

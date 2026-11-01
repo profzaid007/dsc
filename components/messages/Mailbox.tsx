@@ -21,6 +21,7 @@ type Props = {
   isAdmin: boolean
   canCreate: boolean
   caseContext?: { id: string; name: string }
+  startComposing?: boolean
   caseRoute: string
   sending: boolean
   actionError: string
@@ -30,13 +31,13 @@ type Props = {
   onClearNotice: () => void
 }
 
-export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, caseContext, caseRoute, sending, actionError, notice, onRead, onSend, onClearNotice }: Props) {
+export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, caseContext, startComposing, caseRoute, sending, actionError, notice, onRead, onSend, onClearNotice }: Props) {
   const ar = lang === "ar"
   const [folder, setFolder] = useState<MailFolder>("received")
   const [query, setQuery] = useState("")
   const [unreadOnly, setUnreadOnly] = useState(false)
   const [selectedId, setSelectedId] = useState("")
-  const [draft, setDraft] = useState<Draft | null>(null)
+  const [draft, setDraft] = useState<Draft | null>(() => startComposing && canCreate ? {recipients:[], subject:"", body:"", caseId:caseContext?.id || ""} : null)
   const [recipientQuery, setRecipientQuery] = useState("")
   const [attachmentError, setAttachmentError] = useState("")
   const mine = ownMessages(messages, userId)

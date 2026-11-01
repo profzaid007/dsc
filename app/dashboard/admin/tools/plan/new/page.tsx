@@ -1,4 +1,5 @@
 "use client"
+import { caseTaskPath } from "@/lib/case-task-path"
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -69,11 +70,8 @@ export default function PlanBuilderPage({
   const [isInitializing, setIsInitializing] = useState(true)
   const hasInitialized = useRef(false)
 
-  // Tool name for this specific plan instance (only bilingual field)
-  const [toolName, setToolName] = useState({
-    en: "",
-    ar: "",
-  })
+  // Name for this specific plan instance
+  const [toolName, setToolName] = useState("")
 
   const [formData, setFormData] = useState({
     childName: "",
@@ -126,10 +124,7 @@ export default function PlanBuilderPage({
           childName: caseProfile.name,
         }))
         // Auto-generate tool name if empty
-        setToolName((prev) => ({
-          en: prev.en || `${caseProfile.name} - Plan`,
-          ar: prev.ar || `${caseProfile.name} - خطة`,
-        }))
+        setToolName((prev) => prev || caseProfile.name)
       }
     } else {
       // Reset fields when case is cleared
@@ -159,10 +154,7 @@ export default function PlanBuilderPage({
           if (existingAssignment) {
             const config = existingAssignment.config as PlanConfig
             setSelectedCaseId(existingAssignment.case)
-            setToolName({
-              en: existingAssignment.name_en || "",
-              ar: existingAssignment.name_ar || "",
-            })
+            setToolName(existingAssignment.name_ar || existingAssignment.name_en || "")
             setFormData({
               childName: config?.childName || "",
               expertName: config?.expertName || "",
@@ -262,7 +254,7 @@ export default function PlanBuilderPage({
     if (submitting.current) return
     const missing = [
       [!selectedCaseId, lang === "ar" ? "الحالة" : "case"],
-      [!toolName.en.trim() && !toolName.ar.trim(), lang === "ar" ? "اسم الخطة" : "plan name"],
+      [!toolName.trim(), lang === "ar" ? "اسم الخطة" : "plan name"],
       [!childName, lang === "ar" ? "اسم الطفل" : "child name"],
       [!formData.expertName.trim(), lang === "ar" ? "اسم الخبير" : "expert name"],
       [!formData.startDate, lang === "ar" ? "تاريخ البداية" : "start date"],
@@ -307,25 +299,25 @@ export default function PlanBuilderPage({
       // Edit mode - update existing assignment
       if (editAssignmentId) {
         await updateAssignment(editAssignmentId, {
-          name_en: toolName.en.trim() || toolName.ar.trim(),
-          name_ar: toolName.ar.trim() || toolName.en.trim(),
+          name_en: toolName.trim(),
+          name_ar: toolName.trim(),
           config,
         })
-        router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
+        router.push(caseTaskPath(selectedCaseId, editAssignmentId))
       } else {
         // Create case document directly in case_tools (no tool template)
         await assignTool({
           case: selectedCaseId,
           type: planTypeId,
-          name_en: toolName.en.trim() || toolName.ar.trim(),
-          name_ar: toolName.ar.trim() || toolName.en.trim(),
+          name_en: toolName.trim(),
+          name_ar: toolName.trim(),
           is_not_template: true,
           config,
           is_visible_to_user: true,
           status: "pending",
         })
 
-        router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
+        router.push(caseTaskPath(selectedCaseId))
       }
       toast.success(lang === "ar" ? "تم حفظ الخطة ضمن تكليفات الحالة." : "Plan saved to the case assignments.")
     } catch (error) {
@@ -341,11 +333,11 @@ export default function PlanBuilderPage({
 
   const handleCancel = () => {
     if (editAssignmentId) {
-      router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
+      router.push(caseTaskPath(selectedCaseId, editAssignmentId))
     } else {
       // Reset form
       setSelectedCaseId("")
-      setToolName({ en: "", ar: "" })
+      setToolName("")
       setFormData({
         childName: "",
         expertName: currentUser?.name || "",
@@ -543,38 +535,20 @@ export default function PlanBuilderPage({
             </CardContent>
           </Card>
 
-          {/* Plan Name - Only bilingual field */}
+          {/* Plan name */}
           <Card>
             <CardHeader>
               <CardTitle>{lang === "ar" ? "اسم الخطة *" : "Plan Name *"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="dsc-form-grid">
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
-                  <Input
-                    value={toolName.en}
-                    onChange={(e) =>
-                      setToolName({ ...toolName, en: e.target.value })
-                    }
-                    placeholder={
-                      lang === "ar"
-                        ? "مثال: خطة تطوير جون"
-                        : "e.g., John's Development Plan"
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
-                  <Input
-                    value={toolName.ar}
-                    onChange={(e) =>
-                      setToolName({ ...toolName, ar: e.target.value })
-                    }
-                    placeholder="مثال: خطة تطوير جون"
-                  />
-                </div>
-              </div>
+              <Label htmlFor="plan-name">{lang === "ar" ? "اسم الخطة" : "Plan name"}</Label>
+              <Input
+                id="plan-name"
+                dir="auto"
+                value={toolName}
+                onChange={(e) => setToolName(e.target.value)}
+                placeholder={lang === "ar" ? "مثال: خطة تطوير مهارات التواصل" : "e.g., Communication skills plan"}
+              />
             </CardContent>
           </Card>
 

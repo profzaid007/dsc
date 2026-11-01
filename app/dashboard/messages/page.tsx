@@ -18,7 +18,9 @@ export default function MessagesPage() {
 }
 
 function MessagesInbox() {
-  const caseId = useSearchParams().get("case") || ""
+  const searchParams = useSearchParams()
+  const caseId = searchParams.get("case") || ""
+  const startComposing = searchParams.get("compose") === "1"
   const scope = useRef("")
   const [loadedScope, setLoadedScope] = useState<string | null>(null)
   const [caseContext, setCaseContext] = useState<{ id: string; name: string }>()
@@ -106,6 +108,6 @@ function MessagesInbox() {
     </header>
     {caseContext?.id === caseId && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm"><Link href={`/dashboard/${caseRoute}/${caseContext.id}`} className="font-semibold text-[#073b62]">{ar ? "رسائل الحالة: " : "Case messages: "}{caseContext.name}</Link><Link href="/dashboard/messages" className="text-[#0061ab] underline">{ar ? "عرض جميع الرسائل" : "Show all messages"}</Link></div>}
     {error && <DataError message={error} onRetry={() => refresh()} />}
-    {loading || loadedScope !== currentUser.id + ":" + caseId ? <PageLoader /> : !error && <Mailbox key={currentUser.id + ":" + caseId} caseContext={caseContext} messages={messages} contacts={contacts} userId={currentUser.id} lang={lang} isAdmin={isAdmin} canCreate={canCreate} caseRoute={caseRoute} sending={sending} actionError={actionError} notice={notice} onRead={readMessage} onSend={send} onClearNotice={() => { setNotice(""); setActionError("") }} />}
+    {loading || loadedScope !== currentUser.id + ":" + caseId ? <PageLoader /> : !error && <Mailbox key={currentUser.id + ":" + caseId + ":" + startComposing} caseContext={caseContext} startComposing={startComposing} messages={messages} contacts={contacts} userId={currentUser.id} lang={lang} isAdmin={isAdmin} canCreate={canCreate} caseRoute={caseRoute} sending={sending} actionError={actionError} notice={notice} onRead={readMessage} onSend={send} onClearNotice={() => { setNotice(""); setActionError("") }} />}
   </div>
 }
