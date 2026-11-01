@@ -645,13 +645,6 @@ export function CaseAllocations({
                       ? "لم يتم تخصيص خبراء لهذه الحالة بعد"
                       : "No experts have been assigned to this case yet"}
                   </p>
-                  <Button
-                    disabled={!access.can("allocations.create")}
-                    onClick={addRow}
-                  >
-                    <Plus className="me-2 h-4 w-4" />
-                    {lang === "ar" ? "إضافة خبير" : "Add Expert"}
-                  </Button>
                 </div>
               ) : (
                 <Table>
