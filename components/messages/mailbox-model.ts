@@ -27,7 +27,7 @@ export function replySubject(subject: string) {
 }
 
 
-export type MessageDraft = { recipients: string[]; subject: string; body: string; caseId: string }
+export type MessageDraft = { recipients: string[]; subject: string; body: string; caseId: string; attachments?: File[] }
 export type MessageSendResult = { sent: number; failedRecipients: string[] }
 
 // A separate message per recipient keeps addresses and read status private.
@@ -42,4 +42,28 @@ export async function deliverMessages(
     catch { failedRecipients.push(recipient) }
   }
   return { records, failedRecipients }
+}
+
+
+export const messageAttachmentAccept = ".pdf,.jpg,.jpeg,.png,.webp,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp3,.wav,.mp4"
+export function messageAttachmentError(files: Pick<File, "name" | "size">[], lang: "ar" | "en") {
+  const ar = lang === "ar"
+  if (files.length > 5 || files.some(file => file.size > 10 * 1024 * 1024))
+    return ar ? "لم تتم إضافة الملفات. الحد الأقصى 5 ملفات، بحجم 10 ميغابايت لكل ملف." : "Files were not added. Attach up to 5 files, at most 10 MB each."
+  const extensions = messageAttachmentAccept.split(",")
+  if (files.some(file => !extensions.some(extension => file.name.toLowerCase().endsWith(extension))))
+    return ar ? "لم تتم إضافة الملفات. نوع الملف غير مدعوم؛ اختر مستندًا أو صورة أو ملف صوت أو فيديو مدعومًا." : "Files were not added. Unsupported file type; choose a supported document, image, audio or video file."
+  return ""
+}
+
+export function messageFormData(sender: string, recipient: string, draft: MessageDraft) {
+  const data = new FormData()
+  data.set("sender", sender)
+  data.set("recipient", recipient)
+  data.set("subject", draft.subject.trim())
+  data.set("body", draft.body.trim())
+  data.set("read", "false")
+  if (draft.caseId) data.set("case", draft.caseId)
+  for (const file of draft.attachments || []) data.append("attachments", file)
+  return data
 }

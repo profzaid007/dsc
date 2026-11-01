@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import type { RecordModel } from "pocketbase"
 import { Mailbox } from "@/components/messages/Mailbox"
-import { canMessageContact, deliverMessages, type MessageContact, type MessageDraft } from "@/components/messages/mailbox-model"
+import { canMessageContact, deliverMessages, messageAttachmentError, messageFormData, type MessageContact, type MessageDraft } from "@/components/messages/mailbox-model"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useAuth } from "@/hooks/useAuth"
@@ -62,9 +62,11 @@ export default function MessagesPage() {
     if (!currentUser || sending || !ids.length || !draft.body.trim() || !draft.subject.trim() || (draft.caseId && ids.length !== 1) || ids.some(id => !canMessageContact(contacts.find(contact => contact.id === id), isAdmin, canCreate, draft.caseId))) {
       return { sent: 0, failedRecipients: ids }
     }
+    const fileError = messageAttachmentError(draft.attachments || [], lang)
+    if (fileError) { setActionError(fileError); return { sent: 0, failedRecipients: ids } }
     setSending(true); setActionError(""); setNotice("")
     try {
-      const result = await deliverMessages(ids, recipient => pb.collection("internal_messages").create({ sender: currentUser.id, recipient, body: draft.body.trim(), subject: draft.subject.trim(), read: false, ...(draft.caseId ? { case: draft.caseId } : {}) }, { requestKey: null }))
+      const result = await deliverMessages(ids, recipient => pb.collection("internal_messages").create(messageFormData(currentUser.id, recipient, draft), { requestKey: null }))
       if (result.records.length) {
         setMessages(items => [...items.filter(item => !result.records.some(record => record.id === item.id)), ...result.records])
         window.dispatchEvent(new Event("messages-updated"))

@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react"
 import type { RecordModel } from "pocketbase"
 import Link from "next/link"
-import { ArrowLeft, Filter, List, Mail, PenLine, Reply, Search, Send, UserRound, X } from "lucide-react"
+import { ArrowLeft, Filter, List, Mail, Paperclip, PenLine, Reply, Search, Send, UserRound, X } from "lucide-react"
 import { MessageAttachments, MessageBody } from "@/components/cases/CaseMessages"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { canMessageContact, mailboxMessages, ownMessages, replySubject, type MailFolder, type MessageContact, type MessageDraft, type MessageSendResult } from "./mailbox-model"
+import { canMessageContact, messageAttachmentAccept, messageAttachmentError, mailboxMessages, ownMessages, replySubject, type MailFolder, type MessageContact, type MessageDraft, type MessageSendResult } from "./mailbox-model"
 
 type Draft = MessageDraft
 type Props = {
@@ -36,6 +36,7 @@ export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, 
   const [selectedId, setSelectedId] = useState("")
   const [draft, setDraft] = useState<Draft | null>(null)
   const [recipientQuery, setRecipientQuery] = useState("")
+  const [attachmentError, setAttachmentError] = useState("")
   const mine = ownMessages(messages, userId)
   const visible = mailboxMessages(messages, userId, folder, query, unreadOnly, contacts, selectedId)
   const selected = mine.find(message => message.id === selectedId)
@@ -76,11 +77,11 @@ export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, 
     setSelectedId(message.id); setDraft(null); onClearNotice(); if (message.recipient === userId && !message.read) onRead(message)
   }
   function compose() {
-    setDraft({ recipients: [], subject: "", body: "", caseId: "" }); setRecipientQuery(""); onClearNotice()
+    setDraft({ recipients: [], subject: "", body: "", caseId: "" }); setRecipientQuery(""); setAttachmentError(""); onClearNotice()
   }
   function reply() {
     if (!selected || !canReply) return
-    setDraft({ recipients: [selected.sender], subject: replySubject(selected.subject || ""), body: "", caseId: selected.case || "" }); setRecipientQuery(""); onClearNotice()
+    setDraft({ recipients: [selected.sender], subject: replySubject(selected.subject || ""), body: "", caseId: selected.case || "" }); setRecipientQuery(""); setAttachmentError(""); onClearNotice()
   }
   const back = () => { if (!sending) { setSelectedId(""); setDraft(null); onClearNotice() } }
   return (
@@ -141,7 +142,28 @@ export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, 
                 {!matchingRecipients.length && <p className="p-3 text-sm text-slate-500">{recipientQuery ? (ar ? "لا يوجد مستلمون مطابقون للبحث." : "No matching recipients.") : (ar ? "لا يوجد مستلمون متاحون حاليًا." : "No recipients are available yet.")}</p>}
               </div>
               <p className="text-xs leading-5 text-[#41607d]">{draft.caseId ? (ar ? "يرسل هذا الرد إلى مرسل رسالة الحالة فقط." : "This case reply is sent only to the original sender.") : (ar ? "يشمل خيار الجميع جميع المستلمين المتاحين حسب صلاحياتك، حتى إن لم يظهروا في نتائج البحث. تصل لكل مستلم رسالة منفصلة." : "All includes every available recipient, including those outside the search results. Each recipient receives a separate message.")}</p>
-            </fieldset><div className="space-y-2"><Label htmlFor="message-subject">{ar ? "العنوان" : "Subject"}</Label><Input id="message-subject" dir="auto" value={draft.subject} maxLength={200} required disabled={sending} onChange={event => setDraft({ ...draft, subject: event.target.value })} className="h-11 border-[#dce6f2]" /></div><div className="space-y-2"><Label htmlFor="message-body">{ar ? "الرسالة" : "Message"}</Label><Textarea id="message-body" dir="auto" rows={10} value={draft.body} maxLength={4000} required disabled={sending} onChange={event => setDraft({ ...draft, body: event.target.value })} className="min-h-56 border-[#dce6f2]" /><p className="text-end text-xs text-slate-500">{draft.body.length}/4000</p></div>{actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}</div>
+            </fieldset><div className="space-y-2"><Label htmlFor="message-subject">{ar ? "العنوان" : "Subject"}</Label><Input id="message-subject" dir="auto" value={draft.subject} maxLength={200} required disabled={sending} onChange={event => setDraft({ ...draft, subject: event.target.value })} className="h-11 border-[#dce6f2]" /></div><div className="space-y-2"><Label htmlFor="message-body">{ar ? "الرسالة" : "Message"}</Label><Textarea id="message-body" dir="auto" rows={10} value={draft.body} maxLength={4000} required disabled={sending} onChange={event => setDraft({ ...draft, body: event.target.value })} className="min-h-56 border-[#dce6f2]" /><p className="text-end text-xs text-slate-500">{draft.body.length}/4000</p></div><div className="space-y-3">
+              <Label htmlFor="message-attachments" className="flex items-center gap-2"><Paperclip className="size-4" aria-hidden="true" />{ar ? "المرفقات" : "Attachments"}</Label>
+              <Input id="message-attachments" type="file" multiple accept={messageAttachmentAccept} disabled={sending} aria-describedby="message-attachments-help" onChange={event => {
+                const added = Array.from(event.target.files || [])
+                const previous = draft.attachments || []
+                const combined = [...previous, ...added.filter(file => !previous.some(old => old.name === file.name && old.size === file.size && old.lastModified === file.lastModified))]
+                const error = messageAttachmentError(combined, lang)
+                setAttachmentError(error)
+                if (!error) setDraft({ ...draft, attachments: combined })
+                event.target.value = ""
+              }} className="h-auto min-h-11 border-[#dce6f2] py-2" />
+              <p id="message-attachments-help" className="text-xs leading-5 text-[#41607d]">{ar ? "حتى 5 ملفات، بحد أقصى 10 ميغابايت لكل ملف. مستندات PDF وOffice، صور JPG وPNG وWebP، ملفات TXT وCSV، صوت MP3 وWAV، وفيديو MP4. ترفق الملفات نفسها برسالة كل مستلم." : "Up to 5 files, 10 MB each. PDF and Office documents, JPG/PNG/WebP images, TXT/CSV, MP3/WAV audio and MP4 video. Each recipient receives the same attachments."}</p>
+              {(draft.attachments || []).length > 0 && <ul className="space-y-2" aria-label={ar ? "الملفات المرفقة" : "Attached files"}>
+                {draft.attachments!.map((file, index) => <li key={`${file.name}-${index}`} className="flex min-w-0 items-center gap-2 rounded-lg border border-[#dce6f2] px-3 py-2 text-sm">
+                  <Paperclip className="size-4 shrink-0 text-[#005cae]" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 break-words" dir="auto">{file.name}</span>
+                  <span className="shrink-0 text-xs text-slate-500">{Math.ceil(file.size / 1024)} KB</span>
+                  <button type="button" disabled={sending} aria-label={ar ? `إزالة المرفق ${file.name}` : `Remove attachment ${file.name}`} onClick={() => { setDraft({ ...draft, attachments: draft.attachments!.filter((_, fileIndex) => fileIndex !== index) }); setAttachmentError("") }} className="flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 disabled:opacity-50"><X className="size-4" /></button>
+                </li>)}
+              </ul>}
+              {attachmentError && <p role="alert" className="text-sm text-destructive">{attachmentError}</p>}
+            </div>{actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}</div>
           <footer className="flex flex-wrap justify-end gap-3 border-t border-[#e0e8f2] p-5"><Button type="button" variant="outline" onClick={() => setDraft(null)} disabled={sending} className="h-12 rounded-xl px-5">{ar ? "إلغاء" : "Cancel"}</Button><Button type="submit" disabled={sending || !draft.body.trim() || !draft.subject.trim() || !validRecipients} className={`${primaryButton} gap-2`}><Send className="size-4" />{sending ? (ar ? "جارٍ الإرسال…" : "Sending...") : (ar ? `إرسال (${draft.recipients.length})` : `Send message (${draft.recipients.length})`)}</Button></footer>
         </form> : selected ? <>
           <header className="border-b border-[#e0e8f2] px-5 py-6 sm:px-6"><h2 dir="auto" className="break-words text-xl font-bold tracking-tight text-[#09395f]">{selected.subject || (ar ? "بدون عنوان" : "No subject")}</h2></header>

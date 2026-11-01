@@ -87,6 +87,32 @@ if (require.main === module) {
     const result=await model.deliverMessages(['a','b','a'],async id=>{attempts.push(id);if(id==='b')throw Error('denied');return {id:'record-'+id}})
     assert.deepEqual(attempts,['a','b']);assert.deepEqual(result.failedRecipients,['b']);assert.equal(result.records.length,1)
   })
+  test('attachments can be selected, rejected safely, and removed before sending', () => {
+    const h=harness({},['received','',false,'',{recipients:['admin'],subject:'Subject',body:'Body',caseId:''}])
+    const file=new File(['report'],'report.txt',{type:'text/plain'})
+    let input=find(h.render(),node=>node.props?.id==='message-attachments')
+    input.props.onChange({target:{files:[file],value:'file'}})
+    assert.equal(h.state[4].attachments[0],file)
+    assert.ok(renderToStaticMarkup(h.render()).includes('report.txt'))
+    input=find(h.render(),node=>node.props?.id==='message-attachments')
+    input.props.onChange({target:{files:[new File(['bad'],'program.exe')],value:'file'}})
+    assert.equal(h.state[4].attachments.length,1);assert.ok(h.state[6].includes('Unsupported file type'))
+    find(h.render(),node=>node.props?.['aria-label']==='Remove attachment report.txt').props.onClick()
+    assert.equal(h.state[4].attachments.length,0);assert.equal(h.state[6],'')
+    assert.ok(model.messageAttachmentError(Array.from({length:6},()=>({name:'f.pdf',size:1})),'en'))
+    assert.ok(model.messageAttachmentError([{name:'f.pdf',size:10485761}],'ar'))
+    assert.equal(model.messageAttachmentError([{name:'f.PDF',size:10485760}],'en'),'')
+  })
+  test('each recipient gets an independent multipart request with the same files and case context', async () => {
+    const file=new File(['report'],'report.txt',{type:'text/plain'})
+    const draft={recipients:['a','b'],subject:' Subject ',body:' Body ',caseId:'case-123',attachments:[file]}
+    const first=model.messageFormData('self','a',draft),second=model.messageFormData('self','b',draft)
+    assert.notEqual(first,second);assert.equal(first.get('recipient'),'a');assert.equal(second.get('recipient'),'b')
+    for(const data of [first,second]) { assert.equal(data.get('subject'),'Subject');assert.equal(data.get('read'),'false');assert.equal(data.get('case'),'case-123');assert.equal(data.getAll('attachments').length,1);assert.equal(await data.get('attachments').text(),'report') }
+    const h=harness({onSend:async()=>({sent:1,failedRecipients:['b']})},['received','',false,'',draft])
+    await find(h.render(),node=>node.type==='form').props.onSubmit({preventDefault(){}})
+    assert.deepEqual(h.state[4].recipients,['b']);assert.equal(h.state[4].attachments[0],file)
+  })
   test('Arabic, empty, unread filter, and composer states remain usable', () => {
     assert.ok(renderToStaticMarkup(harness({ lang: 'ar', messages: [] }).render()).includes('الرسائل الواردة'))
     const h = harness(); let tree = h.render()
