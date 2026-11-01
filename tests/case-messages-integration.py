@@ -4,7 +4,7 @@ import sqlite3, subprocess, tempfile, socket, time, urllib.request, urllib.error
 root=Path.cwd(); runtime=root.parent/'work/pocketbase'; stage=Path(tempfile.mkdtemp(prefix='dsc-case-messages-'))
 for name in ['data','migrations','hooks']: (stage/name).mkdir()
 with sqlite3.connect((runtime/'pb_data/data.db').resolve().as_uri()+'?mode=ro',uri=True) as a, sqlite3.connect(stage/'data/data.db') as b: a.backup(b)
-for migration in ['1794800000_case_messages.js','1794900000_case_documents.js']:shutil.copy2(root/'pb_migrations'/migration,stage/'migrations'/migration)
+for migration in ['1794800000_case_messages.js','1794900000_case_documents.js','1795600000_unified_message_inbox.js']:shutil.copy2(root/'pb_migrations'/migration,stage/'migrations'/migration)
 fixture='''migrate(app=>{
  const mail=app.settings();mail.smtp.enabled=false;app.save(mail);
  const users=app.findCollectionByNameOrId("users");
@@ -59,6 +59,10 @@ try:
  path='/api/collections/internal_messages/records'; saved=None
  for role in ['parent','individual','organization','care_foundation']:
   case=cases[role];token=tokens[role]
+  status,allContacts=req('/api/dsc/message-contacts',token);assert status==200,(status,allContacts)
+  assert ids['allocated'] in {r['id'] for r in allContacts} and ids['foreign'] not in {r['id'] for r in allContacts}
+  direct={'sender':ids[role],'recipient':ids['admin'],'subject':'General inbox','body':'Contact administration','read':False}
+  assert req(path,token,'POST',direct)[0]==200
   status,contacts=req('/api/dsc/message-contacts?case_id='+case,token);assert status==200,(status,contacts)
   localized=next(r for r in contacts if r['id']==ids['allocated']);assert localized['name_ar']=='الخبير المختص' and localized['name_en']=='Allocated Expert';assert all('email' not in r for r in contacts)
   contacts={r['id'] for r in contacts};assert ids['allocated'] in contacts and ids['admin'] in contacts and ids['foreign'] not in contacts and ids['other'] not in contacts and ids['denied-admin'] not in contacts
@@ -66,6 +70,12 @@ try:
   status,m=req(path,token,'POST',data,b'Private attachment');assert status==200,(status,m)
   assert m['attachments'];saved=m if role=='parent' else saved
   assert req(path+'/'+m['id'],tokens['allocated'])[0]==200
+  import urllib.parse
+  status,filtered=req(path+'?'+urllib.parse.urlencode({'filter':'case = "'+case+'"','expand':'case'}),token)
+  assert status==200 and any(r['id']==m['id'] for r in filtered['items']),(status,filtered)
+  assert all(r['case']==case for r in filtered['items'])
+  assert next(r for r in filtered['items'] if r['id']==m['id'])['expand']['case']['id']==case
+  status,inbox=req(path,token);assert status==200 and any(not r['case'] for r in inbox['items']) and any(r['case']==case for r in inbox['items'])
   for bad in ['other','foreign']:
    assert req(path+'/'+m['id'],tokens[bad])[0]==404
    assert req('/api/dsc/message-contacts?case_id='+case,tokens[bad])[0] in [403,404]

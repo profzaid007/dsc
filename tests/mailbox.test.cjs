@@ -48,6 +48,17 @@ if (require.main === module) {
     assert.deepEqual(model.mailboxMessages(baseProps.messages, 'self', 'all', 'thank', false, baseProps.contacts).map(m => m.id), ['sent'])
     assert.equal(model.mailboxMessages(baseProps.messages, 'self', 'all', 'PRIVATE', false, baseProps.contacts).length, 0)
   })
+  test('case context composes linked messages for multiple authorized participants and shows case labels', () => {
+    const h = harness({ caseContext: { id: 'case-123', name: 'Review case' }, contacts: [...baseProps.contacts, { id: 'owner', name: 'Owner', role: 'parent' }] })
+    find(h.render(), node => node.props?.['aria-label'] === 'New message').props.onClick()
+    assert.equal(h.state[4].caseId, 'case-123')
+    assert.equal(h.state[4].replyTo, undefined)
+    const html = renderToStaticMarkup(h.render())
+    assert.ok(html.includes('Linked to case: ')); assert.ok(html.includes('Review case')); assert.ok(html.includes('Owner'))
+    const linked = { ...message('linked', 'admin', 'self', 'Case update', '2026-11-01 07:06:58Z', true, 'case-123'), expand: { case: { name: 'Review case' } } }
+    assert.ok(renderToStaticMarkup(harness({ messages: [linked] }).render()).includes('Case: Review case'))
+    assert.equal(model.mailboxMessages([linked], 'self', 'all', 'Review case', false, baseProps.contacts).length, 1)
+  })
   test('mailbox does not mark previews read; selecting only one received message requests its read update', () => {
     const reads = []; const h = harness({ onRead: message => reads.push(message.id) })
     let tree = h.render(); assert.deepEqual(reads, [])
@@ -61,7 +72,7 @@ if (require.main === module) {
     const h = harness({ messages: [incoming] }, ['received', '', false, 'case-message', null])
     const reply = find(h.render(), node => node.props?.['aria-label'] === 'Reply')
     assert.ok(reply); reply.props.onClick()
-    assert.deepEqual(h.state[4], { recipients: ['admin'], subject: 'Re: Review notes', body: '', caseId: 'case-123' })
+    assert.deepEqual(h.state[4], { recipients: ['admin'], subject: 'Re: Review notes', body: '', caseId: 'case-123', replyTo: 'admin' })
     assert.equal(model.canMessageContact({ role: 'expert' }, false, true), false)
     assert.equal(model.canMessageContact({ role: 'expert' }, false, true, 'case-123'), true)
     assert.equal(model.canMessageContact(undefined, true, true), false)

@@ -78,20 +78,14 @@ function contacts(e) {
     0,
     { self: u.id }
   )
-  const caseIds =
-    !caseId && u.getString("role") === "expert"
-      ? e.app
-          .findRecordsByFilter("case_experts", "expert_id = {:id}", "", 0, 0, {
-            id: u.id,
-          })
-          .map((r) => r.getString("case_id"))
-      : []
-  const owners = caseIds.map((id) =>
-    e.app.findRecordById("cases", id).getString("user")
-  )
-  const authorized = users.filter(
-    (r) => allowed(e.app, u, r, caseId) || (!caseId && owners.includes(r.id))
-  )
+  // Include authorized case correspondents for names/replies in the unfiltered inbox.
+  // Sending without case context still follows the stricter direct-message policy.
+  let caseIds = []
+  if (!caseId && u.getString("role") === "expert")
+    caseIds = e.app.findRecordsByFilter("case_experts", "expert_id = {:id}", "", 0, 0, { id: u.id }).map(r => r.getString("case_id"))
+  else if (!caseId && clients.includes(u.getString("role")))
+    caseIds = e.app.findRecordsByFilter("cases", "user = {:id}", "", 0, 0, { id: u.id }).map(r => r.id)
+  const authorized = users.filter(r => allowed(e.app, u, r, caseId) || caseIds.some(id => allowed(e.app, u, r, id)))
   const experts = authorized.filter(r => r.getString("role") === "expert")
   const names = {}
   if (experts.length) {

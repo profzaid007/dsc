@@ -1,6 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { Suspense, useCallback, useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import type { RecordModel } from "pocketbase"
 import { Mailbox } from "@/components/messages/Mailbox"
 import { canMessageContact, deliverMessages, messageAttachmentError, messageFormData, type MessageContact, type MessageDraft } from "@/components/messages/mailbox-model"
@@ -12,6 +14,14 @@ import { PageLoader } from "@/components/ui/page-loader"
 import { DataError } from "@/components/ui/data-error"
 
 export default function MessagesPage() {
+  return <Suspense fallback={<PageLoader />}><MessagesInbox /></Suspense>
+}
+
+function MessagesInbox() {
+  const caseId = useSearchParams().get("case") || ""
+  const scope = useRef("")
+  const [loadedScope, setLoadedScope] = useState<string | null>(null)
+  const [caseContext, setCaseContext] = useState<{ id: string; name: string }>()
   const { currentUser, isAdmin, isLoading: authLoading } = useAuth()
   const { lang } = useLang()
   const ar = lang === "ar"
@@ -31,21 +41,26 @@ export default function MessagesPage() {
     if (!currentUser || !allowed) return
     if (!quiet) setLoading(true)
     setError("")
+    const requestScope = currentUser.id + ":" + caseId
+    scope.current = requestScope
     try {
-      const [contactData, records] = await Promise.all([
-        pb.send<{ contacts: MessageContact[] } | MessageContact[]>("/api/dsc/message-contacts", { method: "GET", requestKey: null }),
-        pb.collection("internal_messages").getFullList({ sort: "-created", requestKey: null }),
+      const [contactData, records, caseRecord] = await Promise.all([
+        pb.send<{ contacts: MessageContact[] } | MessageContact[]>("/api/dsc/message-contacts", { method: "GET", query: caseId ? { case_id: caseId } : {}, requestKey: null }),
+        pb.collection("internal_messages").getFullList({ sort: "-created", expand: "case", filter: caseId ? pb.filter("case = {:id}", { id: caseId }) : "", requestKey: null }),
+        caseId ? pb.collection("cases").getOne(caseId, { fields: "id,name", requestKey: null }) : Promise.resolve(undefined),
       ])
+      if (scope.current !== requestScope) return
+      setCaseContext(caseRecord ? { id: caseRecord.id, name: caseRecord.name } : undefined)
       setContacts(Array.isArray(contactData) ? contactData : contactData.contacts)
       setMessages(records)
-    } catch (e) { setError(getErrorMessage(e, lang)) }
-    finally { setLoading(false) }
-  }, [currentUser, allowed, lang])
+    } catch (e) { if (scope.current === requestScope) { setError(getErrorMessage(e, lang)); setMessages([]); setContacts([]); setCaseContext(undefined) } }
+    finally { if (scope.current === requestScope) { setLoading(false); setLoadedScope(requestScope) } }
+  }, [currentUser, allowed, lang, caseId])
   useEffect(() => {
     if (authLoading || !allowed) return
     const initial = setTimeout(() => void refresh(), 0)
     const interval = setInterval(() => void refresh(true), 15000)
-    return () => { clearTimeout(initial); clearInterval(interval) }
+    return () => { scope.current = ""; clearTimeout(initial); clearInterval(interval) }
   }, [refresh, authLoading, allowed])
 
   async function readMessage(message: RecordModel) {
@@ -59,7 +74,7 @@ export default function MessagesPage() {
 
   async function send(draft: MessageDraft) {
     const ids = [...new Set(draft.recipients)]
-    if (!currentUser || sending || !ids.length || !draft.body.trim() || !draft.subject.trim() || (draft.caseId && ids.length !== 1) || ids.some(id => !canMessageContact(contacts.find(contact => contact.id === id), isAdmin, canCreate, draft.caseId))) {
+    if (!currentUser || sending || !ids.length || !draft.body.trim() || !draft.subject.trim() || (draft.replyTo && (ids.length !== 1 || ids[0] !== draft.replyTo)) || (caseId && draft.caseId !== caseId) || ids.some(id => !canMessageContact(contacts.find(contact => contact.id === id), isAdmin, canCreate, draft.caseId))) {
       return { sent: 0, failedRecipients: ids }
     }
     const fileError = messageAttachmentError(draft.attachments || [], lang)
@@ -89,7 +104,8 @@ export default function MessagesPage() {
       <h1 className="text-3xl font-bold tracking-tight text-[#073b62]">{ar ? "الرسائل الداخلية" : "Internal messages"}</h1>
       <p className="mt-1 text-sm leading-6 text-[#335674] sm:text-base">{ar ? "اقرأ محادثاتك وتواصل مع فريق الإدارة." : "Read your conversations and contact the administration team."}</p>
     </header>
+    {caseContext?.id === caseId && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm"><Link href={`/dashboard/${caseRoute}/${caseContext.id}`} className="font-semibold text-[#073b62]">{ar ? "رسائل الحالة: " : "Case messages: "}{caseContext.name}</Link><Link href="/dashboard/messages" className="text-[#0061ab] underline">{ar ? "عرض جميع الرسائل" : "Show all messages"}</Link></div>}
     {error && <DataError message={error} onRetry={() => refresh()} />}
-    {loading ? <PageLoader /> : <Mailbox key={currentUser.id} messages={messages} contacts={contacts} userId={currentUser.id} lang={lang} isAdmin={isAdmin} canCreate={canCreate} caseRoute={caseRoute} sending={sending} actionError={actionError} notice={notice} onRead={readMessage} onSend={send} onClearNotice={() => { setNotice(""); setActionError("") }} />}
+    {loading || loadedScope !== currentUser.id + ":" + caseId ? <PageLoader /> : !error && <Mailbox key={currentUser.id + ":" + caseId} caseContext={caseContext} messages={messages} contacts={contacts} userId={currentUser.id} lang={lang} isAdmin={isAdmin} canCreate={canCreate} caseRoute={caseRoute} sending={sending} actionError={actionError} notice={notice} onRead={readMessage} onSend={send} onClearNotice={() => { setNotice(""); setActionError("") }} />}
   </div>
 }

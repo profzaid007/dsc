@@ -14,7 +14,7 @@ export function mailboxMessages(messages: RecordModel[], userId: string, folder:
     if (folder === "sent" && message.sender !== userId) return false
     if (unreadOnly && (message.recipient !== userId || message.read) && message.id !== selectedId) return false
     const person = contacts.find(contact => contact.id === (message.sender === userId ? message.recipient : message.sender))
-    return !search || [person?.name, person?.name_ar, person?.name_en, message.subject, message.body].some(value => String(value || "").toLocaleLowerCase().includes(search))
+    return !search || [person?.name, person?.name_ar, person?.name_en, message.subject, message.body, message.expand?.case?.name].some(value => String(value || "").toLocaleLowerCase().includes(search))
   }).sort((a, b) => b.created.localeCompare(a.created) || b.id.localeCompare(a.id))
 }
 
@@ -27,7 +27,7 @@ export function replySubject(subject: string) {
 }
 
 
-export type MessageDraft = { recipients: string[]; subject: string; body: string; caseId: string; attachments?: File[] }
+export type MessageDraft = { recipients: string[]; subject: string; body: string; caseId: string; replyTo?: string; attachments?: File[] }
 export type MessageSendResult = { sent: number; failedRecipients: string[] }
 
 // A separate message per recipient keeps addresses and read status private.
