@@ -7,7 +7,6 @@ import { routePermission } from "@/lib/security"
 import { useLang } from "@/lib/lang-context"
 import { Button } from "@/components/ui/button"
 const EXPERT_ALLOWED_PATHS = [
-  "/dashboard/admin/cases",
   "/dashboard/admin/assignments",
   "/dashboard/admin/tools",
 ]
@@ -26,9 +25,10 @@ export function AdminProtectedRoute({
     EXPERT_ALLOWED_PATHS.some(
       (p) => pathname === p || pathname.startsWith(p + "/")
     )
+  const expertCaseManagement = auth.currentUser?.role === "expert" && (pathname === "/dashboard/admin/cases" || pathname.startsWith("/dashboard/admin/cases/"))
   const superOnly = /^\/dashboard\/admin\/(backups)(\/|$)/.test(pathname)
   const required = routePermission(pathname)
-  const allowed =
+  const allowed = !expertCaseManagement && (
     expert ||
     (auth.isAuthenticated &&
       !access.isLoading &&
@@ -37,10 +37,11 @@ export function AdminProtectedRoute({
         ? access.isSuperAdmin
         : required
           ? access.can(required)
-          : auth.isAdmin))
+          : auth.isAdmin)))
   useEffect(() => {
     if (auth.isLoading) return
     if (!auth.isAuthenticated) router.push("/login")
+    else if (expertCaseManagement) router.push("/dashboard/expert/cases")
     else if (!auth.isAdmin && !expert && !access.isLoading && !allowed)
       router.push("/dashboard")
   }, [
@@ -48,6 +49,7 @@ export function AdminProtectedRoute({
     auth.isAuthenticated,
     auth.isAdmin,
     expert,
+    expertCaseManagement,
     access.isLoading,
     required,
     allowed,

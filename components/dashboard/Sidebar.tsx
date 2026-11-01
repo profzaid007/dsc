@@ -174,7 +174,7 @@ const expertNavigation: NavItem[] = [
     icon: Mail,
   },
   {
-    name: { en: "Cases", ar: "الحالات" },
+    name: { en: "My allocated cases", ar: "الحالات المخصصة لي" },
     href: "/dashboard/expert/cases",
     icon: Users,
   },
@@ -245,6 +245,7 @@ export function DashboardSidebar() {
 
   const permissions = usePermissions()
   const canNavigate = (item: NavItem) =>
+    !(currentUser?.role === "expert" && item.href === "/dashboard/admin/cases") &&
     (!item.superAdminOnly || permissions.isSuperAdmin) &&
     (!isAdmin ||
       !routePermission(item.href) ||
@@ -377,7 +378,7 @@ export function DashboardSidebar() {
                           : []),
                   ...adminNavigation.filter((item) => {
                     const key = routePermission(item.href)
-                    return !!key && permissions.can(key)
+                    return !(isExpert && item.href === "/dashboard/admin/cases") && !!key && permissions.can(key)
                   }),
                 ].filter(
                   (item, index, all) =>
@@ -465,7 +466,7 @@ export function DashboardSidebar() {
             adminNavigation
               .filter((item) => {
                 const key = routePermission(item.href)
-                return !!key && permissions.can(key)
+                return !(isExpert && item.href === "/dashboard/admin/cases") && !!key && permissions.can(key)
               })
               .map((item) =>
                 renderNavItem(

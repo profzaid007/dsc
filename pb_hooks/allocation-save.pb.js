@@ -3,7 +3,9 @@ routerAdd(
   "/api/dsc/cases/{caseId}/allocations",
   (e) => {
     const policy = require(`${__hooks}/lib/security-policy.js`)
-    policy.requirePermission(e.app,e.auth,"allocations.read")
+    const actor = policy.requirePermission(e.app,e.auth,"allocations.read")
+    if (actor.getString("role") === "expert")
+      throw new ForbiddenError("Experts cannot allocate cases. / تخصيص الحالات من صلاحيات الإدارة أو المفوضين بها.")
     const caseId = e.request.pathValue("caseId")
     e.app.findRecordById("cases", caseId)
     const rows = e.requestInfo().body.rows

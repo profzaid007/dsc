@@ -8,6 +8,7 @@ function load(file, context){
  const exports={}
  const Link=({children,href,...props})=>React.createElement('a',{...props,href},children)
  const mocks={
+  react: context.mobileOpen ? { ...React, useState: initial => [initial === null ? context.path : typeof initial === 'function' ? initial() : initial, () => {}] } : React,
   'next/navigation':{usePathname:()=>context.path,useRouter:()=>({push(){}})},
   'next/link':{__esModule:true,default:Link},
   'next/image':{__esModule:true,default:()=>null},
@@ -24,7 +25,7 @@ function load(file, context){
   '@/components/ui/button':{Button:({children,...props})=>React.createElement('button',props,children)},
   '@/components/smart-link':{SmartLink:Link},
   '@/lib/utils':{cn:(...args)=>args.filter(x=>typeof x==='string').join(' ')},
-  '@/lib/security':{routePermission:()=>null},
+  '@/lib/security':{routePermission:()=>context.required || null},
   './SecuritySidebar':{SecuritySidebar:()=>React.createElement('div',null,'Security sections')},
  }
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText
@@ -94,4 +95,28 @@ test('header message shortcut supports every account type, respects admin access
   const {Navbar}=load('components/layout/Navbar.tsx',{path:'/',...context})
   assert.equal(renderToStaticMarkup(React.createElement(Navbar)).includes('href="/dashboard/messages"'),false)
  }
+})
+
+
+test('expert navigation shows only allocated cases even with case-management grants, on desktop and mobile',()=>{
+ for(const mobileOpen of [false,true]) for(const lang of ['ar','en']) {
+  const context={path:'/dashboard/expert/cases',role:'expert',admin:false,super:false,cms:true,required:'cases.read',mobileOpen,lang}
+  const {DashboardSidebar}=load('components/dashboard/Sidebar.tsx',context)
+  const html=renderToStaticMarkup(React.createElement(DashboardSidebar))
+  assert.equal(html.includes('href="/dashboard/admin/cases"'),false)
+  assert.ok(html.includes('href="/dashboard/expert/cases"'))
+  assert.ok(html.includes(lang==='ar'?'الحالات المخصصة لي':'My allocated cases'))
+ }
+})
+test('direct administrative case routes deny experts while preserving authorized delegates and expert task routes',()=>{
+ for(const path of ['/dashboard/admin/cases','/dashboard/admin/cases/new','/dashboard/admin/cases/example']) {
+  const {AdminProtectedRoute}=load('components/dashboard/AdminProtectedRoute.tsx',{path,role:'expert',admin:false,cms:true,required:'cases.read'})
+  assert.equal(renderToStaticMarkup(React.createElement(AdminProtectedRoute,null,'PRIVATE CASE MANAGEMENT')).includes('PRIVATE CASE MANAGEMENT'),false)
+ }
+ for(const role of ['admin','parent']) {
+  const {AdminProtectedRoute}=load('components/dashboard/AdminProtectedRoute.tsx',{path:'/dashboard/admin/cases',role,admin:role==='admin',cms:true,required:'cases.read'})
+  assert.ok(renderToStaticMarkup(React.createElement(AdminProtectedRoute,null,'AUTHORIZED DELEGATE')).includes('AUTHORIZED DELEGATE'))
+ }
+ const {AdminProtectedRoute}=load('components/dashboard/AdminProtectedRoute.tsx',{path:'/dashboard/admin/assignments/task',role:'expert',admin:false,cms:false})
+ assert.ok(renderToStaticMarkup(React.createElement(AdminProtectedRoute,null,'EXPERT TASK')).includes('EXPERT TASK'))
 })
