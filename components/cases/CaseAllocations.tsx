@@ -1,6 +1,5 @@
 "use client"
 import { useClassifications } from "@/hooks/useClassifications"
-import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { allocationRowsForSave } from "@/lib/allocation-role-groups"
@@ -36,7 +35,6 @@ import {
 import {
   Plus,
   Trash2,
-  Pencil,
   Save,
   UserCheck,
   Users,
@@ -64,18 +62,7 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRolesManagement } from "@/hooks/useRolesManagement"
-import { useToolTypes } from "@/hooks/useToolTypes"
-import { ToolTypeMultiSelect } from "@/components/admin/tool-type-multi-select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
 interface AllocationRow {
@@ -169,7 +156,6 @@ export function CaseAllocations({
 }) {
   const selectedCase = caseId
   const { groups: ALLOCATION_ROLE_GROUPS } = useClassifications()
-  const ui = useUiTranslation()
 
   const access = usePermissions()
   const canReadExperts = access.can("experts.read")
@@ -201,185 +187,10 @@ export function CaseAllocations({
   const [originalRows, setOriginalRows] = useState<AllocationRow[]>([])
   const [isSaving, setIsSaving] = useState(false)
 
-  const {
-    roles: roleMgmtRoles,
-    isLoading: isRolesLoading,
-    updateRoleToolTypes,
-    updateRole,
-    addRole,
-    removeRole,
-  } = useRolesManagement()
-  const {
-    toolTypes: allToolTypes,
-    isLoading: isToolTypesLoading,
-    fetchToolTypes,
-  } = useToolTypes(access.can("tools.read"))
-
-  const [roleToolTypesMap, setRoleToolTypesMap] = useState<
-    Record<string, string[]>
-  >({})
-  const [isSavingAll, setIsSavingAll] = useState(false)
-  const [roleDialogOpen, setRoleDialogOpen] = useState(false)
-  const [newRoleGroup, setNewRoleGroup] = useState("")
-  const [newRoleNameEn, setNewRoleNameEn] = useState("")
-  const [newRoleNameAr, setNewRoleNameAr] = useState("")
-  const [isAddingRole, setIsAddingRole] = useState(false)
-
-  const [editRoleDialogOpen, setEditRoleDialogOpen] = useState(false)
-  const [editingRole, setEditingRole] = useState<RolesManagement | null>(null)
-  const [editRoleNameEn, setEditRoleNameEn] = useState("")
-  const [editRoleNameAr, setEditRoleNameAr] = useState("")
-  const [isUpdatingRole, setIsUpdatingRole] = useState(false)
-
-  useEffect(() => {
-    fetchToolTypes()
-  }, [fetchToolTypes])
-
-  useEffect(() => {
-    if (
-      roleMgmtRoles.length > 0 &&
-      Object.keys(roleToolTypesMap).length === 0
-    ) {
-      const map: Record<string, string[]> = {}
-      roleMgmtRoles.forEach((r) => {
-        map[r.id] = [...(r.tool_types || [])]
-      })
-      // Synchronize the editable permission map after roles load from the server.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRoleToolTypesMap(map)
-    }
-  }, [roleMgmtRoles, roleToolTypesMap])
-
-  const handleRoleToolTypesChange = (roleId: string, toolTypeIds: string[]) => {
-    setRoleToolTypesMap((prev) => ({ ...prev, [roleId]: toolTypeIds }))
-  }
-
-  /** Localized role label, falling back to the other language when empty. */
+  const { roles: roleMgmtRoles, isLoading: isRolesLoading } = useRolesManagement()
   const getRoleLabel = (role: RolesManagement) =>
     (lang === "ar" ? role.role_name_ar : role.role_name_en) ||
-    (lang === "ar" ? role.role_name_en : role.role_name_ar) ||
-    ""
-
-  const handleSaveAllRoles = async () => {
-    const changed = roleMgmtRoles.filter(
-      (role) =>
-        JSON.stringify(roleToolTypesMap[role.id]?.sort()) !==
-        JSON.stringify([...(role.tool_types || [])].sort())
-    )
-    if (changed.length === 0) return
-
-    setIsSavingAll(true)
-    try {
-      await Promise.all(
-        changed.map((role) =>
-          updateRoleToolTypes(role.id, roleToolTypesMap[role.id])
-        )
-      )
-    } catch (error) {
-      console.error("Failed to save role tool types:", error)
-      toast.error(
-        lang === "ar"
-          ? "فشل الحفظ. يرجى المحاولة مرة أخرى."
-          : "Failed to save. Please try again.",
-        { description: getErrorMessage(error) }
-      )
-    } finally {
-      setIsSavingAll(false)
-    }
-  }
-
-  const handleAddRole = async () => {
-    const roleNameEn = newRoleNameEn.trim()
-    const roleNameAr = newRoleNameAr.trim()
-    if (!roleNameEn || !roleNameAr || !newRoleGroup) return
-
-    setIsAddingRole(true)
-    try {
-      const created = await addRole(roleNameEn, roleNameAr, newRoleGroup)
-      setRoleToolTypesMap((prev) => ({
-        ...prev,
-        [created.id]: created.tool_types || [],
-      }))
-      setRoleDialogOpen(false)
-      setNewRoleNameEn("")
-      setNewRoleNameAr("")
-    } catch (error) {
-      console.error("Failed to add role:", error)
-      toast.error(
-        lang === "ar"
-          ? "فشل إضافة الدور. يرجى المحاولة مرة أخرى."
-          : "Failed to add role. Please try again.",
-        { description: getErrorMessage(error) }
-      )
-    } finally {
-      setIsAddingRole(false)
-    }
-  }
-
-  const openEditRole = (role: RolesManagement) => {
-    setEditingRole(role)
-    setEditRoleNameEn(role.role_name_en)
-    setEditRoleNameAr(role.role_name_ar)
-    setEditRoleDialogOpen(true)
-  }
-
-  const handleUpdateRole = async () => {
-    if (!editingRole) return
-    const roleNameEn = editRoleNameEn.trim()
-    const roleNameAr = editRoleNameAr.trim()
-    if (!roleNameEn || !roleNameAr) return
-
-    setIsUpdatingRole(true)
-    try {
-      await updateRole(editingRole.id, roleNameEn, roleNameAr)
-      await refreshAllocations()
-      onSaved?.()
-      toast.success(
-        lang === "ar" ? "تم حفظ الإسنادات" : "Case allocations saved"
-      )
-      setEditRoleDialogOpen(false)
-      setEditingRole(null)
-    } catch (error) {
-      console.error("Failed to update role:", error)
-      toast.error(
-        lang === "ar"
-          ? "فشل تحديث الدور. يرجى المحاولة مرة أخرى."
-          : "Failed to update role. Please try again.",
-        { description: getErrorMessage(error) }
-      )
-    } finally {
-      setIsUpdatingRole(false)
-    }
-  }
-
-  const handleDeleteRole = async (roleId: string, roleName: string) => {
-    if (
-      !window.confirm(
-        lang === "ar"
-          ? `هل تريد حذف الدور "${roleName}"؟`
-          : `Delete role "${roleName}"?`
-      )
-    ) {
-      return
-    }
-
-    try {
-      await removeRole(roleId)
-      setRoleToolTypesMap((prev) => {
-        const next = { ...prev }
-        delete next[roleId]
-        return next
-      })
-    } catch (error) {
-      console.error("Failed to delete role:", error)
-      toast.error(
-        lang === "ar"
-          ? "فشل حذف الدور. يرجى المحاولة مرة أخرى."
-          : "Failed to delete role. Please try again.",
-        { description: getErrorMessage(error) }
-      )
-    }
-  }
+    (lang === "ar" ? role.role_name_en : role.role_name_ar) || ""
 
   const allExperts = useMemo(() => allocationExpertDirectory(users, expertProfiles, roleMgmtRoles, lang), [users, expertProfiles, roleMgmtRoles, lang])
   const experts = useMemo(() => filterAllocationExperts(allExperts, { country: countryFilter, city: cityFilter, specialty: specialtyFilter }), [allExperts, countryFilter, cityFilter, specialtyFilter])
@@ -470,8 +281,7 @@ export function CaseAllocations({
   const isLoading =
     isUsersLoading ||
     isAllocationsLoading ||
-    isRolesLoading ||
-    isToolTypesLoading
+    isRolesLoading
 
   if (isLoading) {
     return (
@@ -528,17 +338,7 @@ export function CaseAllocations({
             : "Selecting cases and experts requires Cases and Experts read access. Contact your Super Admin to update your access."}
         </p>
       )}
-      <Tabs defaultValue="allocations">
-        <TabsList>
-          <TabsTrigger value="allocations">
-            {lang === "ar" ? "التخصيصات" : "Allocations"}
-          </TabsTrigger>
-          <TabsTrigger value="roles">
-            {lang === "ar" ? "الأدوار" : "Roles"}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="allocations" className="space-y-6">
+      <div className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-3">
             <Input
               aria-label={
@@ -809,302 +609,7 @@ export function CaseAllocations({
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="roles">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>
-                    {lang === "ar"
-                      ? "إدارة أدوار الخبراء"
-                      : "Expert Role Management"}
-                  </CardTitle>
-                  <CardDescription>
-                    {lang === "ar"
-                      ? "تحديد أنواع الأدوات المتاحة لكل دور"
-                      : "Assign which tool types each role can access"}
-                  </CardDescription>
-                </div>
-                <Button onClick={() => setRoleDialogOpen(true)}>
-                  <Plus className="me-2 h-4 w-4" />
-                  {lang === "ar" ? "إضافة دور" : "Add Role"}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isRolesLoading || isToolTypesLoading ? (
-                <SkeletonTable rows={4} />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{lang === "ar" ? "الدور" : "Role"}</TableHead>
-                      <TableHead>
-                        {lang === "ar"
-                          ? "أنواع الأدوات المخصصة"
-                          : "Assigned Tool Types"}
-                      </TableHead>
-                      <TableHead className="text-right">
-                        {lang === "ar" ? "إجراءات" : "Actions"}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {roleMgmtRoles.map((role) => {
-                      const hasAssignments = allocations.some(
-                        (a) =>
-                          a.role_id === role.id
-                      )
-                      return (
-                        <TableRow key={role.id}>
-                          <TableCell className="font-medium">
-                            {getRoleLabel(role)}
-                          </TableCell>
-                          <TableCell>
-                            <ToolTypeMultiSelect
-                              value={
-                                roleToolTypesMap[role.id] ||
-                                role.tool_types ||
-                                []
-                              }
-                              onChange={(toolTypeIds) =>
-                                handleRoleToolTypesChange(role.id, toolTypeIds)
-                              }
-                              toolTypes={allToolTypes}
-                              lang={lang}
-                              placeholder={
-                                lang === "ar"
-                                  ? "اختر أنواع الأدوات..."
-                                  : "Select tool types..."
-                              }
-                              emptyMessage={
-                                lang === "ar"
-                                  ? "لا توجد أنواع أدوات"
-                                  : "No tool types found"
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openEditRole(role)}
-                                title={
-                                  lang === "ar"
-                                    ? "تعديل اسم الدور"
-                                    : "Edit role name"
-                                }
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled={hasAssignments || isSavingAll}
-                                onClick={() =>
-                                  handleDeleteRole(role.id, getRoleLabel(role))
-                                }
-                                title={
-                                  hasAssignments
-                                    ? lang === "ar"
-                                      ? "لا يمكن حذف دور معين لخبراء"
-                                      : "Cannot delete a role assigned to experts"
-                                    : undefined
-                                }
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              )}
-              <div className="mt-4 flex justify-end">
-                <Button onClick={handleSaveAllRoles} disabled={isSavingAll}>
-                  {isSavingAll
-                    ? lang === "ar"
-                      ? "جاري الحفظ..."
-                      : "Saving..."
-                    : lang === "ar"
-                      ? "حفظ الكل"
-                      : "Save"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {lang === "ar" ? "إضافة دور جديد" : "Add New Role"}
-            </DialogTitle>
-            <DialogDescription>
-              {lang === "ar"
-                ? "أدخل اسمي الدور الجديد (بالإنجليزية والعربية) ثم قم بتحديد أنواع الأدوات المتاحة له"
-                : "Enter the new role name in English and Arabic, then assign the tool types it can access"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Select value={newRoleGroup} onValueChange={setNewRoleGroup}>
-              <SelectTrigger
-                aria-label={lang === "ar" ? "مجموعة الأدوار" : "Role Group"}
-              >
-                <SelectValue
-                  placeholder={
-                    lang === "ar" ? "اختر مجموعة…" : "Select role group…"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {ALLOCATION_ROLE_GROUPS.map((group) => (
-                  <SelectItem
-                    key={group.id}
-                    value={group.id}
-                  >
-                    {lang === "ar" ? group.ar : group.en}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="dsc-form-grid">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  {lang === "ar" ? "اسم الدور (إنجليزي)" : "Role Name (EN)"}
-                </label>
-                <Input
-                  value={newRoleNameEn}
-                  onChange={(e) => setNewRoleNameEn(e.target.value)}
-                  placeholder={ui("e.g., Lawyer")}
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  {lang === "ar" ? "اسم الدور (عربي)" : "Role Name (AR)"}
-                </label>
-                <Input
-                  dir="rtl"
-                  value={newRoleNameAr}
-                  onChange={(e) => setNewRoleNameAr(e.target.value)}
-                  placeholder="مثال: محامٍ"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setRoleDialogOpen(false)
-                setNewRoleNameEn("")
-                setNewRoleNameAr("")
-              }}
-              disabled={isAddingRole}
-            >
-              {lang === "ar" ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button
-              onClick={handleAddRole}
-              disabled={
-                isAddingRole ||
-                !newRoleGroup ||
-                !newRoleNameEn.trim() ||
-                !newRoleNameAr.trim()
-              }
-            >
-              {isAddingRole
-                ? lang === "ar"
-                  ? "جارٍ الإضافة..."
-                  : "Adding..."
-                : lang === "ar"
-                  ? "إضافة"
-                  : "Add"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={editRoleDialogOpen}
-        onOpenChange={(open) => {
-          setEditRoleDialogOpen(open)
-          if (!open) setEditingRole(null)
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {lang === "ar" ? "تعديل الدور" : "Edit Role"}
-            </DialogTitle>
-            <DialogDescription>
-              {lang === "ar"
-                ? "تعديل اسم الدور (بالإنجليزية والعربية). تحديث الاسم الإنجليزي سيحدّثه أيضاً في توزيعات الخبراء."
-                : "Edit the role name in English and Arabic. Changing the English name also updates it in existing expert allocations."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="dsc-form-grid">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  {lang === "ar" ? "اسم الدور (إنجليزي)" : "Role Name (EN)"}
-                </label>
-                <Input
-                  value={editRoleNameEn}
-                  onChange={(e) => setEditRoleNameEn(e.target.value)}
-                  placeholder={ui("e.g., Lawyer")}
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  {lang === "ar" ? "اسم الدور (عربي)" : "Role Name (AR)"}
-                </label>
-                <Input
-                  dir="rtl"
-                  value={editRoleNameAr}
-                  onChange={(e) => setEditRoleNameAr(e.target.value)}
-                  placeholder="مثال: محامٍ"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditRoleDialogOpen(false)
-                setEditingRole(null)
-              }}
-              disabled={isUpdatingRole}
-            >
-              {lang === "ar" ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button
-              onClick={handleUpdateRole}
-              disabled={
-                isUpdatingRole ||
-                !editRoleNameEn.trim() ||
-                !editRoleNameAr.trim()
-              }
-            >
-              {isUpdatingRole
-                ? lang === "ar"
-                  ? "جارٍ الحفظ..."
-                  : "Saving..."
-                : lang === "ar"
-                  ? "حفظ"
-                  : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </div>
     </div>
   )
 }
