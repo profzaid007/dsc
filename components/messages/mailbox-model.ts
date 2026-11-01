@@ -25,3 +25,21 @@ export function canMessageContact(contact: MessageContact | undefined, isAdmin: 
 export function replySubject(subject: string) {
   return (/^re\s*:/i.test(subject) ? subject : `Re: ${subject}`).slice(0, 200)
 }
+
+
+export type MessageDraft = { recipients: string[]; subject: string; body: string; caseId: string }
+export type MessageSendResult = { sent: number; failedRecipients: string[] }
+
+// A separate message per recipient keeps addresses and read status private.
+export async function deliverMessages(
+  recipientIds: string[],
+  deliver: (recipient: string) => Promise<RecordModel>,
+) {
+  const records: RecordModel[] = []
+  const failedRecipients: string[] = []
+  for (const recipient of [...new Set(recipientIds)]) {
+    try { records.push(await deliver(recipient)) }
+    catch { failedRecipients.push(recipient) }
+  }
+  return { records, failedRecipients }
+}

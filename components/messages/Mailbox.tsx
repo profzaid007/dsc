@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { canMessageContact, mailboxMessages, ownMessages, replySubject, type MailFolder, type MessageContact } from "./mailbox-model"
+import { canMessageContact, mailboxMessages, ownMessages, replySubject, type MailFolder, type MessageContact, type MessageDraft, type MessageSendResult } from "./mailbox-model"
 
-type Draft = { recipient: string; subject: string; body: string; caseId: string }
+type Draft = MessageDraft
 type Props = {
   messages: RecordModel[]
   contacts: MessageContact[]
@@ -24,7 +24,7 @@ type Props = {
   actionError: string
   notice: string
   onRead: (message: RecordModel) => void
-  onSend: (draft: Draft) => Promise<boolean>
+  onSend: (draft: Draft) => Promise<MessageSendResult>
   onClearNotice: () => void
 }
 
@@ -35,6 +35,7 @@ export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, 
   const [unreadOnly, setUnreadOnly] = useState(false)
   const [selectedId, setSelectedId] = useState("")
   const [draft, setDraft] = useState<Draft | null>(null)
+  const [recipientQuery, setRecipientQuery] = useState("")
   const mine = ownMessages(messages, userId)
   const visible = mailboxMessages(messages, userId, folder, query, unreadOnly, contacts, selectedId)
   const selected = mine.find(message => message.id === selectedId)
@@ -51,7 +52,10 @@ export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, 
   const sender = selected?.sender === userId ? (ar ? "أنت" : "You") : person(selected?.sender)?.name || unknown
   const replyContact = person(selected?.sender)
   const canReply = received && canMessageContact(replyContact, isAdmin, canCreate, selected?.case)
-  const recipients = contacts.filter(contact => canMessageContact(contact, isAdmin, canCreate, draft?.caseId))
+  const recipients = contacts.filter(contact => canMessageContact(contact, isAdmin, canCreate, draft?.caseId) && (!draft?.caseId || draft.recipients.includes(contact.id)))
+  const matchingRecipients = recipients.filter(contact => contact.name.toLocaleLowerCase().includes(recipientQuery.trim().toLocaleLowerCase()))
+  const allSelected = recipients.length > 0 && recipients.every(contact => draft?.recipients.includes(contact.id))
+  const validRecipients = Boolean(draft?.recipients.length) && draft!.recipients.every(id => recipients.some(contact => contact.id === id)) && (!draft?.caseId || draft.recipients.length === 1)
   const showReader = Boolean(selected || draft)
   const listRef = useRef<HTMLElement>(null)
   const readerRef = useRef<HTMLElement>(null)
@@ -72,11 +76,11 @@ export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, 
     setSelectedId(message.id); setDraft(null); onClearNotice(); if (message.recipient === userId && !message.read) onRead(message)
   }
   function compose() {
-    setDraft({ recipient: "", subject: "", body: "", caseId: "" }); onClearNotice()
+    setDraft({ recipients: [], subject: "", body: "", caseId: "" }); setRecipientQuery(""); onClearNotice()
   }
   function reply() {
     if (!selected || !canReply) return
-    setDraft({ recipient: selected.sender, subject: replySubject(selected.subject || ""), body: "", caseId: selected.case || "" }); onClearNotice()
+    setDraft({ recipients: [selected.sender], subject: replySubject(selected.subject || ""), body: "", caseId: selected.case || "" }); setRecipientQuery(""); onClearNotice()
   }
   const back = () => { if (!sending) { setSelectedId(""); setDraft(null); onClearNotice() } }
   return (
@@ -108,10 +112,37 @@ export function Mailbox({ messages, contacts, userId, lang, isAdmin, canCreate, 
 
       <section ref={readerRef} tabIndex={-1} aria-label={draft ? (ar ? "كتابة رسالة" : "Message composer") : (ar ? "قراءة الرسالة" : "Message reader")} className={`${showReader ? "flex" : "hidden xl:flex"} min-h-[36rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-[#dce6f2] bg-white shadow-[0_1px_2px_#102c5014] xl:min-h-[calc(100dvh-16rem)]`}>
         <div className="border-b border-[#e0e8f2] p-4 xl:hidden"><Button variant="ghost" onClick={back} disabled={sending} className="h-10 gap-2 text-[#16456e]"><ArrowLeft className="size-4 rtl:rotate-180" />{ar ? "العودة إلى الرسائل" : "Back to messages"}</Button></div>
-        {draft ? <form className="flex flex-1 flex-col" onSubmit={async event => { event.preventDefault(); if (await onSend(draft)) { setDraft(null); setSelectedId(""); setFolder("sent") } }}>
+        {draft ? <form className="flex flex-1 flex-col" onSubmit={async event => { event.preventDefault(); const result = await onSend(draft); if (result.sent > 0 && !result.failedRecipients.length) { setDraft(null); setSelectedId(""); setFolder("sent") } else if (result.failedRecipients.length) { setDraft({ ...draft, recipients: result.failedRecipients }) } }}>
           <header className="flex items-center justify-between gap-3 border-b border-[#e0e8f2] p-5 sm:p-6"><h2 className="text-xl font-bold text-[#09395f]">{draft.caseId ? (ar ? "الرد على رسالة الحالة" : "Reply to case message") : (ar ? "رسالة جديدة" : "New message")}</h2><Button type="button" variant="ghost" size="icon" aria-label={ar ? "إلغاء الرسالة" : "Cancel message"} disabled={sending} onClick={() => { setDraft(null); onClearNotice() }}><X /></Button></header>
-          <div className="flex-1 space-y-5 p-5 sm:p-6"><div className="space-y-2"><Label htmlFor="message-contact">{ar ? "إلى" : "To"}</Label><select id="message-contact" value={draft.recipient} disabled={sending || Boolean(draft.caseId)} required onChange={event => setDraft({ ...draft, recipient: event.target.value })} className="h-11 w-full min-w-0 rounded-lg border border-[#dce6f2] bg-white px-3 text-sm"><option value="">{ar ? "اختر المستلم…" : "Choose a recipient..."}</option>{recipients.map(contact => <option key={contact.id} value={contact.id}>{contact.name}</option>)}</select>{!recipients.length && <p className="text-sm text-slate-500">{ar ? "لا يوجد مستلمون متاحون حاليًا." : "No recipients are available yet."}</p>}</div><div className="space-y-2"><Label htmlFor="message-subject">{ar ? "العنوان" : "Subject"}</Label><Input id="message-subject" dir="auto" value={draft.subject} maxLength={200} required disabled={sending} onChange={event => setDraft({ ...draft, subject: event.target.value })} className="h-11 border-[#dce6f2]" /></div><div className="space-y-2"><Label htmlFor="message-body">{ar ? "الرسالة" : "Message"}</Label><Textarea id="message-body" dir="auto" rows={10} value={draft.body} maxLength={4000} required disabled={sending} onChange={event => setDraft({ ...draft, body: event.target.value })} className="min-h-56 border-[#dce6f2]" /><p className="text-end text-xs text-slate-500">{draft.body.length}/4000</p></div>{actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}</div>
-          <footer className="flex flex-wrap justify-end gap-3 border-t border-[#e0e8f2] p-5"><Button type="button" variant="outline" onClick={() => setDraft(null)} disabled={sending} className="h-12 rounded-xl px-5">{ar ? "إلغاء" : "Cancel"}</Button><Button type="submit" disabled={sending || !draft.body.trim() || !draft.subject.trim() || !canMessageContact(person(draft.recipient), isAdmin, canCreate, draft.caseId)} className={`${primaryButton} gap-2`}><Send className="size-4" />{sending ? (ar ? "جارٍ الإرسال…" : "Sending...") : (ar ? "إرسال" : "Send message")}</Button></footer>
+          <div className="flex-1 space-y-5 p-5 sm:p-6"><fieldset className="min-w-0 space-y-3" disabled={sending}>
+              <legend className="mb-2 text-sm font-medium">{ar ? "إلى" : "To"}</legend>
+              <div className="relative">
+                <Search className="pointer-events-none absolute start-3 top-3.5 size-4 text-[#234766]" aria-hidden="true" />
+                <Input id="message-contact" value={recipientQuery} onChange={event => setRecipientQuery(event.target.value)} aria-label={ar ? "البحث عن مستلمين" : "Search recipients"} placeholder={ar ? "ابحث باسم المستلم…" : "Search recipients by name..."} className="h-11 border-[#dce6f2] ps-9" />
+              </div>
+              {!draft.caseId && <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#f4f8fd] px-3 py-2">
+                <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm font-medium">
+                  <input type="checkbox" checked={allSelected} disabled={!recipients.length} onChange={event => setDraft({ ...draft, recipients: event.target.checked ? recipients.map(contact => contact.id) : [] })} className="size-4 accent-[#005cae]" />
+                  {ar ? `الإرسال للجميع (${recipients.length})` : `Send to all (${recipients.length})`}
+                </label>
+                <span role="status" className="text-xs text-[#41607d]">{ar ? `تم اختيار ${draft.recipients.length} مستلم` : `${draft.recipients.length} recipients selected`}</span>
+              </div>}
+              {draft.recipients.length > 0 && <div className="flex max-h-24 flex-wrap gap-2 overflow-y-auto" aria-label={ar ? "المستلمون المحددون" : "Selected recipients"}>
+                {draft.recipients.map(id => <span key={id} className="inline-flex max-w-full items-center gap-1 rounded-full bg-[#e0edff] px-3 py-1 text-sm text-[#135389]">
+                  <span className="min-w-0 truncate" dir="auto">{person(id)?.name || unknown}</span>
+                  {!draft.caseId && <button type="button" aria-label={ar ? `إزالة ${person(id)?.name || unknown}` : `Remove ${person(id)?.name || unknown}`} onClick={() => setDraft({ ...draft, recipients: draft.recipients.filter(value => value !== id) })} className="flex size-7 shrink-0 items-center justify-center rounded-full hover:bg-[#c8dfff]"><X className="size-3.5" /></button>}
+                </span>)}
+              </div>}
+              <div className="max-h-44 overflow-y-auto rounded-lg border border-[#dce6f2]" aria-label={ar ? "قائمة المستلمين" : "Recipient list"}>
+                {matchingRecipients.map(contact => <label key={contact.id} className="flex min-h-11 cursor-pointer items-center gap-3 border-b border-[#edf2f8] px-3 py-2 last:border-0 hover:bg-[#f4f8fd]">
+                  <input type="checkbox" checked={draft.recipients.includes(contact.id)} disabled={Boolean(draft.caseId)} onChange={event => setDraft({ ...draft, recipients: event.target.checked ? [...draft.recipients, contact.id] : draft.recipients.filter(id => id !== contact.id) })} className="size-4 shrink-0 accent-[#005cae]" />
+                  <span className="min-w-0 break-words text-sm" dir="auto">{contact.name}</span>
+                </label>)}
+                {!matchingRecipients.length && <p className="p-3 text-sm text-slate-500">{recipientQuery ? (ar ? "لا يوجد مستلمون مطابقون للبحث." : "No matching recipients.") : (ar ? "لا يوجد مستلمون متاحون حاليًا." : "No recipients are available yet.")}</p>}
+              </div>
+              <p className="text-xs leading-5 text-[#41607d]">{draft.caseId ? (ar ? "يرسل هذا الرد إلى مرسل رسالة الحالة فقط." : "This case reply is sent only to the original sender.") : (ar ? "يشمل خيار الجميع جميع المستلمين المتاحين حسب صلاحياتك، حتى إن لم يظهروا في نتائج البحث. تصل لكل مستلم رسالة منفصلة." : "All includes every available recipient, including those outside the search results. Each recipient receives a separate message.")}</p>
+            </fieldset><div className="space-y-2"><Label htmlFor="message-subject">{ar ? "العنوان" : "Subject"}</Label><Input id="message-subject" dir="auto" value={draft.subject} maxLength={200} required disabled={sending} onChange={event => setDraft({ ...draft, subject: event.target.value })} className="h-11 border-[#dce6f2]" /></div><div className="space-y-2"><Label htmlFor="message-body">{ar ? "الرسالة" : "Message"}</Label><Textarea id="message-body" dir="auto" rows={10} value={draft.body} maxLength={4000} required disabled={sending} onChange={event => setDraft({ ...draft, body: event.target.value })} className="min-h-56 border-[#dce6f2]" /><p className="text-end text-xs text-slate-500">{draft.body.length}/4000</p></div>{actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}</div>
+          <footer className="flex flex-wrap justify-end gap-3 border-t border-[#e0e8f2] p-5"><Button type="button" variant="outline" onClick={() => setDraft(null)} disabled={sending} className="h-12 rounded-xl px-5">{ar ? "إلغاء" : "Cancel"}</Button><Button type="submit" disabled={sending || !draft.body.trim() || !draft.subject.trim() || !validRecipients} className={`${primaryButton} gap-2`}><Send className="size-4" />{sending ? (ar ? "جارٍ الإرسال…" : "Sending...") : (ar ? `إرسال (${draft.recipients.length})` : `Send message (${draft.recipients.length})`)}</Button></footer>
         </form> : selected ? <>
           <header className="border-b border-[#e0e8f2] px-5 py-6 sm:px-6"><h2 dir="auto" className="break-words text-xl font-bold tracking-tight text-[#09395f]">{selected.subject || (ar ? "بدون عنوان" : "No subject")}</h2></header>
           <div className="mx-5 flex flex-wrap items-center gap-3 border-b border-[#e0e8f2] py-5 sm:mx-6"><span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#e4effc] text-[#104d7b]"><UserRound className="size-6" /></span><div className="min-w-0 flex-1"><p dir="auto" className="break-words font-bold text-[#143c61]">{sender}</p><time dateTime={selected.created} className="mt-1 block text-sm text-[#41607d]">{new Date(selected.created).toLocaleString(ar ? "ar" : "en")}</time>{!received && <p className="mt-1 text-xs text-[#41607d]">{ar ? "إلى: " : "To: "}{person(selected.recipient)?.name || unknown}</p>}</div><span className="rounded-lg bg-[#e0edff] px-3 py-1 text-xs font-semibold text-[#135389]">{received ? (ar ? "واردة" : "Received") : (ar ? "مرسلة" : "Sent")}</span></div>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import type { RecordModel } from "pocketbase"
 import { Mailbox } from "@/components/messages/Mailbox"
-import { canMessageContact, type MessageContact } from "@/components/messages/mailbox-model"
+import { canMessageContact, deliverMessages, type MessageContact, type MessageDraft } from "@/components/messages/mailbox-model"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useAuth } from "@/hooks/useAuth"
@@ -57,17 +57,25 @@ export default function MessagesPage() {
     } catch (e) { setActionError(getErrorMessage(e, lang)) }
   }
 
-  async function send(draft: { recipient: string; subject: string; body: string; caseId: string }) {
-    if (!currentUser || sending || !draft.body.trim() || !draft.subject.trim() || !canMessageContact(contacts.find(contact => contact.id === draft.recipient), isAdmin, canCreate, draft.caseId)) return false
+  async function send(draft: MessageDraft) {
+    const ids = [...new Set(draft.recipients)]
+    if (!currentUser || sending || !ids.length || !draft.body.trim() || !draft.subject.trim() || (draft.caseId && ids.length !== 1) || ids.some(id => !canMessageContact(contacts.find(contact => contact.id === id), isAdmin, canCreate, draft.caseId))) {
+      return { sent: 0, failedRecipients: ids }
+    }
     setSending(true); setActionError(""); setNotice("")
     try {
-      const record = await pb.collection("internal_messages").create({ sender: currentUser.id, recipient: draft.recipient, body: draft.body.trim(), subject: draft.subject.trim(), read: false, ...(draft.caseId ? { case: draft.caseId } : {}) })
-      setMessages(items => [...items, record])
-      setNotice(ar ? "تم إرسال الرسالة." : "Message sent.")
-      window.dispatchEvent(new Event("messages-updated"))
-      return true
-    } catch (e) { setActionError(getErrorMessage(e, lang)); return false }
-    finally { setSending(false) }
+      const result = await deliverMessages(ids, recipient => pb.collection("internal_messages").create({ sender: currentUser.id, recipient, body: draft.body.trim(), subject: draft.subject.trim(), read: false, ...(draft.caseId ? { case: draft.caseId } : {}) }, { requestKey: null }))
+      if (result.records.length) {
+        setMessages(items => [...items.filter(item => !result.records.some(record => record.id === item.id)), ...result.records])
+        window.dispatchEvent(new Event("messages-updated"))
+      }
+      if (result.failedRecipients.length) {
+        setActionError(ar ? `تم الإرسال إلى ${result.records.length} مستلم، وتعذر الإرسال إلى ${result.failedRecipients.length}. بقي المستلمون الذين تعذر الإرسال إليهم محددين لإعادة المحاولة فقط.` : `Sent to ${result.records.length} recipients; delivery failed for ${result.failedRecipients.length}. Only failed recipients remain selected for retry.`)
+      } else {
+        setNotice(ar ? `تم إرسال الرسالة إلى ${result.records.length} مستلم.` : `Message sent to ${result.records.length} recipients.`)
+      }
+      return { sent: result.records.length, failedRecipients: result.failedRecipients }
+    } finally { setSending(false) }
   }
 
   if (authLoading || isAdmin && access.isLoading) return <PageLoader />

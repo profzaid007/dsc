@@ -4,7 +4,7 @@ const assert = require('node:assert/strict'), { test } = require('node:test')
 const root = path.resolve(__dirname, '..')
 function load(file, mocks) {
   const exports = {}
-  const code = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText
+  const code = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText
   new Function('exports', 'require', code)(exports, name => mocks[name] || require(name))
   return exports
 }
@@ -19,7 +19,7 @@ const primitives = {
 const message = (id, sender, recipient, subject, created, read = false, caseId = '') => ({ id, sender, recipient, subject, body: `Message body ${id}`, created, read, case: caseId, attachments: [] })
 const baseProps = {
   messages: [message('second', 'admin', 'self', 'Next messages', '2026-11-01 07:06:58Z'), message('first', 'admin', 'self', 'How are you', '2026-11-01 07:06:00Z'), message('sent', 'self', 'admin', 'Thank you', '2026-11-01 07:00:00Z', true), message('private', 'admin', 'other', 'PRIVATE', '2026-11-01 08:00:00Z')],
-  contacts: [{ id: 'admin', name: 'Admin-Test', role: 'super_admin' }], userId: 'self', lang: 'en', isAdmin: false, canCreate: true, caseRoute: 'expert/cases', sending: false, actionError: '', notice: '', onRead() {}, onSend: async () => true, onClearNotice() {},
+  contacts: [{ id: 'admin', name: 'Admin-Test', role: 'super_admin' }], userId: 'self', lang: 'en', isAdmin: false, canCreate: true, caseRoute: 'expert/cases', sending: false, actionError: '', notice: '', onRead() {}, onSend: async draft => ({ sent: draft.recipients.length, failedRecipients: [] }), onClearNotice() {},
 }
 function harness(props = {}, initial = ['received', '', false, '', null]) {
   const state = [...initial]; let cursor = 0
@@ -60,10 +60,32 @@ if (require.main === module) {
     const h = harness({ messages: [incoming] }, ['received', '', false, 'case-message', null])
     const reply = find(h.render(), node => node.props?.['aria-label'] === 'Reply')
     assert.ok(reply); reply.props.onClick()
-    assert.deepEqual(h.state[4], { recipient: 'admin', subject: 'Re: Review notes', body: '', caseId: 'case-123' })
+    assert.deepEqual(h.state[4], { recipients: ['admin'], subject: 'Re: Review notes', body: '', caseId: 'case-123' })
     assert.equal(model.canMessageContact({ role: 'expert' }, false, true), false)
     assert.equal(model.canMessageContact({ role: 'expert' }, false, true, 'case-123'), true)
     assert.equal(model.canMessageContact(undefined, true, true), false)
+  })
+  test('recipient search retains selections, supports multiple recipients, and all includes authorized contacts outside search', () => {
+    const contacts = [{id:'a',name:'Alice',role:'parent'},{id:'b',name:'Bob',role:'expert'},{id:'c',name:'Carol',role:'individual'}]
+    const h = harness({contacts,isAdmin:true}, ['received','',false,'',{recipients:[],subject:'Hello',body:'Body',caseId:''}])
+    let tree = h.render()
+    find(tree,node=>node.type==='input' && node.props.type==='checkbox' && node.props.checked===false).props.onChange({target:{checked:true}})
+    assert.deepEqual(h.state[4].recipients,['a','b','c'])
+    find(h.render(),node=>node.props?.['aria-label']==='Search recipients').props.onChange({target:{value:'Alice'}})
+    const html=renderToStaticMarkup(h.render()); assert.ok(html.includes('3 recipients selected')); assert.ok(html.includes('Send to all (3)'))
+    find(h.render(),node=>node.props?.['aria-label']==='Remove Bob').props.onClick()
+    assert.deepEqual(h.state[4].recipients,['a','c'])
+    assert.equal(h.state[5],'Alice')
+    const restricted=harness({contacts:[...contacts,{id:'admin',name:'Admin',role:'admin'}]}, ['received','',false,'',{recipients:[],subject:'',body:'',caseId:''}])
+    const restrictedHtml=renderToStaticMarkup(restricted.render()); assert.ok(restrictedHtml.includes('Send to all (1)')); assert.ok(!restrictedHtml.includes('Alice'))
+  })
+  test('partial sends keep only failed recipients selected for retry', async () => {
+    const h=harness({isAdmin:true,contacts:[{id:'a',name:'Alice',role:'parent'},{id:'b',name:'Bob',role:'parent'}],onSend:async()=>({sent:1,failedRecipients:['b']})},['received','',false,'',{recipients:['a','b'],subject:'Hello',body:'Keep body',caseId:''}])
+    await find(h.render(),node=>node.type==='form').props.onSubmit({preventDefault(){}})
+    assert.deepEqual(h.state[4].recipients,['b']);assert.equal(h.state[4].body,'Keep body')
+    const attempts=[]
+    const result=await model.deliverMessages(['a','b','a'],async id=>{attempts.push(id);if(id==='b')throw Error('denied');return {id:'record-'+id}})
+    assert.deepEqual(attempts,['a','b']);assert.deepEqual(result.failedRecipients,['b']);assert.equal(result.records.length,1)
   })
   test('Arabic, empty, unread filter, and composer states remain usable', () => {
     assert.ok(renderToStaticMarkup(harness({ lang: 'ar', messages: [] }).render()).includes('الرسائل الواردة'))
