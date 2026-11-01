@@ -46,9 +46,8 @@ import {
 import { useLang } from "@/lib/lang-context"
 import { toast } from "sonner"
 import pb, { getErrorMessage } from "@/lib/pb"
-import { specializationLabel } from "@/components/team/team-labels"
-import { countryLabel } from "@/lib/expert-options"
-import { toStringList } from "@/hooks/useExpertProfile"
+import { allocationExpertDirectory, filterAllocationExperts } from "@/lib/allocation-expert-search"
+import { ExpertSearchResults } from "./ExpertSearchResults"
 import type { ExpertProfile } from "@/types/expert"
 import type { RolesManagement } from "@/types/expert-role"
 import {
@@ -186,15 +185,18 @@ export function CaseAllocations({
   } = useAllocations(caseId)
 
   const [expertProfiles, setExpertProfiles] = useState<ExpertProfile[]>([])
+  const [profilesLoading, setProfilesLoading] = useState(true)
+  const [profilesError, setProfilesError] = useState("")
   const [countryFilter, setCountryFilter] = useState("")
   const [cityFilter, setCityFilter] = useState("")
   const [specialtyFilter, setSpecialtyFilter] = useState("")
   useEffect(() => {
     if (!canReadExperts) return
     boundedFullList(pb.collection("expert_profiles"))
-      .then((data) => setExpertProfiles(data as unknown as ExpertProfile[]))
-      .catch((error) => toast.error(getErrorMessage(error)))
-  }, [canReadExperts])
+      .then((data) => { setExpertProfiles(data as unknown as ExpertProfile[]); setProfilesError("") })
+      .catch((error) => { setProfilesError(getErrorMessage(error, lang)); setExpertProfiles([]) })
+      .finally(() => setProfilesLoading(false))
+  }, [canReadExperts, lang])
   const [rows, setRows] = useState<AllocationRow[]>([])
   const [originalRows, setOriginalRows] = useState<AllocationRow[]>([])
   const [isSaving, setIsSaving] = useState(false)
@@ -379,37 +381,16 @@ export function CaseAllocations({
     }
   }
 
-  // Filter only expert users
-  const experts = useMemo(
-    () =>
-      users
-        .filter((u) => u.role === "expert" && u.is_active)
-        .filter((u) => {
-          const profile = expertProfiles.find((p) => p.user === u.id)
-          return (
-            (!countryFilter ||
-              (
-                (profile?.country_of_residence || "") +
-                " " +
-                countryLabel(profile?.country_of_residence || "", lang)
-              )
-                .toLowerCase()
-                .includes(countryFilter.toLowerCase())) &&
-            (!cityFilter ||
-              (profile?.city || "")
-                .toLowerCase()
-                .includes(cityFilter.toLowerCase())) &&
-            (!specialtyFilter ||
-              toStringList(profile?.specialization_type).some((v) =>
-                (v + " " + specializationLabel(v, lang))
-                  .toLowerCase()
-                  .includes(specialtyFilter.toLowerCase())
-              ))
-          )
-        })
-        .map((u) => ({ id: u.id, name: u.name, email: u.email })),
-    [users, expertProfiles, countryFilter, cityFilter, specialtyFilter, lang]
-  )
+  const allExperts = useMemo(() => allocationExpertDirectory(users, expertProfiles, roleMgmtRoles, lang), [users, expertProfiles, roleMgmtRoles, lang])
+  const experts = useMemo(() => filterAllocationExperts(allExperts, { country: countryFilter, city: cityFilter, specialty: specialtyFilter }), [allExperts, countryFilter, cityFilter, specialtyFilter])
+  const hasSearch = Boolean(countryFilter.trim() || cityFilter.trim() || specialtyFilter.trim())
+  function selectSearchExpert(id: string) {
+    setRows(previous => {
+      if (previous.some(row => row.expert_id === id)) return previous
+      const empty = previous.findIndex(row => !row.expert_id && !row.role)
+      return empty < 0 ? [...previous, { expert_id: id, role: "", role_group: "" }] : previous.map((row, index) => index === empty ? { ...row, expert_id: id } : row)
+    })
+  }
 
   // Load existing allocations when case is selected
   const loadAllocationsForCase = useCallback(
@@ -590,6 +571,8 @@ export function CaseAllocations({
               onChange={(e) => setSpecialtyFilter(e.target.value)}
             />
           </div>
+          {hasSearch && canReadExperts && <ExpertSearchResults experts={experts} lang={lang} loading={profilesLoading} error={profilesError} selectedIds={rows.map(row => row.expert_id)} disabled={isSaving || !selectedCase || !access.can("allocations.create")} onSelect={selectSearchExpert} onClear={() => { setCountryFilter(""); setCityFilter(""); setSpecialtyFilter("") }} />}
+          {!hasSearch && <p className="text-sm text-muted-foreground">{lang === "ar" ? "اكتب البلد أو المدينة أو التخصص لعرض الخبراء المطابقين، أو اضغط إضافة خبير لعرض القائمة." : "Enter a country, city or specialization to see matching experts, or click Add Expert to browse."}</p>}
           <div className="flex justify-end">
             <Button
               onClick={handleSave}
@@ -697,7 +680,7 @@ export function CaseAllocations({
                             onChange={(value) =>
                               updateRow(index, { expert_id: value })
                             }
-                            experts={experts}
+                            experts={allExperts.filter(expert => expert.id === row.expert_id || experts.some(match => match.id === expert.id))}
                             placeholder={
                               lang === "ar"
                                 ? "اختر خبير..."
