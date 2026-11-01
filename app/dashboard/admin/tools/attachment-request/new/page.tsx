@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { toolTypesCollection } from "@/lib/pb-collections"
@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { useLang } from "@/lib/lang-context"
@@ -43,12 +42,13 @@ export default function AttachmentRequestBuilderPage({
   const { assignTool } = useAssignments()
   const { getProfileById } = useProfiles()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitting = useRef(false)
+  const [saveError, setSaveError] = useState("")
   const [attachmentTypeId, setAttachmentTypeId] = useState<string>("")
   const [typeError, setTypeError] = useState<string>("")
 
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const [hasCaseContext, setHasCaseContext] = useState(false)
-  const [isInitializing, setIsInitializing] = useState(true)
 
   const [formData, setFormData] = useState({
     nameEn: "",
@@ -81,7 +81,7 @@ export default function AttachmentRequestBuilderPage({
       }
     }
     fetchAttachmentType()
-  }, [])
+  }, [lang])
 
   // Initialize from URL caseId
   useEffect(() => {
@@ -91,17 +91,15 @@ export default function AttachmentRequestBuilderPage({
         const caseIdFromUrl = params?.caseId
         setHasCaseContext(Boolean(caseIdFromUrl))
         if (caseIdFromUrl) {
-          handleCaseSelect(caseIdFromUrl)
+          setSelectedCaseId(caseIdFromUrl)
         }
       } catch (e) {
         console.error("Failed to read searchParams:", e)
         toast.error(getErrorMessage(e))
-      } finally {
-        setIsInitializing(false)
       }
     }
     initFromUrl()
-  }, [])
+  }, [searchParams])
 
   const handleCaseSelect = (caseId: string) => {
     setSelectedCaseId(caseId)
@@ -137,18 +135,25 @@ export default function AttachmentRequestBuilderPage({
   }
 
   const handleSubmit = async () => {
+    if (submitting.current) return
+    const nameEn = formData.nameEn.trim() || formData.nameAr.trim()
+    const nameAr = formData.nameAr.trim() || formData.nameEn.trim()
     if (
       !selectedCaseId ||
-      !formData.nameEn ||
+      !nameEn ||
       selectedTypes.length === 0 ||
       !attachmentTypeId
-    )
+    ) {
+      setSaveError(lang === "ar" ? "اختر الحالة وأدخل اسم الطلب بالعربية أو الإنجليزية." : "Select a case and enter the request name in Arabic or English.")
       return
+    }
+    submitting.current = true
     setIsSubmitting(true)
+    setSaveError("")
 
     try {
       const config: AttachmentRequestConfig = {
-        title: { en: formData.nameEn, ar: formData.nameAr },
+        title: { en: nameEn, ar: nameAr },
         allowedTypes: selectedTypes,
         maxFiles: formData.maxFiles,
         maxFileSize: formData.maxFileSize,
@@ -159,22 +164,26 @@ export default function AttachmentRequestBuilderPage({
       await assignTool({
         case: selectedCaseId,
         type: attachmentTypeId,
-        name_en: formData.nameEn,
-        name_ar: formData.nameAr,
+        name_en: nameEn,
+        name_ar: nameAr,
         config,
         is_visible_to_user: true,
         status: "pending",
       })
 
       // Redirect to assignments page
+      toast.success(lang === "ar" ? "تم حفظ طلب المرفقات وإضافته إلى تكليفات الحالة." : "Attachment request saved and added to the case assignments.")
       router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
     } catch (error) {
       console.error(
         "Failed to create attachment request and assignment:",
         error
       )
-      toast.error(getErrorMessage(error))
+      const message = getErrorMessage(error, lang)
+      setSaveError(message)
+      toast.error(message)
     } finally {
+      submitting.current = false
       setIsSubmitting(false)
     }
   }
@@ -194,7 +203,7 @@ export default function AttachmentRequestBuilderPage({
 
   const isFormValid =
     selectedCaseId &&
-    formData.nameEn &&
+    (formData.nameEn.trim() || formData.nameAr.trim()) &&
     selectedTypes.length > 0 &&
     attachmentTypeId
 
@@ -261,10 +270,14 @@ export default function AttachmentRequestBuilderPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {lang === "ar" ? "أدخل اسم الطلب بالعربية أو الإنجليزية؛ يكفي تعبئة أحد الحقلين." : "Enter the request name in Arabic or English; either field is sufficient."}
+              </p>
               <div className="dsc-form-grid">
                 <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
+                  <Label htmlFor="attachment-name-en">{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
                   <Input
+                    id="attachment-name-en"
                     value={formData.nameEn}
                     onChange={(e) =>
                       setFormData({ ...formData, nameEn: e.target.value })
@@ -277,8 +290,9 @@ export default function AttachmentRequestBuilderPage({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
+                  <Label htmlFor="attachment-name-ar">{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
                   <Input
+                    id="attachment-name-ar"
                     value={formData.nameAr}
                     onChange={(e) =>
                       setFormData({ ...formData, nameAr: e.target.value })
@@ -390,6 +404,7 @@ export default function AttachmentRequestBuilderPage({
             </CardContent>
           </Card>
 
+          {saveError && <p role="alert" className="text-destructive">{saveError}</p>}
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={handleCancel}>
               {lang === "ar" ? "إلغاء" : "Cancel"}
@@ -417,7 +432,7 @@ export default function AttachmentRequestBuilderPage({
             <CardContent className="space-y-4">
               <div className="rounded-lg border bg-muted/30 p-4">
                 <h3 className="font-semibold">
-                  {formData.nameEn ||
+                  {(lang === "ar" ? formData.nameAr || formData.nameEn : formData.nameEn || formData.nameAr) ||
                     (lang === "ar" ? "عنوان الطلب" : "Request Title")}
                 </h3>
               </div>
