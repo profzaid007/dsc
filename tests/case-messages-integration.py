@@ -56,6 +56,7 @@ try:
   status,t=req('/api/files/token',tokens[key],'POST',{});assert status==200,(status,t);fileTokens[key]=t['token']
  with sqlite3.connect(stage/'data/data.db') as c:
   cases={role:c.execute('select id from cases where user=?',(ids[role],)).fetchone()[0] for role in ['parent','individual','organization','care_foundation','other']}
+ status,owned=req('/api/collections/cases/records/'+cases['parent'],tokens['parent']);assert status==200 and owned.get('owner_display')=={'type':'parent','name':'parent'},(status,owned.get('owner_display'))
  path='/api/collections/internal_messages/records'; saved=None
  for role in ['parent','individual','organization','care_foundation']:
   case=cases[role];token=tokens[role]
