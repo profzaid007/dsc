@@ -175,10 +175,11 @@ export default function AdminCasesPage() {
   const isLoading = isProfilesLoading || isAssignmentsLoading
 
   const filteredProfiles = profiles.filter((profile) => {
-    if (!searchQuery) return true
-    const q = searchQuery.toLowerCase()
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return true
     return (
       profile.name?.toLowerCase().includes(q) ||
+      profile.owner_display?.name?.toLowerCase().includes(q) ||
       profile.gender?.toLowerCase().includes(q) ||
       profile.grade?.toLowerCase().includes(q)
     )
@@ -267,8 +268,8 @@ export default function AdminCasesPage() {
           <Input
             placeholder={
               lang === "ar"
-                ? "ابحث بالاسم أو الجنس أو الصف..."
-                : "Search by name, gender, or grade..."
+                ? "ابحث باسم الحالة أو ولي الأمر أو الجهة أو الجنس أو الصف..."
+                : "Search by case, parent or organization name, gender, or grade..."
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

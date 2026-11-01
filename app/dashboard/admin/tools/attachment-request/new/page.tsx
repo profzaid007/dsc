@@ -51,8 +51,7 @@ export default function AttachmentRequestBuilderPage({
   const [hasCaseContext, setHasCaseContext] = useState(false)
 
   const [formData, setFormData] = useState({
-    nameEn: "",
-    nameAr: "",
+    name: "",
     maxFiles: 1,
     maxFileSize: 10,
     required: true,
@@ -109,16 +108,14 @@ export default function AttachmentRequestBuilderPage({
         // Auto-populate request name with case name
         setFormData((prev) => ({
           ...prev,
-          nameEn: `${caseProfile.name} - Attachment Request`,
-          nameAr: `${caseProfile.name} - طلب مرفق`,
+          name: caseProfile.name,
         }))
       }
     } else {
       // Reset name fields when case is cleared
       setFormData((prev) => ({
         ...prev,
-        nameEn: "",
-        nameAr: "",
+        name: "",
       }))
     }
   }
@@ -136,15 +133,14 @@ export default function AttachmentRequestBuilderPage({
 
   const handleSubmit = async () => {
     if (submitting.current) return
-    const nameEn = formData.nameEn.trim() || formData.nameAr.trim()
-    const nameAr = formData.nameAr.trim() || formData.nameEn.trim()
+    const name = formData.name.trim()
     if (
       !selectedCaseId ||
-      !nameEn ||
+      !name ||
       selectedTypes.length === 0 ||
       !attachmentTypeId
     ) {
-      setSaveError(lang === "ar" ? "اختر الحالة وأدخل اسم الطلب بالعربية أو الإنجليزية." : "Select a case and enter the request name in Arabic or English.")
+      setSaveError(lang === "ar" ? "اختر الحالة وأدخل اسم الطلب." : "Select a case and enter the request name.")
       return
     }
     submitting.current = true
@@ -153,7 +149,7 @@ export default function AttachmentRequestBuilderPage({
 
     try {
       const config: AttachmentRequestConfig = {
-        title: { en: nameEn, ar: nameAr },
+        title: { en: name, ar: name },
         allowedTypes: selectedTypes,
         maxFiles: formData.maxFiles,
         maxFileSize: formData.maxFileSize,
@@ -164,8 +160,8 @@ export default function AttachmentRequestBuilderPage({
       await assignTool({
         case: selectedCaseId,
         type: attachmentTypeId,
-        name_en: nameEn,
-        name_ar: nameAr,
+        name_en: name,
+        name_ar: name,
         config,
         is_visible_to_user: true,
         status: "pending",
@@ -192,8 +188,7 @@ export default function AttachmentRequestBuilderPage({
     // Reset form instead of navigating back
     setSelectedCaseId("")
     setFormData({
-      nameEn: "",
-      nameAr: "",
+      name: "",
       maxFiles: 1,
       maxFileSize: 10,
       required: true,
@@ -203,7 +198,7 @@ export default function AttachmentRequestBuilderPage({
 
   const isFormValid =
     selectedCaseId &&
-    (formData.nameEn.trim() || formData.nameAr.trim()) &&
+    formData.name.trim() &&
     selectedTypes.length > 0 &&
     attachmentTypeId
 
@@ -270,37 +265,16 @@ export default function AttachmentRequestBuilderPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {lang === "ar" ? "أدخل اسم الطلب بالعربية أو الإنجليزية؛ يكفي تعبئة أحد الحقلين." : "Enter the request name in Arabic or English; either field is sufficient."}
-              </p>
-              <div className="dsc-form-grid">
-                <div className="space-y-2">
-                  <Label htmlFor="attachment-name-en">{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
-                  <Input
-                    id="attachment-name-en"
-                    value={formData.nameEn}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nameEn: e.target.value })
-                    }
-                    placeholder={
-                      lang === "ar"
-                        ? "مثال: تحميل التقرير الطبي"
-                        : "e.g., Upload Medical Report"
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="attachment-name-ar">{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
-                  <Input
-                    id="attachment-name-ar"
-                    value={formData.nameAr}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nameAr: e.target.value })
-                    }
-                    placeholder="مثال: تحميل التقرير الطبي"
-                  />
-                </div>
-              </div>
+              <Label htmlFor="attachment-name">
+                {lang === "ar" ? "اسم الطلب" : "Request name"}
+              </Label>
+              <Input
+                id="attachment-name"
+                dir="auto"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder={lang === "ar" ? "مثال: طلب شهادة ميلاد" : "e.g., Birth certificate request"}
+              />
             </CardContent>
           </Card>
 
@@ -432,7 +406,7 @@ export default function AttachmentRequestBuilderPage({
             <CardContent className="space-y-4">
               <div className="rounded-lg border bg-muted/30 p-4">
                 <h3 className="font-semibold">
-                  {(lang === "ar" ? formData.nameAr || formData.nameEn : formData.nameEn || formData.nameAr) ||
+                  {formData.name ||
                     (lang === "ar" ? "عنوان الطلب" : "Request Title")}
                 </h3>
               </div>
