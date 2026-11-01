@@ -887,7 +887,7 @@ export default function AdminUserDetailPage({
                   {deleteBlockers.assignments > 0 && (
                     <li>
                       {lang === "ar"
-                        ? `${deleteBlockers.assignments} تعيين خبير`
+                        ? `${deleteBlockers.assignments} تكليف خبير`
                         : `${deleteBlockers.assignments} expert assignment(s)`}
                     </li>
                   )}

@@ -98,7 +98,7 @@ const statusColors: Record<AssignmentStatus, string> = {
 
 const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
   pending: { en: "Pending", ar: "قيد الانتظار" },
-  assigned: { en: "Assigned", ar: "تم التعيين" },
+  assigned: { en: "Assigned", ar: "تم التكليف" },
   in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
   completed: { en: "Completed", ar: "مكتمل" },
 }
@@ -920,7 +920,7 @@ export default function AdminCaseDetailPage({
               >
                 <Plus className="me-2 h-4 w-4" />
                 {lang === "ar"
-                  ? "تعيين أداة أو مقياس"
+                  ? "تكليف أداة أو مقياس"
                   : "Assign tool or assessment"}
               </Button>
             </CardHeader>
@@ -946,7 +946,7 @@ export default function AdminCaseDetailPage({
                             <TableCell className="font-medium">
                               {assignment.name_en ||
                                 (lang === "ar"
-                                  ? "تعيين بدون اسم"
+                                  ? "تكليف بدون اسم"
                                   : "Unnamed Assignment")}
                             </TableCell>
                             <TableCell>
@@ -1090,7 +1090,7 @@ export default function AdminCaseDetailPage({
             <CardHeader>
               <CardTitle>
                 {lang === "ar"
-                  ? "تعيين أداة أو مقياس"
+                  ? "تكليف أداة أو مقياس"
                   : "Assign tool or assessment"}
               </CardTitle>
               <CardDescription>
@@ -1291,7 +1291,7 @@ export default function AdminCaseDetailPage({
               {selectedToolId ? (
                 <p>
                   {lang === "ar"
-                    ? `هل تريد تعيين هذا القالب لهذه الحالة؟`
+                    ? `هل تريد تكليف هذا القالب لهذه الحالة؟`
                     : `Assign this template to this case?`}
                 </p>
               ) : (
@@ -1322,10 +1322,10 @@ export default function AdminCaseDetailPage({
                 <Button onClick={handleAssignTool} disabled={isAssigning}>
                   {isAssigning
                     ? lang === "ar"
-                      ? "جاري التعيين..."
+                      ? "جاري التكليف..."
                       : "Assigning..."
                     : lang === "ar"
-                      ? "تعيين"
+                      ? "تكليف"
                       : "Assign"}
                 </Button>
               ) : (

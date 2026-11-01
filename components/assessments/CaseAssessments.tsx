@@ -268,11 +268,11 @@ function ProfessionalCaseAssessments({ caseId, mode = "all", assignmentRows, onA
               <thead>
                 <tr>
                   {[
-                    t("التعيين", "Assignment"),
+                    t("التكليف", "Assignment"),
                     t("النوع", "Type"),
                     t("الحالة", "Status"),
                     t("مرئي للمستخدم", "Visible to user"),
-                    t("تاريخ التعيين", "Assigned date"),
+                    t("تاريخ التكليف", "Assigned date"),
                     t("التقرير", "Report"),
                   ].map((h) => (
                     <th key={h} className="p-2 text-start">

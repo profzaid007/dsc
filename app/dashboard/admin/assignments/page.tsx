@@ -60,7 +60,7 @@ const statusColors: Record<AssignmentStatus, string> = {
 
 const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
   pending: { en: "Pending", ar: "قيد الانتظار" },
-  assigned: { en: "Assigned", ar: "تم التعيين" },
+  assigned: { en: "Assigned", ar: "تم التكليف" },
   in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
   completed: { en: "Completed", ar: "مكتمل" },
 }
@@ -223,7 +223,7 @@ export default function AssignmentsPage() {
               <Input
                 placeholder={
                   lang === "ar"
-                    ? "ابحث باسم التعيين..."
+                    ? "ابحث باسم التكليف..."
                     : "Search by assignment name..."
                 }
                 value={searchQuery}
@@ -283,7 +283,7 @@ export default function AssignmentsPage() {
                   {lang === "ar" ? "قيد الانتظار" : "Pending"}
                 </SelectItem>
                 <SelectItem value="assigned">
-                  {lang === "ar" ? "تم التعيين" : "Assigned"}
+                  {lang === "ar" ? "تم التكليف" : "Assigned"}
                 </SelectItem>
                 <SelectItem value="in_progress">
                   {lang === "ar" ? "قيد التنفيذ" : "In Progress"}
@@ -305,7 +305,7 @@ export default function AssignmentsPage() {
           </CardTitle>
           <CardDescription>
             {lang === "ar"
-              ? `تم العثور على ${filteredAssignments.length} تعيين`
+              ? `تم العثور على ${filteredAssignments.length} تكليف`
               : `${filteredAssignments.length} assignment(s) found`}
           </CardDescription>
         </CardHeader>
@@ -319,7 +319,7 @@ export default function AssignmentsPage() {
               <p className="text-muted-foreground">
                 {assignments.length === 0
                   ? lang === "ar"
-                    ? "لم يتم تعيين أي أدوات للحالات بعد. افتح الحالة ثم تبويب التكليفات لإضافة أداة أو مقياس."
+                    ? "لم يتم تكليف أي أدوات للحالات بعد. افتح الحالة ثم تبويب التكليفات لإضافة أداة أو مقياس."
                     : "No tools have been assigned yet. Open a case and its Assignments tab to add a tool or assessment."
                   : lang === "ar"
                     ? "لا توجد تكليفات تطابق عوامل التصفية."
@@ -332,7 +332,7 @@ export default function AssignmentsPage() {
                 <TableRow>
                   <TableHead>{lang === "ar" ? "الحالة" : "Case"}</TableHead>
                   <TableHead>
-                    {lang === "ar" ? "التعيين" : "Assignment"}
+                    {lang === "ar" ? "التكليف" : "Assignment"}
                   </TableHead>
                   <TableHead>{lang === "ar" ? "النوع" : "Type"}</TableHead>
                   <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
@@ -340,7 +340,7 @@ export default function AssignmentsPage() {
                     {lang === "ar" ? "مرئي للمستخدم" : "Visible to User"}
                   </TableHead>
                   <TableHead>
-                    {lang === "ar" ? "تاريخ التعيين" : "Assigned Date"}
+                    {lang === "ar" ? "تاريخ التكليف" : "Assigned Date"}
                   </TableHead>
                   <TableHead className="text-right">
                     {lang === "ar" ? "الإجراءات" : "Actions"}
@@ -369,7 +369,7 @@ export default function AssignmentsPage() {
                         >
                           {assignment.name_en ||
                             (lang === "ar"
-                              ? "تعيين بدون اسم"
+                              ? "تكليف بدون اسم"
                               : "Unnamed Assignment")}
                         </SmartLink>
                       </TableCell>

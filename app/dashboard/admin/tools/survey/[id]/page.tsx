@@ -38,7 +38,7 @@ const statusColors: Record<string, string> = {
 
 const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
   pending: { en: "Pending", ar: "قيد الانتظار" },
-  assigned: { en: "Assigned", ar: "تم التعيين" },
+  assigned: { en: "Assigned", ar: "تم التكليف" },
   in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
   completed: { en: "Completed", ar: "مكتمل" },
 }
@@ -263,7 +263,7 @@ export default function SurveyViewPage({ params }: ToolViewPageProps) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {lang === "ar" ? "التعيين من الحالة" : "Assign from a case"}
+            {lang === "ar" ? "التكليف من الحالة" : "Assign from a case"}
           </CardTitle>
           <CardDescription>
             {lang === "ar"

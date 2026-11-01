@@ -50,7 +50,7 @@ const statusColors: Record<AssignmentStatus, string> = {
 
 const statusLabels: Record<AssignmentStatus, { en: string; ar: string }> = {
   pending: { en: "Pending", ar: "قيد الانتظار" },
-  assigned: { en: "Assigned", ar: "تم التعيين" },
+  assigned: { en: "Assigned", ar: "تم التكليف" },
   in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
   completed: { en: "Completed", ar: "مكتمل" },
 }
@@ -630,7 +630,7 @@ export default function AssignmentDetailPage({
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <span className="text-sm font-medium text-muted-foreground">
-                  {lang === "ar" ? "تاريخ التعيين" : "Assigned Date"}
+                  {lang === "ar" ? "تاريخ التكليف" : "Assigned Date"}
                 </span>
                 <p>
                   {formatDate(assignment.assigned_at || assignment.created)}

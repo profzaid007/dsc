@@ -497,7 +497,7 @@ export default function AdminCasesPage() {
                                     className="bg-blue-50 text-blue-700"
                                   >
                                     {counts.assigned}{" "}
-                                    {lang === "ar" ? "تم التعيين" : "assigned"}
+                                    {lang === "ar" ? "تم التكليف" : "assigned"}
                                   </Badge>
                                 )}
                                 {counts.in_progress > 0 && (

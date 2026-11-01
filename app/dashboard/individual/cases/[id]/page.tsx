@@ -49,7 +49,7 @@ const assignmentStatusLabels: Record<
   { en: string; ar: string }
 > = {
   pending: { en: "Pending", ar: "قيد الانتظار" },
-  assigned: { en: "Assigned", ar: "تم التعيين" },
+  assigned: { en: "Assigned", ar: "تم التكليف" },
   in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
   completed: { en: "Completed", ar: "مكتمل" },
 }
