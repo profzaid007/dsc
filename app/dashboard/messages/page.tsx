@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react"
 import type { RecordModel } from "pocketbase"
 import Link from "next/link"
 import { MessageAttachments, MessageBody } from "@/components/cases/CaseMessages"
+import { ReceivedMessages } from "@/components/messages/ReceivedMessages"
 import { Send, MessageSquare } from "lucide-react"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -61,6 +62,14 @@ export default function MessagesPage() {
     }).catch(e => { if (active) setSendError(getErrorMessage(e, lang)) })
     return () => { active = false }
   }, [selected, messages, currentUser, lang, canMarkRead])
+  async function readReceivedMessage(id: string) {
+    if (!canMarkRead) return
+    try {
+      await pb.collection("internal_messages").update(id, { read: true }, { requestKey: null })
+      setMessages(items => items.map(item => item.id === id ? { ...item, read: true } : item))
+      window.dispatchEvent(new Event("messages-updated"))
+    } catch (e) { setSendError(getErrorMessage(e, lang)) }
+  }
   async function send() {
     if (!currentUser || !selected || !body.trim() || !subject.trim() || sending || !canSend) return
     setSending(true); setSendError(""); setNotice("")
@@ -79,6 +88,8 @@ export default function MessagesPage() {
   return <div className="mx-auto max-w-6xl space-y-6" dir={ar ? "rtl" : "ltr"}>
     <header><p className="mb-2 text-xs font-semibold uppercase tracking-widest text-amber-700">DSC</p><h1 className="text-3xl font-bold text-primary">{ar ? "الرسائل الداخلية" : "Internal messages"}</h1><p className="mt-2 text-muted-foreground">{ar ? "اقرأ محادثاتك وتواصل مع فريق الإدارة. يظهر عدد الرسائل غير المقروءة بجوار أيقونة الرسائل." : "Read your conversations and contact the administration team. Unread messages appear beside the Messages icon."}</p></header>
     {error && <DataError message={error} onRetry={() => refresh()} />}
+    {sendError && <p role="alert" className="text-sm text-destructive">{sendError}</p>}
+    {!loading && <ReceivedMessages messages={messages} userId={currentUser!.id} contacts={contacts} lang={lang} onRead={readReceivedMessage} />}
     {loading ? <PageLoader /> : <div className="min-w-0 overflow-hidden rounded-xl border bg-white">
       <aside className="border-b p-4"><Label htmlFor="message-contact">{ar ? "اختر المستلم" : "Choose a recipient"}</Label><select id="message-contact" value={selected} onChange={e => { setSelected(e.target.value); setBody(""); setSubject(""); setNotice(""); setSendError("") }} className="mt-3 min-h-11 w-full rounded-md border bg-white px-3 text-sm"><option value="">{ar ? "اختر شخصًا…" : "Select a person…"}</option>{contacts.map(item => <option key={item.id} value={item.id}>{item.name}{messages.some(m => m.sender === item.id && m.recipient === currentUser?.id && !m.read) ? (ar ? " — رسائل غير مقروءة" : " — Unread messages") : ""}</option>)}</select>
         {!contacts.length && <p className="mt-4 text-sm text-muted-foreground">{ar ? "لا يوجد مستلمون متاحون حاليًا." : "No recipients are available yet."}</p>}
