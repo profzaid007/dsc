@@ -9,6 +9,7 @@ import { usePermissions } from "@/hooks/usePermissions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 export function CaseDocuments({ caseId }: { caseId: string }) {
   const { currentUser } = useAuth(),
@@ -22,6 +23,7 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
   const [documents, setDocuments] = useState<RecordModel[]>([]),
     [loading, setLoading] = useState(true)
   const [title, setTitle] = useState(""),
+    [description, setDescription] = useState(""),
     [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -88,10 +90,12 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
       data.set("case", caseId)
       data.set("uploaded_by", currentUser.id)
       data.set("title", title.trim())
+      data.set("description", description.trim())
       data.set("file", file)
       await pb.collection("case_documents").create(data, { requestKey: null })
       setFile(null)
       setTitle("")
+      setDescription("")
       if (input.current) input.current.value = ""
       setNotice(
         ar ? "تمت إضافة المستند إلى الحالة." : "Document added to this case."
@@ -160,6 +164,11 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
               <p dir="auto" className="font-medium [overflow-wrap:anywhere]">
                 {doc.title}
               </p>
+              {doc.description && (
+                <p dir="auto" className="mt-1 whitespace-pre-wrap text-sm [overflow-wrap:anywhere]">
+                  {doc.description}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {new Date(doc.created).toLocaleString(ar ? "ar" : "en")} ·{" "}
                 {doc.source_message
@@ -181,13 +190,13 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
             </li>
           ))}
         </ul>
-      ) : (
+      ) : !error ? (
         <p>
           {ar
             ? "لا توجد مستندات لهذه الحالة بعد."
             : "No documents have been added to this case yet."}
         </p>
-      )}
+      ) : null}
       {canUpload && (
         <form onSubmit={upload} className="space-y-3 border-t pt-4">
           <Label htmlFor={`document-title-${caseId}`}>
@@ -201,6 +210,17 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
             value={title}
             disabled={busy}
             onChange={(e) => setTitle(e.target.value)}
+          />
+          <Label htmlFor={`document-description-${caseId}`}>
+            {ar ? "وصف المستند (اختياري)" : "Document description (optional)"}
+          </Label>
+          <Textarea
+            id={`document-description-${caseId}`}
+            dir="auto"
+            maxLength={2000}
+            value={description}
+            disabled={busy}
+            onChange={(e) => setDescription(e.target.value)}
           />
           <Label htmlFor={`document-file-${caseId}`}>
             {ar ? "الملف (حتى 10 ميغابايت)" : "File (up to 10 MB)"}
