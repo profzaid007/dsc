@@ -11,6 +11,7 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
   const migrations = path.join(fixture, "migrations")
   fs.mkdirSync(migrations)
   fs.writeFileSync(path.join(migrations, "1000_fixture.js"), `migrate(app=>{
+    const testAdmin=new Record(app.findCollectionByNameOrId('_superusers'));testAdmin.set('email','fixture@category.example.test');testAdmin.set('password','PrivateCategoryFixture123!');app.save(testAdmin);
     let users;try{users=app.findCollectionByNameOrId('users')}catch{users=new Collection({name:'users',type:'auth'})};
     for(const field of [new BoolField({name:'is_active'}),new TextField({name:'role'}),new JSONField({name:'security_permissions'})])if(!users.fields.getByName(field.name))users.fields.add(field);app.save(users);
     const roots=new Collection({name:'specialist_role_categories',type:'base',createRule:'',updateRule:'',deleteRule:'',fields:[
@@ -88,7 +89,7 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
     const roots=app.findCollectionByNameOrId('specialist_role_categories');
     if(!roots.createRule.includes('settings.create')||!roots.updateRule.includes('settings.update')||!roots.deleteRule.includes('settings.delete'))throw new Error('Settings permission rules missing');
     // Public access is enabled only in this disposable fixture to exercise hooks separately.
-    roots.createRule='';roots.updateRule='';roots.deleteRule='';app.save(roots);
+    roots.createRule='';roots.updateRule='';roots.deleteRule='';roots.listRule='';roots.viewRule='';app.save(roots);
   });`)
   const editable=spawnSync(binary,args,{encoding:"utf8",windowsHide:true})
   assert.match(editable.stdout+editable.stderr,/Applied 1793400001_verify_editable/,editable.stdout+editable.stderr)
@@ -139,13 +140,15 @@ test("PocketBase unifies seven roots without losing roles, posts, custom categor
     const valid=await create({main_category:"special-needs",category:"autism",content_en:"Valid"})
     assert.equal(valid.status,200,JSON.stringify(valid.body))
     assert.equal(valid.body.main_category,"special-needs")
-    const mediaRole=await fetch(base+"/api/collections/roles_management/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({role_group:"dsc-news"})})
+    const rootRecords=await (await fetch(base+"/api/collections/specialist_role_categories/records?perPage=100")).json()
+    const categoryId=key=>rootRecords.items.find(item=>item.key===key)?.id
+    const mediaRole=await fetch(base+"/api/collections/roles_management/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({category:categoryId("dsc-news") || "missingmedia001"})})
     assert.equal(mediaRole.status,400,await mediaRole.text())
-    const professionalRole=await fetch(base+"/api/collections/roles_management/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({role_group:"research"})})
+    const professionalRole=await fetch(base+"/api/collections/roles_management/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({category:categoryId("research")})})
     const createdRole=await professionalRole.json()
     assert.equal(professionalRole.status,200,JSON.stringify(createdRole))
-    assert.ok(createdRole.category,"Role category relation must follow the shared group")
-    const otherRole=await fetch(base+"/api/collections/roles_management/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({role_group:"other"})})
+    assert.ok(createdRole.category,"Role must retain the selected category relation")
+    const otherRole=await fetch(base+"/api/collections/roles_management/records",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({category:categoryId("other")})})
     const otherBody=await otherRole.json()
     assert.equal(otherRole.status,200,JSON.stringify(otherBody))
     assert.equal(otherBody.category,"legacyother0001")

@@ -12,7 +12,7 @@ onRecordUpdateRequest((e) => {
 
 onRecordDelete((e) => {
   const key = e.record.getString("key")
-  if (e.app.findRecordsByFilter("roles_management", "category = {:id} || role_group = {:key}", "", 1, 0, { id: e.record.id, key }).length) throw new BadRequestError("This classification contains roles; move them before deletion")
+  if (e.app.findRecordsByFilter("roles_management", "category = {:id}", "", 1, 0, { id: e.record.id }).length) throw new BadRequestError("This classification contains roles; move them before deletion")
   for (const name of ["blog_categories", "blog_pages", "programs", "public_lectures"]) {
     if (e.app.findRecordsByFilter(name, "main_category = {:key}", "", 1, 0, { key }).length) throw new BadRequestError("This classification is used by content; move the linked content before deletion")
   }

@@ -8,13 +8,3 @@ const validateExpertTextLists = e => {
 }
 onRecordCreate(validateExpertTextLists, "expert_profiles")
 onRecordUpdate(validateExpertTextLists, "expert_profiles")
-
-const validateRoleCategory = e => {
-  const group = e.record.getString("role_group").trim()
-  if (!group || ["psychology", "dsc-news"].includes(group))
-    throw new BadRequestError("Correct this role's professional category before saving.")
-  e.app.findFirstRecordByFilter("specialist_role_categories", "key = {:key}", {key:group})
-  return e.next()
-}
-onRecordCreate(validateRoleCategory, "roles_management")
-onRecordUpdate(validateRoleCategory, "roles_management")

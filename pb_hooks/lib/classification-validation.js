@@ -19,18 +19,10 @@ module.exports = (e) => {
   }
   if (collection === "roles_management") {
     const categoryId = record.getString("category")
-    const group = record.getString("role_group")
-    if (group === "dsc-news") throw new BadRequestError("Media categories cannot contain specialist roles")
-    const body = e.requestInfo().body
-    if (group && Object.prototype.hasOwnProperty.call(body, "role_group") && !Object.prototype.hasOwnProperty.call(body, "category")) {
-      const categories = e.app.findRecordsByFilter("specialist_role_categories", "key = {:key}", "", 1, 0, { key: group })
-      if (!categories.length || categories[0].getBool("media_only")) throw new BadRequestError("Select a professional classification")
-      record.set("category", categories[0].id)
-    } else if (categoryId) {
-      const category = e.app.findRecordById("specialist_role_categories", categoryId)
-      if (category.getBool("media_only") || category.getString("key") === "dsc-news") throw new BadRequestError("Media categories cannot contain specialist roles")
-      record.set("role_group", category.getString("key"))
-    }
+    if (!categoryId) throw new BadRequestError("Select a professional classification")
+    const category = e.app.findRecordById("specialist_role_categories", categoryId)
+    if (category.getBool("media_only") || ["psychology", "dsc-news"].includes(category.getString("key")))
+      throw new BadRequestError("Select a professional classification")
     return
   }
   if (["blog_pages", "programs", "public_lectures"].includes(collection) &&

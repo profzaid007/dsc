@@ -1,3 +1,4 @@
+import { normalizeAllocationRole } from "./allocation-role-groups"
 import { assertBlogClassificationSchema } from "./blog-content"
 import { boundedFullList } from "@/lib/bounded-records"
 import pb from "./pb"
@@ -948,36 +949,18 @@ export const caseExpertsCollection = {
 
 export const rolesManagementCollection = {
   async getAll(): Promise<import("@/types/expert-role").RolesManagement[]> {
-    return boundedFullList(pb.collection("roles_management"), {
-      expand: "tool_types",
-    })
+    const records = await boundedFullList<import("@/types/expert-role").RolesManagement>(pb.collection("roles_management"), { expand: "category,tool_types" })
+    return records.map(normalizeAllocationRole)
   },
-
-  async getById(
-    id: string
-  ): Promise<import("@/types/expert-role").RolesManagement> {
-    return pb.collection("roles_management").getOne(id, {
-      expand: "tool_types",
-    })
+  async getById(id: string): Promise<import("@/types/expert-role").RolesManagement> {
+    return normalizeAllocationRole(await pb.collection("roles_management").getOne(id, { expand: "category,tool_types" }))
   },
-
-  async update(
-    id: string,
-    data: Partial<import("@/types/expert-role").RolesManagement>
-  ): Promise<import("@/types/expert-role").RolesManagement> {
-    return pb.collection("roles_management").update(id, data)
+  async update(id: string, data: Partial<import("@/types/expert-role").RolesManagement>): Promise<import("@/types/expert-role").RolesManagement> {
+    return normalizeAllocationRole(await pb.collection("roles_management").update(id, data, { expand: "category,tool_types" }))
   },
-
-  async create(data: {
-    role_name_en: string
-    role_name_ar: string
-    role_group?: string
-    is_retired?: boolean
-    tool_types?: string[]
-  }): Promise<import("@/types/expert-role").RolesManagement> {
-    return pb.collection("roles_management").create(data)
+  async create(data: { role_name_en: string; role_name_ar: string; category: string; is_active: boolean; order: number; tool_types?: string[] }): Promise<import("@/types/expert-role").RolesManagement> {
+    return normalizeAllocationRole(await pb.collection("roles_management").create(data, { expand: "category,tool_types" }))
   },
-
   async delete(id: string): Promise<void> {
     await pb.collection("roles_management").delete(id)
   },

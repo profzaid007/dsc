@@ -162,9 +162,6 @@ export function SpecialistSettings({
               role_name_en: en.trim(),
               role_name_ar: arabic.trim(),
               category,
-              role_group: mainCategoryKey(
-                categories.find((c) => c.id === category)?.key || ""
-              ),
               ...(id ? {} : { order: roles.length + 1, is_active: true }),
             }
       if (id) await col.update(id, data)

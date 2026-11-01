@@ -993,12 +993,6 @@ export function CaseAllocations({
                   <SelectItem
                     key={group.id}
                     value={group.id}
-                    disabled={
-                      !roleMgmtRoles.some(
-                        (role) =>
-                          !role.is_retired && role.role_group === group.id
-                      )
-                    }
                   >
                     {lang === "ar" ? group.ar : group.en}
                   </SelectItem>

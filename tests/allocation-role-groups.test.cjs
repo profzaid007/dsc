@@ -39,3 +39,19 @@ test("administrator-created classification keys remain attached to their roles",
   assert.equal(normalizeAllocationRole(custom), custom)
   assert.equal(normalizeAllocationRole(custom).role_group, "custom-topic")
 })
+
+
+test("current category relation supplies group, order and availability without legacy fields", () => {
+  const current = role("Orthopedic Specialist", { category: "medical-id", order: 37, is_active: true, expand: { category: { id: "medical-id", key: "medical", is_active: true } } })
+  const normalized = normalizeAllocationRole(current)
+  assert.equal(normalized.role_group, "medical")
+  assert.equal(normalized.role_order, 37)
+  assert.equal(normalized.is_retired, false)
+  assert.equal(current.role_group, undefined)
+  assert.equal(normalizeAllocationRole({ ...current, role_group: "psychology" }).role_group, "medical")
+  assert.equal(normalizeAllocationRole({ ...current, is_active: false }).is_retired, true)
+  assert.equal(normalizeAllocationRole({ ...current, expand: { category: { id: "medical-id", key: "medical", is_active: false } } }).is_retired, true)
+  assert.throws(() => normalizeAllocationRole({ ...current, expand: undefined, role_group: "medical" }), /corrected professional category/)
+  assert.throws(() => normalizeAllocationRole({ ...current, expand: { category: { id: "other", key: "medical" } } }), /corrected professional category/)
+  assert.throws(() => normalizeAllocationRole({ ...current, expand: { category: { id: "medical-id", key: "custom", media_only: true } } }), /corrected professional category/)
+})

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { normalizeAllocationRole } from "@/lib/allocation-role-groups"
+import pb from "@/lib/pb"
 import { rolesManagementCollection } from "@/lib/pb-collections"
 import type { RolesManagement } from "@/types/expert-role"
 import { toast } from "sonner"
@@ -14,7 +14,7 @@ export function useRolesManagement() {
   const fetchRoles = useCallback(async () => {
     try {
       const data = await rolesManagementCollection.getAll()
-      setRoles(data.map(normalizeAllocationRole))
+      setRoles(data)
     } catch (error) {
       console.error("Failed to fetch roles:", error)
       toast.error(getErrorMessage(error))
@@ -55,16 +55,18 @@ export function useRolesManagement() {
 
   const addRole = useCallback(
     async (roleNameEn: string, roleNameAr: string, roleGroup: string) => {
+      const category = await pb.collection("specialist_role_categories").getFirstListItem(pb.filter("key = {:key} && is_active = true && media_only = false", { key: roleGroup }), { requestKey: null })
       const created = await rolesManagementCollection.create({
         role_name_en: roleNameEn,
         role_name_ar: roleNameAr,
-        role_group: roleGroup,
-        is_retired: false,
+        category: category.id,
+        is_active: true,
+        order: roles.length,
       })
       setRoles((prev) => [...prev, created])
       return created
     },
-    []
+    [roles.length]
   )
 
   const removeRole = useCallback(async (id: string) => {

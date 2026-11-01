@@ -113,7 +113,7 @@ test("role form requires the category foreign key", () => {
 })
 
 
-test("saving a role retains its category relation and canonical category key", async () => {
+test("saving a role writes only its current category relation", async () => {
   const ui = screen(async () => {})
   ui.nodes(ui.render()).find(node => node.type === "button" && node.props.className === "edit").props.onClick()
   ui.nodes(ui.render()).find(node => node.type === "select" && node.props.name === "category").props.onChange({ target: { value: "research-cat" } })
@@ -121,7 +121,7 @@ test("saving a role retains its category relation and canonical category key", a
   assert.equal(ui.writes[0].name, "roles_management")
   assert.equal(ui.writes[0].id, "physician")
   assert.equal(ui.writes[0].data.category, "research-cat")
-  assert.equal(ui.writes[0].data.role_group, "research")
+  assert.equal(Object.hasOwn(ui.writes[0].data, "role_group"), false)
 })
 
 
