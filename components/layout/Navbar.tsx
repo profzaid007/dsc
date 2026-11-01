@@ -14,7 +14,7 @@ import {
   UserPlus,
   LogOut,
   ShieldCheck,
-  MessageSquare,
+  Mail,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
@@ -207,7 +207,7 @@ export function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#0a3d62] transition-colors hover:bg-[#0a3d62]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
-                  <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                  <Mail className="h-5 w-5" aria-hidden="true" />
                   {unreadMessages > 0 && (
                     <span aria-hidden="true" className="absolute -top-0.5 -end-0.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1 text-[11px] font-bold text-slate-950">
                       {unreadMessages > 99 ? "99+" : unreadMessages}
