@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { usePermissions } from "@/hooks/usePermissions"
+import { useUserDisplayName } from "@/hooks/useUserDisplayName"
 import { useAuth } from "@/hooks/useAuth"
 import { useUnreadMessages } from "@/hooks/useUnreadMessages"
 import { usePortals } from "@/hooks/usePortals"
@@ -44,6 +45,7 @@ export function Navbar() {
   const getPortalById = (id: string) =>
     PORTALS.find((portal) => portal.id === id)
   const { isAuthenticated, isAdmin, currentUser, logout } = useAuth()
+  const displayName = useUserDisplayName(currentUser, lang)
   const permissions = usePermissions()
   const canReadMessages = isAuthenticated && (
     isAdmin ? permissions.can("messages.read") :
@@ -239,10 +241,10 @@ export function Navbar() {
                 <>
                   <div className="hidden items-center gap-2 rounded-full border px-3 py-1.5 text-sm 2xl:flex">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                      {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
+                      {displayName.charAt(0)?.toUpperCase() || "U"}
                     </span>
                     <span className="max-w-[120px] truncate font-medium">
-                      {currentUser?.name || ""}
+                      {displayName}
                     </span>
                   </div>
                 </>
@@ -340,10 +342,10 @@ export function Navbar() {
               {isAuthenticated && (
                 <div className="flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                    {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
+                    {displayName.charAt(0)?.toUpperCase() || "U"}
                   </div>
                   <span className="truncate font-medium">
-                    {currentUser?.name || ""}
+                    {displayName}
                   </span>
                 </div>
               )}

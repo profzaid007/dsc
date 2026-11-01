@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import type { RecordModel } from "pocketbase"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
+import { personName } from "@/lib/person-name"
 import { useLang } from "@/lib/lang-context"
 import { usePermissions } from "@/hooks/usePermissions"
 import { Button } from "@/components/ui/button"
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 
-type Contact = { id: string; name: string; role: string }
+type Contact = { id: string; name: string; role: string; name_ar?: string; name_en?: string }
 const accept =
   ".pdf,.jpg,.jpeg,.png,.webp,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp3,.wav,.mp4"
 
@@ -335,7 +336,7 @@ export function CaseMessages({ caseId }: { caseId: string }) {
             </option>
             {contacts.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name} —{" "}
+                {personName(c, lang)} —{" "}
                 {["admin", "super_admin"].includes(c.role)
                   ? ar
                     ? "الإدارة"
@@ -380,7 +381,7 @@ export function CaseMessages({ caseId }: { caseId: string }) {
                         ? ar
                           ? "أنت"
                           : "You"
-                        : contacts.find((c) => c.id === m.sender)?.name}
+                        : personName(contacts.find((c) => c.id === m.sender), lang)}
                     </p>
                     <MessageBody text={m.body} />
                     <MessageAttachments

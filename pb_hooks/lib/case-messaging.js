@@ -89,15 +89,31 @@ function contacts(e) {
   const owners = caseIds.map((id) =>
     e.app.findRecordById("cases", id).getString("user")
   )
-  return users
-    .filter(
-      (r) => allowed(e.app, u, r, caseId) || (!caseId && owners.includes(r.id))
-    )
-    .map((r) => ({
-      id: r.id,
-      name: r.getString("name"),
-      role: r.getString("role"),
-    }))
+  const authorized = users.filter(
+    (r) => allowed(e.app, u, r, caseId) || (!caseId && owners.includes(r.id))
+  )
+  const experts = authorized.filter(r => r.getString("role") === "expert")
+  const names = {}
+  if (experts.length) {
+    const bindings = {}
+    const filter = experts.map((r, index) => {
+      bindings["user" + index] = r.id
+      return "user = {:user" + index + "}"
+    }).join(" || ")
+    for (const profile of e.app.findRecordsByFilter("expert_profiles", filter, "", 0, 0, bindings)) {
+      names[profile.getString("user")] = {
+        name_ar: profile.getString("public_name_ar").trim(),
+        name_en: profile.getString("public_name_en").trim(),
+      }
+    }
+  }
+  return authorized.map(r => ({
+    id: r.id,
+    name: r.getString("name"),
+    name_ar: names[r.id] ? names[r.id].name_ar : "",
+    name_en: names[r.id] ? names[r.id].name_en : "",
+    role: r.getString("role"),
+  }))
 }
 function create(e) {
   const u = actor(e.app, e.auth, "create")

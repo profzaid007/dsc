@@ -28,6 +28,7 @@ function harness(props = {}, initial = ['received', '', false, '', null]) {
     react: { ...React, useRef: value => ({ current: value }), useEffect() {}, useState(value) { const i = cursor++; if (!(i in state)) state[i] = value; return [state[i], next => { state[i] = typeof next === 'function' ? next(state[i]) : next }] } },
     'next/link': { __esModule: true, default: native('a') },
     ...primitives,
+    '@/lib/person-name':load('lib/person-name.ts',{}),
     '@/components/cases/CaseMessages': { MessageBody: ({ text }) => React.createElement('p', { dir: 'auto' }, text), MessageAttachments: () => null }, './mailbox-model': model,
   }
   const { Mailbox } = load('components/messages/Mailbox.tsx', mocks)
@@ -112,6 +113,19 @@ if (require.main === module) {
     const h=harness({onSend:async()=>({sent:1,failedRecipients:['b']})},['received','',false,'',draft])
     await find(h.render(),node=>node.type==='form').props.onSubmit({preventDefault(){}})
     assert.deepEqual(h.state[4].recipients,['b']);assert.equal(h.state[4].attachments[0],file)
+  })
+  test('message and recipient names follow interface language and search accepts both names', () => {
+    const contacts=[{id:'admin',name:'اسم قديم',name_ar:'أحمد زوه',name_en:'Ahmed Zoh',role:'admin'}]
+    for(const [lang,expected,hidden] of [['ar','أحمد زوه','Ahmed Zoh'],['en','Ahmed Zoh','أحمد زوه']]) {
+      const h=harness({lang,contacts},['received','',false,'second',null])
+      const html=renderToStaticMarkup(h.render());assert.ok(html.includes(expected));assert.ok(!html.includes(hidden))
+      const draft=harness({lang,contacts},['received','',false,'',{recipients:['admin'],subject:'',body:'',caseId:''}])
+      assert.ok(renderToStaticMarkup(draft.render()).includes(expected))
+    }
+    assert.equal(model.mailboxMessages(baseProps.messages,'self','received','Ahmed',false,contacts).length,2)
+    assert.equal(model.mailboxMessages(baseProps.messages,'self','received','أحمد',false,contacts).length,2)
+    const {personName}=load('lib/person-name.ts',{})
+    assert.equal(personName({name:'Legacy'},'ar'),'Legacy');assert.equal(personName({name:'Legacy',name_en:' ',name_ar:'أحمد'},'en'),'Legacy');assert.equal(personName({name_en:'Ahmed'},'ar'),'Ahmed')
   })
   test('Arabic, empty, unread filter, and composer states remain usable', () => {
     assert.ok(renderToStaticMarkup(harness({ lang: 'ar', messages: [] }).render()).includes('الرسائل الواردة'))

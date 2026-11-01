@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useUnreadMessages } from "@/hooks/useUnreadMessages"
 import { usePermissions } from "@/hooks/usePermissions"
 import { routePermission } from "@/lib/security"
+import { useUserDisplayName } from "@/hooks/useUserDisplayName"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import type { Lang } from "@/types/form"
@@ -240,6 +241,7 @@ export function DashboardSidebar() {
   const pathname = usePathname()
   const { lang } = useLang()
   const { currentUser, isAdmin, isLoading: isAuthLoading } = useAuth()
+  const displayName = useUserDisplayName(currentUser, lang)
 
   const permissions = usePermissions()
   const canNavigate = (item: NavItem) =>
@@ -593,7 +595,7 @@ export function DashboardSidebar() {
               {!isCollapsed && (
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
-                    {currentUser?.name}
+                    {displayName}
                   </p>
                   <p className="truncate text-xs text-primary-foreground/70">
                     {currentUser?.email}

@@ -10,6 +10,7 @@ fixture='''migrate(app=>{
  const users=app.findCollectionByNameOrId("users");
  function user(key,role){const u=new Record(users);u.set("email",key+"@messages.example.test");u.set("name",key);u.set("password","PrivateMessages123!");u.set("role",role);u.set("is_active",true);app.save(u);return u}
  const expert=user("allocated","expert"),foreign=user("foreign","expert"),admin=user("admin","super_admin"),other=user("other","parent"),deniedAdmin=user("denied-admin","admin");
+ const profile=new Record(app.findCollectionByNameOrId("expert_profiles"));profile.set("user",expert.id);profile.set("public_name_ar","الخبير المختص");profile.set("public_name_en","Allocated Expert");app.save(profile);
  for(const role of ["parent","individual","organization","care_foundation"]){
   const owner=user(role,role),c=new Record(app.findCollectionByNameOrId("cases"));c.set("name","Message case "+role);c.set("user",owner.id);c.set("status","active");app.save(c);
   const a=new Record(app.findCollectionByNameOrId("case_experts"));a.set("case_id",c.id);a.set("expert_id",expert.id);app.save(a);
@@ -59,6 +60,7 @@ try:
  for role in ['parent','individual','organization','care_foundation']:
   case=cases[role];token=tokens[role]
   status,contacts=req('/api/dsc/message-contacts?case_id='+case,token);assert status==200,(status,contacts)
+  localized=next(r for r in contacts if r['id']==ids['allocated']);assert localized['name_ar']=='الخبير المختص' and localized['name_en']=='Allocated Expert';assert all('email' not in r for r in contacts)
   contacts={r['id'] for r in contacts};assert ids['allocated'] in contacts and ids['admin'] in contacts and ids['foreign'] not in contacts and ids['other'] not in contacts and ids['denied-admin'] not in contacts
   data={'sender':ids[role],'recipient':ids['allocated'],'case':case,'subject':'Case discussion','body':'Please review https://example.com','read':'false'}
   status,m=req(path,token,'POST',data,b'Private attachment');assert status==200,(status,m)

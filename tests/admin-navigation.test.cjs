@@ -16,6 +16,7 @@ function load(file, context){
   '@/hooks/useAuth':{useAuth:()=>({isAuthenticated:context.auth !== false,isAdmin:context.admin !== false,currentUser:{id:'test-user',name:'Admin',role:context.role || 'admin'},logout(){}})},
   '@/hooks/usePermissions':{usePermissions:()=>({isSuperAdmin:context.super,can:()=>context.cms})},
   '@/hooks/usePortals':{usePortals:()=>({portals:[]})},
+  '@/hooks/useUserDisplayName':{useUserDisplayName:user=>user?.name || ''},
   '@/hooks/useUnreadMessages':{useUnreadMessages:(_id,enabled)=>enabled ? context.unread || 0 : 0},
   '@/lib/i18n':{t:(x,lang)=>x[lang]},
   '@/lib/site-content':{SITE_CONTENT:{nav:{bookConsultation:{ar:'حجز',en:'Book'}}}},
