@@ -54,11 +54,13 @@ export default function PlanBuilderPage({
   const router = useRouter()
   const { lang } = useLang()
   const { assignTool, updateAssignment, assignments, isLoading: isAssignmentsLoading } = useAssignments()
-  const { getProfileById } = useProfiles()
+  const { getProfileById, isLoading: isProfilesLoading } = useProfiles()
   const { currentUser } = useAuth()
   const [editAssignmentId, setEditAssignmentId] = useState<string>("")
   const [showPreview, setShowPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitting = useRef(false)
+  const [saveError, setSaveError] = useState("")
   const [planTypeId, setPlanTypeId] = useState<string>("")
   const [typeError, setTypeError] = useState<string>("")
 
@@ -82,6 +84,7 @@ export default function PlanBuilderPage({
 
   const [goals, setGoals] = useState<SimplePlanGoal[]>([])
   const [steps, setSteps] = useState<SimplePlanStep[]>([])
+  const childName = formData.childName.trim() || getProfileById(selectedCaseId)?.name || ""
 
   // Fetch plan type ID on mount
   useEffect(() => {
@@ -139,7 +142,7 @@ export default function PlanBuilderPage({
 
   // Initialize from URL caseId - runs once after assignments load
   useEffect(() => {
-    if (isAssignmentsLoading) return
+    if (isAssignmentsLoading || isProfilesLoading) return
     if (hasInitialized.current) return
 
     const initFromUrl = async () => {
@@ -200,7 +203,7 @@ export default function PlanBuilderPage({
       }
     }
     initFromUrl()
-  }, [isAssignmentsLoading, assignments, searchParams, handleCaseSelect])
+  }, [isAssignmentsLoading, isProfilesLoading, assignments, searchParams, handleCaseSelect])
 
   const addGoal = () => {
     setGoals([
@@ -256,22 +259,29 @@ export default function PlanBuilderPage({
   }
 
   const handleSubmit = async () => {
-    if (
-      !toolName.en ||
-      !formData.childName ||
-      !formData.expertName ||
-      !formData.startDate ||
-      !formData.endDate ||
-      !selectedCaseId ||
-      !planTypeId
-    )
+    if (submitting.current) return
+    const missing = [
+      [!selectedCaseId, lang === "ar" ? "الحالة" : "case"],
+      [!toolName.en.trim() && !toolName.ar.trim(), lang === "ar" ? "اسم الخطة" : "plan name"],
+      [!childName, lang === "ar" ? "اسم الطفل" : "child name"],
+      [!formData.expertName.trim(), lang === "ar" ? "اسم الخبير" : "expert name"],
+      [!formData.startDate, lang === "ar" ? "تاريخ البداية" : "start date"],
+      [!formData.endDate, lang === "ar" ? "تاريخ النهاية" : "end date"],
+    ].filter(([required]) => required).map(([, label]) => label)
+    if (missing.length || !planTypeId) {
+      setSaveError(missing.length
+        ? (lang === "ar" ? "أكمل الحقول المطلوبة: " : "Complete the required fields: ") + missing.join("، ")
+        : (lang === "ar" ? "نوع الخطة غير متاح. أعد تحميل الصفحة." : "Plan type is unavailable. Reload the page."))
       return
+    }
+    submitting.current = true
+    setSaveError("")
     setIsSubmitting(true)
 
     try {
       // Convert simple form data to bilingual config for storage
       const config: PlanConfig = {
-        childName: formData.childName,
+        childName,
         expertName: formData.expertName,
         startDate: formData.startDate,
         endDate: formData.endDate,
@@ -297,8 +307,8 @@ export default function PlanBuilderPage({
       // Edit mode - update existing assignment
       if (editAssignmentId) {
         await updateAssignment(editAssignmentId, {
-          name_en: toolName.en,
-          name_ar: toolName.ar,
+          name_en: toolName.en.trim() || toolName.ar.trim(),
+          name_ar: toolName.ar.trim() || toolName.en.trim(),
           config,
         })
         router.push(`/dashboard/admin/cases/${selectedCaseId}/tasks/${editAssignmentId}`)
@@ -307,8 +317,8 @@ export default function PlanBuilderPage({
         await assignTool({
           case: selectedCaseId,
           type: planTypeId,
-          name_en: toolName.en,
-          name_ar: toolName.ar,
+          name_en: toolName.en.trim() || toolName.ar.trim(),
+          name_ar: toolName.ar.trim() || toolName.en.trim(),
           is_not_template: true,
           config,
           is_visible_to_user: true,
@@ -317,10 +327,14 @@ export default function PlanBuilderPage({
 
         router.push(`/dashboard/admin/cases/${selectedCaseId}#case-assignments`)
       }
+      toast.success(lang === "ar" ? "تم حفظ الخطة ضمن تكليفات الحالة." : "Plan saved to the case assignments.")
     } catch (error) {
       console.error(editAssignmentId ? "Failed to update plan:" : "Failed to create plan:", error)
-      toast.error(getErrorMessage(error))
+      const message = getErrorMessage(error, lang)
+      setSaveError(message)
+      toast.error(message)
     } finally {
+      submitting.current = false
       setIsSubmitting(false)
     }
   }
@@ -576,9 +590,10 @@ export default function PlanBuilderPage({
             <CardContent className="space-y-4">
               <div className="dsc-form-grid">
                 <div className="space-y-2">
-                  <Label>{lang === "ar" ? "اسم الطفل" : "Child Name"}</Label>
+                  <Label htmlFor="plan-child-name">{lang === "ar" ? "اسم الطفل" : "Child Name"}</Label>
                   <Input
-                    value={formData.childName}
+                    id="plan-child-name"
+                    value={formData.childName || childName}
                     onChange={(e) =>
                       setFormData({ ...formData, childName: e.target.value })
                     }
@@ -673,6 +688,7 @@ export default function PlanBuilderPage({
             </CardContent>
           </Card>
 
+          {saveError && <p role="alert" className="text-destructive">{saveError}</p>}
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={handleCancel}>
               {lang === "ar" ? "إلغاء" : "Cancel"}
@@ -680,12 +696,7 @@ export default function PlanBuilderPage({
             <Button
               onClick={handleSubmit}
               disabled={
-                !toolName.en ||
-                !formData.childName ||
-                !formData.startDate ||
-                !formData.endDate ||
-                !selectedCaseId ||
-                !planTypeId ||
+                isInitializing ||
                 isSubmitting
               }
             >
@@ -715,7 +726,7 @@ export default function PlanBuilderPage({
             </p>
             <PlanPreview
               config={{
-                childName: formData.childName,
+                childName,
                 expertName: formData.expertName,
                 startDate: formData.startDate,
                 endDate: formData.endDate,
