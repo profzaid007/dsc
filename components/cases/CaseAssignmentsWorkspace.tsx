@@ -10,12 +10,12 @@ import { formatDate } from "@/lib/format-date"
 export type WorkspaceAssignment = { id: string; name: string; status: string; date: string; category?: string; content: ReactNode; actions?: ReactNode }
 type Props = {
   ar: boolean; caseName: string; caseId: string; ownerName?: string; ownerLabel?: string; phone?: string
-  items: WorkspaceAssignment[]; messages: ReactNode; documents: ReactNode; results: ReactNode; create: ReactNode; feedback?: ReactNode
+  items: WorkspaceAssignment[]; documents: ReactNode; results: ReactNode; create: ReactNode; feedback?: ReactNode
 }
 const pageSize = 6
 
-export function CaseAssignmentsWorkspace({ ar, caseName, caseId, ownerName, ownerLabel, phone, items, messages, documents, results, create, feedback }: Props) {
-  const [tab, setTab] = useState<"assignments" | "messages" | "documents" | "results">("assignments")
+export function CaseAssignmentsWorkspace({ ar, caseName, caseId, ownerName, ownerLabel, phone, items, documents, results, create, feedback }: Props) {
+  const [tab, setTab] = useState<"assignments" | "documents" | "results">("assignments")
   const [query, setQuery] = useState("")
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -77,7 +77,7 @@ export function CaseAssignmentsWorkspace({ ar, caseName, caseId, ownerName, owne
     </section>
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div role="tablist" aria-label={t("أقسام الحالة", "Case sections")} className="flex flex-wrap gap-2">
-        {([{ id: "assignments", label: `${t("التكليفات", "Assignments")} (${items.length})`, icon: Layers }, { id: "messages", label: t("الرسائل", "Messages"), icon: Mail }, { id: "documents", label: t("ملفات الحالة", "Case files"), icon: FolderOpen }, { id: "results", label: t("النتائج والتقارير", "Results & reports"), icon: ClipboardList }] as const).map(({ id, label, icon: Icon }) => <button key={id} id={`case-tab-${id}`} aria-controls={`case-panel-${id}`} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex min-h-12 items-center gap-2 rounded-xl border px-4 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${tab === id ? "border-blue-700 bg-[#005bb9] text-white shadow-sm" : "border-blue-200 bg-white text-[#134e85] hover:bg-blue-50"}`}><Icon className="size-5" />{label}</button>)}
+        {([{ id: "assignments", label: `${t("التكليفات", "Assignments")} (${items.length})`, icon: Layers }, { id: "messages", label: t("الرسائل", "Messages"), icon: Mail }, { id: "documents", label: t("ملفات الحالة", "Case files"), icon: FolderOpen }, { id: "results", label: t("النتائج والتقارير", "Results & reports"), icon: ClipboardList }] as const).map(({ id, label, icon: Icon }) => id === "messages" ? <Link key={id} href={`/dashboard/messages?case=${encodeURIComponent(caseId)}`} className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-blue-200 bg-white px-4 text-sm font-bold text-[#134e85] transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"><Icon className="size-5" />{label}</Link> : <button key={id} id={`case-tab-${id}`} aria-controls={`case-panel-${id}`} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex min-h-12 items-center gap-2 rounded-xl border px-4 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${tab === id ? "border-blue-700 bg-[#005bb9] text-white shadow-sm" : "border-blue-200 bg-white text-[#134e85] hover:bg-blue-50"}`}><Icon className="size-5" />{label}</button>)}
       </div>
       <Button onClick={() => { setCreating(value => !value); setTab("assignments") }} aria-expanded={creating} aria-controls="case-new-assignment" className="min-h-12 rounded-xl bg-[#073d6b] px-5 text-base font-bold hover:bg-[#062f52]">{creating ? <X className="size-5" /> : <Plus className="size-5" />}{creating ? t("إغلاق", "Close") : t("تكليف جديد", "New assignment")}</Button>
     </div>
@@ -97,7 +97,6 @@ export function CaseAssignmentsWorkspace({ ar, caseName, caseId, ownerName, owne
         </article>
       </div>
     </section>}
-    {tab === "messages" && <section id="case-panel-messages" role="tabpanel" aria-labelledby="case-tab-messages">{messages}</section>}
     {tab === "documents" && <section id="case-panel-documents" role="tabpanel" aria-labelledby="case-tab-documents">{documents}</section>}
     {tab === "results" && <section id="case-panel-results" role="tabpanel" aria-labelledby="case-tab-results" className="space-y-5">{results}{feedback}</section>}
   </div>

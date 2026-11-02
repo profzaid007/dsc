@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import type { RecordModel } from "pocketbase"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
@@ -11,7 +13,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
-export function CaseDocuments({ caseId }: { caseId: string }) {
+export function CaseDocuments({ caseId, mode = "all", documentId, basePath }: { caseId: string; mode?: "all" | "list" | "detail" | "create"; documentId?: string; basePath?: string }) {
+  const router = useRouter()
   const { currentUser } = useAuth(),
     { lang } = useLang(),
     ar = lang === "ar",
@@ -33,6 +36,13 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
   const refresh = useCallback(
     async (signal?: AbortSignal) => {
       try {
+        if (mode === "create") { if (!signal?.aborted) setLoading(false); return }
+        if (mode === "detail") {
+          const record = await pb.collection("case_documents").getOne(documentId || "", { signal, requestKey: null })
+          if (record.case !== caseId) throw new Error(ar ? "المستند لا ينتمي إلى هذه الحالة." : "This file does not belong to this case.")
+          if (!signal?.aborted) { setDocuments([record]); setError("") }
+          return
+        }
         const records = await pb
           .collection("case_documents")
           .getFullList({
@@ -51,7 +61,7 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
         if (!signal?.aborted) setLoading(false)
       }
     },
-    [caseId, lang]
+    [caseId, lang, ar, mode, documentId]
   )
   useEffect(() => {
     const controller = new AbortController()
@@ -92,7 +102,8 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
       data.set("title", title.trim())
       data.set("description", description.trim())
       data.set("file", file)
-      await pb.collection("case_documents").create(data, { requestKey: null })
+      const saved = await pb.collection("case_documents").create(data, { requestKey: null })
+      if (mode === "create" && basePath) { router.push(`${basePath}/${encodeURIComponent(saved.id)}`); return }
       setFile(null)
       setTitle("")
       setDescription("")
@@ -141,8 +152,9 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
       dir={ar ? "rtl" : "ltr"}
     >
       <h2 className="text-xl font-semibold">
-        {ar ? "مستندات الحالة" : "Case documents"}
+        {mode === "create" ? (ar ? "ملف جديد" : "New file") : mode === "detail" ? (ar ? "تفاصيل الملف" : "File details") : (ar ? "ملفات الحالة" : "Case files")}
       </h2>
+      {basePath && <div className="flex flex-wrap gap-3">{mode === "list" && <Button asChild variant="outline"><Link href={basePath.replace(/\/files$/, "")}>{ar ? "العودة إلى التكليفات" : "Back to assignments"}</Link></Button>}{mode !== "list" && <Button asChild variant="outline"><Link href={basePath}>{ar ? "العودة إلى ملفات الحالة" : "Back to case files"}</Link></Button>}{mode === "list" && canUpload && <Button asChild><Link href={`${basePath}/new`}>{ar ? "ملف جديد" : "New file"}</Link></Button>}</div>}
       <p className="text-sm text-muted-foreground">
         {ar
           ? "ملفات الحالة المحفوظة، بما فيها المرفقات التي أضافها الخبير من رسائل صاحب الحالة."
@@ -153,7 +165,7 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
           {error}
         </p>
       )}
-      {loading ? (
+      {mode !== "create" && (loading ? (
         <p role="status">
           {ar ? "جارٍ تحميل المستندات…" : "Loading documents…"}
         </p>
@@ -162,9 +174,9 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
           {documents.map((doc) => (
             <li key={doc.id} className="rounded-md border p-3">
               <p dir="auto" className="font-medium [overflow-wrap:anywhere]">
-                {doc.title}
+                {basePath && mode === "list" ? <Link className="text-primary underline underline-offset-4" href={`${basePath}/${encodeURIComponent(doc.id)}`}>{doc.title || doc.file}</Link> : (doc.title || doc.file)}
               </p>
-              {doc.description && (
+              {mode !== "list" && doc.description && (
                 <p dir="auto" className="mt-1 whitespace-pre-wrap text-sm [overflow-wrap:anywhere]">
                   {doc.description}
                 </p>
@@ -179,14 +191,15 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
                     ? "ملف مرفوع"
                     : "Uploaded file"}
               </p>
-              <Button
+              {mode !== "list" && <p dir="auto" className="mt-2 text-sm [overflow-wrap:anywhere]">{ar ? "اسم الملف: " : "Filename: "}{doc.file}</p>}
+              {mode !== "list" && <Button
                 type="button"
                 variant="link"
                 disabled={busy}
                 onClick={() => void download(doc)}
               >
                 {ar ? "تنزيل المستند" : "Download document"}
-              </Button>
+              </Button>}
             </li>
           ))}
         </ul>
@@ -196,8 +209,9 @@ export function CaseDocuments({ caseId }: { caseId: string }) {
             ? "لا توجد مستندات لهذه الحالة بعد."
             : "No documents have been added to this case yet."}
         </p>
-      ) : null}
-      {canUpload && (
+      ) : null)}
+      {mode === "create" && !canUpload && <p role="alert">{ar ? "ليست لديك صلاحية إضافة ملفات لهذه الحالة." : "You do not have permission to add files to this case."}</p>}
+      {canUpload && (mode === "all" || mode === "create") && (
         <form onSubmit={upload} className="space-y-3 border-t pt-4">
           <Label htmlFor={`document-title-${caseId}`}>
             {ar ? "اسم المستند" : "Document title"}

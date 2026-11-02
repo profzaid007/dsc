@@ -1,7 +1,6 @@
 "use client"
 import { TemplateResponse } from "@/components/tools/TemplateResponse"
 import { CaseDocuments } from "@/components/cases/CaseDocuments"
-import { CaseMessages } from "@/components/cases/CaseMessages"
 import { ExpertCreateAssignment } from "@/components/cases/ExpertCreateAssignment"
 import type { MultipleChoiceConfig } from "@/types/tool"
 import { CaseAssignmentsWorkspace, type WorkspaceAssignment } from "@/components/cases/CaseAssignmentsWorkspace"
@@ -161,8 +160,7 @@ export default function ExpertCaseDetailPage({
     <CaseAssignmentsWorkspace key={id} ar={ar} caseName={profile.name} caseId={profile.id}
       ownerName={profile.owner_display?.name || profile.user_details?.name} ownerLabel={ownerLabel} phone={profile.user_details?.contact}
       items={items}
-      messages={<CaseMessages caseId={profile.id} />}
-      documents={<CaseDocuments caseId={profile.id} />}
+      documents={<CaseDocuments caseId={profile.id} mode="list" basePath={`/dashboard/expert/cases/${encodeURIComponent(profile.id)}/files`} />}
       results={<CaseAssessments key={`results-${assessmentReload}`} caseId={profile.id} mode="list" />}
       feedback={<CaseFeedback caseId={profile.id} ownerId={profile.user} />}
       create={<ExpertCreateAssignment caseId={profile.id} embedded onCreated={() => { void refreshTasks(); setAssessmentReload(value => value + 1) }} />}
