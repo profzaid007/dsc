@@ -952,7 +952,7 @@ export default function AdminCaseDetailPage({
             />
           </TabsContent>
         )}
-        <TabsContent value="documents"><CaseDocuments key={caseId} caseId={caseId} /></TabsContent>
+        <TabsContent value="documents"><CaseDocuments key={caseId} caseId={caseId} mode="list" basePath={`/dashboard/admin/cases/${encodeURIComponent(caseId)}/files`} /></TabsContent>
         <TabsContent value="case-file">
           <Card>
             <CardHeader>
