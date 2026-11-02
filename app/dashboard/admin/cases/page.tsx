@@ -55,7 +55,13 @@ import { formatDate, formatDateTime } from "@/lib/format-date"
 import { CaseStatusBadge } from "@/components/cases/status-badge"
 import type { Profile } from "@/types/profile"
 
-type CaseSortField = "name" | "date_of_birth" | "gender" | "grade" | "created"
+type CaseSortField = "name" | "date_of_birth" | "gender" | "status" | "created"
+const CASE_STATUS_ORDER: Record<string, number> = {
+  pending: 0,
+  awaiting_payment: 1,
+  under_review: 2,
+  active: 3,
+}
 
 const DATE_SORT_FIELDS: ReadonlySet<CaseSortField> = new Set([
   "date_of_birth",
@@ -133,7 +139,7 @@ export default function AdminCasesPage() {
     </div>
   )
   const [searchQuery, setSearchQuery] = useState("")
-  const [sortField, setSortField] = useState<CaseSortField>("name")
+  const [sortField, setSortField] = useState<CaseSortField>("status")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
   const assignmentCounts = useMemo(() => {
@@ -187,6 +193,17 @@ export default function AdminCasesPage() {
 
   const sortedProfiles = [...filteredProfiles].sort((a, b) => {
     const getVal = (p: Profile) => String(p[sortField] ?? "")
+
+    if (sortField === "status") {
+      const rankA = CASE_STATUS_ORDER[a.status || ""]
+      const rankB = CASE_STATUS_ORDER[b.status || ""]
+      if (rankA === undefined || rankB === undefined) {
+        if (rankA !== rankB) return rankA === undefined ? 1 : -1
+      } else if (rankA !== rankB) {
+        return sortDirection === "asc" ? rankA - rankB : rankB - rankA
+      }
+      return (a.name || "").localeCompare(b.name || "", lang)
+    }
 
     if (DATE_SORT_FIELDS.has(sortField)) {
       const timeA = Date.parse(getVal(a))
@@ -297,8 +314,8 @@ export default function AdminCasesPage() {
               <SelectItem value="gender">
                 {lang === "ar" ? "الجنس" : "Gender"}
               </SelectItem>
-              <SelectItem value="grade">
-                {lang === "ar" ? "الصف الدراسي" : "Grade"}
+              <SelectItem value="status">
+                {lang === "ar" ? "الحالة" : "Status"}
               </SelectItem>
             </SelectContent>
           </Select>
