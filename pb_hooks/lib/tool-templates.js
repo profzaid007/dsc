@@ -47,8 +47,9 @@ function validate(t){
 function list(e){
  const u=actor(e,e.app),out=[]
  for(const r of h.find(e.app,"case_tool_templates",'owner = "" || owner = {:id}',{id:u.id}))out.push(dto(r))
+ const types={};for(const r of h.find(e.app,"lookups",'type = "tool_types"',{}))types[r.id]=r.getString("key")
  for(const r of h.find(e.app,"tools",'status = "active"',{})){
-  const type=e.app.findRecordById("lookups",r.getString("type")),kind=type.getString("key")
+  const kind=types[r.getString("type")]
   if(kinds.includes(kind))out.push({id:"tool:"+r.id,name:r.getString("name_ar")||r.getString("name_en"),kind,scope:"public"})
  }
  for(const r of h.find(e.app,"assessments",'status = "published"',{}))out.push({id:"assessment:"+r.id,name:r.getString("name"),kind:"assessment",scope:"public"})
