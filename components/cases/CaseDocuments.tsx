@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import type { RecordModel } from "pocketbase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { CloudUpload, FileText, FolderOpen } from "lucide-react"
+import { CaseFilesTable, CaseFileTypeIcon } from "@/components/cases/CaseFilesTable"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
@@ -145,13 +147,25 @@ export function CaseDocuments({ caseId, mode = "all", documentId, basePath }: { 
       setBusy(false)
     }
   }
+  if (mode === "list" && basePath) return <CaseFilesTable
+    ar={ar}
+    files={documents.map(doc => ({ id: doc.id, title: String(doc.title || ""), filename: String(doc.file || ""), description: String(doc.description || ""), created: doc.created, fromMessage: Boolean(doc.source_message) }))}
+    basePath={basePath}
+    canUpload={canUpload}
+    loading={loading}
+    error={error}
+    busy={busy}
+    onDownload={id => { const doc = documents.find(item => item.id === id); if (doc) void download(doc) }}
+    onRetry={() => void refresh()}
+  />
   return (
     <section
       id="case-documents"
-      className="space-y-4 rounded-lg border bg-card p-4"
+      className="space-y-5 rounded-2xl border border-blue-100 bg-white p-5 text-[#082c4a] shadow-[0_3px_8px_#1648800c] sm:p-6"
       dir={ar ? "rtl" : "ltr"}
     >
-      <h2 className="text-xl font-semibold">
+      <h2 className="flex items-center gap-3 text-xl font-bold sm:text-2xl">
+        {mode === "create" ? <CloudUpload className="size-8 text-[#005bb9]" /> : mode === "detail" ? <FileText className="size-8 text-[#005bb9]" /> : <FolderOpen className="size-8 text-[#005bb9]" />}
         {mode === "create" ? (ar ? "ملف جديد" : "New file") : mode === "detail" ? (ar ? "تفاصيل الملف" : "File details") : (ar ? "ملفات الحالة" : "Case files")}
       </h2>
       {basePath && <div className="flex flex-wrap gap-3">{mode === "list" && <Button asChild variant="outline"><Link href={basePath.replace(/\/files$/, "")}>{ar ? "العودة إلى التكليفات" : "Back to assignments"}</Link></Button>}{mode !== "list" && <Button asChild variant="outline"><Link href={basePath}>{ar ? "العودة إلى ملفات الحالة" : "Back to case files"}</Link></Button>}{mode === "list" && canUpload && <Button asChild><Link href={`${basePath}/new`}>{ar ? "ملف جديد" : "New file"}</Link></Button>}</div>}
@@ -172,12 +186,12 @@ export function CaseDocuments({ caseId, mode = "all", documentId, basePath }: { 
       ) : documents.length ? (
         <ul className="space-y-3">
           {documents.map((doc) => (
-            <li key={doc.id} className="rounded-md border p-3">
-              <p dir="auto" className="font-medium [overflow-wrap:anywhere]">
+            <li key={doc.id} className="space-y-4 rounded-xl border border-blue-100 bg-[#f5f9ff] p-5">
+              <div className="flex items-center gap-3"><CaseFileTypeIcon filename={String(doc.file || "")} /><p dir="auto" className="text-lg font-bold [overflow-wrap:anywhere]">
                 {basePath && mode === "list" ? <Link className="text-primary underline underline-offset-4" href={`${basePath}/${encodeURIComponent(doc.id)}`}>{doc.title || doc.file}</Link> : (doc.title || doc.file)}
-              </p>
+              </p></div>
               {mode !== "list" && doc.description && (
-                <p dir="auto" className="mt-1 whitespace-pre-wrap text-sm [overflow-wrap:anywhere]">
+                <p dir="auto" className="rounded-xl bg-white p-4 whitespace-pre-wrap text-sm leading-7 [overflow-wrap:anywhere]">
                   {doc.description}
                 </p>
               )}
@@ -212,7 +226,7 @@ export function CaseDocuments({ caseId, mode = "all", documentId, basePath }: { 
       ) : null)}
       {mode === "create" && !canUpload && <p role="alert">{ar ? "ليست لديك صلاحية إضافة ملفات لهذه الحالة." : "You do not have permission to add files to this case."}</p>}
       {canUpload && (mode === "all" || mode === "create") && (
-        <form onSubmit={upload} className="space-y-3 border-t pt-4">
+        <form onSubmit={upload} className="space-y-3 rounded-xl border border-blue-100 bg-[#f6faff] p-5">
           <Label htmlFor={`document-title-${caseId}`}>
             {ar ? "اسم المستند" : "Document title"}
           </Label>
@@ -246,13 +260,15 @@ export function CaseDocuments({ caseId, mode = "all", documentId, basePath }: { 
             required
             disabled={busy}
             accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp3,.wav,.mp4"
+            className="h-auto min-h-14 border-dashed border-blue-300 bg-white p-3"
             onChange={(e) => {
               const selected = e.target.files?.[0] || null
               setFile(selected)
               if (!title && selected) setTitle(selected.name.slice(0, 250))
             }}
           />
-          <Button type="submit" disabled={busy || !file || !title.trim()}>
+          {file && <p className="text-xs text-slate-600"><bdi>{file.name}</bdi> · <bdi>{(file.size / 1048576).toFixed(2)} MB</bdi></p>}
+          <Button type="submit" disabled={busy || !file || !title.trim()} className="min-h-11 rounded-xl bg-[#005bb9] px-5 font-bold hover:bg-[#004d9d]">
             {busy
               ? ar
                 ? "جارٍ الحفظ…"
