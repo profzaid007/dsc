@@ -4,20 +4,22 @@ import { CaseDocuments } from "@/components/cases/CaseDocuments"
 import { CaseMessages } from "@/components/cases/CaseMessages"
 import { ExpertCreateAssignment } from "@/components/cases/ExpertCreateAssignment"
 import type { MultipleChoiceConfig } from "@/types/tool"
-import { CaseName } from "@/components/cases/CaseName"
+import { CaseAssignmentsWorkspace, type WorkspaceAssignment } from "@/components/cases/CaseAssignmentsWorkspace"
+import { AssignmentAssessmentDetail } from "@/components/cases/AssignmentAssessmentDetail"
+import type { SessionRecord } from "@/lib/assessments/types"
+import { ClipboardCheck, ExternalLink } from "lucide-react"
 import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
-import { use, useState } from "react"
+import { use, useEffect, useState } from "react"
 import Link from "next/link"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
-import { getErrorMessage } from "@/lib/pb"
+import pb, { getErrorMessage } from "@/lib/pb"
 import { specializationLabel } from "@/components/team/team-labels"
 import { PageLoader } from "@/components/ui/page-loader"
 import { DataError } from "@/components/ui/data-error"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -103,6 +105,17 @@ export default function ExpertCaseDetailPage({
   const { currentUser } = useAuth()
   const { lang } = useLang()
   const ar = lang === "ar"
+  const [assessmentData, setAssessmentData] = useState<{caseId: string; sessions: SessionRecord[]}>({caseId: "", sessions: []})
+  const assessmentSessions = assessmentData.caseId === id ? assessmentData.sessions : []
+  const [assessmentError, setAssessmentError] = useState("")
+  const [assessmentReload, setAssessmentReload] = useState(0)
+  useEffect(() => {
+    const controller = new AbortController()
+    pb.send<{sessions: SessionRecord[]}>(`/api/dsc/cases/${encodeURIComponent(id)}/assessments`, { method: "GET", signal: controller.signal, requestKey: null })
+      .then(data => { setAssessmentData({caseId: id, sessions: data.sessions}); setAssessmentError("") })
+      .catch(error => { if (!controller.signal.aborted) setAssessmentError(getErrorMessage(error, lang)) })
+    return () => controller.abort()
+  }, [id, lang, assessmentReload])
   if (isLoading || tasksLoading) return <PageLoader />
   if (loadError || taskError)
     return (
@@ -121,71 +134,38 @@ export default function ExpertCaseDetailPage({
         {ar ? "الحالة غير متاحة لك." : "This case is not available to you."}
       </p>
     )
-  const statuses: Record<string, string> = ar
-    ? {
-        pending: "قيد الانتظار",
-        assigned: "مسندة",
-        in_progress: "قيد التنفيذ",
-        completed: "مكتملة",
-      }
-    : {
-        pending: "Pending",
-        assigned: "Assigned",
-        in_progress: "In progress",
-        completed: "Completed",
-      }
-  return (
-    <div className="space-y-6">
-      <Link className="text-primary underline" href="/dashboard/expert/cases">
-        {ar ? "العودة إلى الحالات" : "Back to cases"}
-      </Link>
-      <h1 className="text-2xl font-bold [overflow-wrap:anywhere]">
-        <CaseName profile={profile} />
-      </h1>
-      <h2 className="text-lg font-semibold">{ar ? "التكليفات" : "Assignments"}</h2>
-      <CaseMessages key={`messages-${profile.id}`} caseId={profile.id} />
-      <ExpertCreateAssignment key={profile.id} caseId={profile.id} onCreated={() => { void refreshTasks() }} />
-      {!assignments.length && (
-        <p>{ar ? "لا توجد تكليفات متاحة بعد." : "No assignments available yet."}</p>
-      )}
-      {assignments.map((task) => (
-        <Card key={task.id} className="block p-0">
-         <details className="group">
-          <summary className="cursor-pointer rounded-xl p-6 focus-visible:outline-2 focus-visible:outline-primary">
-            <span className="font-semibold [overflow-wrap:anywhere]">
-              {(ar ? task.name_ar : task.name_en) ||
-                task.name_en ||
-                task.name_ar ||
-                (ar ? "تكليف" : "Assignment")}
-            </span>
-            <span className="mt-1 block text-sm text-muted-foreground">
-              {statuses[task.status]}
-              {task.specialization &&
-                ` · ${specializationLabel(task.specialization, lang)}`}
-            </span>
-          </summary>
-          <CardContent className="space-y-4">
-            {(task.config as unknown as Record<string, unknown>)?.templateWorkflow === true && ["plan","report"].includes(String((task.config as unknown as Record<string, unknown>)?.templateKind || "")) && <TemplateResponse task={task} kind={String((task.config as unknown as Record<string, unknown>)?.templateKind || "")} readOnly />}
-            <Button asChild variant="outline"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}>{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>
-            <p className="[overflow-wrap:anywhere] whitespace-pre-wrap">
-              {task.task_brief}
-            </p>
-            {!task.task_brief && (task.config as Partial<MultipleChoiceConfig> | undefined)?.questions?.map(question => (
-              <div key={question.id} className="space-y-2">
-                <p dir="auto" className="whitespace-pre-wrap">{question.text}</p>
-                {typeof task.responses?.[question.id] === "string" && <div className="rounded-md bg-slate-50 p-3"><p className="text-sm font-semibold">{ar ? "إجابة صاحب الحالة" : "Case owner's answer"}</p><p dir="auto" className="whitespace-pre-wrap">{String(task.responses[question.id])}</p></div>}
-              </div>
-            ))}
-            {task.assigned_expert === currentUser?.id && (
-              <TaskResponse key={task.id} task={task} save={updateAssignment} />
-            )}
-          </CardContent>
-         </details>
-        </Card>
-      ))}
-      <CaseDocuments key={`documents-${profile.id}`} caseId={profile.id} />
-      <CaseAssessments caseId={profile.id} />
-      <CaseFeedback caseId={profile.id} ownerId={profile.user} />
-    </div>
-  )
+  const items: WorkspaceAssignment[] = assignments.map(task => ({
+    id: `tool:${task.id}`,
+    name: (ar ? task.name_ar : task.name_en) || task.name_en || task.name_ar || (ar ? "تكليف" : "Assignment"),
+    status: task.status,
+    date: task.assigned_at || task.created,
+    category: task.specialization ? specializationLabel(task.specialization, lang) : undefined,
+    content: <div className="space-y-5">
+      {(task.config as unknown as Record<string, unknown>)?.templateWorkflow === true && ["plan", "report"].includes(String((task.config as unknown as Record<string, unknown>)?.templateKind || "")) && <TemplateResponse task={task} kind={String((task.config as unknown as Record<string, unknown>)?.templateKind || "")} readOnly />}
+      {task.task_brief && <p dir="auto" className="rounded-xl bg-blue-50 p-4 text-sm leading-7 whitespace-pre-wrap [overflow-wrap:anywhere]">{task.task_brief}</p>}
+      {!task.task_brief && (task.config as Partial<MultipleChoiceConfig> | undefined)?.questions?.map((question, index) => <section key={question.id} className="rounded-xl border border-blue-100 bg-[#f3f8ff] p-4"><div className="flex items-start gap-3"><span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white text-xs font-bold text-blue-700">{index + 1}</span><p dir="auto" className="text-sm font-semibold leading-7 whitespace-pre-wrap">{question.text}</p></div>{typeof task.responses?.[question.id] === "string" && <div className="mt-3 rounded-lg bg-white p-3"><p className="text-xs font-semibold text-slate-500">{ar ? "إجابة صاحب الحالة" : "Case owner's answer"}</p><p dir="auto" className="mt-1 text-sm whitespace-pre-wrap">{String(task.responses[question.id])}</p></div>}</section>)}
+      {task.assigned_expert === currentUser?.id && <TaskResponse key={task.id} task={task} save={updateAssignment} />}
+    </div>,
+    actions: <Button asChild variant="outline" className="min-h-11 border-blue-200 text-blue-800"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}><ExternalLink className="size-4" />{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>,
+  }))
+  items.push(...assessmentSessions.map(session => ({
+    id: `assessment:${session.id}`, name: session.snapshot.name, status: session.status,
+    date: session.assigned_at || session.created, category: ar ? "مقياس / تقييم" : "Assessment",
+    content: <AssignmentAssessmentDetail key={session.id} id={session.id} ar={ar} />,
+    actions: <span className="inline-flex items-center gap-2 text-xs text-slate-600"><ClipboardCheck className="size-4" />{ar ? "التقرير الكامل متاح من تبويب النتائج والتقارير." : "Full reports are available in Results & reports."}</span>,
+  })))
+  items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  const ownerLabel = profile.owner_display?.type === "parent" ? (ar ? "ولي الأمر" : "Parent") : (ar ? "الجهة التابعة لها الحالة" : "Case organization")
+  return <>
+    {assessmentError && <p role="alert" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{ar ? "تعذر تحميل تكليفات المقاييس: " : "Could not load assessments: "}{assessmentError}<Button variant="link" onClick={() => setAssessmentReload(value => value + 1)}>{ar ? "إعادة المحاولة" : "Retry"}</Button></p>}
+    <CaseAssignmentsWorkspace key={id} ar={ar} caseName={profile.name} caseId={profile.id}
+      ownerName={profile.owner_display?.name || profile.user_details?.name} ownerLabel={ownerLabel} phone={profile.user_details?.contact}
+      items={items}
+      messages={<CaseMessages caseId={profile.id} />}
+      documents={<CaseDocuments caseId={profile.id} />}
+      results={<CaseAssessments key={`results-${assessmentReload}`} caseId={profile.id} mode="list" />}
+      feedback={<CaseFeedback caseId={profile.id} ownerId={profile.user} />}
+      create={<ExpertCreateAssignment caseId={profile.id} embedded onCreated={() => { void refreshTasks(); setAssessmentReload(value => value + 1) }} />}
+    />
+  </>
 }
