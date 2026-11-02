@@ -1,5 +1,6 @@
 "use client"
 import { TemplateResponse } from "@/components/tools/TemplateResponse"
+import { AttachmentAssignmentDetail, isAttachmentRequest } from "@/components/cases/AttachmentAssignmentDetail"
 import { CaseDocuments } from "@/components/cases/CaseDocuments"
 import { ExpertCreateAssignment } from "@/components/cases/ExpertCreateAssignment"
 import type { MultipleChoiceConfig } from "@/types/tool"
@@ -140,12 +141,13 @@ export default function ExpertCaseDetailPage({
     date: task.assigned_at || task.created,
     category: task.specialization ? specializationLabel(task.specialization, lang) : undefined,
     content: <div className="space-y-5">
+      {isAttachmentRequest(task) && <AttachmentAssignmentDetail task={task} ar={ar} />}
       {(task.config as unknown as Record<string, unknown>)?.templateWorkflow === true && ["plan", "report"].includes(String((task.config as unknown as Record<string, unknown>)?.templateKind || "")) && <TemplateResponse task={task} kind={String((task.config as unknown as Record<string, unknown>)?.templateKind || "")} readOnly />}
       {task.task_brief && <p dir="auto" className="rounded-xl bg-blue-50 p-4 text-sm leading-7 whitespace-pre-wrap [overflow-wrap:anywhere]">{task.task_brief}</p>}
       {!task.task_brief && (task.config as Partial<MultipleChoiceConfig> | undefined)?.questions?.map((question, index) => <section key={question.id} className="rounded-xl border border-blue-100 bg-[#f3f8ff] p-4"><div className="flex items-start gap-3"><span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white text-xs font-bold text-blue-700">{index + 1}</span><p dir="auto" className="text-sm font-semibold leading-7 whitespace-pre-wrap">{question.text}</p></div>{typeof task.responses?.[question.id] === "string" && <div className="mt-3 rounded-lg bg-white p-3"><p className="text-xs font-semibold text-slate-500">{ar ? "إجابة صاحب الحالة" : "Case owner's answer"}</p><p dir="auto" className="mt-1 text-sm whitespace-pre-wrap">{String(task.responses[question.id])}</p></div>}</section>)}
       {task.assigned_expert === currentUser?.id && <TaskResponse key={task.id} task={task} save={updateAssignment} />}
     </div>,
-    actions: <Button asChild variant="outline" className="min-h-11 border-blue-200 text-blue-800"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}><ExternalLink className="size-4" />{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>,
+    actions: isAttachmentRequest(task) ? undefined : <Button asChild variant="outline" className="min-h-11 border-blue-200 text-blue-800"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}><ExternalLink className="size-4" />{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>,
   }))
   items.push(...assessmentSessions.map(session => ({
     id: `assessment:${session.id}`, name: session.snapshot.name, status: session.status,
