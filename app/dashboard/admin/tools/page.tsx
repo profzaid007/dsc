@@ -132,6 +132,11 @@ export default function AdminToolsPage() {
   }
 
   const isLoading = isToolsLoading || isToolTypesLoading
+  const createHref = filterType === "all"
+    ? "/dashboard/admin/tools/new"
+    : filterType === "attachment_request" || filterType === "one_to_one_meeting"
+      ? `/dashboard/admin/tools/${getToolTypeMeta(filterType)?.route}/new`
+      : `/dashboard/admin/tools/new?type=${encodeURIComponent(filterType)}`
 
   if (toolsLoadError)
     return <DataError message={toolsLoadError} onRetry={retryTools} />
@@ -148,7 +153,7 @@ export default function AdminToolsPage() {
               {lang === "ar" ? "إدارة قوالب الأدوات" : "Manage tool templates"}
             </p>
           </div>
-          <Link href="/dashboard/admin/tools/new">
+          <Link href={createHref}>
             <Button disabled={!access.can("tools.create")}>
               <Plus className="me-2 h-4 w-4" />
               {lang === "ar" ? "أداة جديدة" : "New Tool"}
@@ -171,7 +176,7 @@ export default function AdminToolsPage() {
             {lang === "ar" ? "إدارة قوالب الأدوات" : "Manage tool templates"}
           </p>
         </div>
-        <Link href="/dashboard/admin/tools/new">
+        <Link href={createHref}>
           <Button disabled={!access.can("tools.create")}>
             <Plus className="me-2 h-4 w-4" />
             {lang === "ar" ? "أداة جديدة" : "New Tool"}
@@ -179,6 +184,7 @@ export default function AdminToolsPage() {
         </Link>
       </div>
 
+      <Button asChild variant="outline"><Link href="/dashboard/admin/tools/templates">{lang === "ar" ? "مكتبة القوالب العامة" : "Public template library"}</Link></Button>
       <div className="flex gap-4">
         <Select
           value={filterType}
@@ -241,11 +247,6 @@ export default function AdminToolsPage() {
                 ? "أنشئ أداتك الأولى للبدء"
                 : "Create your first tool to get started"}
             </p>
-            <Link href="/dashboard/admin/tools/new">
-              <Button disabled={!access.can("tools.create")}>
-                {lang === "ar" ? "إنشاء أداة" : "Create Tool"}
-              </Button>
-            </Link>
           </CardContent>
         </Card>
       ) : (

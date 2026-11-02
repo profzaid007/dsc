@@ -1,4 +1,5 @@
 "use client"
+import { TemplateResponse } from "@/components/tools/TemplateResponse"
 import { CaseName } from "@/components/cases/CaseName"
 import { useProtectedFileToken } from "@/hooks/useProtectedFileToken"
 import { surveyOptionLabel } from "@/lib/survey-options"
@@ -1243,6 +1244,8 @@ export default function TakeSurveyToolPage({
     lang === "ar"
       ? assignment.name_ar || assignment.name_en
       : assignment.name_en
+
+  if ((isPlanTool || isReportTool) && (assignment.config as unknown as Record<string, unknown>)?.templateWorkflow === true) return <TemplateResponse key={assignment.id} task={assignment} kind={toolTypeName} readOnly={isAdminOrExpert} save={updateAssignment} />
 
   if (isCompleted) {
     return (

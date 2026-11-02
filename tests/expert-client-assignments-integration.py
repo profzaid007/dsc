@@ -31,7 +31,7 @@ const list=await req('/api/dsc/my-assignments',parent);assert.equal(list.status,
 assert.equal((await req(recordPath,other)).status,404);assert.equal((await req(recordPath,other,'PATCH',{status:'completed',responses:{answer:'Foreign answer'}})).status,404);
 const answer=await req(recordPath,parent,'PATCH',{status:'completed',responses:{answer:'I finished the tool.'}});assert.equal(answer.status,200);assert.equal((await req(recordPath,parent,'PATCH',{config:{}})).status,404);assert.equal((await req(recordPath,parent,'PATCH',{is_visible_to_user:false})).status,404);assert.equal((await req(recordPath,expert)).data.responses.answer,'I finished the tool.');
 const template=await req('/api/collections/tools/records/'+tool.id,expert);assert.equal(template.status,200);
-const customBody={type:template.data.type,name_ar:'Private custom tool',config:template.data.config,case:'foreign-case',status:'completed'};
+const requestTypes=await req('/api/collections/lookups/records?filter='+encodeURIComponent('type = \"tool_types\" && key = \"attachment_request\"'),expert);assert.equal(requestTypes.status,200);const customBody={type:requestTypes.data.items[0].id,name_ar:'Private custom tool',config:template.data.config,case:'foreign-case',status:'completed'};
 assert.equal((await req(path+'/custom-assignments',foreign,'POST',customBody)).status,403);
 assert.equal((await req(path+'/custom-assignments',parent,'POST',customBody)).status,403);
 const custom=await req(path+'/custom-assignments',expert,'POST',customBody);assert.equal(custom.status,201,JSON.stringify(custom.data));

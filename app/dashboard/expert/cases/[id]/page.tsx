@@ -1,4 +1,5 @@
 "use client"
+import { TemplateResponse } from "@/components/tools/TemplateResponse"
 import { CaseDocuments } from "@/components/cases/CaseDocuments"
 import { CaseMessages } from "@/components/cases/CaseMessages"
 import { ExpertCreateAssignment } from "@/components/cases/ExpertCreateAssignment"
@@ -163,6 +164,7 @@ export default function ExpertCaseDetailPage({
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {(task.config as unknown as Record<string, unknown>)?.templateWorkflow === true && ["plan","report"].includes(String((task.config as unknown as Record<string, unknown>)?.templateKind || "")) && <TemplateResponse task={task} kind={String((task.config as unknown as Record<string, unknown>)?.templateKind || "")} readOnly />}
             <Button asChild variant="outline"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}>{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>
             <p className="[overflow-wrap:anywhere] whitespace-pre-wrap">
               {task.task_brief}

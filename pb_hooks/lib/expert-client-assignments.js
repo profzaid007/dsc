@@ -62,7 +62,7 @@ function createCustom(e) {
     const ctx = context(e, app)
     if (typeof body.type !== "string") throw new BadRequestError("Select a tool type.")
     const type = app.findRecordById("lookups", body.type)
-    const keys = ["plan", "report", "attachment_request", "survey", "multiple_answer", "one_to_one_meeting"]
+    const keys = ["attachment_request", "one_to_one_meeting"]
     if (type.getString("type") !== "tool_types" || !keys.includes(type.getString("key"))) throw new BadRequestError("Unsupported tool type.")
     const en = typeof body.name_en === "string" ? body.name_en.trim() : ""
     const ar = typeof body.name_ar === "string" ? body.name_ar.trim() : ""

@@ -1,4 +1,5 @@
 "use client"
+import { TemplateWorkspace } from "@/components/tools/TemplateWorkspace"
 import { CaseDocuments } from "@/components/cases/CaseDocuments"
 import { CaseMessages } from "@/components/cases/CaseMessages"
 import { CaseName } from "@/components/cases/CaseName"
@@ -12,7 +13,6 @@ import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
-import { useTools } from "@/hooks/useTools"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useUsers } from "@/hooks/useUsers"
 import { useLang } from "@/lib/lang-context"
@@ -77,17 +77,10 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import type { AssignmentStatus } from "@/types/assignment"
-import type { Tool, ToolType, ToolConfig } from "@/types/tool"
 import {
   getToolTypeLabel,
   getToolTypeMeta,
-  toolTypeOrder,
 } from "@/lib/tool-types"
-import {
-  getAllowedToolTypesForCase,
-  getAllowedToolTypesForRoleId,
-  caseExpertsCollection,
-} from "@/lib/pb-collections"
 
 const statusColors: Record<AssignmentStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -131,8 +124,7 @@ export default function AdminCaseDetailPage({
     approveCase,
     rejectPayment,
   } = useProfiles()
-  const { assignments, assignTool, deleteAssignment } = useAssignments()
-  const { tools } = useTools()
+  const { assignments, deleteAssignment, refresh: refreshAssignments } = useAssignments()
   const { toolTypes, fetchToolTypes } = useToolTypes()
   const { users } = useUsers()
   const { bankDetails } = usePaymentSettings()
@@ -141,15 +133,6 @@ export default function AdminCaseDetailPage({
   const [assignKind, setAssignKind] = useState<"tool" | "assessment">("tool")
   const [assessmentReload, setAssessmentReload] = useState(0)
   const [assessmentCount, setAssessmentCount] = useState(0)
-  const [selectedToolId, setSelectedToolId] = useState<string>("")
-  const [isAssigning, setIsAssigning] = useState(false)
-  const [assignTab, setAssignTab] = useState<"templates" | "caseSpecific">(
-    "templates"
-  )
-  const [toolTypeFilter, setToolTypeFilter] = useState<string>("all")
-  const [confirmToolType, setConfirmToolType] = useState<string | null>(null)
-  const [allocationRevision, setAllocationRevision] = useState(0)
-  const [allowedToolTypeIds, setAllowedToolTypeIds] = useState<string[]>([])
   const [linkMode, setLinkMode] = useState<"existing" | "new">("existing")
   const [linkUserId, setLinkUserId] = useState("")
   const [newUser, setNewUser] = useState({ name: "", email: "", password: "" })
@@ -164,7 +147,6 @@ export default function AdminCaseDetailPage({
 
   const profile = getProfileById(caseId)
   const caseAssignments = assignments.filter((a) => a.case === caseId)
-  const isExpert = currentUser?.role === "expert"
   const owner = profile ? users.find((u) => u.id === profile.user) : undefined
   const linkableUsers = users.filter(
     (u) => !["admin", "super_admin", "expert"].includes(u.role)
@@ -357,56 +339,6 @@ export default function AdminCaseDetailPage({
   useEffect(() => {
     fetchToolTypes()
   }, [fetchToolTypes])
-
-  useEffect(() => {
-    async function fetchAllowedToolTypes() {
-      if (!caseId || !currentUser) return
-      try {
-        if (isExpert) {
-          const caseExpert = await caseExpertsCollection.getByCaseAndExpert(
-            caseId,
-            currentUser.id
-          )
-          const allowed = caseExpert?.role_id
-            ? await getAllowedToolTypesForRoleId(caseExpert.role_id)
-            : []
-          setAllowedToolTypeIds(allowed)
-        } else {
-          const allowed = await getAllowedToolTypesForCase(caseId)
-          setAllowedToolTypeIds(allowed)
-        }
-      } catch (error) {
-        console.error("Failed to fetch allowed tool types for case:", error)
-        toast.error(getErrorMessage(error))
-      }
-    }
-    fetchAllowedToolTypes()
-  }, [caseId, currentUser, isExpert, allocationRevision])
-
-  const handleAssignTool = async () => {
-    if (!selectedToolId) return
-    setIsAssigning(true)
-    try {
-      const tool = tools.find((t) => t.id === selectedToolId)
-      if (tool) {
-        const toolTypeObj = toolTypes.find((tt) => tt.id === tool.type)
-        await assignTool({
-          case: caseId,
-          type: toolTypeObj?.id || tool.type,
-          name_en: tool.name.en,
-          name_ar: tool.name.ar,
-          is_not_template: false,
-          config: tool.config as ToolConfig,
-          status: "pending",
-          is_visible_to_user: true,
-        })
-        setShowAssignModal(false)
-        setSelectedToolId("")
-      }
-    } finally {
-      setIsAssigning(false)
-    }
-  }
 
   if (!profile) {
     return (
@@ -1017,7 +949,6 @@ export default function AdminCaseDetailPage({
             <CaseAllocations
               key={profile.id}
               caseId={profile.id}
-              onSaved={() => setAllocationRevision((value) => value + 1)}
             />
           </TabsContent>
         )}
@@ -1124,146 +1055,7 @@ export default function AdminCaseDetailPage({
                   }}
                 />
               ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                    {/* Case-specific tools - direct create */}
-                    {toolTypeOrder
-                      .filter((key) =>
-                        ["plan", "report", "attachment_request"].includes(key)
-                      )
-                      .filter((key) => {
-                        const toolType = toolTypes.find(
-                          (item) => item.key === key
-                        )
-                        if (!toolType) return false
-                        if (isExpert)
-                          return allowedToolTypeIds.includes(toolType.id)
-                        return (
-                          allowedToolTypeIds.length === 0 ||
-                          allowedToolTypeIds.includes(toolType.id)
-                        )
-                      })
-                      .map((key) => {
-                        const toolType = toolTypes.find(
-                          (item) => item.key === key
-                        )
-                        const meta = getToolTypeMeta(key)
-                        if (!toolType || !meta) return null
-
-                        return (
-                          <div
-                            key={toolType.id}
-                            className="flex flex-col items-center gap-3 rounded-lg border p-4"
-                          >
-                            <meta.icon className="h-8 w-8 text-muted-foreground" />
-                            <span className="font-medium">
-                              {getToolTypeLabel(toolType, lang)}
-                            </span>
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                router.push(
-                                  `/dashboard/admin/tools/${meta.route}/new?caseId=${caseId}`
-                                )
-                                setShowAssignModal(false)
-                              }}
-                            >
-                              {lang === "ar" ? "إنشاء" : "Create"}
-                            </Button>
-                          </div>
-                        )
-                      })}
-
-                    {/* Template-based tools - show template list or create new */}
-                    {toolTypeOrder
-                      .filter((key) =>
-                        ["survey", "multiple_answer"].includes(key)
-                      )
-                      .filter((key) => {
-                        const toolType = toolTypes.find(
-                          (item) => item.key === key
-                        )
-                        if (!toolType) return false
-                        if (isExpert)
-                          return allowedToolTypeIds.includes(toolType.id)
-                        return (
-                          allowedToolTypeIds.length === 0 ||
-                          allowedToolTypeIds.includes(toolType.id)
-                        )
-                      })
-                      .map((key) => {
-                        const toolType = toolTypes.find(
-                          (item) => item.key === key
-                        )
-                        const meta = getToolTypeMeta(key)
-                        if (!toolType || !meta) return null
-
-                        const typeTools = tools.filter((t) => {
-                          const toolTypeObj = toolTypes.find(
-                            (tt) => tt.id === t.type
-                          )
-                          return toolTypeObj?.key === key
-                        })
-
-                        return (
-                          <div
-                            key={toolType.id}
-                            className="flex flex-col items-center gap-3 rounded-lg border p-4"
-                          >
-                            <meta.icon className="h-8 w-8 text-muted-foreground" />
-                            <span className="font-medium">
-                              {getToolTypeLabel(toolType, lang)}
-                            </span>
-                            <div className="flex gap-2">
-                              {typeTools.length > 0 && (
-                                <Select
-                                  onValueChange={(toolId) => {
-                                    setSelectedToolId(toolId)
-                                    setConfirmToolType(key)
-                                  }}
-                                >
-                                  <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue
-                                      placeholder={
-                                        lang === "ar" ? "قوالب" : "Templates"
-                                      }
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {typeTools.map((tool) => (
-                                      <SelectItem key={tool.id} value={tool.id}>
-                                        {tool.name.en}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  router.push(
-                                    `/dashboard/admin/tools/${meta.route}/new?caseId=${caseId}`
-                                  )
-                                  setShowAssignModal(false)
-                                }}
-                              >
-                                {lang === "ar" ? "جديد" : "New"}
-                              </Button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-
-                  {allowedToolTypeIds.length > 0 && (
-                    <p className="mt-4 text-sm text-muted-foreground">
-                      {lang === "ar"
-                        ? "يتم عرض أنواع الأدوات بناءً على أدوار الخبراء المخصصين لهذه الحالة."
-                        : "Tool types shown are based on the assigned experts' roles for this case."}
-                    </p>
-                  )}
-                </>
+                <TemplateWorkspace caseId={caseId} onSent={() => { void refreshAssignments(); setAssessmentReload(v => v + 1); setShowAssignModal(false) }} />
               )}
             </CardContent>
             <CardContent className="flex justify-end pt-0">
@@ -1271,7 +1063,6 @@ export default function AdminCaseDetailPage({
                 variant="outline"
                 onClick={() => {
                   setShowAssignModal(false)
-                  setSelectedToolId("")
                 }}
               >
                 {lang === "ar" ? "إلغاء" : "Cancel"}
@@ -1281,73 +1072,7 @@ export default function AdminCaseDetailPage({
         </div>
       )}
 
-      {confirmToolType && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="mx-4 w-full max-w-sm">
-            <CardHeader>
-              <CardTitle>{lang === "ar" ? "تأكيد" : "Confirm"}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedToolId ? (
-                <p>
-                  {lang === "ar"
-                    ? `هل تريد تكليف هذا القالب لهذه الحالة؟`
-                    : `Assign this template to this case?`}
-                </p>
-              ) : (
-                <p>
-                  {lang === "ar"
-                    ? `إنشاء ${getToolTypeLabel(
-                        toolTypes.find((item) => item.key === confirmToolType),
-                        lang
-                      )} جديد لهذه الحالة؟`
-                    : `Create new ${getToolTypeLabel(
-                        toolTypes.find((item) => item.key === confirmToolType),
-                        lang
-                      )} for this case?`}
-                </p>
-              )}
-            </CardContent>
-            <CardContent className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setConfirmToolType(null)
-                  setSelectedToolId("")
-                }}
-              >
-                {lang === "ar" ? "إلغاء" : "Cancel"}
-              </Button>
-              {selectedToolId ? (
-                <Button onClick={handleAssignTool} disabled={isAssigning}>
-                  {isAssigning
-                    ? lang === "ar"
-                      ? "جاري التكليف..."
-                      : "Assigning..."
-                    : lang === "ar"
-                      ? "تكليف"
-                      : "Assign"}
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => {
-                    const route =
-                      getToolTypeMeta(confirmToolType)?.route || confirmToolType
-                    router.push(
-                      `/dashboard/admin/tools/${route}/new?caseId=${caseId}`
-                    )
-                    setShowAssignModal(false)
-                    setConfirmToolType(null)
-                    setSelectedToolId("")
-                  }}
-                >
-                  {lang === "ar" ? "إنشاء" : "Create"}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+
     </div>
   )
 }

@@ -474,7 +474,7 @@ function Results({
   )
 }
 
-export default function AssessmentBuilder() {
+export default function AssessmentBuilder({templateOnly=false}:{templateOnly?:boolean}={}) {
   const { lang } = useLang()
   const t = (a: string, b: string) => (lang === "ar" ? a : b)
   const [data, setData] = useState<{
@@ -631,7 +631,7 @@ export default function AssessmentBuilder() {
     t("التفسير والتنبيهات", "Interpretation & alerts"),
     t("التجربة والنشر", "Test & publish"),
     t("التطبيق والتقرير", "Sessions & report"),
-  ]
+  ].slice(0,templateOnly?7:8)
   if (!data)
     return (
       <div className="p-6">
@@ -1980,7 +1980,7 @@ export default function AssessmentBuilder() {
                   )}
                 </div>
               )}
-              {tab === 7 && (
+              {tab === 7 && !templateOnly && (
                 <div className="space-y-3 print:hidden">
                   <h3 className="font-bold">
                     {t("التطبيقات المحفوظة", "Saved sessions")}
