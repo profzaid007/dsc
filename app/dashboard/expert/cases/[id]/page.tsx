@@ -17,7 +17,7 @@ import { getErrorMessage } from "@/lib/pb"
 import { specializationLabel } from "@/components/team/team-labels"
 import { PageLoader } from "@/components/ui/page-loader"
 import { DataError } from "@/components/ui/data-error"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -149,20 +149,21 @@ export default function ExpertCaseDetailPage({
         <p>{ar ? "لا توجد تكليفات متاحة بعد." : "No assignments available yet."}</p>
       )}
       {assignments.map((task) => (
-        <Card key={task.id}>
-          <CardHeader>
-            <CardTitle className="[overflow-wrap:anywhere]">
+        <Card key={task.id} className="block p-0">
+         <details className="group">
+          <summary className="cursor-pointer rounded-xl p-6 focus-visible:outline-2 focus-visible:outline-primary">
+            <span className="font-semibold [overflow-wrap:anywhere]">
               {(ar ? task.name_ar : task.name_en) ||
                 task.name_en ||
                 task.name_ar ||
                 (ar ? "تكليف" : "Assignment")}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
+            </span>
+            <span className="mt-1 block text-sm text-muted-foreground">
               {statuses[task.status]}
               {task.specialization &&
                 ` · ${specializationLabel(task.specialization, lang)}`}
-            </p>
-          </CardHeader>
+            </span>
+          </summary>
           <CardContent className="space-y-4">
             {(task.config as unknown as Record<string, unknown>)?.templateWorkflow === true && ["plan","report"].includes(String((task.config as unknown as Record<string, unknown>)?.templateKind || "")) && <TemplateResponse task={task} kind={String((task.config as unknown as Record<string, unknown>)?.templateKind || "")} readOnly />}
             <Button asChild variant="outline"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}>{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>
@@ -179,6 +180,7 @@ export default function ExpertCaseDetailPage({
               <TaskResponse key={task.id} task={task} save={updateAssignment} />
             )}
           </CardContent>
+         </details>
         </Card>
       ))}
       <CaseDocuments key={`documents-${profile.id}`} caseId={profile.id} />
