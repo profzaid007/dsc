@@ -7,13 +7,15 @@ import type { MultipleChoiceConfig } from "@/types/tool"
 import { CaseAssignmentsWorkspace, type WorkspaceAssignment } from "@/components/cases/CaseAssignmentsWorkspace"
 import { AssignmentAssessmentDetail } from "@/components/cases/AssignmentAssessmentDetail"
 import type { SessionRecord } from "@/lib/assessments/types"
-import { ClipboardCheck, ExternalLink } from "lucide-react"
+import { ClipboardCheck, ClipboardList, ExternalLink, Paperclip } from "lucide-react"
 import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
 import { use, useEffect, useState } from "react"
 import Link from "next/link"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
+import { useToolTypes } from "@/hooks/useToolTypes"
+import { getToolTypeMeta, getToolTypeLabel } from "@/lib/tool-types"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
 import pb, { getErrorMessage } from "@/lib/pb"
@@ -102,6 +104,8 @@ export default function ExpertCaseDetailPage({
     updateAssignment,
     refresh: refreshTasks,
   } = useAssignments(id)
+  const { toolTypes, fetchToolTypes } = useToolTypes()
+  useEffect(() => { void fetchToolTypes() }, [fetchToolTypes])
   const { currentUser } = useAuth()
   const { lang } = useLang()
   const ar = lang === "ar"
@@ -134,8 +138,16 @@ export default function ExpertCaseDetailPage({
         {ar ? "الحالة غير متاحة لك." : "This case is not available to you."}
       </p>
     )
+  function toolIcon(task: CaseTool) {
+    const record = toolTypes.find(type => type.id === task.type)
+    const kind = String((task.config as unknown as Record<string, unknown>)?.templateKind || record?.key || "")
+    const Icon = isAttachmentRequest(task) ? Paperclip : getToolTypeMeta(kind)?.icon || ClipboardList
+    const label = isAttachmentRequest(task) ? (ar ? "طلب مرفقات" : "Attachment request") : record ? getToolTypeLabel(record, lang) : (ar ? "أداة" : "Tool")
+    return <span role="img" aria-label={label} title={label}><Icon aria-hidden="true" className="size-4" /></span>
+  }
   const items: WorkspaceAssignment[] = assignments.map(task => ({
     id: `tool:${task.id}`,
+    icon: toolIcon(task),
     name: (ar ? task.name_ar : task.name_en) || task.name_en || task.name_ar || (ar ? "تكليف" : "Assignment"),
     status: task.status,
     date: task.assigned_at || task.created,
@@ -150,6 +162,7 @@ export default function ExpertCaseDetailPage({
     actions: isAttachmentRequest(task) ? undefined : <Button asChild variant="outline" className="min-h-11 border-blue-200 text-blue-800"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}><ExternalLink className="size-4" />{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>,
   }))
   items.push(...assessmentSessions.map(session => ({
+    icon: <span role="img" aria-label={ar ? "مقياس / تقييم" : "Assessment"} title={ar ? "مقياس / تقييم" : "Assessment"}><ClipboardCheck aria-hidden="true" className="size-4" /></span>,
     id: `assessment:${session.id}`, name: session.snapshot.name, status: session.status,
     date: session.assigned_at || session.created, category: ar ? "مقياس / تقييم" : "Assessment",
     content: <AssignmentAssessmentDetail key={session.id} id={session.id} ar={ar} />,
