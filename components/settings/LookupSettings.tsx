@@ -89,8 +89,8 @@ export function LookupSettings({ type }: { type: LookupType }) {
     if (!item) return
     setFormData({
       key: item.key,
-      label_en: item.label_en,
-      label_ar: item.label_ar,
+      label_en: item.label_en || item.label_ar,
+      label_ar: item.label_en || item.label_ar,
     })
     setEditingLookup(id)
     setDialogOpen(true)
@@ -102,7 +102,7 @@ export function LookupSettings({ type }: { type: LookupType }) {
     if (
       !formData.key.trim() ||
       !formData.label_en.trim() ||
-      !formData.label_ar.trim()
+      !(formData.label_en || formData.label_ar).trim()
     )
       return
 
@@ -112,7 +112,7 @@ export function LookupSettings({ type }: { type: LookupType }) {
       const payload = {
         key: formData.key.trim(),
         label_en: formData.label_en.trim(),
-        label_ar: formData.label_ar.trim(),
+        label_ar: (formData.label_en || formData.label_ar).trim(),
       }
       const saved = editingLookup
         ? await updateLookup(editingLookup, payload)
@@ -198,7 +198,7 @@ export function LookupSettings({ type }: { type: LookupType }) {
               <TableRow>
                 <TableHead>{lang === "ar" ? "المفتاح" : "Key"}</TableHead>
                 <TableHead>
-                  {lang === "ar" ? "التسمية (إنجليزي)" : "Label (EN)"}
+                  {lang === "ar" ? "الاسم" : "Label (EN)"}
                 </TableHead>
                 <TableHead>
                   {lang === "ar" ? "التسمية (عربي)" : "Label (AR)"}
@@ -322,29 +322,17 @@ export function LookupSettings({ type }: { type: LookupType }) {
             </div>
             <div className="space-y-2">
               <Label>
-                {lang === "ar" ? "التسمية (إنجليزي)" : "Label (English)"}
+                {lang === "ar" ? "الاسم" : "Name"}
               </Label>
               <Input
                 placeholder={ui("e.g. Survey")}
-                value={formData.label_en}
+                value={formData.label_en || formData.label_ar}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, label_en: e.target.value }))
+                  setFormData((prev) => ({ ...prev, label_en: e.target.value, label_ar: e.target.value }))
                 }
               />
             </div>
-            <div className="space-y-2">
-              <Label>
-                {lang === "ar" ? "التسمية (عربي)" : "Label (Arabic)"}
-              </Label>
-              <Input
-                placeholder="e.g. استبيان"
-                value={formData.label_ar}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, label_ar: e.target.value }))
-                }
-                dir="rtl"
-              />
-            </div>
+
           </div>
           <DialogFooter>
             <Button
@@ -365,7 +353,7 @@ export function LookupSettings({ type }: { type: LookupType }) {
                 ) ||
                 !formData.key.trim() ||
                 !formData.label_en.trim() ||
-                !formData.label_ar.trim()
+                !(formData.label_en || formData.label_ar).trim()
               }
             >
               {editingLookup

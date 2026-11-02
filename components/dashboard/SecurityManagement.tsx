@@ -143,7 +143,7 @@ export function SecurityManagement() {
       securityApi(
         role.id ? "/roles/" + role.id : "/roles",
         role.id ? "PATCH" : "POST",
-        role
+        { ...role, name_en: (role.name_en || role.name_ar).trim(), name_ar: (role.name_en || role.name_ar).trim() }
       )
     )
   }
@@ -366,8 +366,7 @@ export function SecurityManagement() {
                             {(
                               [
                                 ["key", "Role key", "مفتاح الدور"],
-                                ["name_en", "English name", "الاسم الإنجليزي"],
-                                ["name_ar", "Arabic name", "الاسم العربي"],
+                                ["name_en", "Role name", "اسم الدور"],
                                 ["description", "Description", "الوصف"],
                               ] as const
                             ).map(([key, en, arabic]) => (
@@ -379,9 +378,9 @@ export function SecurityManagement() {
                                 <Input
                                   required={key !== "description"}
                                   disabled={key === "key" && !!role.id}
-                                  value={role[key]}
+                                  value={key === "name_en" ? role.name_en || role.name_ar : role[key]}
                                   onChange={(e) =>
-                                    setRole({ ...role, [key]: e.target.value })
+                                    setRole({ ...role, [key]: e.target.value, ...(key === "name_en" ? { name_ar: e.target.value } : {}) })
                                   }
                                 />
                               </label>

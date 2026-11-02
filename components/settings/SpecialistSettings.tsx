@@ -95,7 +95,7 @@ export function SpecialistSettings({
     setKind(k)
     setCategoryKey("key" in r ? r.key : "")
     setId(r.id)
-    setEn("name_en" in r ? r.name_en : r.role_name_en)
+    setEn("name_en" in r ? r.name_en : r.role_name_en || r.role_name_ar)
     setArabic("name_ar" in r ? r.name_ar : r.role_name_ar)
     setCategory("category" in r ? r.category : "")
     setNotice("")
@@ -111,8 +111,8 @@ export function SpecialistSettings({
       return
     if (!access.can(id ? "settings.update" : "settings.create")) return
     if (
-      !en.trim() ||
-      !arabic.trim() ||
+      !(en || (kind === "role" ? arabic : "")).trim() ||
+      (kind === "category" && !arabic.trim()) ||
       (kind === "role" && !category) ||
       (kind === "category" && !categoryKey.trim())
     ) {
@@ -159,8 +159,8 @@ export function SpecialistSettings({
                   }),
             }
           : {
-              role_name_en: en.trim(),
-              role_name_ar: arabic.trim(),
+              role_name_en: (en || arabic).trim(),
+              role_name_ar: (en || arabic).trim(),
               category,
               ...(id ? {} : { order: roles.length + 1, is_active: true }),
             }
@@ -562,8 +562,7 @@ export function SpecialistSettings({
                   <th scope="col">
                     {ar ? "التصنيف / مفتاحه" : "Category / key"}
                   </th>
-                  <th scope="col">{ui("Name (English)")}</th>
-                  <th scope="col">الاسم (العربية)</th>
+                  <th scope="col">{ar ? "اسم الدور" : "Role name"}</th>
                   <th scope="col">{ar ? "الحالة" : "Status"}</th>
                   <th scope="col">{ar ? "الإجراءات" : "Actions"}</th>
                 </tr>
@@ -593,8 +592,7 @@ export function SpecialistSettings({
                           </code>
                         </div>
                       </td>
-                      <td>{r.role_name_en}</td>
-                      <td dir="rtl">{r.role_name_ar || "—"}</td>
+                      <td dir="auto">{r.role_name_en || r.role_name_ar}</td>
                       <td>{status("role", r)}</td>
                       <td>{actions("role", r)}</td>
                     </tr>
@@ -638,9 +636,9 @@ export function SpecialistSettings({
                     : "Add role"}
             </DialogTitle>
             <DialogDescription>
-              {ar
-                ? "أدخل الاسم باللغتين الإنجليزية والعربية."
-                : "Enter the name in both English and Arabic."}
+              {kind === "category"
+                ? ar ? "أدخل الاسم باللغتين الإنجليزية والعربية." : "Enter the name in both English and Arabic."
+                : ar ? "أدخل اسم الدور." : "Enter the role name."}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={save} className={styles.form}>
@@ -686,15 +684,16 @@ export function SpecialistSettings({
               </label>
             )}
             <label>
-              {ui("Name (English)")}
+              {kind === "role" ? (ar ? "اسم الدور" : "Role name") : ui("Name (English)")}
               <input
-                dir="ltr"
+                dir={kind === "role" ? "auto" : "ltr"}
                 required
                 value={en}
                 disabled={saving}
-                onChange={(e) => setEn(e.target.value)}
+                onChange={(e) => { setEn(e.target.value); if (kind === "role") setArabic(e.target.value) }}
               />
             </label>
+            {kind === "category" && (
             <label>
               الاسم (العربية)
               <input
@@ -705,6 +704,7 @@ export function SpecialistSettings({
                 onChange={(e) => setArabic(e.target.value)}
               />
             </label>
+            )}
             {formError && (
               <p role="alert" className={styles.formError}>
                 {formError}

@@ -152,16 +152,11 @@ export default function MultipleChoiceViewPage({ params }: ToolViewPageProps) {
           <div className="dsc-form-grid">
             <div>
               <span className="text-sm font-medium text-muted-foreground">
-                {lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}
+                {lang === "ar" ? "الاسم" : "Name"}
               </span>
-              <p>{tool.name.en}</p>
+              <p>{tool.name.ar || tool.name.en}</p>
             </div>
-            <div>
-              <span className="text-sm font-medium text-muted-foreground">
-                {lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}
-              </span>
-              <p>{tool.name.ar}</p>
-            </div>
+
           </div>
           <div className="flex items-center gap-4">
             <div>

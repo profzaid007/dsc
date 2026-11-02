@@ -78,7 +78,9 @@ export function ProgramForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await onSubmit(formData)
+    const unified = (value: { en: string; ar: string }) => ({ en: value.en || value.ar, ar: value.en || value.ar })
+    const namedData = { ...formData, title: unified(formData.title), trainer: { ...formData.trainer, name: unified(formData.trainer.name), role: unified(formData.trainer.role) } }
+    await onSubmit(namedData)
   }
 
   const updateBilingual = (
@@ -88,20 +90,20 @@ export function ProgramForm({
   ) => {
     setFormData({
       ...formData,
-      [field]: { ...formData[field], [option]: value },
+      [field]: field === "title" ? { en: value, ar: value } : { ...formData[field], [option]: value },
     })
   }
 
   const updateTrainer = (
     field: "name" | "role",
-    option: "en" | "ar",
+    _option: "en" | "ar",
     value: string
   ) => {
     setFormData({
       ...formData,
       trainer: {
         ...formData.trainer,
-        [field]: { ...formData.trainer[field], [option]: value },
+        [field]: { en: value, ar: value },
       },
     })
   }
@@ -151,27 +153,17 @@ export function ProgramForm({
         <CardContent className="space-y-4">
           <div className="dsc-form-grid">
             <div className="space-y-2">
-              <Label htmlFor="titleEn">{ui("Title (English) *")}</Label>
+              <Label htmlFor="titleEn">{lang === "ar" ? "عنوان البرنامج" : "Title"}</Label>
               <Input
                 id="titleEn"
-                dir="ltr"
-                value={formData.title.en}
+                dir="auto"
+                value={formData.title.en || formData.title.ar}
                 onChange={(e) => updateBilingual("title", "en", e.target.value)}
                 placeholder={ui("Program title")}
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="titleAr">{ui("Title (Arabic) *")}</Label>
-              <Input
-                id="titleAr"
-                value={formData.title.ar}
-                onChange={(e) => updateBilingual("title", "ar", e.target.value)}
-                placeholder="عنوان البرنامج"
-                required
-                dir="rtl"
-              />
-            </div>
+
           </div>
 
           {!formData.main_category && (formData.category.en || formData.category.ar) && <p className="text-sm text-muted-foreground">{lang === "ar" ? "التصنيف السابق: " : "Previous category: "}{formData.category[lang] || formData.category.en}</p>}
@@ -192,47 +184,29 @@ export function ProgramForm({
         <CardContent className="space-y-4">
           <div className="dsc-form-grid">
             <div className="space-y-2">
-              <Label htmlFor="trainerNameEn">{ui("Trainer Name (English)")}</Label>
+              <Label htmlFor="trainerNameEn">{lang === "ar" ? "اسم المدرب" : "Name"}</Label>
               <Input
                 id="trainerNameEn"
-                dir="ltr"
-                value={formData.trainer.name.en}
+                dir="auto"
+                value={formData.trainer.name.en || formData.trainer.name.ar}
                 onChange={(e) => updateTrainer("name", "en", e.target.value)}
                 placeholder={ui("Trainer name")}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="trainerNameAr">{ui("Trainer Name (Arabic)")}</Label>
-              <Input
-                id="trainerNameAr"
-                value={formData.trainer.name.ar}
-                onChange={(e) => updateTrainer("name", "ar", e.target.value)}
-                placeholder="اسم المدرب"
-                dir="rtl"
-              />
-            </div>
+
           </div>
           <div className="dsc-form-grid">
             <div className="space-y-2">
-              <Label htmlFor="trainerRoleEn">{ui("Role (English)")}</Label>
+              <Label htmlFor="trainerRoleEn">{lang === "ar" ? "المسمى الوظيفي" : "Role"}</Label>
               <Input
                 id="trainerRoleEn"
-                dir="ltr"
-                value={formData.trainer.role.en}
+                dir="auto"
+                value={formData.trainer.role.en || formData.trainer.role.ar}
                 onChange={(e) => updateTrainer("role", "en", e.target.value)}
                 placeholder={ui("e.g., Lead Instructor")}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="trainerRoleAr">{ui("Role (Arabic)")}</Label>
-              <Input
-                id="trainerRoleAr"
-                value={formData.trainer.role.ar}
-                onChange={(e) => updateTrainer("role", "ar", e.target.value)}
-                placeholder="الدور"
-                dir="rtl"
-              />
-            </div>
+
           </div>
           <div className="dsc-form-grid">
             <div className="space-y-2">

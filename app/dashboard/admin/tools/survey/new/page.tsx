@@ -157,8 +157,8 @@ export default function SurveyBuilderPage({
     if (tool && tool.config) {
       const config = tool.config as SurveyConfig
       setFormData({
-        nameEn: tool.name.en,
-        nameAr: tool.name.ar,
+        nameEn: tool.name.ar || tool.name.en,
+        nameAr: tool.name.ar || tool.name.en,
         answerType: config.answerType || "single_choice",
       })
       setOptions(config.options || [])
@@ -219,7 +219,7 @@ export default function SurveyBuilderPage({
     setIsSubmitting(true)
 
     const config: SurveyConfig = {
-      title: { en: formData.nameEn, ar: formData.nameAr },
+      title: { en: formData.nameEn, ar: formData.nameEn },
       answerType: formData.answerType,
       options: options.map((o, idx) => ({ ...o, order: idx })),
       questions: questions.map((q, idx) => ({ ...q, order: idx })),
@@ -228,7 +228,7 @@ export default function SurveyBuilderPage({
 
     if (isEditMode && editId) {
       await updateTool(editId, {
-        name: { en: formData.nameEn, ar: formData.nameAr },
+        name: { en: formData.nameEn, ar: formData.nameEn },
         config,
       })
       router.push(`/dashboard/admin/tools/survey/${editId}`)
@@ -245,7 +245,7 @@ export default function SurveyBuilderPage({
           case: caseId,
           type: type,
           name_en: formData.nameEn,
-          name_ar: formData.nameAr,
+          name_ar: formData.nameEn,
           is_not_template: true,
           config,
           is_visible_to_user: true,
@@ -254,7 +254,7 @@ export default function SurveyBuilderPage({
         router.push(caseTaskPath(caseId))
       } else {
         await addTool({
-          name: { en: formData.nameEn, ar: formData.nameAr },
+          name: { en: formData.nameEn, ar: formData.nameEn },
           type: type,
           serviceType: "individual",
           status: "active",
@@ -428,33 +428,20 @@ export default function SurveyBuilderPage({
                 <div className="space-y-2">
                   <Label>
                     {lang === "ar"
-                      ? "اسم الاستبيان (إنجليزي)"
-                      : "Survey Name (EN)"}
+                      ? "اسم الاستبيان"
+                      : "Survey Name"}
                   </Label>
                   <Input
-                    value={formData.nameEn}
+                    value={formData.nameEn || formData.nameAr}
                     onChange={(e) =>
-                      setFormData({ ...formData, nameEn: e.target.value })
+                      setFormData({ ...formData, nameEn: e.target.value, nameAr: e.target.value })
                     }
                     placeholder={
                       lang === "ar" ? "عنوان الاستبيان" : "Survey title"
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>
-                    {lang === "ar"
-                      ? "اسم الاستبيان (عربي)"
-                      : "Survey Name (AR)"}
-                  </Label>
-                  <Input
-                    value={formData.nameAr}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nameAr: e.target.value })
-                    }
-                    placeholder="عنوان الاستبيان"
-                  />
-                </div>
+
               </div>
             </CardContent>
           </Card>
@@ -620,7 +607,7 @@ export default function SurveyBuilderPage({
             </p>
             <SurveyPreview
               config={{
-                title: { en: formData.nameEn, ar: formData.nameAr },
+                title: { en: formData.nameEn, ar: formData.nameEn },
                 answerType: formData.answerType,
                 options: options,
                 questions: questions,

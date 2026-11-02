@@ -45,7 +45,7 @@ export default function ReportBuilderPage({
   // Child name - from case selection
   const [childName, setChildName] = useState("")
 
-  // Report name (bilingual) - goes directly to name_en/name_ar
+  // Report name - goes directly to name_en/name_ar
   const [reportName, setReportName] = useState({
     en: "",
     ar: "",
@@ -127,7 +127,7 @@ export default function ReportBuilderPage({
             const config = existingAssignment.config as ReportConfig
             setSelectedCaseId(existingAssignment.case)
             setReportName({
-              en: existingAssignment.name_en || "",
+              en: existingAssignment.name_ar || existingAssignment.name_en || "",
               ar: existingAssignment.name_ar || "",
             })
             setChildName(config?.childName || "")
@@ -160,7 +160,7 @@ export default function ReportBuilderPage({
     try {
       // Store fixed fields in config
       const config: ReportConfig = {
-        title: { en: reportName.en, ar: reportName.ar },
+        title: { en: reportName.en, ar: reportName.en },
         childName: childName,
         expertName: expertName,
         customFields: [],
@@ -174,7 +174,7 @@ export default function ReportBuilderPage({
       if (editAssignmentId) {
         await updateAssignment(editAssignmentId, {
           name_en: reportName.en,
-          name_ar: reportName.ar,
+          name_ar: reportName.en,
           config,
         })
         router.push(caseTaskPath(selectedCaseId, editAssignmentId))
@@ -184,7 +184,7 @@ export default function ReportBuilderPage({
           case: selectedCaseId,
           type: reportTypeId,
           name_en: reportName.en,
-          name_ar: reportName.ar,
+          name_ar: reportName.en,
           is_not_template: true,
           config,
           is_visible_to_user: true,
@@ -314,7 +314,7 @@ export default function ReportBuilderPage({
             </CardContent>
           </Card>
 
-          {/* Report Name - Bilingual (goes to name_en/name_ar) */}
+          {/* Report Name (goes to name_en/name_ar) */}
           <Card>
             <CardHeader>
               <CardTitle>
@@ -324,27 +324,18 @@ export default function ReportBuilderPage({
             <CardContent className="space-y-4">
               <div className="dsc-form-grid">
                 <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
+                  <Label>{lang === "ar" ? "اسم التقرير" : "Report name"}</Label>
                   <Input
                     value={reportName.en}
                     onChange={(e) =>
-                      setReportName({ ...reportName, en: e.target.value })
+                      setReportName({ en: e.target.value, ar: e.target.value })
                     }
                     placeholder={
                       lang === "ar" ? "عنوان التقرير" : "Report title"
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
-                  <Input
-                    value={reportName.ar}
-                    onChange={(e) =>
-                      setReportName({ ...reportName, ar: e.target.value })
-                    }
-                    placeholder="عنوان التقرير"
-                  />
-                </div>
+
               </div>
             </CardContent>
           </Card>
@@ -466,7 +457,7 @@ export default function ReportBuilderPage({
             </p>
             <ReportPreview
               config={{
-                title: { en: reportName.en, ar: reportName.ar },
+                title: { en: reportName.en, ar: reportName.en },
                 childName: childName,
                 expertName: expertName,
                 customFields: [],

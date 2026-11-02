@@ -150,8 +150,8 @@ export default function MultipleChoiceBuilderPage({
       if (tool && tool.config) {
         const config = tool.config as MultipleChoiceConfig
         setFormData({
-          nameEn: tool.name.en,
-          nameAr: tool.name.ar,
+          nameEn: tool.name.ar || tool.name.en,
+          nameAr: tool.name.ar || tool.name.en,
         })
         setQuestions(config.questions || [])
       }
@@ -204,7 +204,7 @@ export default function MultipleChoiceBuilderPage({
     const pendingEntries = Array.from(pendingFiles.entries())
 
     const baseConfig: MultipleChoiceConfig = {
-      title: { en: formData.nameEn, ar: formData.nameAr },
+      title: { en: formData.nameEn, ar: formData.nameEn },
       questions: baseQuestions,
       media: [],
     }
@@ -221,7 +221,7 @@ export default function MultipleChoiceBuilderPage({
         return q
       })
       return {
-        title: { en: formData.nameEn, ar: formData.nameAr },
+        title: { en: formData.nameEn, ar: formData.nameEn },
         questions: finalQuestions,
         media: uploadedUrls,
       }
@@ -240,7 +240,7 @@ export default function MultipleChoiceBuilderPage({
       finalConfig = buildFinalConfig(uploadedUrls)
 
       await updateTool(editId, {
-        name: { en: formData.nameEn, ar: formData.nameAr },
+        name: { en: formData.nameEn, ar: formData.nameEn },
         config: finalConfig,
       })
       router.push(`/dashboard/admin/tools/multiple-choice/${editId}`)
@@ -254,7 +254,7 @@ export default function MultipleChoiceBuilderPage({
         case: caseId,
         type: type,
         name_en: formData.nameEn,
-        name_ar: formData.nameAr,
+        name_ar: formData.nameEn,
         is_not_template: true,
         config: baseConfig,
         status: "pending",
@@ -284,7 +284,7 @@ export default function MultipleChoiceBuilderPage({
       // Template (with or without case): create in tools, upload media there
       const mediaFormData = new FormData()
       mediaFormData.append("name_en", formData.nameEn)
-      mediaFormData.append("name_ar", formData.nameAr)
+      mediaFormData.append("name_ar", formData.nameEn)
       mediaFormData.append("type", type)
       mediaFormData.append("serviceType", "individual")
       mediaFormData.append("status", "active")
@@ -302,7 +302,7 @@ export default function MultipleChoiceBuilderPage({
       finalConfig = buildFinalConfig(uploadedUrls)
 
       await updateTool(record.id, {
-        name: { en: formData.nameEn, ar: formData.nameAr },
+        name: { en: formData.nameEn, ar: formData.nameEn },
         config: finalConfig,
       })
 
@@ -311,7 +311,7 @@ export default function MultipleChoiceBuilderPage({
           case: caseId,
           type: type,
           name_en: formData.nameEn,
-          name_ar: formData.nameAr,
+          name_ar: formData.nameEn,
           is_not_template: false,
           config: finalConfig,
           is_visible_to_user: true,
@@ -662,28 +662,19 @@ export default function MultipleChoiceBuilderPage({
               <div className="dsc-form-grid">
                 <div className="space-y-2">
                   <Label>
-                    {lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}
+                    {lang === "ar" ? "الاسم" : "Name"}
                   </Label>
                   <Input
-                    value={formData.nameEn}
+                    value={formData.nameEn || formData.nameAr}
                     onChange={(e) =>
-                      setFormData({ ...formData, nameEn: e.target.value })
+                      setFormData({ ...formData, nameEn: e.target.value, nameAr: e.target.value })
                     }
                     placeholder={
                       lang === "ar" ? "عنوان الاختبار" : "Quiz title"
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
-                  <Input
-                    value={formData.nameAr}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nameAr: e.target.value })
-                    }
-                    placeholder="عنوان الاختبار"
-                  />
-                </div>
+
               </div>
             </CardContent>
           </Card>
@@ -791,7 +782,7 @@ export default function MultipleChoiceBuilderPage({
             </p>
             <MultipleChoicePreview
               config={{
-                title: { en: formData.nameEn, ar: formData.nameAr },
+                title: { en: formData.nameEn, ar: formData.nameEn },
                 questions,
                 media: [],
               }}

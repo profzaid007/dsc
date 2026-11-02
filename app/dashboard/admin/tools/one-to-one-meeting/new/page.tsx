@@ -42,7 +42,7 @@ export default function OneToOneMeetingNewPage({
   const [isInitializing, setIsInitializing] = useState(true)
   const hasInitialized = useRef(false)
 
-  const [toolName, setToolName] = useState({ en: "", ar: "" })
+  const [toolName, setToolName] = useState("")
 
   const [meetingDate, setMeetingDate] = useState("")
   const [meetingTime, setMeetingTime] = useState("")
@@ -76,15 +76,12 @@ export default function OneToOneMeetingNewPage({
     if (caseId) {
       const caseProfile = getProfileById(caseId)
       if (caseProfile) {
-        setToolName({
-          en: `${caseProfile.name} - One to One Meeting`,
-          ar: `${caseProfile.name} - اجتماع فردي`,
-        })
+        setToolName(`${caseProfile.name} - ${lang === "ar" ? "اجتماع فردي" : "One to One Meeting"}`)
       }
     } else {
-      setToolName({ en: "", ar: "" })
+      setToolName("")
     }
-  }, [getProfileById])
+  }, [getProfileById, lang])
 
   useEffect(() => {
     if (isAssignmentsLoading) return
@@ -103,10 +100,7 @@ export default function OneToOneMeetingNewPage({
           if (existingAssignment) {
             const config = existingAssignment.config as OneToOneMeetingConfig
             setSelectedCaseId(existingAssignment.case)
-            setToolName({
-              en: existingAssignment.name_en || "",
-              ar: existingAssignment.name_ar || "",
-            })
+            setToolName(existingAssignment.name_ar || existingAssignment.name_en || "")
             setMeetingDate(config?.date || "")
             setMeetingTime(config?.time || "")
             setMeetingType(config?.meetingType || "online")
@@ -130,7 +124,7 @@ export default function OneToOneMeetingNewPage({
   }, [isAssignmentsLoading, assignments, searchParams, handleCaseSelect])
 
   const handleSubmit = async () => {
-    if (!selectedCaseId || !toolName.en || !meetingDate || !meetingTime || !meetingTypeId) return
+    if (!selectedCaseId || !toolName.trim() || !meetingDate || !meetingTime || !meetingTypeId) return
     setIsSubmitting(true)
 
     try {
@@ -147,8 +141,8 @@ export default function OneToOneMeetingNewPage({
 
       if (editAssignmentId) {
         await updateAssignment(editAssignmentId, {
-          name_en: toolName.en,
-          name_ar: toolName.ar,
+          name_en: toolName.trim(),
+          name_ar: toolName.trim(),
           config,
         })
         router.push(caseTaskPath(selectedCaseId, editAssignmentId))
@@ -156,8 +150,8 @@ export default function OneToOneMeetingNewPage({
         await assignTool({
           case: selectedCaseId,
           type: meetingTypeId,
-          name_en: toolName.en,
-          name_ar: toolName.ar,
+          name_en: toolName.trim(),
+          name_ar: toolName.trim(),
           is_not_template: true,
           config,
           is_visible_to_user: true,
@@ -178,7 +172,7 @@ export default function OneToOneMeetingNewPage({
       router.push(caseTaskPath(selectedCaseId, editAssignmentId))
     } else {
       setSelectedCaseId("")
-      setToolName({ en: "", ar: "" })
+      setToolName("")
       setMeetingDate("")
       setMeetingTime("")
       setMeetingType("online")
@@ -190,7 +184,7 @@ export default function OneToOneMeetingNewPage({
     }
   }
 
-  const isFormValid = selectedCaseId && toolName.en && meetingDate && meetingTime && meetingTypeId
+  const isFormValid = selectedCaseId && toolName.trim() && meetingDate && meetingTime && meetingTypeId
 
   if (typeError) {
     return (
@@ -291,27 +285,14 @@ export default function OneToOneMeetingNewPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="dsc-form-grid">
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (إنجليزي)" : "Name (EN)"}</Label>
-                  <Input
-                    value={toolName.en}
-                    onChange={(e) => setToolName({ ...toolName, en: e.target.value })}
-                    placeholder={
-                      lang === "ar"
-                        ? "مثال: اجتماع التقييم الأولي"
-                        : "e.g., Initial Assessment Meeting"
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الاسم (عربي)" : "Name (AR)"}</Label>
-                  <Input
-                    value={toolName.ar}
-                    onChange={(e) => setToolName({ ...toolName, ar: e.target.value })}
-                    placeholder="مثال: اجتماع التقييم الأولي"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="meeting-name">{lang === "ar" ? "اسم الاجتماع" : "Meeting name"}</Label>
+                <Input
+                  id="meeting-name"
+                  value={toolName}
+                  onChange={(e) => setToolName(e.target.value)}
+                  placeholder={lang === "ar" ? "مثال: اجتماع التقييم الأولي" : "e.g., Initial Assessment Meeting"}
+                />
               </div>
             </CardContent>
           </Card>
@@ -461,7 +442,7 @@ export default function OneToOneMeetingNewPage({
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-lg font-semibold">
                 <Calendar className="h-5 w-5 text-primary" />
-                {toolName.en ||
+                {toolName.trim() ||
                   (lang === "ar" ? "اجتماع فردي" : "One to One Meeting")}
               </div>
               <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
