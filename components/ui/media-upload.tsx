@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { Upload, X, Image, Video, Music, Play } from "lucide-react"
+import { useFilePreviewUrls } from "@/hooks/useFilePreviewUrls"
+import { useState, useRef, useMemo } from "react"
+import { X, Image, Video, Music } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -62,8 +63,8 @@ export function MediaUpload({
   const [mediaType, setMediaType] = useState<MediaType>("image")
   const [responseType, setResponseType] = useState<ResponseType>("text")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const previewFiles = useMemo(() => new Map<string, File>(selectedFile && open ? [["selected", selectedFile]] : []), [selectedFile, open])
+  const previewUrl = useFilePreviewUrls(previewFiles).get("selected")
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -87,7 +88,6 @@ export function MediaUpload({
     }
 
     setSelectedFile(file)
-    setPreviewUrl(URL.createObjectURL(file))
   }
 
   const handleSave = () => {
@@ -97,11 +97,7 @@ export function MediaUpload({
   }
 
   const handleClose = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
-    }
     setSelectedFile(null)
-    setPreviewUrl(null)
     setError(null)
     setMediaType("image")
     setResponseType("text")
@@ -126,12 +122,7 @@ export function MediaUpload({
     if (mediaType === "video") {
       return (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
-          <video src={previewUrl} className="h-full w-full object-contain" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-              <Play className="h-8 w-8 text-white" />
-            </div>
-          </div>
+          <video src={previewUrl} controls playsInline className="h-full w-full object-contain" />
         </div>
       )
     }
@@ -151,7 +142,7 @@ export function MediaUpload({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => next ? onOpenChange(true) : handleClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
@@ -239,11 +230,7 @@ export function MediaUpload({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  if (previewUrl) {
-                    URL.revokeObjectURL(previewUrl)
-                  }
                   setSelectedFile(null)
-                  setPreviewUrl(null)
                   if (fileInputRef.current) fileInputRef.current.value = ""
                 }}
               >

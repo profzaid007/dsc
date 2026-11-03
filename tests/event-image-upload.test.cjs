@@ -17,7 +17,7 @@ test('event images reject unsupported types and oversize files',()=>{
 for(const [kind,hookName,add,edit,collection] of [['training','useTraining','addProgram','updateProgram','trainingProgramsCollection'],['lectures','useLectures','addLecture','updateLecture','lecturesCollection']]){
  test(kind+' create and edit send image bytes as multipart and retain existing images without reupload',async()=>{
   const calls=[]
-  const pb={files:{getUrl:(_r,name)=>'https://files.test/'+name},collection:()=>({create:async data=>{calls.push(data);return {id:'event',thumbnail:'saved.png',schedule:{},speaker:{}}},update:async(_id,data)=>{calls.push(data);return {id:'event',thumbnail:['saved.png'],schedule:{},speaker:{}}}})}
+  const pb={files:{getURL:(_r,name)=>'https://files.test/'+name},collection:()=>({create:async data=>{calls.push(data);return {id:'event',thumbnail:'saved.png',schedule:{},speaker:{}}},update:async(_id,data)=>{calls.push(data);return {id:'event',thumbnail:['saved.png'],schedule:{},speaker:{}}}})}
   const lib=load('lib/pb-'+kind+'.ts',{'./pb':{__esModule:true,default:pb},'@/lib/bounded-records':{boundedFullList:async()=>[]}})
   const hook=load('hooks/'+hookName+'.ts',{'react':{useState:value=>[value,()=>{}],useEffect(){},useCallback:fn=>fn},'@/lib/pb':{getErrorMessage:String},'@/lib/validators':{normalizeEmail:x=>x},['@/lib/pb-'+kind]:lib})[hookName]()
   const file=new File(['image bytes'],'test.png',{type:'image/png'})

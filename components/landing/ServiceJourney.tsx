@@ -1,30 +1,9 @@
 "use client"
 
-import Image from "next/image"
+
 import { useLang } from "@/lib/lang-context"
 import { t } from "@/lib/i18n"
-import {
-  Users,
-  UserPlus,
-  Rocket,
-  UserCheck,
-  UserCircle,
-  ClipboardList,
-  FolderOpen,
-  Handshake,
-  ListChecks,
-  RefreshCw,
-  RefreshCcw,
-  CreditCard,
-  HeartHandshake,
-  FileBarChart,
-  Briefcase,
-  ShieldCheck,
-  BadgeCheck,
-  Building2,
-  Stethoscope,
-  ClipboardCheck,
-} from "lucide-react"
+import { Users, UserPlus, Rocket, UserCircle, ClipboardList, FolderOpen, Handshake, ListChecks, RefreshCw, RefreshCcw, CreditCard, HeartHandshake, FileBarChart, ShieldCheck, BadgeCheck, ClipboardCheck } from "lucide-react"
 
 const SERVICE_STEPS = [
   { icon: UserPlus, en: "Create Account", ar: "إنشاء حساب" },

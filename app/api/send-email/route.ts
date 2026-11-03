@@ -1,6 +1,7 @@
 import { Resend } from "resend"
 import {
   guardMessaging,
+  reserveMessagingDelivery,
   readMessagingBody,
   messagingUser,
   messageString,
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
         attachments.push({ filename, content })
       }
     }
+    await reserveMessagingDelivery()
     if (localMessagingDisabled())
       return Response.json({ data: { id: "local-development-email-disabled" } })
     const { data, error } = await new Resend(

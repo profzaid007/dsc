@@ -2,6 +2,7 @@ import { Resend } from "resend"
 import { escapeContactHtml } from "@/lib/contact-validation"
 import {
   guardMessaging,
+  reserveMessagingDelivery,
   messagingUser,
   readMessagingBody,
   messagingError,
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
       throw new RequestError("Access denied", 403)
     await readMessagingBody(request)
     takeQuota("expert-application:" + user.id, 1)
+    await reserveMessagingDelivery()
     if (localMessagingDisabled()) return Response.json({ success: true })
     const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
       from: "admin@dsc.ac",

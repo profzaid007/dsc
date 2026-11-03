@@ -25,7 +25,7 @@ import {
   PortalServiceSelector,
   type PortalServiceValue,
 } from "./PortalServiceSelector"
-import pb, { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
+import { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 import {
   EMAIL_INVALID_MESSAGE,

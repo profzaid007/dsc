@@ -9,9 +9,10 @@ export function useRequestGuard(scope = "") {
   const key = auth + ":" + scope
   const current = useRef({ key, generation: 0 })
   useEffect(() => {
-    current.current.key = key
+    const request = current.current
+    request.key = key
     return () => {
-      current.current.generation++
+      request.generation++
     }
   }, [key])
   return useCallback(() => {

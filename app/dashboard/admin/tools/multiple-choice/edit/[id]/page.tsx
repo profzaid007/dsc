@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+
 import MultipleChoiceBuilderPage from "../../new/page"
 
 interface EditMultipleChoicePageProps {

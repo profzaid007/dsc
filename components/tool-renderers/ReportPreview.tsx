@@ -5,8 +5,8 @@ import { useLang } from "@/lib/lang-context"
 import { formatDate } from "@/lib/format-date"
 import type { BilingualString, ReportConfig } from "@/types/tool"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+
+
 import { Textarea } from "@/components/ui/textarea"
 
 export function ReportPreview({ config }: { config: ReportConfig }) {

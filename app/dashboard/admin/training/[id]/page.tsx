@@ -1,8 +1,9 @@
 "use client"
+import { useRequestGuard } from "@/hooks/useRequestGuard"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { openProtectedFile } from "@/components/ProtectedFileLink"
 
-import { use, useState, useEffect } from "react"
+import { use, useState, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -136,6 +137,7 @@ export default function AdminTrainingProgramDetailPage({
     isLoading,
   } = useTraining()
 
+  const beginEnrollmentRequest = useRequestGuard("training-enrollments:" + id)
   const [enrollments, setEnrollments] = useState<Profile[]>([])
   const [enrollmentsLoading, setEnrollmentsLoading] = useState(true)
 
@@ -160,25 +162,29 @@ export default function AdminTrainingProgramDetailPage({
     ? certificates.filter((c) => c.programId === program.id)
     : []
 
-  const fetchEnrollments = async () => {
+  const fetchEnrollments = useCallback(async () => {
+    const isCurrent = beginEnrollmentRequest()
+    setEnrollmentsLoading(true)
+    setEnrollments([])
     try {
       const data = await casesCollection.getByProgramAndPortalType(
         id,
         "Attending Training"
       )
-      setEnrollments(data)
+      if (isCurrent()) setEnrollments(data)
     } catch (err) {
+      if (!isCurrent()) return
       console.error("Failed to load enrollments:", err)
       toast.error(getErrorMessage(err))
       setEnrollments([])
     } finally {
-      setEnrollmentsLoading(false)
+      if (isCurrent()) setEnrollmentsLoading(false)
     }
-  }
+  }, [id, beginEnrollmentRequest])
 
   useEffect(() => {
-    fetchEnrollments()
-  }, [id])
+    void fetchEnrollments()
+  }, [fetchEnrollments])
 
   const eligibleRegistrations = enrollments.filter((e) => {
     const status = caseStatusToEnrollmentStatus(e.program_status)

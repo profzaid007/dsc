@@ -60,9 +60,9 @@ test("new records are saved into their page's group; failed writes keep the dial
     const ui = screen(type, null)
     ui.nodes(ui.render()).find(node => node.type === "Button" && node.props.children?.[1] === "Add Lookup").props.onClick()
     const inputs = ui.nodes(ui.render()).filter(node => node.type === "Input")
-    for (const [i, value] of ["custom-key", "Custom value", "قيمة"].entries()) inputs[i].props.onChange({ target: { value } })
+    for (const [i, value] of ["custom-key", "Custom value"].entries()) inputs[i].props.onChange({ target: { value } })
     await ui.nodes(ui.render()).find(node => node.type === "Button" && node.props.children === "Create").props.onClick()
-    assert.equal(ui.saved[0].type, type)
+    assert.deepEqual(ui.saved[0], { type, key: "custom-key", label_en: "Custom value", label_ar: "Custom value" })
     assert.equal(ui.nodes(ui.render()).find(node => node.type === "Dialog").props.open, true)
   }
 })

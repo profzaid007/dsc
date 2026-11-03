@@ -37,7 +37,7 @@ export default async function InfoPage({ params }: InfoPageProps) {
 
   if (record && page && isPublished) {
     const iconFile = page.icon
-    const iconUrl = iconFile ? pb.files.getUrl(record, iconFile) : null
+    const iconUrl = iconFile ? pb.files.getURL(record, iconFile) : null
 
     return (
       <div className="mx-auto max-w-4xl px-6 py-12">

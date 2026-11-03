@@ -28,18 +28,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  ArrowLeft,
-  Calendar,
-  Mail,
-  Phone,
-  User,
-  ClipboardList,
-  History,
-  Eye,
-  Pencil,
-  Send,
-} from "lucide-react"
+import { ArrowLeft, User, ClipboardList, History, Eye, Pencil } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { getErrorMessage } from "@/lib/pb"

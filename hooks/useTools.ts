@@ -69,7 +69,7 @@ export function useTools() {
     }
   }
 
-  const getToolById = (id: string) => tools.find((t) => t.id === id)
+  const getToolById = useCallback((id: string) => tools.find((t) => t.id === id), [tools])
 
   const getToolsByType = (type: ToolType) =>
     tools.filter((t) => t.type === type)

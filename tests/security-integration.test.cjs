@@ -21,6 +21,7 @@ let server,
   readerToken,
   expertToken
 const password = "SecurityFixture123!"
+const quotaSecret = require("node:crypto").randomBytes(32).toString("hex")
 const ids = {
   super: "superfixture001",
   admin: "adminfixture001",
@@ -117,6 +118,7 @@ before(async () => {
     "1794100000_audit_rule_repairs.js",
     "1794100100_account_registration.js",
     "1794100200_training_enrollment.js",
+    "1794100300_messaging_quotas.js",
     "1795100000_general_role_assignment.js",
     "1795500000_expert_review_status.js",
   ])
@@ -152,7 +154,7 @@ before(async () => {
       `--migrationsDir=${migrations}`,
       `--hooksDir=${path.join(root, "pb_hooks")}`,
     ],
-    { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }
+    { windowsHide: true, stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, DSC_MESSAGING_QUOTA_SECRET: quotaSecret } }
   )
   server.stdout.on("data", (b) => {
     logs += b.toString()
@@ -821,6 +823,7 @@ test("allocation replacement enforces create, update and delete independently", 
   )
   assert.equal(category.status, 200, JSON.stringify(category.data))
   const specialist = await request(records("roles_management"), "POST", {
+    category: category.data.id,
     role_name_en: "Fixture physician",
     role_group: "medical",
     role_name_ar: "طبيب تجريبي",
@@ -1196,4 +1199,26 @@ test("training-only grants manage enrollment without access to clinical cases", 
   )
   assert.equal(outsider.status, 200)
   assert.equal(outsider.data.items.length, 0)
+})
+
+
+test("messaging quotas reject anonymous and incorrect credentials without consuming capacity", async () => {
+  for (const secret of [undefined, "incorrect-server-secret-which-is-long-enough"]) {
+    for (let i = 0; i < 31; i++) {
+      const response = await fetch(base + "/api/dsc/messaging-quota", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(secret ? { "X-DSC-Quota-Secret": secret } : {}) },
+        body: JSON.stringify({ scope: "global" }),
+      })
+      assert.equal(response.status, 403)
+    }
+  }
+  for (let i = 0; i < 31; i++) {
+    const response = await fetch(base + "/api/dsc/messaging-quota", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-DSC-Quota-Secret": quotaSecret },
+      body: JSON.stringify({ scope: "global" }),
+    })
+    assert.equal(response.status, i < 30 ? 200 : 429)
+  }
 })

@@ -16,6 +16,7 @@ function load(file, mocks) {
 const classification = load("lib/classification.ts", {
   "./classification-catalog.json": JSON.parse(fs.readFileSync("lib/classification-catalog.json", "utf8")),
 })
+const listFields = load("lib/expert-list-fields.ts", {})
 const groups = load("lib/allocation-role-groups.ts", {
   "./classification": classification,
   "./allocation-role-catalog.json": JSON.parse(fs.readFileSync("lib/allocation-role-catalog.json", "utf8")),
@@ -24,13 +25,13 @@ const groups = load("lib/allocation-role-groups.ts", {
 test("anonymous team filtering derives every category from saved profile role IDs", async () => {
   const records = [
     { id: "teacher", specialist_roles: ["teach", "doctor"] },
-    { id: "therapist", specialist_roles: '["speech"]' },
+    { id: "therapist", specialist_roles: ["speech"] },
     { id: "unassigned", specialist_roles: [] },
   ]
   const roles = [
-    { id: "teach", role_name_en: "Teacher" },
-    { id: "doctor", role_name_en: "Physician" },
-    { id: "speech", role_name_en: "Speech-Language Pathologist" },
+    { id: "teach", role_name_en: "Teacher", role_group: "education" },
+    { id: "doctor", role_name_en: "Physician", role_group: "medical" },
+    { id: "speech", role_name_en: "Speech-Language Pathologist", role_group: "special-needs" },
   ]
   const { getTeamExperts } = load("lib/team-experts.ts", {
     "@/lib/pb": { __esModule: true, default: { baseURL: "https://example.test", collection: name => name } },
@@ -39,6 +40,7 @@ test("anonymous team filtering derives every category from saved profile role ID
       assert.equal(name, "expert_roles_public", "public visitors must not need private role access")
       return roles
     } },
+    "./expert-list-fields": listFields,
     "./allocation-role-groups": groups,
     "./expert-display-order": { readExpertOrder: async () => [], applyExpertOrder: rows => rows },
   })
@@ -66,21 +68,20 @@ test("public view migration preserves existing fields and active expert restrict
   assert.doesNotMatch(view.viewQuery, /tool_types|email|contact_number/)
 })
 
-test("missing public role view falls back to an accessible legacy catalog", async () => {
+test("missing public role view reports the backend correction required", async () => {
   const { getTeamExperts } = load("lib/team-experts.ts", {
     "@/lib/pb": { __esModule: true, default: { baseURL: "https://example.test", collection: name => name } },
     "@/lib/bounded-records": { boundedFullList: async name => {
       if (name === "experts_public") return [{ id: "expert", specialist_roles: ["speech"] }]
       if (name === "expert_roles_public") throw { status: 404 }
       assert.equal(name, "roles_management")
-      return [{ id: "speech", role_name_en: "Speech-Language Pathologist" }]
+      return [{ id: "speech", role_name_en: "Speech-Language Pathologist", role_group: "special-needs" }]
     } },
+    "./expert-list-fields": listFields,
     "./allocation-role-groups": groups,
     "./expert-display-order": { readExpertOrder: async () => [], applyExpertOrder: rows => rows },
   })
-  const experts = await getTeamExperts({ all: true, throwOnError: true })
-  assert.equal(experts.length, 1)
-  assert.deepEqual(experts[0].specialistCategoryIds, ["special-needs"])
+  await assert.rejects(getTeamExperts({ all: true }), /Public expert catalog requires correction: expert_roles_public/)
 })
 
 test("targeted backend repair handles the published category schema without replacing records", async () => {

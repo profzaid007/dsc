@@ -2,7 +2,7 @@
 import { caseTaskPath } from "@/lib/case-task-path"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAuth } from "@/hooks/useAuth"
@@ -63,12 +63,15 @@ export default function ReportBuilderPage({
 
   // Fetch report type ID on mount
   useEffect(() => {
+    let active = true
     const fetchReportType = async () => {
       try {
         const reportType = await toolTypesCollection.getByName("report")
+        if (!active) return
         setReportTypeId(reportType.id)
         setTypeError("")
       } catch (error) {
+        if (!active) return
         setTypeError(
           getErrorMessage(error) ||
             (lang === "ar"
@@ -78,8 +81,9 @@ export default function ReportBuilderPage({
         console.error("Failed to fetch report type:", error)
       }
     }
-    fetchReportType()
-  }, [])
+    void fetchReportType()
+    return () => { active = false }
+  }, [lang])
 
   // Auto-fill expert name when currentUser loads
   useEffect(() => {

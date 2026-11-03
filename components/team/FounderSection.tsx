@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+
 import { Crown } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useLang } from "@/lib/lang-context";

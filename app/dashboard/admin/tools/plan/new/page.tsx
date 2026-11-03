@@ -2,7 +2,7 @@
 import { caseTaskPath } from "@/lib/case-task-path"
 
 import { useEffect, useState, useRef, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAuth } from "@/hooks/useAuth"
@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { DragList } from "@/components/ui/drag-list"
 import { CaseSearchCombobox } from "@/components/case-search-combobox"
 import { PlanPreview } from "@/components/tool-renderers/PlanPreview"
-import { Plus, Trash2, Eye, EyeOff, GripVertical } from "lucide-react"
+import { Plus, Trash2, Eye, EyeOff } from "lucide-react"
 import { useLang } from "@/lib/lang-context"
 import type { PlanConfig } from "@/types/tool"
 
@@ -86,12 +86,15 @@ export default function PlanBuilderPage({
 
   // Fetch plan type ID on mount
   useEffect(() => {
+    let active = true
     const fetchPlanType = async () => {
       try {
         const planType = await toolTypesCollection.getByName("plan")
+        if (!active) return
         setPlanTypeId(planType.id)
         setTypeError("")
       } catch (error) {
+        if (!active) return
         setTypeError(
           getErrorMessage(error) ||
             (lang === "ar"
@@ -101,8 +104,9 @@ export default function PlanBuilderPage({
         console.error("Failed to fetch plan type:", error)
       }
     }
-    fetchPlanType()
-  }, [])
+    void fetchPlanType()
+    return () => { active = false }
+  }, [lang])
 
   // Update expert name when currentUser loads
   useEffect(() => {

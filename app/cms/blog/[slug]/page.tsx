@@ -81,7 +81,7 @@ export default function CmsBlogEditorPage() {
       pageRecordRef.current = rawRecord
 
       const thumbFile = extractThumbnail(rawRecord)
-      setThumbnailUrl(thumbFile ? pb.files.getUrl(rawRecord, thumbFile) : null)
+      setThumbnailUrl(thumbFile ? pb.files.getURL(rawRecord, thumbFile) : null)
 
       const data: BlogPage = {
         id: rawRecord.id as string,
@@ -153,7 +153,7 @@ export default function CmsBlogEditorPage() {
         setSaving(false)
       }
     },
-    [page, title, postSlug, category, keywords, mainCategory, authorName, content, slug, router, lang]
+    [page, title, postSlug, keywords, mainCategory, authorName, content, slug, router, lang]
   )
 
   const handleContentSave = useCallback(async (html: string) => {
@@ -173,7 +173,7 @@ export default function CmsBlogEditorPage() {
     setAuthorName(page.author_name)
     setThumbnailUrl(
       page.thumbnail && pageRecordRef.current
-        ? pb.files.getUrl(pageRecordRef.current, page.thumbnail)
+        ? pb.files.getURL(pageRecordRef.current, page.thumbnail)
         : null
     )
     setResetKey(t => t + 1)
@@ -204,7 +204,7 @@ export default function CmsBlogEditorPage() {
       const newMedia = updated.media
       const filename = newMedia[newMedia.length - 1]
       setPage((prev) => (prev ? { ...prev, media: newMedia } : null))
-      return pb.files.getUrl(updated, filename)
+      return pb.files.getURL(updated, filename)
     },
     [page]
   )
@@ -218,7 +218,7 @@ export default function CmsBlogEditorPage() {
         const updated = await blogPagesCollection.updateThumbnail(page.id, file)
         setPage(updated)
         pageRecordRef.current = updated as unknown as Record<string, unknown>
-        setThumbnailUrl(pb.files.getUrl(updated as never, updated.thumbnail))
+        setThumbnailUrl(pb.files.getURL(updated as never, updated.thumbnail))
       } catch (err) {
         toast.error(
           t(

@@ -1,8 +1,9 @@
 "use client"
 import { usePermissions } from "@/hooks/usePermissions"
+import { useRequestGuard } from "@/hooks/useRequestGuard"
 
 import { boundedFullList } from "@/lib/bounded-records"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { homePagesCollection } from "@/lib/pb-collections"
 import { formatDate } from "@/lib/format-date"
@@ -36,21 +37,26 @@ export default function CmsHomePagesListPage() {
   const [newSlug, setNewSlug] = useState("")
   const [newTitle, setNewTitle] = useState("")
   const [creatingPage, setCreatingPage] = useState(false)
+  const [loadError, setLoadError] = useState("")
+  const beginRequest = useRequestGuard("cms-home-pages")
+
+  const loadPages = useCallback(async () => {
+    const isCurrent = beginRequest()
+    setLoading(true)
+    setLoadError("")
+    try {
+      const data = await boundedFullList(pb.collection("home_pages"))
+      if (isCurrent()) setPages(data as unknown as HomePage[])
+    } catch (error) {
+      if (isCurrent()) setLoadError(getErrorMessage(error))
+    } finally {
+      if (isCurrent()) setLoading(false)
+    }
+  }, [beginRequest])
 
   useEffect(() => {
-    loadPages()
-  }, [])
-
-  const loadPages = () => {
-    setLoading(true)
-    boundedFullList(pb.collection("home_pages"))
-      .then((data) => {
-        setPages(data as unknown as HomePage[])
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }
+    void loadPages()
+  }, [loadPages])
 
   const handleCreate = async () => {
     if (!newSlug.trim() || !newTitle.trim()) return
@@ -215,7 +221,14 @@ export default function CmsHomePagesListPage() {
         </div>
       )}
 
-      {loading ? (
+      {loadError ? (
+        <div role="alert" className="space-y-3 rounded-md border border-destructive p-4">
+          <p>{t({ en: "Unable to load pages.", ar: "تعذر تحميل الصفحات." }, lang)} {loadError}</p>
+          <Button variant="outline" onClick={() => void loadPages()}>
+            {t({ en: "Retry", ar: "إعادة المحاولة" }, lang)}
+          </Button>
+        </div>
+      ) : loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>

@@ -31,12 +31,15 @@ export async function sharedQuota(key: string, limit: number) {
       takeQuota(key, limit)
       return
     }
+    const secret = process.env.DSC_MESSAGING_QUOTA_SECRET
+    if (!secret || secret.length < 32)
+      throw new RequestError("Messaging quota service unavailable", 503)
     const [, scope, ...identity] = key.split(":")
     const backend =
       process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090"
     const response = await fetch(backend + "/api/dsc/messaging-quota", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-DSC-Quota-Secret": secret },
       body: JSON.stringify({ scope, identity: identity.join(":") }),
       signal: AbortSignal.timeout(5000),
     })
@@ -79,8 +82,6 @@ export async function guardMessaging(request: Request) {
       .startsWith("application/json")
   )
     throw new RequestError("JSON required", 415)
-  // A process-wide ceiling also applies when no trusted proxy supplies a client IP.
-  await sharedQuota("messaging:global", 30)
   const ip =
     process.env.DSC_TRUST_PROXY === "true"
       ? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
@@ -97,6 +98,10 @@ export async function guardMessaging(request: Request) {
           .digest("hex"),
       5
     )
+}
+/** Reserve delivery capacity only after authentication and payload validation succeed. */
+export async function reserveMessagingDelivery() {
+  await sharedQuota("messaging:global", 30)
 }
 export async function readMessagingBody(
   request: Request,

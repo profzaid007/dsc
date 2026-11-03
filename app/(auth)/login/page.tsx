@@ -8,13 +8,7 @@ import Image from "next/image"
 import { useAuth } from "@/hooks/useAuth"
 import { t, UI_STRINGS } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { EmailInput } from "@/components/ui/email-input"
 import { PasswordInput } from "@/components/ui/password-input"

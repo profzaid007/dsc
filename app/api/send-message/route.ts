@@ -3,6 +3,7 @@ import { Resend } from "resend"
 import { escapeContactHtml } from "@/lib/contact-validation"
 import {
   guardMessaging,
+  reserveMessagingDelivery,
   readMessagingBody,
   messageString,
   messagingError,
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
         .join("\n")
     if (text.length > 4000)
       throw new RequestError("Consultation request too long")
+    await reserveMessagingDelivery()
     if (localMessagingDisabled())
       return Response.json({ message: "Sent successfully" })
     const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send(

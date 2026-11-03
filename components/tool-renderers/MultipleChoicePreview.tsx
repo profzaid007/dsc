@@ -54,7 +54,7 @@ export function MultipleChoicePreview({ config, responses = {}, readOnly = false
     if (question.mediaType === "video") {
       return (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
-          <video src={question.mediaUrl} className="h-full w-full object-contain" />
+          <video controls playsInline src={question.mediaUrl} className="h-full w-full object-contain" />
         </div>
       )
     }

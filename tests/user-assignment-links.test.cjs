@@ -15,6 +15,7 @@ function screen(canReadCases = true, failure = false) {
     },
     '@/lib/lang-context': { useLang: () => ({ lang: 'en' }) },
     '@/hooks/usePermissions': { usePermissions: () => ({ can: () => canReadCases }) },
+    '@/components/cases/CaseName': { CaseName: 'CaseName' },
     '@/components/smart-link': { SmartLink: 'Link' },
     '@/components/ui/button': { Button: 'Button' },
     '@/lib/pb': { __esModule: true, getErrorMessage: e => e.message, default: {
@@ -38,7 +39,8 @@ test('shows linked case and role, scopes query to selected expert, and paginates
   const view = screen(); view.render(); await view.load(); const tree = view.render()
   const link = nodes(tree).find(n => n.type === 'Link')
   assert.equal(link.props.href, '/dashboard/admin/cases/case-123#case-allocations')
-  assert.equal(link.props.children, 'Example Case')
+  assert.equal(link.props.children.type, 'CaseName')
+  assert.equal(link.props.children.props.profile.name, 'Example Case')
   assert.match(JSON.stringify(tree), /Psychologist/)
   assert.deepEqual(view.calls[0].params, { id: 'expert-123' })
   nodes(tree).find(n => n.type === 'Button' && n.props.children === 'Next').props.onClick()

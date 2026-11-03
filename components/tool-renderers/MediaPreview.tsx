@@ -7,7 +7,7 @@ import type { MediaConfig, MediaItem } from "@/types/tool"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+
 
 interface MediaPreviewProps {
   config: MediaConfig
@@ -20,7 +20,6 @@ export function MediaPreview({ config, responses = {}, readOnly = false }: Media
 
   const { lang } = useLang()
   const [localResponses, setLocalResponses] = useState<Record<string, string>>(responses)
-  const [playingId, setPlayingId] = useState<string | null>(null)
 
   const sortedItems = [...config.items].sort((a, b) => a.order - b.order)
 
@@ -45,7 +44,7 @@ export function MediaPreview({ config, responses = {}, readOnly = false }: Media
     if (item.mediaType === "video") {
       return (
         <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-black">
-          <video src={item.mediaUrl} className="h-full w-full object-contain" />
+          <video src={item.mediaUrl} controls playsInline className="h-full w-full object-contain" />
         </div>
       )
     }

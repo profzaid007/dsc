@@ -4,13 +4,13 @@ import { surveyOptionLabel } from "@/lib/survey-options"
 
 import { useState } from "react"
 import { useLang } from "@/lib/lang-context"
-import type { SurveyConfig, SurveyQuestion, SurveyOption } from "@/types/tool"
+import type { SurveyConfig } from "@/types/tool"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+
 
 interface SurveyPreviewProps {
   config: SurveyConfig

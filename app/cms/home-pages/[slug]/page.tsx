@@ -184,7 +184,7 @@ export default function CmsHomePageEditorPage() {
       const newMedia = updated.media as string[]
       const filename = newMedia[newMedia.length - 1]
       setPage((prev) => (prev ? { ...prev, media: newMedia } : null))
-      return pb.files.getUrl(updated, filename)
+      return pb.files.getURL(updated, filename)
     },
     [page]
   )

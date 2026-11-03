@@ -25,8 +25,8 @@ test('care foundations use child workflows and entity profiles', () => {
 })
 
 test('migration adds account and portal choices idempotently without changing access rules', () => {
-  const role = { values: ['parent', 'organization'] }
-  const registration = { values: ['parent', 'organization'] }
+  const role = { type: 'select', values: ['parent', 'organization'] }
+  const registration = { type: 'select', values: ['parent', 'organization'] }
   const collections = {
     users: { fields: { getByName: name => { assert.equal(name, 'role'); return role } } },
     portals: { fields: { getByName: name => { assert.equal(name, 'registration_type'); return registration } } },

@@ -1,4 +1,5 @@
 "use client"
+import { useFilePreviewUrls } from "@/hooks/useFilePreviewUrls"
 import { useAuth } from "@/hooks/useAuth"
 import { caseTaskPath } from "@/lib/case-task-path"
 import { CaseName } from "@/components/cases/CaseName"
@@ -95,7 +96,7 @@ interface MultipleChoiceBuilderPageProps {
 export default function MultipleChoiceBuilderPage({
   params,
   searchParams,
-}: MultipleChoiceBuilderPageProps = {}) {
+}: MultipleChoiceBuilderPageProps) {
   const router = useRouter()
   const { lang } = useLang()
   const {
@@ -135,6 +136,7 @@ export default function MultipleChoiceBuilderPage({
 
   const [questions, setQuestions] = useState<MCQuestion[]>([])
   const [pendingFiles, setPendingFiles] = useState<Map<string, File>>(new Map())
+  const filePreviewUrls = useFilePreviewUrls(pendingFiles)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [currentMediaQuestionId, setCurrentMediaQuestionId] = useState<
     string | null
@@ -157,7 +159,7 @@ export default function MultipleChoiceBuilderPage({
       }
       setIsLoading(false)
     }
-  }, [isEditMode, editId, isToolsLoading])
+  }, [isEditMode, editId, isToolsLoading, getToolById])
 
   const addQuestion = () => {
     const newQuestion: MCQuestion = {
@@ -198,7 +200,7 @@ export default function MultipleChoiceBuilderPage({
 
     const mediaUrls = (record: {media?: unknown;[key:string]:unknown}) => {
       if (!Array.isArray(record.media) || record.media.some(name => typeof name !== "string")) throw new Error(lang === "ar" ? "تعذر إكمال الحفظ: حقل ملفات الأداة media مفقود أو غير صحيح على الخادم. يلزم تطبيق تحديث قاعدة البيانات." : "Cannot complete saving: the tool media file field is missing or invalid on the server. Apply the database update.")
-      return (record.media as string[]).map(filename => pb.files.getUrl(record as never, filename))
+      return (record.media as string[]).map(filename => pb.files.getURL(record as never, filename))
     }
     const baseQuestions = questions.map((q, idx) => ({ ...q, order: idx }))
     const pendingEntries = Array.from(pendingFiles.entries())
@@ -271,7 +273,7 @@ export default function MultipleChoiceBuilderPage({
           files
         )
         const uploadedUrls = (updated.media as string[]).map((filename) =>
-          pb.files.getUrl(updated, filename)
+          pb.files.getURL(updated, filename)
         )
         finalConfig = buildFinalConfig(uploadedUrls)
         await caseToolsCollection.update(assignment.id, { config: finalConfig })
@@ -378,12 +380,8 @@ export default function MultipleChoiceBuilderPage({
     const showOptions =
       question.answerType === "single_choice" ||
       question.answerType === "multiple_choice"
-    const showCorrect = showOptions
     const isMedia = question.answerType === "media"
-    const pendingFile = pendingFiles.get(question.id)
-    const mediaPreviewSrc = pendingFile
-      ? URL.createObjectURL(pendingFile)
-      : question.mediaUrl
+    const mediaPreviewSrc = filePreviewUrls.get(question.id) || question.mediaUrl
 
     return (
       <div className="flex-1 space-y-3">
@@ -475,6 +473,8 @@ export default function MultipleChoiceBuilderPage({
                   )}
                   {question.mediaType === "video" && mediaPreviewSrc && (
                     <video
+                      controls
+                      playsInline
                       src={mediaPreviewSrc}
                       className="h-32 w-full rounded object-cover"
                     />

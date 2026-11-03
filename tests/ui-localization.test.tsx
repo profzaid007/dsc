@@ -27,7 +27,7 @@ function render(lang: Lang, children: React.ReactNode) {
   )
 }
 
-test("Arabic training form translates controls while preserving entered bilingual content", () => {
+test("Arabic training form translates controls and displays the unified title", () => {
   const html = render(
     "ar",
     <ProgramForm
@@ -57,9 +57,9 @@ test("Arabic training form translates controls while preserving entered bilingua
   ])
     assert.ok(!html.includes(label), label)
   assert.ok(html.includes('dir="rtl"'))
-  assert.match(html, /id="titleEn"[^>]*dir="ltr"/)
+  assert.match(html, /id="titleEn"[^>]*dir="auto"/)
   assert.ok(html.includes('value="Health Training"'))
-  assert.ok(html.includes('value="برنامج الصحة"'))
+  assert.doesNotMatch(html, /id="titleAr"/)
 })
 
 test("Arabic lecture form localizes submit override, placeholders and visibility description", () => {
@@ -75,7 +75,7 @@ test("Arabic lecture form localizes submit override, placeholders and visibility
   for (const label of [
     "معلومات المتحدث",
     "الوصف (بالإنجليزية)",
-    "أدخل عنوان المحاضرة بالإنجليزية",
+    "عنوان المحاضرة",
     "إظهار هذه المحاضرة في صفحة المحاضرات العامة",
     "حفظ البرنامج",
   ])

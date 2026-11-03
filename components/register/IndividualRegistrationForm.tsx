@@ -21,7 +21,7 @@ import {
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
-import pb, { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
+import { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 import {
   EMAIL_INVALID_MESSAGE,

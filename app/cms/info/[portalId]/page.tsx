@@ -237,7 +237,7 @@ export default function CmsPortalServicesPage() {
           keyExtractor={(p) => p.id}
           containerClassName="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
           renderItem={(p) => {
-            const iconUrl = p.icon ? pb.files.getUrl(p as never, p.icon) : null
+            const iconUrl = p.icon ? pb.files.getURL(p as never, p.icon) : null
             return (
               <>
                 <div

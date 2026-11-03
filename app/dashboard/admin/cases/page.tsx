@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { PageLoader } from "@/components/ui/page-loader"
+
 import { SkeletonTable } from "@/components/ui/skeleton"
 import { SmartLink } from "@/components/smart-link"
 import {

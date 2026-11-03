@@ -4,7 +4,7 @@ import { CaseName } from "@/components/cases/CaseName"
 import { useProtectedFileToken } from "@/hooks/useProtectedFileToken"
 import { surveyOptionLabel } from "@/lib/survey-options"
 
-import { use, useState, useEffect, useMemo, useRef } from "react"
+import { use, useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useProfiles } from "@/hooks/useProfiles"
 import { useAssignments } from "@/hooks/useAssignments"
@@ -24,20 +24,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  ArrowLeft,
-  CheckCircle,
-  AlertCircle,
-  Upload,
-  X,
-  FileText,
-  Image,
-  Video,
-  Music,
-  Play,
-  Trash2,
-  File,
-} from "lucide-react"
+import { ArrowLeft, AlertCircle, Upload, X, FileText, Image as ImageIcon, Video, Music, Play, Trash2, File } from "lucide-react"
 import Link from "next/link"
 import type {
   SurveyConfig,
@@ -52,7 +39,7 @@ import type {
   ReportConfig,
   PlanConfig,
 } from "@/types/tool"
-import { cn } from "@/lib/utils"
+
 import { toast } from "sonner"
 import pb, { getErrorMessage } from "@/lib/pb"
 import { PaymentGate } from "@/components/cases/PaymentGate"
@@ -519,7 +506,7 @@ export default function TakeSurveyToolPage({
   const getFileIcon = (filename: string) => {
     const ext = filename.split(".").pop()?.toLowerCase()
     if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext || ""))
-      return <Image className="h-5 w-5" />
+      return <ImageIcon aria-hidden="true" className="h-5 w-5" />
     if (["mp4", "webm", "mov", "avi"].includes(ext || ""))
       return <Video className="h-5 w-5" />
     if (["mp3", "wav", "ogg", "m4a"].includes(ext || ""))
@@ -529,7 +516,7 @@ export default function TakeSurveyToolPage({
 
   const getFileUrl = (filename: string) => {
     if (!fileToken) return undefined
-    return pb.files.getUrl(
+    return pb.files.getURL(
       { collectionId: "case_tools", id: assignmentId },
       filename,
       { token: fileToken }

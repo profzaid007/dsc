@@ -53,12 +53,15 @@ export default function OneToOneMeetingNewPage({
   const [notesVisible, setNotesVisible] = useState(false)
 
   useEffect(() => {
+    let active = true
     const fetchType = async () => {
       try {
         const meetingType = await toolTypesCollection.getByName("one_to_one_meeting")
+        if (!active) return
         setMeetingTypeId(meetingType.id)
         setTypeError("")
       } catch (error) {
+        if (!active) return
         setTypeError(
           getErrorMessage(error) ||
             (lang === "ar"
@@ -68,8 +71,9 @@ export default function OneToOneMeetingNewPage({
         console.error("Failed to fetch meeting type:", error)
       }
     }
-    fetchType()
-  }, [])
+    void fetchType()
+    return () => { active = false }
+  }, [lang])
 
   const handleCaseSelect = useCallback((caseId: string) => {
     setSelectedCaseId(caseId)

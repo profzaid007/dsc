@@ -38,7 +38,7 @@ export default async function BlogPage() {
         author_name: record.author_name || "",
         created: record.created,
         updated: record.updated,
-        thumbnailUrl: thumbnail ? pb.files.getUrl(record, thumbnail) : null,
+        thumbnailUrl: thumbnail ? pb.files.getURL(record, thumbnail) : null,
       } satisfies BlogPost & { thumbnailUrl: string | null }
     })
   } catch {

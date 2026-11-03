@@ -125,6 +125,25 @@ new protected module. A new catalog entry alone does not secure a new endpoint.
 
 ## Validation
 
+### Messaging quota configuration
+
+When using the PocketBase quota fallback (without Upstash), set the same
+`DSC_MESSAGING_QUOTA_SECRET` in the Next.js server environment and the
+PocketBase service environment. Generate a random value with at least 32
+characters, for example with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`.
+Keep it server-only; never use a `NEXT_PUBLIC_` variable for this secret.
+Apply `1794100300_messaging_quotas.js`, deploy both updated hook copies as
+appropriate, and restart both services together. Missing or mismatched secrets
+reject quota reservations rather than allowing unauthenticated access.
+
+Deployments with both `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN` use Redis and do not need the fallback secret.
+Local development with `DSC_LOCAL_BACKEND=true` uses in-memory quotas.
+Configure `DSC_TRUST_PROXY=true` only when your trusted proxy replaces
+`X-Forwarded-For`; Netlify uses its platform client-IP header automatically.
+Per-client checks precede delivery reservations, and malformed or unauthorized
+requests do not spend the shared delivery budget.
+
 ```powershell
 npm run typecheck
 npm run build

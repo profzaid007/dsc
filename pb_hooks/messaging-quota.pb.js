@@ -3,6 +3,13 @@ routerAdd(
   "POST",
   "/api/dsc/messaging-quota",
   (e) => {
+    // Only the Next.js server may reserve the shared delivery budget.
+    const secret = $os.getenv("DSC_MESSAGING_QUOTA_SECRET")
+    if (!secret || secret.length < 32)
+      return e.json(503, { message: "Messaging quota service unavailable" })
+    const supplied = e.request.header.get("X-DSC-Quota-Secret")
+    if (!supplied || !$security.equal(supplied, secret))
+      return e.json(403, { message: "Access denied" })
     const b = e.requestInfo().body
     if (
       !["global", "client", "token"].includes(b.scope) ||

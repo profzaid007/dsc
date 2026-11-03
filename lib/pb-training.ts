@@ -24,9 +24,9 @@ function getThumbnailUrl(record: Record<string, unknown>): string | undefined {
   const thumbnail = record.thumbnail
   if (!thumbnail) return undefined
   if (typeof thumbnail === "string")
-    return pb.files.getUrl(record as never, thumbnail)
+    return pb.files.getURL(record as never, thumbnail)
   if (Array.isArray(thumbnail) && thumbnail.length > 0) {
-    return pb.files.getUrl(record as never, thumbnail[0] as string)
+    return pb.files.getURL(record as never, thumbnail[0] as string)
   }
   return undefined
 }
@@ -38,10 +38,10 @@ function getFileUrl(
   const file = record[fieldName]
   if (!file) return undefined
   if (Array.isArray(file) && file.length > 0) {
-    return pb.files.getUrl(record as never, file[0] as string)
+    return pb.files.getURL(record as never, file[0] as string)
   }
   if (typeof file === "string") {
-    return pb.files.getUrl(record as never, file)
+    return pb.files.getURL(record as never, file)
   }
   return undefined
 }

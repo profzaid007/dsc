@@ -1,5 +1,6 @@
 import {
   guardMessaging,
+  reserveMessagingDelivery,
   messagingUser,
   readMessagingBody,
   messageString,
@@ -11,6 +12,7 @@ export async function POST(request: Request) {
     await guardMessaging(request)
     await messagingUser(request)
     const text = messageString(await readMessagingBody(request), "text", 4000)
+    await reserveMessagingDelivery()
     if (localMessagingDisabled())
       return Response.json({ message: "Sent successfully" })
     const response = await fetch(

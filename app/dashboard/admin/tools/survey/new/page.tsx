@@ -67,7 +67,7 @@ interface SurveyBuilderPageProps {
 export default function SurveyBuilderPage({
   params,
   searchParams,
-}: SurveyBuilderPageProps = {}) {
+}: SurveyBuilderPageProps) {
   const ui = useUiTranslation()
 
   const router = useRouter()
@@ -151,7 +151,6 @@ export default function SurveyBuilderPage({
     if (hasInitialized.current) return
 
     // Initialize the editable draft once the asynchronous tool data is available.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true)
     const tool = getToolById(editId)
     if (tool && tool.config) {

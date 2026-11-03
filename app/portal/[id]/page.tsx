@@ -81,7 +81,7 @@ export default async function PortalPage({ params }: PortalPageProps) {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
           {publishedPages.map((record) => {
             const iconFile = record.icon as string
-            const iconUrl = iconFile ? pb.files.getUrl(record, iconFile) : null
+            const iconUrl = iconFile ? pb.files.getURL(record, iconFile) : null
             return (
               <Link
                 key={record.id}

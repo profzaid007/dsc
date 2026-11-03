@@ -55,6 +55,10 @@ export function RichTextEditor({
   const onImageUploadRef = useRef(onImageUpload)
   const onChangeRef = useRef(onChange)
   const mediaLimitRef = useRef({ maxMediaSizeMB, lang })
+  const initialEditorRef = useRef({ initialContent, direction })
+  useLayoutEffect(() => {
+    initialEditorRef.current = { initialContent, direction }
+  }, [initialContent, direction])
   useEffect(() => { mediaLimitRef.current = { maxMediaSizeMB, lang } }, [maxMediaSizeMB, lang])
   const exceedsMediaLimit = (file: File) => {
     const { maxMediaSizeMB: limit, lang: currentLang } = mediaLimitRef.current
@@ -97,14 +101,17 @@ export function RichTextEditor({
 
       if (cancelled || !textarea.isConnected) return
 
+      // Imports may finish after the caller switches to another language or page.
+      const { initialContent: startingContent, direction: startingDirection } = initialEditorRef.current
+
       instance = suneditor.create(textarea, {
         plugins,
         externalLibs: {
           codeMirror: { src: CodeMirror },
         },
-        textDirection: direction,
+        textDirection: startingDirection,
         toolbar_sticky: 93,
-        value: isCustomCmsLayout(initialContent) ? "" : initialContent,
+        value: isCustomCmsLayout(startingContent) ? "" : startingContent,
         height: "600px",
         minHeight: "400px",
         buttonList: [
@@ -139,7 +146,7 @@ export function RichTextEditor({
             if (file && exceedsMediaLimit(file)) return false
             const upload = onImageUploadRef.current
             if (!file || !upload) {
-              toast.error(lang === "ar" ? "أدخل رابط فيديو منشورًا على الإنترنت." : "Enter an online video URL.")
+              toast.error(mediaLimitRef.current.lang === "ar" ? "أدخل رابط فيديو منشورًا على الإنترنت." : "Enter an online video URL.")
               return false
             }
             try {
@@ -197,7 +204,7 @@ export function RichTextEditor({
       editorRef.current = instance
       setEditorReady(true)
 
-      if (direction === "rtl") {
+      if (startingDirection === "rtl") {
         containerRef.current
           ?.querySelector(".sun-editor-editable")
           ?.setAttribute("lang", "ar")
@@ -220,6 +227,15 @@ export function RichTextEditor({
       }
     }
   }, []) // run once
+
+  useEffect(() => {
+    const instance = editorRef.current
+    if (!instance) return
+    if (instance.$.options.get("textDirection") !== direction) {
+      instance.resetOptions({ textDirection: direction })
+    }
+    containerRef.current?.querySelector(".sun-editor-editable")?.setAttribute("lang", direction === "rtl" ? "ar" : "en")
+  }, [direction, editorReady])
 
   // Update editor content when initialContent prop changes
   useEffect(() => {

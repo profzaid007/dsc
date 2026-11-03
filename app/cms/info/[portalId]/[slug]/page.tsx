@@ -122,7 +122,7 @@ export default function CmsServiceEditorPage() {
       const iconFile = extractIcon(pageRecordRef.current)
       setIconUrl(
         iconFile && pageRecordRef.current
-          ? pb.files.getUrl(pageRecordRef.current, iconFile)
+          ? pb.files.getURL(pageRecordRef.current, iconFile)
           : null
       )
       setPage(data)
@@ -197,6 +197,8 @@ export default function CmsServiceEditorPage() {
       portalId,
       router,
       lang,
+      setEnTitle,
+      setArTitle,
     ]
   )
 
@@ -227,7 +229,7 @@ export default function CmsServiceEditorPage() {
     setArTitle(enTitle)
     setArContent(enContent)
     setResetKey(t => t + 1)
-  }, [enTitle, enContent])
+  }, [enTitle, enContent, setArTitle])
 
   const handleDiscard = useCallback(async () => {
     const data = await infoPagesCollection.getBySlug(slug)
@@ -241,9 +243,9 @@ export default function CmsServiceEditorPage() {
     setArContent(data.content_ar || "")
     setIsPublished(data.is_published)
     const iconFile = extractIcon(pageRecordRef.current)
-    setIconUrl(iconFile ? pb.files.getUrl(pageRecordRef.current, iconFile) : null)
+    setIconUrl(iconFile ? pb.files.getURL(pageRecordRef.current, iconFile) : null)
     setResetKey(t => t + 1)
-  }, [slug])
+  }, [slug, setEnTitle, setArTitle])
 
   const togglePublish = useCallback(async () => {
     if (!page) return
@@ -266,7 +268,7 @@ export default function CmsServiceEditorPage() {
       const newMedia = updated.media as string[]
       const filename = newMedia[newMedia.length - 1]
       setPage((prev) => (prev ? { ...prev, media: newMedia } : null))
-      return pb.files.getUrl(updated, filename)
+      return pb.files.getURL(updated, filename)
     },
     [page]
   )
@@ -283,7 +285,7 @@ export default function CmsServiceEditorPage() {
         pageRecordRef.current = updated as unknown as Record<string, unknown>
         const iconFile = extractIcon(pageRecordRef.current)
         setIconUrl(
-          iconFile ? pb.files.getUrl(pageRecordRef.current, iconFile) : null
+          iconFile ? pb.files.getURL(pageRecordRef.current, iconFile) : null
         )
       } catch (err) {
         toast.error(

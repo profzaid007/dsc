@@ -68,16 +68,22 @@ takeQuota("regression:limit", 1, 1000)
 assert.throws(() => takeQuota("regression:limit", 1, 1001), RequestError)
 takeQuota("regression:limit", 1, 61_001)
 
+const originalQuotaSecret = process.env.DSC_MESSAGING_QUOTA_SECRET
+process.env.DSC_MESSAGING_QUOTA_SECRET = "isolated-test-quota-secret-32-characters"
 const originalFetch = globalThis.fetch
+let globalReservations = 0
 let deliveries = 0
 let role = "individual"
 let active = true
 let invalidToken = false
 let permissions = ["messages.create"]
-globalThis.fetch = async (input) => {
+globalThis.fetch = async (input, options) => {
   const url = String(input instanceof Request ? input.url : input)
-  if (url.includes("/api/dsc/messaging-quota"))
+  if (url.includes("/api/dsc/messaging-quota")) {
+    assert.equal(new Headers(options?.headers).get("X-DSC-Quota-Secret"), process.env.DSC_MESSAGING_QUOTA_SECRET)
+    if (JSON.parse(String(options?.body)).scope === "global") globalReservations++
     return Response.json({ allowed: true })
+  }
   if (url.includes("/api/dsc/security/me"))
     return Response.json({ permissions })
   if (url.includes("/auth-refresh"))
@@ -152,8 +158,11 @@ try {
     400
   )
   assert.equal(deliveries, 0)
+  assert.equal(globalReservations, 0, "invalid and unauthenticated requests must not consume delivery capacity")
 } finally {
   globalThis.fetch = originalFetch
+  if (originalQuotaSecret === undefined) delete process.env.DSC_MESSAGING_QUOTA_SECRET
+  else process.env.DSC_MESSAGING_QUOTA_SECRET = originalQuotaSecret
 }
 
 const pb = new PocketBase("http://localhost:8090")

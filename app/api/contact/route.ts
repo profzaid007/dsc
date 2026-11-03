@@ -1,5 +1,6 @@
 import {
   guardMessaging,
+  reserveMessagingDelivery,
   readMessagingBody,
   messagingError,
 } from "@/lib/messaging-security"
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
     const errors = validateContact(values, lang)
     if (Object.keys(errors).length)
       return Response.json({ errors }, { status: 400 })
+    await reserveMessagingDelivery()
     if (
       process.env.NODE_ENV === "development" &&
       process.env.DSC_LOCAL_BACKEND === "true"
