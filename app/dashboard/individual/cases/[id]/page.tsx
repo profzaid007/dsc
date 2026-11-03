@@ -4,6 +4,9 @@ import { CaseMessages } from "@/components/cases/CaseMessages"
 import { CaseName } from "@/components/cases/CaseName"
 import { CaseAssessments } from "@/components/assessments/CaseAssessments"
 import { CaseFeedback } from "@/components/cases/CaseFeedback"
+import { ClientCaseAssignments } from "@/components/clients/ClientCaseAssignments"
+import { DataError } from "@/components/ui/data-error"
+import { PageLoader } from "@/components/ui/page-loader"
 
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -12,10 +15,7 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useToolTypes } from "@/hooks/useToolTypes"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
-import { getToolTypeLabel } from "@/lib/tool-types"
 import { formatDate } from "@/lib/format-date"
-import { caseExpertsCollection } from "@/lib/pb-collections"
-import { getAllowedToolTypesForRoleId } from "@/lib/pb-collections"
 import { PaymentGate } from "@/components/cases/PaymentGate"
 import {
   Card,
@@ -28,20 +28,8 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, User, ClipboardList, History, Eye, Pencil } from "lucide-react"
+import { ArrowLeft, User, History } from "lucide-react"
 import Link from "next/link"
-import { toast } from "sonner"
-import { getErrorMessage } from "@/lib/pb"
-
-const assignmentStatusLabels: Record<
-  string,
-  { en: string; ar: string }
-> = {
-  pending: { en: "Pending", ar: "قيد الانتظار" },
-  assigned: { en: "Assigned", ar: "تم التكليف" },
-  in_progress: { en: "In Progress", ar: "قيد التنفيذ" },
-  completed: { en: "Completed", ar: "مكتمل" },
-}
 
 export default function ProfileDetailPage({
   params,
@@ -51,53 +39,28 @@ export default function ProfileDetailPage({
   const { id } = use(params)
   const router = useRouter()
   const { lang } = useLang()
-  const { getProfileById, isLoading: profilesLoading } = useProfiles()
-  const { getAssignmentsByCase, getVisibleAssignments } = useAssignments(id)
-  const { toolTypes, fetchToolTypes } = useToolTypes()
-  const { currentUser } = useAuth()
+  const { getProfileById, isLoading: profilesLoading, loadError: profileError, refresh: refreshProfiles } = useProfiles()
+  const { getVisibleAssignments, isLoading: tasksLoading, loadError: tasksError, refresh: refreshTasks } = useAssignments(id)
+  const { toolTypes, fetchToolTypes, isLoading: typesLoading, error: typeError } = useToolTypes()
+  const { currentUser, isLoading: authLoading } = useAuth()
 
-  const [expertRole, setExpertRole] = useState<string | null>(null)
-  const [allowedToolTypeIds, setAllowedToolTypeIds] = useState<string[]>([])
+  const [typesReady, setTypesReady] = useState(false)
 
-  const profile = getProfileById(id)
-  const assignments = getAssignmentsByCase(id)
-  const visibleAssignments = getVisibleAssignments(id)
-
-  // Filter visible assignments by role-based tool type permissions
-  const roleFilteredAssignments =
-    expertRole && allowedToolTypeIds.length > 0
-      ? visibleAssignments.filter((a) => allowedToolTypeIds.includes(a.type))
-      : visibleAssignments
+  const candidate = getProfileById(id)
+  const profile = candidate?.user === currentUser?.id ? candidate : undefined
+  const assignments = getVisibleAssignments(id).filter(assignment => assignment.is_visible_to_user === true)
 
   useEffect(() => {
-    fetchToolTypes()
+    let active = true
+    void fetchToolTypes().finally(() => { if (active) setTypesReady(true) })
+    return () => { active = false }
   }, [fetchToolTypes])
+  function retryData() { void refreshProfiles(); void refreshTasks(); void fetchToolTypes() }
 
-  useEffect(() => {
-    async function fetchExpertRole() {
-      if (!currentUser || !id) return
-      try {
-        const caseExpert = await caseExpertsCollection.getByCaseAndExpert(
-          id,
-          currentUser.id
-        )
-        if (caseExpert?.role_id) {
-          setExpertRole(caseExpert.role_id)
-          const allowed = await getAllowedToolTypesForRoleId(caseExpert.role_id)
-          setAllowedToolTypeIds(allowed)
-        }
-      } catch (error) {
-        console.error("Failed to fetch expert role:", error)
-        toast.error(getErrorMessage(error))
-      }
-    }
-    fetchExpertRole()
-  }, [currentUser, id])
-
-  if (profilesLoading) {
+  if (authLoading || profilesLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
+      <div className="space-y-6 text-[#082c4a]">
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-blue-200 bg-[#edf5ff] p-5">
           <Skeleton className="h-9 w-9" />
           <Skeleton className="h-7 w-56" />
         </div>
@@ -109,6 +72,8 @@ export default function ProfileDetailPage({
       </div>
     )
   }
+
+  if (profileError) return <DataError message={profileError} onRetry={retryData} />
 
   if (!profile) {
     return (
@@ -127,27 +92,27 @@ export default function ProfileDetailPage({
     <PaymentGate profile={profile}>
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-5 w-5" />
+        <Button variant="ghost" size="icon" aria-label={lang === "ar" ? "العودة" : "Back"} onClick={() => router.back()}>
+          <ArrowLeft className={`h-5 w-5 ${lang === "ar" ? "rotate-180" : ""}`} />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-primary"><CaseName profile={profile} /></h1>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold text-primary [overflow-wrap:anywhere]"><CaseName profile={profile} /></h1>
           <p className="text-muted-foreground">
             {lang === "ar" ? `أنشئت في ${formatDate(profile.created)}` : `Created ${formatDate(profile.created)}`}
           </p>
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="h-auto flex-wrap">
+      <Tabs defaultValue={profile.portal_type === "Attending Training" ? "overview" : "tasks"} className="space-y-4">
+        <TabsList className="h-auto flex-wrap gap-2 rounded-xl border border-blue-100 bg-blue-50 p-2">
           <TabsTrigger value="overview">
             {lang === "ar" ? "نظرة عامة" : "Overview"}
           </TabsTrigger>
           <TabsTrigger value="tasks">
             {lang === "ar" ? "التكليفات" : "Assignments"}
-            {roleFilteredAssignments.length > 0 && (
+            {assignments.length > 0 && (
               <Badge variant="secondary" className="ms-2">
-                {roleFilteredAssignments.length}
+                {assignments.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -285,152 +250,15 @@ export default function ProfileDetailPage({
           </div>
         </TabsContent>
 
-        <TabsContent value="tasks">
+        <TabsContent value="tasks" className="space-y-5">
+          {tasksLoading || typesLoading || !typesReady ? <PageLoader /> : tasksError || typeError ? <DataError message={tasksError || typeError || ""} onRetry={retryData} /> : <ClientCaseAssignments profile={profile} assignments={assignments} toolTypes={toolTypes} ar={lang === "ar"} role={currentUser!.role} />}
           <CaseMessages key={id} caseId={id} />
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5" />
-                {lang === "ar" ? "التكليفات" : "Assignments"}
-              </CardTitle>
-              <CardDescription>
-                {lang === "ar"
-                  ? "التكليفات لهذه الحالة"
-                  : "Assignments assigned to this profile"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {roleFilteredAssignments.length === 0 ? (
-                <div className="py-8 text-center">
-                  <ClipboardList className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="mb-2 text-lg font-medium">
-                    {lang === "ar" ? "لا توجد تكليفات بعد" : "No assignments yet"}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {lang === "ar"
-                      ? "ستظهر التكليفات هنا بمجرد تكليفها من قبل المشرف"
-                      : "Assignments will appear here once assigned by an admin"}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {roleFilteredAssignments.map((assignment) => {
-                    const toolType = toolTypes.find(
-                      (t) => t.id === assignment.type
-                    )
-                    const toolTypeName = getToolTypeLabel(toolType, lang)
-                    return (
-                      <div
-                        key={assignment.id}
-                        className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">
-                              {lang === "ar"
-                                ? assignment.name_ar || assignment.name_en
-                                : assignment.name_en}
-                            </p>
-                            <Badge
-                              variant="outline"
-                              className="text-xs capitalize"
-                            >
-                              {toolTypeName}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {!assignment.is_not_template ? (
-                            <Link
-                              href={`/dashboard/individual/cases/${id}/tasks/${assignment.id}`}
-                            >
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                title={lang === "ar" ? "الإجابة" : "Respond"}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                          ) : (
-                            <Link
-                              href={`/dashboard/individual/cases/${id}/tasks/${assignment.id}`}
-                            >
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                title={lang === "ar" ? "عرض" : "View"}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                          )}
-                          {assignment.status === "completed" && !assignment.is_not_template && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const responses = assignment.responses
-                                if (
-                                  responses &&
-                                  Object.keys(responses).length > 0
-                                ) {
-                                  const printWindow = window.open(
-                                    "",
-                                    "_blank",
-                                    "width=800,height=600"
-                                  )
-                                  if (printWindow) {
-                                    printWindow.document.write(`
-                                    <html>
-                                      <head>
-                                        <title>${assignment.name_en || (lang === "ar" ? "الردود" : "Responses")}</title>
-                                        <style>
-                                          body { font-family: system-ui, sans-serif; padding: 20px; }
-                                          h1 { margin-bottom: 10px; }
-                                          .meta { color: #666; margin-bottom: 20px; }
-                                          .response { margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
-                                          .question { font-weight: bold; margin-bottom: 5px; }
-                                          @media print { .no-print { display: none; } }
-                                        </style>
-                                      </head>
-                                      <body>
-                                        <h1>${assignment.name_en || (lang === "ar" ? "الردود" : "Responses")}</h1>
-                                        <p class="meta">${lang === "ar" ? "الحالة" : "Profile"}: ${profile.name} | ${lang === "ar" ? "التاريخ" : "Date"}: ${formatDate(assignment.updated)}</p>
-                                        <pre style="white-space: pre-wrap; background: #f5f5f5; padding: 15px; border-radius: 4px;">${JSON.stringify(responses, null, 2)}</pre>
-                                        <button class="no-print" onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">${lang === "ar" ? "طباعة / حفظ كـ PDF" : "Print / Save as PDF"}</button>
-                                      </body>
-                                    </html>
-                                  `)
-                                    printWindow.document.close()
-                                  }
-                                }
-                              }}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Badge
-                            variant={
-                              assignment.status === "completed"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {assignmentStatusLabels[assignment.status]?.[lang] || assignment.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <CaseAssessments caseId={profile.id} />
         </TabsContent>
 
         <TabsContent value="documents"><CaseDocuments key={id} caseId={id} /></TabsContent>
         <TabsContent value="case-file">
+          {tasksLoading ? <PageLoader /> : tasksError ? <DataError message={tasksError} onRetry={retryData} /> : <>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -487,9 +315,9 @@ export default function ProfileDetailPage({
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+        </>}</TabsContent>
       </Tabs>
-      <CaseAssessments caseId={profile.id} />
+
       <CaseFeedback caseId={profile.id} ownerId={profile.user} />
     </div>
     </PaymentGate>

@@ -120,3 +120,13 @@ test('direct administrative case routes deny experts while preserving authorized
  const {AdminProtectedRoute}=load('components/dashboard/AdminProtectedRoute.tsx',{path:'/dashboard/admin/assignments/task',role:'expert',admin:false,cms:false})
  assert.ok(renderToStaticMarkup(React.createElement(AdminProtectedRoute,null,'EXPERT TASK')).includes('EXPERT TASK'))
 })
+
+test('client navigation exposes working shared services with role-correct case and project routes on desktop and mobile',()=>{
+ for(const[role,home,segment]of[['parent','parent','cases'],['care_foundation','parent','cases'],['individual','individual','cases'],['organization','institution','projects']])for(const mobileOpen of [false,true])for(const lang of ['ar','en']){
+  const{DashboardSidebar}=load('components/dashboard/Sidebar.tsx',{path:`/dashboard/${home}`,role,admin:false,super:false,cms:false,mobileOpen,lang,unread:2})
+  const html=renderToStaticMarkup(React.createElement(DashboardSidebar))
+  for(const href of ['/dashboard/messages','/dashboard/assessments',`/dashboard/${home}/${segment}`,`/dashboard/${home}/appointments`,`/dashboard/${home}/reports`,`/dashboard/${home}/documents`])assert.ok(html.includes(`href="${href}"`),`${role}/${lang}/${mobileOpen}: ${href}`)
+  for(const href of ['/dashboard/expert/cases','/dashboard/admin/cases','/dashboard/institution/quotations',`/dashboard/${home}/services`])assert.ok(!html.includes(`href="${href}"`),`${role}: ${href}`)
+  assert.ok(html.includes(lang==='ar'?'2 رسائل غير مقروءة':'2 unread messages'))
+ }
+})

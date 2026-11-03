@@ -28,11 +28,9 @@ import {
   Briefcase,
   FileText,
   Calendar,
-  MessageSquare,
   Mail,
   UserCircle,
   StickyNote,
-  Baby,
   Menu,
   X,
 } from "lucide-react"
@@ -88,85 +86,19 @@ const adminNavigation: NavItem[] = [
   },
 ]
 
-const organizationNavigation: NavItem[] = [
-  {
-    name: { en: "My Assignments", ar: "تكليفاتي" },
-    href: "/dashboard/assessments",
-    icon: ClipboardList,
-  },
-  {
-    name: { en: "Projects", ar: "المشاريع" },
-    href: "/dashboard/institution/projects",
-    icon: Briefcase,
-  },
-  {
-    name: { en: "Quotations", ar: "عروض الأسعار" },
-    href: "/dashboard/institution/quotations",
-    icon: MessageSquare,
-  },
-  {
-    name: { en: "Services", ar: "الخدمات" },
-    href: "/dashboard/institution/services",
-    icon: FolderKanban,
-  },
-  {
-    name: { en: "Documents", ar: "المستندات" },
-    href: "/dashboard/institution/documents",
-    icon: FileText,
-  },
-]
-
-const individualNavigation: NavItem[] = [
-  {
-    name: { en: "My Assignments", ar: "تكليفاتي" },
-    href: "/dashboard/assessments",
-    icon: ClipboardList,
-  },
-  {
-    name: { en: "Cases", ar: "الحالات" },
-    href: "/dashboard/individual/cases",
-    icon: Users,
-  },
-  {
-    name: { en: "Appointments", ar: "المواعيد" },
-    href: "/dashboard/individual/appointments",
-    icon: Calendar,
-  },
-  {
-    name: { en: "Services", ar: "الخدمات" },
-    href: "/dashboard/individual/services",
-    icon: FolderKanban,
-  },
-  {
-    name: { en: "Reports", ar: "التقارير" },
-    href: "/dashboard/individual/reports",
-    icon: FileText,
-  },
-]
-
-const parentNavigation: NavItem[] = [
-  {
-    name: { en: "My Assignments", ar: "تكليفاتي" },
-    href: "/dashboard/assessments",
-    icon: ClipboardList,
-  },
-  {
-    name: { en: "Cases", ar: "الحالات" },
-    href: "/dashboard/parent/cases",
-    icon: Baby,
-  },
-  {
-    name: { en: "Appointments", ar: "المواعيد" },
-    href: "/dashboard/parent/appointments",
-    icon: Calendar,
-  },
-  {
-    name: { en: "Reports", ar: "التقارير" },
-    href: "/dashboard/parent/reports",
-    icon: FileText,
-  },
-]
-
+export function customerNavigation(home: string, projects = false): NavItem[] {
+  return [
+    { name: { en: "Messages", ar: "الرسائل" }, href: "/dashboard/messages", icon: Mail },
+    { name: projects ? { en: "My projects", ar: "مشاريعي" } : { en: "My cases", ar: "حالاتي" }, href: `${home}/${projects ? "projects" : "cases"}`, icon: projects ? Briefcase : Users },
+    { name: { en: "My assignments", ar: "تكليفاتي" }, href: "/dashboard/assessments", icon: ClipboardList },
+    { name: { en: "Appointments", ar: "المواعيد" }, href: `${home}/appointments`, icon: Calendar },
+    { name: { en: "Results & reports", ar: "النتائج والتقارير" }, href: `${home}/reports`, icon: FileText },
+    { name: { en: "Shared files", ar: "الملفات المشتركة" }, href: `${home}/documents`, icon: FolderKanban },
+  ]
+}
+const organizationNavigation = customerNavigation("/dashboard/institution", true)
+const individualNavigation = customerNavigation("/dashboard/individual")
+const parentNavigation = customerNavigation("/dashboard/parent")
 const expertNavigation: NavItem[] = [
   {
     name: { en: "Messages", ar: "الرسائل" },
@@ -254,13 +186,14 @@ export function DashboardSidebar() {
   const isExpert = role === "expert"
   const unread = useUnreadMessages(
     currentUser?.id,
-    isExpert || (isAdmin && permissions.can("messages.read"))
+    isExpert || role === "parent" || role === "individual" || role === "organization" || role === "care_foundation" || (isAdmin && permissions.can("messages.read"))
   )
   const withUnread = (item: NavItem): NavItem =>
     item.href === "/dashboard/messages" ? { ...item, unread } : item
   const isOrganization = role === "organization"
   const isIndividual = role === "individual"
   const isParent = role === "parent" || role === "care_foundation"
+  const roleNavigation = isExpert ? expertNavigation : isOrganization ? organizationNavigation : isIndividual ? individualNavigation : isParent ? parentNavigation : []
 
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -378,7 +311,7 @@ export function DashboardSidebar() {
                           : []),
                   ...adminNavigation.filter((item) => {
                     const key = routePermission(item.href)
-                    return !(isExpert && item.href === "/dashboard/admin/cases") && !!key && permissions.can(key)
+                    return !roleNavigation.some(link => link.href === item.href) && !(isExpert && item.href === "/dashboard/admin/cases") && !!key && permissions.can(key)
                   }),
                 ].filter(
                   (item, index, all) =>
@@ -466,7 +399,7 @@ export function DashboardSidebar() {
             adminNavigation
               .filter((item) => {
                 const key = routePermission(item.href)
-                return !(isExpert && item.href === "/dashboard/admin/cases") && !!key && permissions.can(key)
+                return !roleNavigation.some(link => link.href === item.href) && !(isExpert && item.href === "/dashboard/admin/cases") && !!key && permissions.can(key)
               })
               .map((item) =>
                 renderNavItem(
