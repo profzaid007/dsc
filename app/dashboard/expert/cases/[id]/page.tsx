@@ -3,6 +3,7 @@ import { TemplateResponse } from "@/components/tools/TemplateResponse"
 import { AttachmentAssignmentDetail, isAttachmentRequest } from "@/components/cases/AttachmentAssignmentDetail"
 import { CaseDocuments } from "@/components/cases/CaseDocuments"
 import { ExpertCreateAssignment } from "@/components/cases/ExpertCreateAssignment"
+import { MeetingAssignmentDetail } from "@/components/cases/MeetingAssignmentDetail"
 import type { MultipleChoiceConfig } from "@/types/tool"
 import { CaseAssignmentsWorkspace, type WorkspaceAssignment } from "@/components/cases/CaseAssignmentsWorkspace"
 import { AssignmentAssessmentDetail } from "@/components/cases/AssignmentAssessmentDetail"
@@ -145,7 +146,19 @@ export default function ExpertCaseDetailPage({
     const label = isAttachmentRequest(task) ? (ar ? "طلب مرفقات" : "Attachment request") : record ? getToolTypeLabel(record, lang) : (ar ? "أداة" : "Tool")
     return <span role="img" aria-label={label} title={label}><Icon aria-hidden="true" className="size-4" /></span>
   }
+  function assignmentType(task: CaseTool) {
+    const record = toolTypes.find(type => type.id === task.type)
+    const config = task.config as unknown as Record<string, unknown> | undefined
+    const key = isAttachmentRequest(task) ? "attachment_request" : String(config?.templateKind || record?.key || task.type)
+    const canonical = toolTypes.find(type => type.key === key) || record
+    const label = isAttachmentRequest(task) ? (ar ? "طلب مرفقات" : "Attachment request") : canonical ? getToolTypeLabel(canonical, lang) : (ar ? "أداة أخرى" : "Other tool")
+    return { typeKey: `tool:${key}`, typeLabel: label }
+  }
+  function isMeeting(task: CaseTool) {
+    return toolTypes.find(type => type.id === task.type)?.key === "one_to_one_meeting"
+  }
   const items: WorkspaceAssignment[] = assignments.map(task => ({
+    ...assignmentType(task),
     id: `tool:${task.id}`,
     icon: toolIcon(task),
     name: (ar ? task.name_ar : task.name_en) || task.name_en || task.name_ar || (ar ? "تكليف" : "Assignment"),
@@ -153,17 +166,19 @@ export default function ExpertCaseDetailPage({
     date: task.assigned_at || task.created,
     category: task.specialization ? specializationLabel(task.specialization, lang) : undefined,
     content: <div className="space-y-5">
+      {isMeeting(task) && <MeetingAssignmentDetail key={task.id} task={task} ar={ar} save={updateAssignment} />}
       {isAttachmentRequest(task) && <AttachmentAssignmentDetail task={task} ar={ar} />}
       {(task.config as unknown as Record<string, unknown>)?.templateWorkflow === true && ["plan", "report"].includes(String((task.config as unknown as Record<string, unknown>)?.templateKind || "")) && <TemplateResponse task={task} kind={String((task.config as unknown as Record<string, unknown>)?.templateKind || "")} readOnly />}
       {task.task_brief && <p dir="auto" className="rounded-xl bg-blue-50 p-4 text-sm leading-7 whitespace-pre-wrap [overflow-wrap:anywhere]">{task.task_brief}</p>}
       {!task.task_brief && (task.config as Partial<MultipleChoiceConfig> | undefined)?.questions?.map((question, index) => <section key={question.id} className="rounded-xl border border-blue-100 bg-[#f3f8ff] p-4"><div className="flex items-start gap-3"><span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white text-xs font-bold text-blue-700">{index + 1}</span><p dir="auto" className="text-sm font-semibold leading-7 whitespace-pre-wrap">{question.text}</p></div>{typeof task.responses?.[question.id] === "string" && <div className="mt-3 rounded-lg bg-white p-3"><p className="text-xs font-semibold text-slate-500">{ar ? "إجابة صاحب الحالة" : "Case owner's answer"}</p><p dir="auto" className="mt-1 text-sm whitespace-pre-wrap">{String(task.responses[question.id])}</p></div>}</section>)}
       {task.assigned_expert === currentUser?.id && <TaskResponse key={task.id} task={task} save={updateAssignment} />}
     </div>,
-    actions: isAttachmentRequest(task) ? undefined : <Button asChild variant="outline" className="min-h-11 border-blue-200 text-blue-800"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}><ExternalLink className="size-4" />{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>,
+    actions: isAttachmentRequest(task) || isMeeting(task) ? undefined : <Button asChild variant="outline" className="min-h-11 border-blue-200 text-blue-800"><Link href={`/dashboard/admin/assignments/${encodeURIComponent(task.id)}`}><ExternalLink className="size-4" />{ar ? "عرض الأداة والإجابات" : "View tool and responses"}</Link></Button>,
   }))
   items.push(...assessmentSessions.map(session => ({
     icon: <span role="img" aria-label={ar ? "مقياس / تقييم" : "Assessment"} title={ar ? "مقياس / تقييم" : "Assessment"}><ClipboardCheck aria-hidden="true" className="size-4" /></span>,
     id: `assessment:${session.id}`, name: session.snapshot.name, status: session.status,
+    typeKey: "assessment", typeLabel: ar ? "مقياس / تقييم" : "Assessment",
     date: session.assigned_at || session.created, category: ar ? "مقياس / تقييم" : "Assessment",
     content: <AssignmentAssessmentDetail key={session.id} id={session.id} ar={ar} />,
     actions: <span className="inline-flex items-center gap-2 text-xs text-slate-600"><ClipboardCheck className="size-4" />{ar ? "التقرير الكامل متاح من تبويب النتائج والتقارير." : "Full reports are available in Results & reports."}</span>,

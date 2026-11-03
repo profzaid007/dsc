@@ -170,6 +170,8 @@ export interface AttachmentRequestConfig {
 // ============ ONE TO ONE MEETING ============
 
 export interface OneToOneMeetingConfig {
+  sessionType?: string
+  description?: string
   date: string
   time: string
   meetingType: "online" | "face_to_face"

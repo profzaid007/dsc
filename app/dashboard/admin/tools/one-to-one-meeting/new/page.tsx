@@ -1,515 +1,104 @@
 "use client"
-import { caseTaskPath } from "@/lib/case-task-path"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { CalendarDays, Check, Eye, EyeOff, Loader2, UsersRound, X } from "lucide-react"
+import { toast } from "sonner"
+import { caseTaskPath } from "@/lib/case-task-path"
 import { useAssignments } from "@/hooks/useAssignments"
+import { useAuth } from "@/hooks/useAuth"
 import { useProfiles } from "@/hooks/useProfiles"
 import { toolTypesCollection } from "@/lib/pb-collections"
 import { getErrorMessage } from "@/lib/pb"
-import { toast } from "sonner"
-import { formatDate } from "@/lib/format-date"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { DateInput } from "@/components/ui/date-input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Switch } from "@/components/ui/switch"
-import { CaseSearchCombobox } from "@/components/case-search-combobox"
-import { Calendar, Eye, EyeOff, Loader2 } from "lucide-react"
 import { useLang } from "@/lib/lang-context"
+import { isMeetingDraftValid, meetingConfig, meetingDraft } from "@/lib/meeting-assignment"
+import { Button } from "@/components/ui/button"
+import { CaseSearchCombobox } from "@/components/case-search-combobox"
+import { OneToOneMeetingFields } from "@/components/cases/OneToOneMeetingFields"
 import type { OneToOneMeetingConfig } from "@/types/tool"
+import type { CaseTool } from "@/types/assignment"
 
-export default function OneToOneMeetingNewPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ caseId?: string; edit?: string }>
-}) {
+export default function OneToOneMeetingNewPage({ searchParams }: { searchParams: Promise<{ caseId?: string; edit?: string }> }) {
   const router = useRouter()
   const { lang } = useLang()
-  const { assignTool, updateAssignment, assignments, isLoading: isAssignmentsLoading } = useAssignments()
+  const ar = lang === "ar"
+  const t = (a: string, e: string) => ar ? a : e
+  const { currentUser } = useAuth()
+  const { assignTool, updateAssignment, assignments, isLoading, loadError } = useAssignments()
   const { getProfileById } = useProfiles()
   const [showPreview, setShowPreview] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [meetingTypeId, setMeetingTypeId] = useState<string>("")
-  const [typeError, setTypeError] = useState<string>("")
-  const [editAssignmentId, setEditAssignmentId] = useState<string>("")
-
+  const [saving, setSaving] = useState(false)
+  const [typeId, setTypeId] = useState("")
+  const [error, setError] = useState("")
+  const [initialError, setInitialError] = useState("")
+  const [existing, setExisting] = useState<CaseTool>()
   const [selectedCaseId, setSelectedCaseId] = useState("")
   const [hasCaseContext, setHasCaseContext] = useState(false)
-  const [isInitializing, setIsInitializing] = useState(true)
-  const hasInitialized = useRef(false)
-
-  const [toolName, setToolName] = useState("")
-
-  const [meetingDate, setMeetingDate] = useState("")
-  const [meetingTime, setMeetingTime] = useState("")
-  const [meetingType, setMeetingType] = useState<"online" | "face_to_face">("online")
-  const [meetingLink, setMeetingLink] = useState("")
-  const [meetingLocation, setMeetingLocation] = useState("")
-  const [adminNotes, setAdminNotes] = useState("")
-  const [notesVisible, setNotesVisible] = useState(false)
+  const [initializing, setInitializing] = useState(true)
+  const initialized = useRef(false)
+  const [draft, setDraft] = useState(() => meetingDraft())
 
   useEffect(() => {
     let active = true
-    const fetchType = async () => {
-      try {
-        const meetingType = await toolTypesCollection.getByName("one_to_one_meeting")
-        if (!active) return
-        setMeetingTypeId(meetingType.id)
-        setTypeError("")
-      } catch (error) {
-        if (!active) return
-        setTypeError(
-          getErrorMessage(error) ||
-            (lang === "ar"
-              ? 'نوع الأداة "one_to_one_meeting" غير موجود. يرجى الاتصال بالمسؤول.'
-              : 'Tool type "one_to_one_meeting" not found. Please contact admin.')
-        )
-        console.error("Failed to fetch meeting type:", error)
-      }
-    }
-    void fetchType()
+    toolTypesCollection.getByName("one_to_one_meeting").then(type => { if (active) setTypeId(type.id) }).catch(err => { if (active) setInitialError(getErrorMessage(err, lang)) })
     return () => { active = false }
   }, [lang])
 
-  const handleCaseSelect = useCallback((caseId: string) => {
-    setSelectedCaseId(caseId)
-    if (caseId) {
-      const caseProfile = getProfileById(caseId)
-      if (caseProfile) {
-        setToolName(`${caseProfile.name} - ${lang === "ar" ? "اجتماع فردي" : "One to One Meeting"}`)
-      }
-    } else {
-      setToolName("")
-    }
-  }, [getProfileById, lang])
-
   useEffect(() => {
-    if (isAssignmentsLoading) return
-    if (hasInitialized.current) return
-
-    const initFromUrl = async () => {
-      try {
-        const params = await searchParams
-        const editId = params?.edit
-        const caseIdFromUrl = params?.caseId
-        setHasCaseContext(Boolean(caseIdFromUrl || editId))
-
-        if (editId) {
-          setEditAssignmentId(editId)
-          const existingAssignment = assignments.find((a) => a.id === editId)
-          if (existingAssignment) {
-            const config = existingAssignment.config as OneToOneMeetingConfig
-            setSelectedCaseId(existingAssignment.case)
-            setToolName(existingAssignment.name_ar || existingAssignment.name_en || "")
-            setMeetingDate(config?.date || "")
-            setMeetingTime(config?.time || "")
-            setMeetingType(config?.meetingType || "online")
-            setMeetingLink(config?.meetingLink || "")
-            setMeetingLocation(config?.location || "")
-            setAdminNotes(config?.notes || "")
-            setNotesVisible(config?.notesVisibleToUser || false)
-          }
-        } else if (caseIdFromUrl) {
-          handleCaseSelect(caseIdFromUrl)
-        }
-      } catch (e) {
-        console.error("Failed to read searchParams:", e)
-        toast.error(getErrorMessage(e))
-      } finally {
-        setIsInitializing(false)
-        hasInitialized.current = true
+    if (isLoading || initialized.current) return
+    let active = true
+    searchParams.then(params => {
+      if (!active) return
+      initialized.current = true
+      setHasCaseContext(Boolean(params.caseId || params.edit))
+      if (params.edit) {
+        const assignment = assignments.find(item => item.id === params.edit)
+        if (!assignment) { setInitialError(ar ? "الجلسة غير متاحة للتعديل." : "This session is not available to edit."); return }
+        setExisting(assignment)
+        setSelectedCaseId(assignment.case)
+        setDraft(meetingDraft((ar ? assignment.name_ar : assignment.name_en) || assignment.name_ar || assignment.name_en || "", assignment.config as OneToOneMeetingConfig))
+      } else if (params.caseId) {
+        setSelectedCaseId(params.caseId)
+        const profile = getProfileById(params.caseId)
+        setDraft(meetingDraft(profile ? `${profile.name} - ${ar ? "جلسة فردية" : "Individual session"}` : (ar ? "جلسة فردية" : "Individual session")))
       }
-    }
-    initFromUrl()
-  }, [isAssignmentsLoading, assignments, searchParams, handleCaseSelect])
+    }).catch(err => { if (active) setInitialError(getErrorMessage(err, lang)) }).finally(() => { if (active) setInitializing(false) })
+    return () => { active = false }
+  }, [isLoading, assignments, searchParams, getProfileById, ar, lang])
 
-  const handleSubmit = async () => {
-    if (!selectedCaseId || !toolName.trim() || !meetingDate || !meetingTime || !meetingTypeId) return
-    setIsSubmitting(true)
+  const mayEdit = !existing || currentUser?.role !== "expert" || (existing.can_edit_configuration === true && existing.status !== "completed")
+  const canSave = Boolean(selectedCaseId && typeId && isMeetingDraftValid(draft) && mayEdit)
+  const profile = getProfileById(selectedCaseId)
 
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!canSave || saving) return
+    setSaving(true); setError("")
     try {
-      const config: OneToOneMeetingConfig = {
-        date: meetingDate,
-        time: meetingTime,
-        meetingType,
-        meetingLink: meetingType === "online" ? meetingLink : undefined,
-        location: meetingType === "face_to_face" ? meetingLocation || undefined : undefined,
-        notes: adminNotes || undefined,
-        notesVisibleToUser: notesVisible,
-        media: [],
-      }
-
-      if (editAssignmentId) {
-        await updateAssignment(editAssignmentId, {
-          name_en: toolName.trim(),
-          name_ar: toolName.trim(),
-          config,
-        })
-        router.push(caseTaskPath(selectedCaseId, editAssignmentId))
+      const config = meetingConfig(draft, existing?.config as OneToOneMeetingConfig | undefined)
+      if (existing) {
+        await updateAssignment(existing.id, { name_ar: draft.title.trim(), name_en: draft.title.trim(), config })
       } else {
-        await assignTool({
-          case: selectedCaseId,
-          type: meetingTypeId,
-          name_en: toolName.trim(),
-          name_ar: toolName.trim(),
-          is_not_template: true,
-          config,
-          is_visible_to_user: true,
-          status: "pending",
-        })
-        router.push(caseTaskPath(selectedCaseId))
+        await assignTool({ case: selectedCaseId, type: typeId, name_ar: draft.title.trim(), name_en: draft.title.trim(), is_not_template: true, config, is_visible_to_user: true, status: "pending" })
       }
-    } catch (error) {
-      console.error(editAssignmentId ? "Failed to update meeting:" : "Failed to create meeting:", error)
-      toast.error(getErrorMessage(error))
-    } finally {
-      setIsSubmitting(false)
-    }
+      toast.success(t("تم حفظ الجلسة", "Session saved"))
+      router.push(caseTaskPath(selectedCaseId, existing?.id))
+    } catch (err) { setError(getErrorMessage(err, lang)) }
+    finally { setSaving(false) }
+  }
+  function cancel() {
+    if (selectedCaseId && hasCaseContext) router.push(caseTaskPath(selectedCaseId, existing?.id))
+    else { setSelectedCaseId(""); setDraft(meetingDraft()); setError(""); setShowPreview(false) }
   }
 
-  const handleCancel = () => {
-    if (editAssignmentId) {
-      router.push(caseTaskPath(selectedCaseId, editAssignmentId))
-    } else {
-      setSelectedCaseId("")
-      setToolName("")
-      setMeetingDate("")
-      setMeetingTime("")
-      setMeetingType("online")
-      setMeetingLink("")
-      setMeetingLocation("")
-      setAdminNotes("")
-      setNotesVisible(false)
-      setShowPreview(false)
-    }
-  }
-
-  const isFormValid = selectedCaseId && toolName.trim() && meetingDate && meetingTime && meetingTypeId
-
-  if (typeError) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-destructive">{typeError}</p>
-      </div>
-    )
-  }
-
-  if (isInitializing) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-muted-foreground">
-          {lang === "ar" ? "جارٍ التحميل..." : "Loading..."}
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-primary">
-            {editAssignmentId
-              ? lang === "ar"
-                ? "تعديل اجتماع فردي"
-                : "Edit One to One Meeting"
-              : lang === "ar"
-                ? "إنشاء اجتماع فردي"
-                : "Create One to One Meeting"}
-          </h1>
-          <p className="text-muted-foreground">
-            {editAssignmentId
-              ? lang === "ar"
-                ? "تحديث الاجتماع لحالة محددة"
-                : "Update the meeting for a specific case"
-              : lang === "ar"
-                ? "إنشاء اجتماع لحالة محددة"
-                : "Create a meeting for a specific case"}
-          </p>
-        </div>
-        <Button
-          variant={showPreview ? "default" : "outline"}
-          onClick={() => setShowPreview(!showPreview)}
-        >
-          {showPreview ? (
-            <EyeOff className="me-2 h-4 w-4" />
-          ) : (
-            <Eye className="me-2 h-4 w-4" />
-          )}
-          {showPreview
-            ? lang === "ar"
-              ? "إخفاء المعاينة"
-              : "Hide Preview"
-            : lang === "ar"
-              ? "معاينة"
-              : "Preview"}
-        </Button>
-      </div>
-
-      {typeError && (
-        <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-          {typeError}
-        </div>
-      )}
-
-      <div className={`grid gap-6 ${showPreview ? "lg:grid-cols-2" : "grid-cols-1"}`}>
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {lang === "ar" ? "اختر حالة *" : "Select Case *"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CaseSearchCombobox
-                readOnly={hasCaseContext}
-                value={selectedCaseId}
-                onChange={handleCaseSelect}
-                placeholder={lang === "ar" ? "اختر حالة..." : "Select a case..."}
-                disabled={!!editAssignmentId}
-              />
-              {!selectedCaseId && (
-                <p className="mt-2 text-sm text-destructive">
-                  {lang === "ar"
-                    ? "يرجى اختيار حالة للمتابعة"
-                    : "Please select a case to continue"}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {lang === "ar" ? "اسم الاجتماع *" : "Meeting Name *"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="meeting-name">{lang === "ar" ? "اسم الاجتماع" : "Meeting name"}</Label>
-                <Input
-                  id="meeting-name"
-                  value={toolName}
-                  onChange={(e) => setToolName(e.target.value)}
-                  placeholder={lang === "ar" ? "مثال: اجتماع التقييم الأولي" : "e.g., Initial Assessment Meeting"}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {lang === "ar" ? "جدول الاجتماع *" : "Meeting Schedule *"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="dsc-form-grid">
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "التاريخ *" : "Date *"}</Label>
-                  <DateInput
-                    required
-                    value={meetingDate}
-                    onChange={setMeetingDate}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الوقت *" : "Time *"}</Label>
-                  <Input
-                    type="time"
-                    required
-                    value={meetingTime}
-                    onChange={(e) => setMeetingTime(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{lang === "ar" ? "نوع الاجتماع *" : "Meeting Type *"}</Label>
-                <RadioGroup
-                  value={meetingType}
-                  onValueChange={(val) => setMeetingType(val as "online" | "face_to_face")}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="online" id="online" />
-                    <Label htmlFor="online">
-                      {lang === "ar" ? "عن بعد" : "Online"}
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="face_to_face" id="face_to_face" />
-                    <Label htmlFor="face_to_face">
-                      {lang === "ar" ? "حضوري" : "Face to Face"}
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {meetingType === "online" ? (
-                <div className="space-y-2">
-                  <Label>
-                    {lang === "ar" ? "رابط الاجتماع *" : "Meeting Link *"}
-                  </Label>
-                  <Input
-                    value={meetingLink}
-                    onChange={(e) => setMeetingLink(e.target.value)}
-                    placeholder="https://meet.google.com/..."
-                  />
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label>{lang === "ar" ? "الموقع" : "Location"}</Label>
-                  <Input
-                    value={meetingLocation}
-                    onChange={(e) => setMeetingLocation(e.target.value)}
-                    placeholder={
-                      lang === "ar"
-                        ? "مثال: غرفة 201، المبنى الرئيسي"
-                        : "e.g., Room 201, Main Building"
-                    }
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {lang === "ar" ? "ملاحظات إدارية" : "Admin Notes"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder={
-                  lang === "ar"
-                    ? "أضف ملاحظات داخلية حول هذا الاجتماع..."
-                    : "Add internal notes about this meeting..."
-                }
-                rows={3}
-              />
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="notes-visible"
-                  checked={notesVisible}
-                  onCheckedChange={setNotesVisible}
-                />
-                <Label htmlFor="notes-visible" className="text-sm text-muted-foreground">
-                  {lang === "ar" ? "إظهار الملاحظات للمستخدم" : "Show notes to user"}
-                </Label>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={handleCancel}>
-              {lang === "ar" ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!isFormValid || isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {editAssignmentId
-                    ? lang === "ar"
-                      ? "جارٍ الحفظ..."
-                      : "Saving..."
-                    : lang === "ar"
-                      ? "جارٍ الإنشاء..."
-                      : "Creating..."}
-                </>
-              ) : editAssignmentId ? (
-                lang === "ar" ? "حفظ التغييرات" : "Save Changes"
-              ) : lang === "ar" ? (
-                "إنشاء اجتماع"
-              ) : (
-                "Create Meeting"
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {showPreview && (
-          <div className="sticky top-6 max-h-[calc(100vh-12rem)] overflow-auto rounded-lg border bg-card p-4">
-            <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
-              {lang === "ar" ? "معاينة مباشرة" : "Live Preview"}
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <Calendar className="h-5 w-5 text-primary" />
-                {toolName.trim() ||
-                  (lang === "ar" ? "اجتماع فردي" : "One to One Meeting")}
-              </div>
-              <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "التاريخ:" : "Date:"}
-                  </span>
-                  <span>{meetingDate ? formatDate(meetingDate) : "—"}</span>
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "الوقت:" : "Time:"}
-                  </span>
-                  <span>{meetingTime || "—"}</span>
-                  <span className="text-muted-foreground">
-                    {lang === "ar" ? "النوع:" : "Type:"}
-                  </span>
-                  <span>
-                    {meetingType === "online"
-                      ? lang === "ar"
-                        ? "عن بعد"
-                        : "Online"
-                      : lang === "ar"
-                        ? "حضوري"
-                        : "Face to Face"}
-                  </span>
-                  {meetingType === "online" && (
-                    <>
-                      <span className="text-muted-foreground">
-                        {lang === "ar" ? "الرابط:" : "Link:"}
-                      </span>
-                      <span className="truncate">{meetingLink || "—"}</span>
-                    </>
-                  )}
-                  {meetingType === "face_to_face" && (
-                    <>
-                      <span className="text-muted-foreground">
-                        {lang === "ar" ? "الموقع:" : "Location:"}
-                      </span>
-                      <span>{meetingLocation || "—"}</span>
-                    </>
-                  )}
-                </div>
-                {adminNotes && (
-                  <div className="pt-2 border-t text-sm">
-                    <span className="text-muted-foreground">
-                      {lang === "ar" ? "الملاحظات:" : "Notes:"}
-                    </span>
-                    <p className="mt-1 whitespace-pre-wrap">{adminNotes}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {notesVisible
-                        ? lang === "ar"
-                          ? "مرئية للمستخدم"
-                          : "Visible to user"
-                        : lang === "ar"
-                          ? "للمسؤول فقط"
-                          : "Admin only"}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+  if (initializing || isLoading) return <p className="py-12 text-center text-slate-600">{t("جارٍ تحميل الجلسة…", "Loading session…")}</p>
+  if (initialError || loadError) return <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">{initialError || loadError}</p>
+  return <div dir={ar ? "rtl" : "ltr"} className="mx-auto max-w-6xl space-y-6 text-[#082c4a]">
+    <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="mb-1 text-xs font-semibold text-[#51708c]">{t("الحالات المتخصصة / التكليفات", "Specialist cases / Assignments")}</p><h1 className="text-2xl font-bold">{existing ? t("تعديل الجلسة الفردية", "Edit individual session") : t("جلسة فردية جديدة", "New individual session")}</h1></div><Button type="button" variant="outline" onClick={() => setShowPreview(value => !value)} className="min-h-11 rounded-xl border-blue-200 text-[#073d6b]">{showPreview ? <EyeOff className="size-4" /> : <Eye className="size-4" />}{showPreview ? t("إخفاء المعاينة", "Hide preview") : t("معاينة الجلسة", "Preview session")}</Button></header>
+    <section aria-label={t("الحالة", "Case")} className="space-y-3 rounded-2xl border border-blue-200 bg-[#edf5ff] p-5"><div className="flex items-center gap-2 text-sm font-bold"><UsersRound className="size-5 text-blue-700" />{t("اسم الحالة", "Case name")}</div><CaseSearchCombobox readOnly={hasCaseContext} value={selectedCaseId} onChange={caseId => { setSelectedCaseId(caseId); const selected = getProfileById(caseId); setDraft(value => ({ ...value, title: selected ? `${selected.name} - ${t("جلسة فردية", "Individual session")}` : "" })) }} placeholder={t("اختر حالة…", "Select a case…")} disabled={Boolean(existing)} />{profile && <p className="text-xs text-[#51708c]">{t("رقم الحالة", "Case ID")}: <bdi>{profile.id}</bdi></p>}</section>
+    <div className={`grid items-start gap-6 ${showPreview ? "xl:grid-cols-2" : ""}`}>
+      <section className="overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-sm"><h2 className="flex items-center gap-3 bg-[#073d6b] px-5 py-4 text-lg font-bold text-white"><UsersRound className="size-6" />{t("تفاصيل الجلسة", "Session details")}</h2><form onSubmit={submit} className="space-y-5 p-5"><OneToOneMeetingFields ar={ar} value={draft} onChange={setDraft} idPrefix="meeting-builder" assignedAt={existing?.assigned_at || existing?.created} readOnly={!mayEdit || saving} />{!mayEdit && <p className="text-sm text-amber-800">{t("لا تملك صلاحية تعديل هذا التكليف.", "You do not have permission to edit this assignment.")}</p>}{error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}<footer className="flex flex-wrap justify-end gap-3"><Button type="button" variant="outline" onClick={cancel} disabled={saving} className="min-h-12 rounded-xl border-blue-200 px-6"><X className="size-4" />{t("إلغاء", "Cancel")}</Button><Button type="submit" disabled={!canSave || saving} className="min-h-12 rounded-xl bg-[#073d6b] px-6 font-bold hover:bg-[#062f52]">{saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}{saving ? t("جارٍ الحفظ…", "Saving…") : t("حفظ التكليف", "Save assignment")}</Button></footer></form></section>
+      {showPreview && <aside className="overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-sm"><h2 className="flex items-center gap-2 border-b border-blue-100 bg-[#edf5ff] px-5 py-4 font-bold"><CalendarDays className="size-5 text-blue-700" />{t("معاينة الجلسة", "Session preview")}</h2><div className="p-5"><OneToOneMeetingFields ar={ar} value={draft} onChange={() => {}} idPrefix="meeting-preview" assignedAt={existing?.assigned_at || existing?.created} readOnly /></div></aside>}
     </div>
-  )
+  </div>
 }

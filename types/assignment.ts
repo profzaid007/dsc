@@ -7,6 +7,8 @@ export type AssignmentStatus =
   | "completed"
 
 export interface CaseTool {
+  /** Server-derived permission; never infer this from assigned_expert. */
+  can_edit_configuration?: boolean
   assigned_expert?: string
   specialization?: string
   task_brief?: string
