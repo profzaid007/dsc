@@ -7,6 +7,18 @@ export function blogField(post: { title?: string; content?: string }, field: "ti
   return value
 }
 
+/** Read published legacy posts while the backend schema is being upgraded.
+ * Canonical values, including intentionally empty strings, remain authoritative.
+ * This read-only adapter never merges or rewrites separate authored versions.
+ */
+export function publicBlogField(post: Record<string, unknown>, field: "title" | "content", lang: "ar" | "en"): string {
+  if (typeof post[field] === "string") return post[field]
+  const preferred = post[`${field}_${lang}`]
+  const alternative = post[`${field}_${lang === "ar" ? "en" : "ar"}`]
+  if (typeof preferred === "string" && preferred) return preferred
+  return typeof alternative === "string" ? alternative : ""
+}
+
 export function blogContentLang(html: string): "ar" | "en" {
   const text = blogPlainText(html)
   const firstLetter = text.match(/[\p{L}]/u)?.[0] ?? ""

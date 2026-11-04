@@ -1,0 +1,1107 @@
+TAP version 13
+# Subtest: registration identifies name, email, mobile and password problems
+ok 1 - registration identifies name, email, mobile and password problems
+  ---
+  duration_ms: 8.8166
+  type: 'test'
+  ...
+# Subtest: child validation identifies the child number and exact field in both languages
+ok 2 - child validation identifies the child number and exact field in both languages
+  ---
+  duration_ms: 4.6822
+  type: 'test'
+  ...
+# Subtest: field limits and missing server setup give actionable messages
+ok 3 - field limits and missing server setup give actionable messages
+  ---
+  duration_ms: 6.5492
+  type: 'test'
+  ...
+# Subtest: overview renders live-data chart sections, accessible monthly table and only available cards
+ok 4 - overview renders live-data chart sections, accessible monthly table and only available cards
+  ---
+  duration_ms: 142.86
+  type: 'test'
+  ...
+# Subtest: Arabic overview uses RTL and translated chart/action labels
+ok 5 - Arabic overview uses RTL and translated chart/action labels
+  ---
+  duration_ms: 14.0371
+  type: 'test'
+  ...
+# Subtest: loading and fatal failures never display stale counts as successful results
+ok 6 - loading and fatal failures never display stale counts as successful results
+  ---
+  duration_ms: 5.2601
+  type: 'test'
+  ...
+# Subtest: zero and unavailable case charts do not draw a false full data ring
+ok 7 - zero and unavailable case charts do not draw a false full data ring
+  ---
+  duration_ms: 21.5709
+  type: 'test'
+  ...
+# Subtest: non-statistical permissions produce a compact authorized workspace
+ok 8 - non-statistical permissions produce a compact authorized workspace
+  ---
+  duration_ms: 2.7921
+  type: 'test'
+  ...
+# Subtest: dashboard performs no protected requests without metric permissions
+ok 9 - dashboard performs no protected requests without metric permissions
+  ---
+  duration_ms: 5.0414
+  type: 'test'
+  ...
+# Subtest: case-only access queries exact totals and payment lifecycle without loading personal data
+ok 10 - case-only access queries exact totals and payment lifecycle without loading personal data
+  ---
+  duration_ms: 1.9933
+  type: 'test'
+  ...
+# Subtest: failed counts remain unavailable instead of becoming zero, including derived buckets
+ok 11 - failed counts remain unavailable instead of becoming zero, including derived buckets
+  ---
+  duration_ms: 0.9709
+  type: 'test'
+  ...
+# Subtest: event and approval metrics respect independent grants
+ok 12 - event and approval metrics respect independent grants
+  ---
+  duration_ms: 0.6713
+  type: 'test'
+  ...
+# Subtest: monthly windows cover year changes in UTC with exclusive end boundaries
+ok 13 - monthly windows cover year changes in UTC with exclusive end boundaries
+  ---
+  duration_ms: 0.3644
+  type: 'test'
+  ...
+# Subtest: full access is bounded to four concurrent count requests
+ok 14 - full access is bounded to four concurrent count requests
+  ---
+  duration_ms: 133.2338
+  type: 'test'
+  ...
+# Subtest: cancellation stops stale dashboard results from being returned
+ok 15 - cancellation stops stale dashboard results from being returned
+  ---
+  duration_ms: 1.9571
+  type: 'test'
+  ...
+# Subtest: malformed API totals do not become misleading statistics
+ok 16 - malformed API totals do not become misleading statistics
+  ---
+  duration_ms: 0.6344
+  type: 'test'
+  ...
+# Subtest: admin header exposes management and logout actions with their access restrictions
+ok 17 - admin header exposes management and logout actions with their access restrictions
+  ---
+  duration_ms: 562.2174
+  type: 'test'
+  ...
+# Subtest: dashboard sidebar retains the security shortcut, omits CMS and logout, and switches to security sections
+ok 18 - dashboard sidebar retains the security shortcut, omits CMS and logout, and switches to security sections
+  ---
+  duration_ms: 62.087
+  type: 'test'
+  ...
+# Subtest: logged-in main navigation replaces public links and retains Home
+ok 19 - logged-in main navigation replaces public links and retains Home
+  ---
+  duration_ms: 47.1925
+  type: 'test'
+  ...
+# Subtest: guests see public navigation without account management actions
+ok 20 - guests see public navigation without account management actions
+  ---
+  duration_ms: 32.6256
+  type: 'test'
+  ...
+# Subtest: login page retains all public navigation links
+ok 21 - login page retains all public navigation links
+  ---
+  duration_ms: 39.5752
+  type: 'test'
+  ...
+# Subtest: header message shortcut supports every account type, respects admin access, and announces unread counts
+ok 22 - header message shortcut supports every account type, respects admin access, and announces unread counts
+  ---
+  duration_ms: 421.961
+  type: 'test'
+  ...
+# Subtest: expert navigation shows only allocated cases even with case-management grants, on desktop and mobile
+ok 23 - expert navigation shows only allocated cases even with case-management grants, on desktop and mobile
+  ---
+  duration_ms: 144.3482
+  type: 'test'
+  ...
+# Subtest: direct administrative case routes deny experts while preserving authorized delegates and expert task routes
+ok 24 - direct administrative case routes deny experts while preserving authorized delegates and expert task routes
+  ---
+  duration_ms: 58.0239
+  type: 'test'
+  ...
+# Subtest: country/city/current specialist roles and public specialties filter immediately with combined fields and bilingual text
+ok 25 - country/city/current specialist roles and public specialties filter immediately with combined fields and bilingual text
+  ---
+  duration_ms: 6.9374
+  type: 'test'
+  ...
+# Subtest: visible search results show count, context and selection action; distinguish no matches, loading and errors
+ok 26 - visible search results show count, context and selection action; distinguish no matches, loading and errors
+  ---
+  duration_ms: 31.364
+  type: 'test'
+  ...
+# Subtest: missing or obsolete role groups require correction instead of inferred categories
+ok 27 - missing or obsolete role groups require correction instead of inferred categories
+  ---
+  duration_ms: 1.7123
+  type: 'test'
+  ...
+# Subtest: allocation save sends the backend role relation and rejects stale selections
+ok 28 - allocation save sends the backend role relation and rejects stale selections
+  ---
+  duration_ms: 0.4105
+  type: 'test'
+  ...
+# Subtest: administrator-created classification keys remain attached to their roles
+ok 29 - administrator-created classification keys remain attached to their roles
+  ---
+  duration_ms: 0.1814
+  type: 'test'
+  ...
+# Subtest: current category relation supplies group, order and availability without legacy fields
+ok 30 - current category relation supplies group, order and availability without legacy fields
+  ---
+  duration_ms: 0.4113
+  type: 'test'
+  ...
+# Subtest: common options use one matrix with shared column headings and unique radio group per question
+ok 31 - common options use one matrix with shared column headings and unique radio group per question
+  ---
+  duration_ms: 19.289
+  type: 'test'
+  ...
+# Subtest: mixed options keep exact per-row IDs/labels and preserve global order in contiguous groups
+ok 32 - mixed options keep exact per-row IDs/labels and preserve global order in contiguous groups
+  ---
+  duration_ms: 5.1128
+  type: 'test'
+  ...
+# Subtest: locked/busy matrices disable every radio and omit clear controls without losing saved selection
+ok 33 - locked/busy matrices disable every radio and omit clear controls without losing saved selection
+  ---
+  duration_ms: 1.3976
+  type: 'test'
+  ...
+# Subtest: introduction, reference period and respondent notice render as escaped plain text before answering
+ok 34 - introduction, reference period and respondent notice render as escaped plain text before answering
+  ---
+  duration_ms: 18.0505
+  type: 'test'
+  ...
+# Subtest: reverse uses min+max and weighted dimension links are independent of the overall score
+ok 35 - reverse uses min+max and weighted dimension links are independent of the overall score
+  ---
+  duration_ms: 8.2607
+  type: 'test'
+  ...
+# Subtest: percentage uses actual lower bound; count and constrained formulas support indices
+ok 36 - percentage uses actual lower bound; count and constrained formulas support indices
+  ---
+  duration_ms: 4.1761
+  type: 'test'
+  ...
+# Subtest: missing answer policies mark incomplete, omit, or explicitly impute zero
+ok 37 - missing answer policies mark incomplete, omit, or explicitly impute zero
+  ---
+  duration_ms: 2.8465
+  type: 'test'
+  ...
+# Subtest: dimension exclusions do not duplicate shared questions in total
+ok 38 - dimension exclusions do not duplicate shared questions in total
+  ---
+  duration_ms: 0.7118
+  type: 'test'
+  ...
+# Subtest: population matched norms and bands; critical alerts use adjusted scores
+ok 39 - population matched norms and bands; critical alerts use adjusted scores
+  ---
+  duration_ms: 0.8063
+  type: 'test'
+  ...
+# Subtest: formula rejects injection, unknown variables, zero division, cycles and bad definitions
+ok 40 - formula rejects injection, unknown variables, zero division, cycles and bad definitions
+  ---
+  duration_ms: 2.2282
+  type: 'test'
+  ...
+# Subtest: bands use half-open boundaries with optional inclusive last endpoint
+ok 41 - bands use half-open boundaries with optional inclusive last endpoint
+  ---
+  duration_ms: 0.5569
+  type: 'test'
+  ...
+# Subtest: indicators depending on incomplete dimensions remain incomplete without inventing scores
+ok 42 - indicators depending on incomplete dimensions remain incomplete without inventing scores
+  ---
+  duration_ms: 0.3356
+  type: 'test'
+  ...
+# Subtest: approved zero-denominator policy returns an explicit nonnumeric result without marking complete responses incomplete
+ok 43 - approved zero-denominator policy returns an explicit nonnumeric result without marking complete responses incomplete
+  ---
+  duration_ms: 0.9205
+  type: 'test'
+  ...
+# Subtest: maps selected columns and preserves scoring metadata before append
+ok 44 - maps selected columns and preserves scoring metadata before append
+  ---
+  duration_ms: 1.7218
+  type: 'test'
+  ...
+# Subtest: rejects entire preview on a malformed later row without changing definition
+ok 45 - rejects entire preview on a malformed later row without changing definition
+  ---
+  duration_ms: 1.2871
+  type: 'test'
+  ...
+# Subtest: defaults append ordering from maximum existing order, never array length
+ok 46 - defaults append ordering from maximum existing order, never array length
+  ---
+  duration_ms: 0.6496
+  type: 'test'
+  ...
+# Subtest: empty sheet and duplicate imported order cannot silently produce partial imports
+ok 47 - empty sheet and duplicate imported order cannot silently produce partial imports
+  ---
+  duration_ms: 0.596
+  type: 'test'
+  ...
+# Subtest: unassigned tasks continue and only comma-separated specialties are accepted
+ok 48 - unassigned tasks continue and only comma-separated specialties are accepted
+  ---
+  duration_ms: 8.5077
+  type: 'test'
+  ...
+# Subtest: a single authored version reads the same in both interface languages
+ok 49 - a single authored version reads the same in both interface languages
+  ---
+  duration_ms: 2.6073
+  type: 'test'
+  ...
+# Subtest: missing canonical fields are reported instead of reading old language copies
+ok 50 - missing canonical fields are reported instead of reading old language copies
+  ---
+  duration_ms: 0.7583
+  type: 'test'
+  ...
+# Subtest: writing direction follows content rather than interface language or HTML markup
+ok 51 - writing direction follows content rather than interface language or HTML markup
+  ---
+  duration_ms: 4.4212
+  type: 'test'
+  ...
+# Subtest: HTML article summaries omit CSS, scripts, metadata and comments while preserving article text
+ok 52 - HTML article summaries omit CSS, scripts, metadata and comments while preserving article text
+  ---
+  duration_ms: 2.2488
+  type: 'test'
+  ...
+# Subtest: summaries preserve paragraph separation and render encoded markup as text
+ok 53 - summaries preserve paragraph separation and render encoded markup as text
+  ---
+  duration_ms: 0.5114
+  type: 'test'
+  ...
+# Subtest: old backend schema cannot silently discard selected classification and keywords
+ok 54 - old backend schema cannot silently discard selected classification and keywords
+  ---
+  duration_ms: 0.3662
+  type: 'test'
+  ...
+# Subtest: custom blog content receives the correct available width
+ok 55 - custom blog content receives the correct available width
+  ---
+  duration_ms: 171.1215
+  type: 'test'
+  ...
+# Subtest: ordinary blog content receives the correct available width
+ok 56 - ordinary blog content receives the correct available width
+  ---
+  duration_ms: 39.64
+  type: 'test'
+  ...
+# Subtest: care foundations use child workflows and entity profiles
+ok 57 - care foundations use child workflows and entity profiles
+  ---
+  duration_ms: 131.5244
+  type: 'test'
+  ...
+# Subtest: migration adds account and portal choices idempotently without changing access rules
+ok 58 - migration adds account and portal choices idempotently without changing access rules
+  ---
+  duration_ms: 14.0908
+  type: 'test'
+  ...
+# Subtest: child uses its parent's name
+ok 59 - child uses its parent's name
+  ---
+  duration_ms: 14.4904
+  type: 'test'
+  ...
+# Subtest: care case uses organization name, not the contact person's name
+ok 60 - care case uses organization name, not the contact person's name
+  ---
+  duration_ms: 0.4128
+  type: 'test'
+  ...
+# Subtest: missing care profile is explicit and does not substitute a contact name
+ok 61 - missing care profile is explicit and does not substitute a contact name
+  ---
+  duration_ms: 0.1839
+  type: 'test'
+  ...
+# Subtest: individual cases and cases without an owner do not receive a parent label
+ok 62 - individual cases and cases without an owner do not receive a parent label
+  ---
+  duration_ms: 0.1425
+  type: 'test'
+  ...
+# Subtest: organization cases use their organization name and type
+ok 63 - organization cases use their organization name and type
+  ---
+  duration_ms: 0.2041
+  type: 'test'
+  ...
+# Subtest: case headings render the case, owner type and full owner name in both interface languages
+ok 64 - case headings render the case, owner type and full owner name in both interface languages
+  ---
+  duration_ms: 862.2893
+  type: 'test'
+  ...
+# Subtest: classification selectors use persisted names and custom keys instead of resurrecting deleted defaults
+ok 65 - classification selectors use persisted names and custom keys instead of resurrecting deleted defaults
+  ---
+  duration_ms: 109.1023
+  type: 'test'
+  ...
+# Subtest: returns visible tasks and assessments with their child and excludes foreign cases
+ok 66 - returns visible tasks and assessments with their child and excludes foreign cases
+  ---
+  duration_ms: 38.8621
+  type: 'test'
+  ...
+# Subtest: missing assignment schema gives a named setup error rather than an empty list
+ok 67 - missing assignment schema gives a named setup error rather than an empty list
+  ---
+  duration_ms: 3.9845
+  type: 'test'
+  ...
+# Subtest: custom content renders inside the sandbox, with CSS absent from the host document
+ok 68 - custom content renders inside the sandbox, with CSS absent from the host document
+  ---
+  duration_ms: 18.3391
+  type: 'test'
+  ...
+# Subtest: ordinary rich text retains its existing host rendering and sanitizer
+ok 69 - ordinary rich text retains its existing host rendering and sanitizer
+  ---
+  duration_ms: 2.7119
+  type: 'test'
+  ...
+# Subtest: reopening a stored layout selects custom mode and exposes the unchanged source
+ok 70 - reopening a stored layout selects custom mode and exposes the unchanged source
+  ---
+  duration_ms: 14.4209
+  type: 'test'
+  ...
+# Subtest: the supplied complete Arabic page preserves CSS variables, media queries and structure
+ok 71 - the supplied complete Arabic page preserves CSS variables, media queries and structure
+  ---
+  duration_ms: 25.6475
+  type: 'test'
+  ...
+# Subtest: custom source round-trips exactly through the existing CMS content field
+ok 72 - custom source round-trips exactly through the existing CMS content field
+  ---
+  duration_ms: 4.6249
+  type: 'test'
+  ...
+# Subtest: inline layout styles and body/html attributes survive inside the isolated document
+ok 73 - inline layout styles and body/html attributes survive inside the isolated document
+  ---
+  duration_ms: 1.5677
+  type: 'test'
+  ...
+# Subtest: active content, navigation metadata, forms and event handlers are removed
+ok 74 - active content, navigation metadata, forms and event handlers are removed
+  ---
+  duration_ms: 1.8229
+  type: 'test'
+  ...
+# Subtest: custom content cannot supply a permissive CSP or replace the renderer's document head
+ok 75 - custom content cannot supply a permissive CSP or replace the renderer's document head
+  ---
+  duration_ms: 1.008
+  type: 'test'
+  ...
+# Subtest: anchors retain safe navigation and rich-text sanitization remains strict
+ok 76 - anchors retain safe navigation and rich-text sanitization remains strict
+  ---
+  duration_ms: 3.5083
+  type: 'test'
+  ...
+# Subtest: rich-text articles preserve playable uploaded videos without active content
+ok 77 - rich-text articles preserve playable uploaded videos without active content
+  ---
+  duration_ms: 0.9545
+  type: 'test'
+  ...
+# Subtest: saving one language also persists edits made in the other tab
+ok 78 - saving one language also persists edits made in the other tab
+  ---
+  duration_ms: 2.3919
+  type: 'test'
+  ...
+# Subtest: HTML/CSS remains intact after verified save and a fresh load
+ok 79 - HTML/CSS remains intact after verified save and a fresh load
+  ---
+  duration_ms: 0.6998
+  type: 'test'
+  ...
+# Subtest: a successful update response followed by unchanged stored data is not reported as saved
+ok 80 - a successful update response followed by unchanged stored data is not reported as saved
+  ---
+  duration_ms: 3.0038
+  type: 'test'
+  ...
+# Subtest: write and verification read failures propagate without replacing the draft
+ok 81 - write and verification read failures propagate without replacing the draft
+  ---
+  duration_ms: 0.5805
+  type: 'test'
+  ...
+# Subtest: verification accepts only harmless outer whitespace and CRLF normalization
+ok 82 - verification accepts only harmless outer whitespace and CRLF normalization
+  ---
+  duration_ms: 0.2854
+  type: 'test'
+  ...
+# Subtest: PocketBase content length errors identify the language and actual backend limit
+ok 83 - PocketBase content length errors identify the language and actual backend limit
+  ---
+  duration_ms: 1.1816
+  type: 'test'
+  ...
+# Contact bounds, localization, phone/email formats and HTML escaping passed.
+# Subtest: D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\contact-validation.test.cjs
+ok 20 - D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\contact-validation.test.cjs
+  ---
+  duration_ms: 2212.4228
+  type: 'test'
+  ...
+# Subtest: search finds keyword-only Arabic and English matches and ignores blank queries
+ok 85 - search finds keyword-only Arabic and English matches and ignores blank queries
+  ---
+  duration_ms: 1.3435
+  type: 'test'
+  ...
+# Subtest: role repository expands category for list/read/create/update and uses current availability fields
+ok 86 - role repository expands category for list/read/create/update and uses current availability fields
+  ---
+  duration_ms: 109.6991
+  type: 'test'
+  ...
+# Subtest: classification request and model hooks validate the current category relation without any legacy column
+ok 87 - classification request and model hooks validate the current category relation without any legacy column
+  ---
+  duration_ms: 3.3659
+  type: 'test'
+  ...
+# Subtest: allocation role creation resolves the selected category and writes its relation
+ok 88 - allocation role creation resolves the selected category and writes its relation
+  ---
+  duration_ms: 13.7529
+  type: 'test'
+  ...
+# Subtest: mouse drag moves an item to its drop position, renumbers order, and leaves source unchanged
+ok 89 - mouse drag moves an item to its drop position, renumbers order, and leaves source unchanged
+  ---
+  duration_ms: 142.9081
+  type: 'test'
+  ...
+# Subtest: touch drag uses the row under the pointer and commits only at release
+ok 90 - touch drag uses the row under the pointer and commits only at release
+  ---
+  duration_ms: 31.0491
+  type: 'test'
+  ...
+# Subtest: disabled lists reject drag, touch and arrow reordering
+ok 91 - disabled lists reject drag, touch and arrow reordering
+  ---
+  duration_ms: 26.0556
+  type: 'test'
+  ...
+# Subtest: category migration narrows the existing permission rule without granting new delete access
+ok 92 - category migration narrows the existing permission rule without granting new delete access
+  ---
+  duration_ms: 3.1225
+  type: 'test'
+  ...
+# Subtest: event images reject unsupported types and oversize files
+ok 93 - event images reject unsupported types and oversize files
+  ---
+  duration_ms: 65.7121
+  type: 'test'
+  ...
+# Subtest: training create and edit send image bytes as multipart and retain existing images without reupload
+ok 94 - training create and edit send image bytes as multipart and retain existing images without reupload
+  ---
+  duration_ms: 193.7343
+  type: 'test'
+  ...
+# Subtest: lectures create and edit send image bytes as multipart and retain existing images without reupload
+ok 95 - lectures create and edit send image bytes as multipart and retain existing images without reupload
+  ---
+  duration_ms: 64.4587
+  type: 'test'
+  ...
+# Subtest: expert accounts cannot create/update/delete cases or allocations, including with stale privileged auth
+ok 96 - expert accounts cannot create/update/delete cases or allocations, including with stale privileged auth
+  ---
+  duration_ms: 6.754
+  type: 'test'
+  ...
+# Subtest: case mutation boundary preserves administrators, delegated accounts and server operations
+ok 97 - case mutation boundary preserves administrators, delegated accounts and server operations
+  ---
+  duration_ms: 3.9491
+  type: 'test'
+  ...
+# Subtest: custom allocation endpoint denies experts even when permissions are granted and permits authorized delegates
+ok 98 - custom allocation endpoint denies experts even when permissions are granted and permits authorized delegates
+  ---
+  duration_ms: 4.2218
+  type: 'test'
+  ...
+# Subtest: template-free requests create only case-specific assignments within the allocated case
+ok 99 - template-free requests create only case-specific assignments within the allocated case
+  ---
+  duration_ms: 8.2505
+  type: 'test'
+  ...
+# Subtest: foreign cases and nonexperts cannot create a tool assignment
+ok 100 - foreign cases and nonexperts cannot create a tool assignment
+  ---
+  duration_ms: 3.9777
+  type: 'test'
+  ...
+# Subtest: unknown types and empty, malformed or oversized configurations are rejected without saving
+ok 101 - unknown types and empty, malformed or oversized configurations are rejected without saving
+  ---
+  duration_ms: 10.6283
+  type: 'test'
+  ...
+# Expert ordering, IBAN checksum and private registration hook checks passed
+# Subtest: D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\expert-management.test.ts
+ok 28 - D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\expert-management.test.ts
+  ---
+  duration_ms: 1106.3558
+  type: 'test'
+  ...
+# Subtest: unconfirmed clearing is rejected before saving
+ok 103 - unconfirmed clearing is rejected before saving
+  ---
+  duration_ms: 9.0074
+  type: 'test'
+  ...
+# Subtest: ordinary saves preserve photos without creating photo audit entries
+ok 104 - ordinary saves preserve photos without creating photo audit entries
+  ---
+  duration_ms: 2.5786
+  type: 'test'
+  ...
+# Subtest: intentional removals and replacements record actor and old/new filenames
+ok 105 - intentional removals and replacements record actor and old/new filenames
+  ---
+  duration_ms: 3.4791
+  type: 'test'
+  ...
+# Subtest: audit failure propagates without committing the transaction
+ok 106 - audit failure propagates without committing the transaction
+  ---
+  duration_ms: 1.5548
+  type: 'test'
+  ...
+# Subtest: backend deployment hook matches the application hook
+ok 107 - backend deployment hook matches the application hook
+  ---
+  duration_ms: 0.6825
+  type: 'test'
+  ...
+# Subtest: registration errors retain field labels and every validation detail
+ok 108 - registration errors retain field labels and every validation detail
+  ---
+  duration_ms: 3.4228
+  type: 'test'
+  ...
+# Subtest: custom registration explanations replace the generic request error
+ok 109 - custom registration explanations replace the generic request error
+  ---
+  duration_ms: 0.608
+  type: 'test'
+  ...
+# Subtest: profile editing restores expert role choices and defaults older profiles to no selection
+ok 110 - profile editing restores expert role choices and defaults older profiles to no selection
+  ---
+  duration_ms: 1.4197
+  type: 'test'
+  ...
+# Subtest: creating, editing and clearing roles persists IDs without creating case allocations
+ok 111 - creating, editing and clearing roles persists IDs without creating case allocations
+  ---
+  duration_ms: 22.3135
+  type: 'test'
+  ...
+# Subtest: cleared public names remain empty when reopening the profile
+ok 112 - cleared public names remain empty when reopening the profile
+  ---
+  duration_ms: 0.2751
+  type: 'test'
+  ...
+# Subtest: saving requires both names and rejects missing names before any database writes
+ok 113 - saving requires both names and rejects missing names before any database writes
+  ---
+  duration_ms: 1.2296
+  type: 'test'
+  ...
+# Subtest: ordinary profile saves omit photos; only explicit removal sends a clear instruction
+ok 114 - ordinary profile saves omit photos; only explicit removal sends a clear instruction
+  ---
+  duration_ms: 1.2969
+  type: 'test'
+  ...
+# Subtest: catalog errors are explicit without preventing other homepage sections from rendering
+ok 115 - catalog errors are explicit without preventing other homepage sections from rendering
+  ---
+  duration_ms: 98.2116
+  type: 'test'
+  ...
+# Subtest: valid expert results render without a catalog warning
+ok 116 - valid expert results render without a catalog warning
+  ---
+  duration_ms: 15.4112
+  type: 'test'
+  ...
+# Subtest: folders and search only expose current-user messages, newest first
+ok 117 - folders and search only expose current-user messages, newest first
+  ---
+  duration_ms: 16.9061
+  type: 'test'
+  ...
+# Subtest: case context composes linked messages for multiple authorized participants and shows case labels
+ok 118 - case context composes linked messages for multiple authorized participants and shows case labels
+  ---
+  duration_ms: 309.2817
+  type: 'test'
+  ...
+# Subtest: mailbox does not mark previews read; selecting only one received message requests its read update
+ok 119 - mailbox does not mark previews read; selecting only one received message requests its read update
+  ---
+  duration_ms: 65.4783
+  type: 'test'
+  ...
+# Subtest: reply prepopulates recipient and subject, and retains authorized case context
+ok 120 - reply prepopulates recipient and subject, and retains authorized case context
+  ---
+  duration_ms: 72.6894
+  type: 'test'
+  ...
+# Subtest: recipient search retains selections, supports multiple recipients, and all includes authorized contacts outside search
+ok 121 - recipient search retains selections, supports multiple recipients, and all includes authorized contacts outside search
+  ---
+  duration_ms: 93.1114
+  type: 'test'
+  ...
+# Subtest: partial sends keep only failed recipients selected for retry
+ok 122 - partial sends keep only failed recipients selected for retry
+  ---
+  duration_ms: 41.2058
+  type: 'test'
+  ...
+# Subtest: attachments can be selected, rejected safely, and removed before sending
+ok 123 - attachments can be selected, rejected safely, and removed before sending
+  ---
+  duration_ms: 101.0528
+  type: 'test'
+  ...
+# Subtest: each recipient gets an independent multipart request with the same files and case context
+ok 124 - each recipient gets an independent multipart request with the same files and case context
+  ---
+  duration_ms: 71.0663
+  type: 'test'
+  ...
+# Subtest: message and recipient names follow interface language and search accepts both names
+ok 125 - message and recipient names follow interface language and search accepts both names
+  ---
+  duration_ms: 178.9857
+  type: 'test'
+  ...
+# Subtest: Arabic, empty, unread filter, and composer states remain usable
+ok 126 - Arabic, empty, unread filter, and composer states remain usable
+  ---
+  duration_ms: 74.8271
+  type: 'test'
+  ...
+# Subtest: quota fallback fails closed and throttled clients cannot spend delivery capacity
+ok 127 - quota fallback fails closed and throttled clients cannot spend delivery capacity
+  ---
+  duration_ms: 44.2328
+  type: 'test'
+  ...
+# Subtest: Upstash enforces delivery limits without needing a PocketBase quota secret
+ok 128 - Upstash enforces delivery limits without needing a PocketBase quota secret
+  ---
+  duration_ms: 7.2674
+  type: 'test'
+  ...
+# Subtest: reset errors distinguish malformed email from unregistered email in both languages
+ok 129 - reset errors distinguish malformed email from unregistered email in both languages
+  ---
+  duration_ms: 1.4807
+  type: 'test'
+  ...
+# PASS: portal-specific guest registration and every signed-in role routes to its own cases/projects across all portals.
+# Subtest: D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\portal-journey.test.cjs
+ok 36 - D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\portal-journey.test.cjs
+  ---
+  duration_ms: 1226.148
+  type: 'test'
+  ...
+# Subtest: portal record preserves existing service and philosophy configuration while editable fields drive display
+ok 131 - portal record preserves existing service and philosophy configuration while editable fields drive display
+  ---
+  duration_ms: 1.4305
+  type: 'test'
+  ...
+# Subtest: new portals work without a hardcoded default and their picture replaces banner
+ok 132 - new portals work without a hardcoded default and their picture replaces banner
+  ---
+  duration_ms: 0.6757
+  type: 'test'
+  ...
+# Subtest: configured portal registration types apply to guests while signed-in roles go to their own cases
+ok 133 - configured portal registration types apply to guests while signed-in roles go to their own cases
+  ---
+  duration_ms: 0.2452
+  type: 'test'
+  ...
+# Subtest: compatible rules keep protected fields immutable and preserve admin/owner guards
+ok 134 - compatible rules keep protected fields immutable and preserve admin/owner guards
+  ---
+  duration_ms: 2.8596
+  type: 'test'
+  ...
+# Subtest: migration fixes both save stages without altering other rules or records
+ok 135 - migration fixes both save stages without altering other rules or records
+  ---
+  duration_ms: 1.6477
+  type: 'test'
+  ...
+# Subtest: user permission compatibility repair denies direct permission submissions and preserves other guards
+ok 136 - user permission compatibility repair denies direct permission submissions and preserves other guards
+  ---
+  duration_ms: 1.308
+  type: 'test'
+  ...
+# Project validation and metadata checks passed.
+# Subtest: D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\project-validation.test.cjs
+ok 39 - D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\project-validation.test.cjs
+  ---
+  duration_ms: 909.1949
+  type: 'test'
+  ...
+# PASS: HTML sanitization, messaging access, request bounds, throttling, bound filters and paginated retrieval
+# Subtest: D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\report-security.test.ts
+ok 40 - D:\\SysDir\\MyDocument\\ChatGPT\\DSC\\dsc\\tests\\report-security.test.ts
+  ---
+  duration_ms: 772.1941
+  type: 'test'
+  ...
+# Subtest: request guards discard superseded requests, changed scopes, changed auth and unmounted completions
+ok 139 - request guards discard superseded requests, changed scopes, changed auth and unmounted completions
+  ---
+  duration_ms: 100.9746
+  type: 'test'
+  ...
+# Subtest: missing backend setup is distinguished from account and connection failures
+ok 140 - missing backend setup is distinguished from account and connection failures
+  ---
+  duration_ms: 0.6195
+  type: 'test'
+  ...
+# Subtest: malformed backend responses cannot become effective access
+ok 141 - malformed backend responses cannot become effective access
+  ---
+  duration_ms: 0.2296
+  type: 'test'
+  ...
+# Subtest: switching accounts discards in-flight permissions from the previous account
+ok 142 - switching accounts discards in-flight permissions from the previous account
+  ---
+  duration_ms: 155.5075
+  type: 'test'
+  ...
+# Subtest: malformed responses fail closed and Retry can recover
+ok 143 - malformed responses fail closed and Retry can recover
+  ---
+  duration_ms: 39.9887
+  type: 'test'
+  ...
+# Subtest: service failures revoke cached effective permissions and report the cause
+ok 144 - service failures revoke cached effective permissions and report the cause
+  ---
+  duration_ms: 30.633
+  type: 'test'
+  ...
+# Subtest: deactivating a locally cached account prevents late responses from restoring access
+ok 145 - deactivating a locally cached account prevents late responses from restoring access
+  ---
+  duration_ms: 43.3053
+  type: 'test'
+  ...
+# Subtest: each list fetches and renders only its fixed lookup type
+ok 146 - each list fetches and renders only its fixed lookup type
+  ---
+  duration_ms: 237.8602
+  type: 'test'
+  ...
+# Subtest: new records are saved into their page's group; failed writes keep the dialog open
+ok 147 - new records are saved into their page's group; failed writes keep the dialog open
+  ---
+  duration_ms: 83.0477
+  type: 'test'
+  ...
+# Subtest: failed deletion leaves its error visible inside the confirmation dialog
+ok 148 - failed deletion leaves its error visible inside the confirmation dialog
+  ---
+  duration_ms: 262.7978
+  type: 'test'
+  ...
+# Subtest: read-only settings access disables destructive specialist actions
+ok 149 - read-only settings access disables destructive specialist actions
+  ---
+  duration_ms: 87.3517
+  type: 'test'
+  ...
+# Subtest: successful confirmed deletion closes the dialog and reports success
+ok 150 - successful confirmed deletion closes the dialog and reports success
+  ---
+  duration_ms: 60.5282
+  type: 'test'
+  ...
+# Subtest: blocked deletion identifies the case and expert and links to their records
+ok 151 - blocked deletion identifies the case and expert and links to their records
+  ---
+  duration_ms: 58.1429
+  type: 'test'
+  ...
+# Subtest: classifications and roles render as separate settings
+ok 152 - classifications and roles render as separate settings
+  ---
+  duration_ms: 92.0722
+  type: 'test'
+  ...
+# Subtest: role form requires the category foreign key
+ok 153 - role form requires the category foreign key
+  ---
+  duration_ms: 41.5476
+  type: 'test'
+  ...
+# Subtest: saving a role writes only its current category relation
+ok 154 - saving a role writes only its current category relation
+  ---
+  duration_ms: 37.428
+  type: 'test'
+  ...
+# Subtest: classifications expose Add, Edit and Delete when permitted
+ok 155 - classifications expose Add, Edit and Delete when permitted
+  ---
+  duration_ms: 32.3536
+  type: 'test'
+  ...
+# Subtest: classification edits save the entered labels without recreating the record
+ok 156 - classification edits save the entered labels without recreating the record
+  ---
+  duration_ms: 38.4072
+  type: 'test'
+  ...
+# Subtest: role blocker includes the actual case and assigned expert rather than a generic error
+ok 157 - role blocker includes the actual case and assigned expert rather than a generic error
+  ---
+  duration_ms: 156.1567
+  type: 'test'
+  ...
+# Subtest: profile blocker uses user IDs for expert links and retains total counts
+ok 158 - profile blocker uses user IDs for expert links and retains total counts
+  ---
+  duration_ms: 19.2485
+  type: 'test'
+  ...
+# Subtest: a category containing roles cannot be deleted
+ok 159 - a category containing roles cannot be deleted
+  ---
+  duration_ms: 1.4795
+  type: 'test'
+  ...
+# Subtest: expert and case references block role deletion, including legacy assignments
+ok 160 - expert and case references block role deletion, including legacy assignments
+  ---
+  duration_ms: 1.3973
+  type: 'test'
+  ...
+# Subtest: unused categories and roles proceed to normal permission-checked deletion
+ok 161 - unused categories and roles proceed to normal permission-checked deletion
+  ---
+  duration_ms: 0.2808
+  type: 'test'
+  ...
+# Subtest: both backend deployments enforce identical deletion guards
+ok 162 - both backend deployments enforce identical deletion guards
+  ---
+  duration_ms: 0.5136
+  type: 'test'
+  ...
+# Subtest: expert text lists accept comma-separated text only and report invalid values
+ok 163 - expert text lists accept comma-separated text only and report invalid values
+  ---
+  duration_ms: 2.405
+  type: 'test'
+  ...
+# Subtest: missing case statuses require payment while explicit statuses remain unchanged
+ok 164 - missing case statuses require payment while explicit statuses remain unchanged
+  ---
+  duration_ms: 0.3873
+  type: 'test'
+  ...
+# Subtest: media and multiple-choice previews expose native video playback controls
+ok 165 - media and multiple-choice previews expose native video playback controls
+  ---
+  duration_ms: 145.3349
+  type: 'test'
+  ...
+# Subtest: file previews allocate outside render, survive rerenders and release replaced files and unmounts
+ok 166 - file previews allocate outside render, survive rerenders and release replaced files and unmounts
+  ---
+  duration_ms: 14.607
+  type: 'test'
+  ...
+# Subtest: unread badges isolate accounts and ignore superseded polling responses
+ok 167 - unread badges isolate accounts and ignore superseded polling responses
+  ---
+  duration_ms: 17.3344
+  type: 'test'
+  ...
+# Subtest: CMS list failures show retry, and a late older response cannot replace newer pages
+ok 168 - CMS list failures show retry, and a late older response cannot replace newer pages
+  ---
+  duration_ms: 39.79
+  type: 'test'
+  ...
+# Subtest: anonymous team filtering derives every category from saved profile role IDs
+ok 169 - anonymous team filtering derives every category from saved profile role IDs
+  ---
+  duration_ms: 36.5303
+  type: 'test'
+  ...
+# Subtest: public view migration preserves existing fields and active expert restriction
+ok 170 - public view migration preserves existing fields and active expert restriction
+  ---
+  duration_ms: 2.2793
+  type: 'test'
+  ...
+# Subtest: missing public role view reports the backend correction required
+ok 171 - missing public role view reports the backend correction required
+  ---
+  duration_ms: 24.871
+  type: 'test'
+  ...
+# Subtest: targeted backend repair handles the published category schema without replacing records
+ok 172 - targeted backend repair handles the published category schema without replacing records
+  ---
+  duration_ms: 8.815
+  type: 'test'
+  ...
+# Subtest: Arabic training form translates controls and displays the unified title
+ok 173 - Arabic training form translates controls and displays the unified title
+  ---
+  duration_ms: 23.6636
+  type: 'test'
+  ...
+# Subtest: Arabic lecture form localizes submit override, placeholders and visibility description
+ok 174 - Arabic lecture form localizes submit override, placeholders and visibility description
+  ---
+  duration_ms: 6.7255
+  type: 'test'
+  ...
+# Subtest: English forms keep English interface text and pending action states
+ok 175 - English forms keep English interface text and pending action states
+  ---
+  duration_ms: 14.1341
+  type: 'test'
+  ...
+# Subtest: server page labels follow the interface language
+ok 176 - server page labels follow the interface language
+  ---
+  duration_ms: 0.5317
+  type: 'test'
+  ...
+# Subtest: shows linked case and role, scopes query to selected expert, and paginates
+ok 177 - shows linked case and role, scopes query to selected expert, and paginates
+  ---
+  duration_ms: 130.954
+  type: 'test'
+  ...
+# Subtest: does not link to case pages without Cases read access
+ok 178 - does not link to case pages without Cases read access
+  ---
+  duration_ms: 29.1889
+  type: 'test'
+  ...
+# Subtest: explains failure and offers retry instead of silently hiding allocations
+ok 179 - explains failure and offers retry instead of silently hiding allocations
+  ---
+  duration_ms: 19.6333
+  type: 'test'
+  ...
+# Subtest: a stalled profile request exits loading with a retryable error, even if transport ignores abort
+ok 180 - a stalled profile request exits loading with a retryable error, even if transport ignores abort
+  ---
+  duration_ms: 148.9019
+  type: 'test'
+  ...
+# Subtest: missing profiles and roles with no collection finish loading normally; permission failures show errors
+ok 181 - missing profiles and roles with no collection finish loading normally; permission failures show errors
+  ---
+  duration_ms: 75.5873
+  type: 'test'
+  ...
+# Subtest: a late response for a previous user cannot replace the current profile or loading state
+ok 182 - a late response for a previous user cannot replace the current profile or loading state
+  ---
+  duration_ms: 22.2214
+  type: 'test'
+  ...
+1..182
+# tests 182
+# suites 0
+# pass 182
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5748.2247

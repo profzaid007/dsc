@@ -3,14 +3,14 @@
 migrate((app) => {
   const users = app.findCollectionByNameOrId("users")
   const role = users.fields.getByName("role")
-  if (!role.values.includes("care_foundation")) {
+  if (role.type === "select" && !role.values.includes("care_foundation")) {
     role.values = [...role.values, "care_foundation"]
     app.save(users)
   }
 
   const portals = app.findCollectionByNameOrId("portals")
   const registrationType = portals.fields.getByName("registration_type")
-  if (!registrationType.values.includes("care_foundation")) {
+  if (registrationType.type === "select" && !registrationType.values.includes("care_foundation")) {
     registrationType.values = [...registrationType.values, "care_foundation"]
     app.save(portals)
   }

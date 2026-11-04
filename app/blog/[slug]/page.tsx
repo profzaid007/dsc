@@ -1,4 +1,4 @@
-import { blogField, blogContentLang } from "@/lib/blog-content"
+import { blogField, blogContentLang, publicBlogField } from "@/lib/blog-content"
 import { boundedFullList } from "@/lib/bounded-records"
 import Link from "next/link"
 import { cookies } from "next/headers"
@@ -20,7 +20,7 @@ interface BlogPostPageProps {
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params
   const cookieStore = await cookies()
-  const lang = (cookieStore.get("lang")?.value as Lang) || "en"
+  const lang: Lang = cookieStore.get("lang")?.value === "ar" ? "ar" : "en"
 
   let page: BlogPage | null = null
   let categoryLabel = ""
@@ -51,11 +51,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     page = {
       id: record.id as string,
       slug: record.slug as string,
-      title: record.title as string,
+      title: publicBlogField(record, "title", lang),
       main_category: record.main_category || "",
       category: rawCategory,
       keywords: record.keywords !== undefined ? String(record.keywords || "") : rawCategory,
-      content: record.content as string,
+      content: publicBlogField(record, "content", lang),
       is_published: record.is_published as boolean,
       media: (record.media as string[]) || [],
       thumbnail: "",

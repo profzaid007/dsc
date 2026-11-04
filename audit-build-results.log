@@ -1,0 +1,163 @@
+
+> dsc@0.0.1 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.mjs took 44ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 9.0s
+  Running TypeScript ...
+  Finished TypeScript in 7.6s ...
+  Collecting page data using 19 workers ...
+  Generating static pages using 19 workers (0/94) ...
+  Generating static pages using 19 workers (23/94) 
+  Generating static pages using 19 workers (46/94) 
+  Generating static pages using 19 workers (70/94) 
+✓ Generating static pages using 19 workers (94/94) in 1707ms
+  Finalizing page optimization ...
+
+Route (app)                                              Revalidate  Expire
+┌ ƒ /
+├ ƒ /_
+├ ƒ /_not-found
+├ ƒ /[slug]
+├ ƒ /api/contact
+├ ƒ /api/expert-application
+├ ƒ /api/send-email
+├ ƒ /api/send-message
+├ ƒ /api/telegram-notify
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ƒ /cms
+├ ƒ /cms/blog
+├ ƒ /cms/blog/[slug]
+├ ƒ /cms/blog/categories
+├ ƒ /cms/home-pages
+├ ƒ /cms/home-pages/[slug]
+├ ƒ /cms/info
+├ ƒ /cms/info/[portalId]
+├ ƒ /cms/info/[portalId]/[slug]
+├ ƒ /cms/portals
+├ ƒ /config-preview
+├ ƒ /contact-us
+├ ƒ /dashboard
+├ ƒ /dashboard/admin
+├ ƒ /dashboard/admin/allocations
+├ ƒ /dashboard/admin/assignments
+├ ƒ /dashboard/admin/assignments/[id]
+├ ƒ /dashboard/admin/backups
+├ ƒ /dashboard/admin/cases
+├ ƒ /dashboard/admin/cases/[id]
+├ ƒ /dashboard/admin/cases/[id]/files
+├ ƒ /dashboard/admin/cases/[id]/files/[fileId]
+├ ƒ /dashboard/admin/cases/[id]/files/new
+├ ƒ /dashboard/admin/cases/[id]/tasks/[taskId]
+├ ƒ /dashboard/admin/cases/new
+├ ƒ /dashboard/admin/expert-approval
+├ ƒ /dashboard/admin/experts
+├ ƒ /dashboard/admin/experts/[id]
+├ ƒ /dashboard/admin/payments
+├ ƒ /dashboard/admin/public-lectures
+├ ƒ /dashboard/admin/public-lectures/[id]
+├ ƒ /dashboard/admin/public-lectures/new
+├ ƒ /dashboard/admin/security
+├ ƒ /dashboard/admin/settings
+├ ƒ /dashboard/admin/settings/classifications
+├ ƒ /dashboard/admin/settings/lookups
+├ ƒ /dashboard/admin/settings/payments
+├ ƒ /dashboard/admin/settings/roles
+├ ƒ /dashboard/admin/settings/specialists
+├ ƒ /dashboard/admin/settings/tool-types
+├ ƒ /dashboard/admin/settings/user-types
+├ ƒ /dashboard/admin/tools
+├ ƒ /dashboard/admin/tools/assessments
+├ ƒ /dashboard/admin/tools/attachment-request/[id]
+├ ƒ /dashboard/admin/tools/attachment-request/new
+├ ƒ /dashboard/admin/tools/multiple-choice/[id]
+├ ƒ /dashboard/admin/tools/multiple-choice/edit/[id]
+├ ƒ /dashboard/admin/tools/multiple-choice/new
+├ ƒ /dashboard/admin/tools/new
+├ ƒ /dashboard/admin/tools/one-to-one-meeting/[id]
+├ ƒ /dashboard/admin/tools/one-to-one-meeting/edit/[id]
+├ ƒ /dashboard/admin/tools/one-to-one-meeting/new
+├ ƒ /dashboard/admin/tools/plan/[id]
+├ ƒ /dashboard/admin/tools/plan/edit/[id]
+├ ƒ /dashboard/admin/tools/plan/new
+├ ƒ /dashboard/admin/tools/report/[id]
+├ ƒ /dashboard/admin/tools/report/edit/[id]
+├ ƒ /dashboard/admin/tools/report/new
+├ ƒ /dashboard/admin/tools/survey/[id]
+├ ƒ /dashboard/admin/tools/survey/edit/[id]
+├ ƒ /dashboard/admin/tools/survey/new
+├ ƒ /dashboard/admin/tools/templates
+├ ƒ /dashboard/admin/training
+├ ƒ /dashboard/admin/training/[id]
+├ ƒ /dashboard/admin/training/new
+├ ƒ /dashboard/admin/users
+├ ƒ /dashboard/admin/users/[id]
+├ ƒ /dashboard/assessments
+├ ƒ /dashboard/assessments/[id]
+├ ƒ /dashboard/cases
+├ ƒ /dashboard/cases/[id]
+├ ƒ /dashboard/cases/[id]/tasks/[toolId]
+├ ƒ /dashboard/cases/new
+├ ƒ /dashboard/expert
+├ ƒ /dashboard/expert/cases
+├ ƒ /dashboard/expert/cases/[id]
+├ ƒ /dashboard/expert/cases/[id]/files
+├ ƒ /dashboard/expert/cases/[id]/files/[fileId]
+├ ƒ /dashboard/expert/cases/[id]/files/new
+├ ƒ /dashboard/expert/notes
+├ ƒ /dashboard/expert/profile
+├ ƒ /dashboard/expert/schedule
+├ ƒ /dashboard/individual
+├ ƒ /dashboard/individual/appointments
+├ ƒ /dashboard/individual/cases
+├ ƒ /dashboard/individual/cases/[id]
+├ ƒ /dashboard/individual/cases/[id]/tasks/[toolId]
+├ ƒ /dashboard/individual/cases/new
+├ ƒ /dashboard/individual/reports
+├ ƒ /dashboard/individual/services
+├ ƒ /dashboard/institution
+├ ƒ /dashboard/institution/documents
+├ ƒ /dashboard/institution/projects
+├ ƒ /dashboard/institution/projects/[id]
+├ ƒ /dashboard/institution/projects/[id]/tasks/[toolId]
+├ ƒ /dashboard/institution/projects/new
+├ ƒ /dashboard/institution/quotations
+├ ƒ /dashboard/institution/services
+├ ƒ /dashboard/messages
+├ ƒ /dashboard/parent
+├ ƒ /dashboard/parent/appointments
+├ ƒ /dashboard/parent/cases
+├ ƒ /dashboard/parent/cases/[id]
+├ ƒ /dashboard/parent/cases/[id]/tasks/[toolId]
+├ ƒ /dashboard/parent/cases/new
+├ ƒ /dashboard/parent/reports
+├ ƒ /dashboard/parent/services
+├ ƒ /info/[id]
+├ ƒ /login
+├ ƒ /portal/[id]
+├ ƒ /privacy-policy
+├ ƒ /programmes
+├ ƒ /programmes/public_lectures
+├ ƒ /programmes/public_lectures/[id]
+├ ƒ /programmes/training_programmes
+├ ƒ /programmes/training_programmes/[id]
+├ ƒ /register
+├ ƒ /register/care_foundation
+├ ƒ /register/expert
+├ ƒ /register/individual
+├ ƒ /register/organization
+├ ƒ /register/parent
+├ ƒ /reset-password
+├ ○ /robots.txt
+├ ○ /sitemap.xml                                                 1h      1y
+└ ƒ /terms
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

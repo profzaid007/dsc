@@ -1,9 +1,12 @@
 import { boundedFullList } from "@/lib/bounded-records"
+import { publicBlogField } from "@/lib/blog-content"
+import { cookies } from "next/headers"
 import pb from "@/lib/pb"
 import type { BlogPage as BlogPost, BlogCategory } from "@/types/cms"
 import { BlogListing, type ListingPost } from "./BlogListing"
 
 export default async function BlogPage() {
+  const lang = (await cookies()).get("lang")?.value === "ar" ? "ar" : "en"
   let posts: ListingPost[] = []
   let categories: BlogCategory[] = []
   let fetchFailed = false
@@ -27,11 +30,11 @@ export default async function BlogPage() {
       return {
         id: record.id,
         slug: record.slug,
-        title: record.title || "",
+        title: publicBlogField(record, "title", lang),
         main_category: record.main_category || "",
         category: record.category || "",
         keywords: record.keywords !== undefined ? String(record.keywords || "") : String(record.category || ""),
-        content: record.content || "",
+        content: publicBlogField(record, "content", lang),
         is_published: record.is_published,
         media: record.media || [],
         thumbnail: thumbnail || "",

@@ -103,3 +103,31 @@ test("saving requires both names and rejects missing names before any database w
   assert.equal(writes.at(-1).data.get("public_name_ar"), "خبير")
   assert.equal(writes.at(-1).data.get("public_name_en"), "Expert")
 })
+
+test("ordinary profile saves omit photos; only explicit removal sends a clear instruction", async () => {
+  const draft = {
+    ...hook.emptyDraft(),
+    publicNameAr: "خبير",
+    publicNameEn: "Expert",
+  }
+  await hook.saveExpertProfileFor(draft, "expert", "profile")
+  assert.equal(writes.at(-1).data.has("profile_photo"), false)
+  assert.equal(writes.at(-1).data.has("confirm_profile_photo_removal"), false)
+
+  await hook.saveExpertProfileFor(
+    { ...draft, removePhoto: true },
+    "expert",
+    "profile"
+  )
+  assert.equal(writes.at(-1).data.get("profile_photo"), "")
+  assert.equal(writes.at(-1).data.get("confirm_profile_photo_removal"), "true")
+
+  const photo = new File(["image"], "portrait.png", { type: "image/png" })
+  await hook.saveExpertProfileFor(
+    { ...draft, newPhoto: photo },
+    "expert",
+    "profile"
+  )
+  assert.equal(writes.at(-1).data.get("profile_photo").name, "portrait.png")
+  assert.equal(writes.at(-1).data.has("confirm_profile_photo_removal"), false)
+})

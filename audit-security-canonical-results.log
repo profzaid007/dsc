@@ -1,0 +1,32 @@
+
+> dsc@0.0.1 test:security:canonical
+> node -e "process.env.SECURITY_TEST_CANONICAL='1';require('./tests/security-integration.test.cjs')"
+
+✔ migration preserves administrator access and restricts security administration (435.038ms)
+✔ read-only staff can read cases but cannot mutate via direct APIs or public fallback (138.1344ms)
+✔ role union, revocation, deactivation, and reactivation apply without login (156.4087ms)
+✔ any account can receive roles; delegation is limited to the actor's capacity (423.4935ms)
+✔ invalid grants, arbitrary role assignments, and deleting assigned/system roles are denied (199.0297ms)
+✔ native account writes cannot escalate permissions or remove own Super Admin (148.3469ms)
+✔ customer ownership, public reads and pending expert registration remain scoped (241.8078ms)
+✔ audit is immutable, records successful changes, and paginates (46.3478ms)
+✔ payment grants are enforced independently of case editing and hide clinical data (233.6969ms)
+✔ expert approval works with its own grant and only exposes expert user records (222.3813ms)
+✔ protected files require both a valid file token and current permission (127.1414ms)
+✔ event record rules distinguish training from lecture grants (80.9136ms)
+✔ allocation replacement enforces create, update and delete independently (127.1276ms)
+✔ realtime subscriptions do not deliver protected records after role revocation (465.4065ms)
+✔ user deletion includes linked profiles atomically without unrelated module grants (223.769ms)
+✔ password resets require the dedicated permission in addition to user update (370.7313ms)
+✔ concurrent privileged-account edits leave an active Super Admin (181.3664ms)
+✔ expert name saves accept ordinary changes while permission-field writes stay denied (28.7903ms)
+✔ training-only grants manage enrollment without access to clinical cases (270.3645ms)
+✔ messaging quotas reject anonymous and incorrect credentials without consuming capacity (1377.1966ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6362.9698

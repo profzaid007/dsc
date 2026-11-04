@@ -158,6 +158,7 @@ function expertProfileFormData(
   // An empty string clears a single-file field in PocketBase.
   if (draft.removePhoto) {
     formData.set("profile_photo", "")
+    formData.set("confirm_profile_photo_removal", "true")
   } else if (draft.newPhoto) {
     formData.append("profile_photo", draft.newPhoto)
   }

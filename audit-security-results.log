@@ -1,0 +1,32 @@
+
+> dsc@0.0.1 test:security
+> node tests/security-integration.test.cjs
+
+✔ migration preserves administrator access and restricts security administration (483.9382ms)
+✔ read-only staff can read cases but cannot mutate via direct APIs or public fallback (154.3632ms)
+✔ role union, revocation, deactivation, and reactivation apply without login (165.7384ms)
+✔ any account can receive roles; delegation is limited to the actor's capacity (429.2508ms)
+✔ invalid grants, arbitrary role assignments, and deleting assigned/system roles are denied (166.2452ms)
+✔ native account writes cannot escalate permissions or remove own Super Admin (128.1412ms)
+✔ customer ownership, public reads and pending expert registration remain scoped (208.5736ms)
+✔ audit is immutable, records successful changes, and paginates (48.7556ms)
+✔ payment grants are enforced independently of case editing and hide clinical data (212.0283ms)
+✔ expert approval works with its own grant and only exposes expert user records (189.9727ms)
+✔ protected files require both a valid file token and current permission (136.2761ms)
+✔ event record rules distinguish training from lecture grants (81.9808ms)
+✔ allocation replacement enforces create, update and delete independently (142.8594ms)
+✔ realtime subscriptions do not deliver protected records after role revocation (443.521ms)
+✔ user deletion includes linked profiles atomically without unrelated module grants (218.9672ms)
+✔ password resets require the dedicated permission in addition to user update (345.8785ms)
+✔ concurrent privileged-account edits leave an active Super Admin (181.0892ms)
+✔ expert name saves accept ordinary changes while permission-field writes stay denied (14.1898ms)
+✔ training-only grants manage enrollment without access to clinical cases (334.3957ms)
+✔ messaging quotas reject anonymous and incorrect credentials without consuming capacity (1426.8049ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6724.9642
