@@ -5,6 +5,21 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Self-hosted decorative Arabic face. Noto remains the loading/glyph fallback. */
+@font-face {
+  font-family: "Mohammad Bold Art";
+  src: url("/fonts/mohammad-bold-art-web.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-089F, U+08A0-08FF,
+    U+FB50-FDFF, U+FE70-FEFF, U+10E60-10E7F, U+1EE00-1EEFF;
+}
+
+:root {
+  --font-arabic: "Mohammad Bold Art", var(--font-arabic-fallback);
+}
+
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-geist-sans), var(--font-arabic), Tahoma, Arial, sans-serif;
@@ -135,7 +150,7 @@
   }
 }
 
-/* Arabic text uses the self-hosted Noto family, including mixed-language pages. */
+/* Arabic text uses the self-hosted decorative face, including mixed-language pages. */
 html:lang(ar),
 [lang="ar"] {
   font-family: var(--font-arabic), var(--font-geist-sans), Tahoma, Arial, sans-serif;

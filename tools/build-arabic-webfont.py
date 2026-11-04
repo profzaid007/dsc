@@ -1,4 +1,4 @@
-"""Build the supplied Arabic design as an unhinted WOFF; requires fonttools.
+"""Build the supplied Arabic design as an unhinted WOFF2; requires fonttools.
 Run: python tools/build-arabic-webfont.py
 The original TTF is retained unchanged. Copyright/name ownership is preserved.
 """
@@ -8,7 +8,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "public/fonts/mohammad-bold-art-1.ttf"
-OUTPUT = ROOT / "public/fonts/mohammad-bold-art-web.woff"
+OUTPUT = ROOT / "public/fonts/mohammad-bold-art-web.woff2"
 
 def outlines(font):
     glyf = font["glyf"]
@@ -38,7 +38,7 @@ for glyph in font["glyf"].glyphs.values():
 for tag in ("fpgm", "prep", "cvt "):
     if tag in font:
         del font[tag]
-font.flavor = "woff"
+font.flavor = "woff2"
 font.save(OUTPUT)
 verified = TTFont(OUTPUT)
 assert outlines(verified) == original_outlines, "Letter outlines changed"

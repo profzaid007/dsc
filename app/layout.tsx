@@ -23,7 +23,7 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" })
 
 const arabic = Noto_Sans_Arabic({
   subsets: ["arabic"],
-  variable: "--font-arabic",
+  variable: "--font-arabic-fallback",
   display: "swap",
   fallback: ["Tahoma", "Arial", "sans-serif"],
 })
