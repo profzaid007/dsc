@@ -31,6 +31,7 @@ export function CmsContent({ html, lang, className }: CmsContentProps) {
   }
   return (
     <div
+      lang={lang}
       dir={lang === "ar" ? "rtl" : "ltr"}
       className={
         "cms-rendered sun-editor-editable space-y-4 leading-relaxed text-gray-700 " +

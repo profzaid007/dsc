@@ -693,3 +693,10 @@ input[data-field-width="medium"] {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Rich-text editor defaults assign fonts to paragraphs and quotes independently.
+   Arabic articles use the site Arabic face throughout, including pasted text. */
+.cms-rendered.sun-editor-editable:lang(ar),
+.cms-rendered.sun-editor-editable:lang(ar) * {
+  font-family: var(--font-arabic), var(--font-geist-sans), Tahoma, Arial, sans-serif !important;
+}
