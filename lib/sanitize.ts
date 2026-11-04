@@ -33,6 +33,7 @@ export function sanitizeCmsContent(html: string, lang?: string): string {
         "text-align": [/^(left|right|center|justify)$/],
         color: [/^#[0-9a-f]{3,8}$/i, /^[a-z]+$/i],
         "background-color": [/^#[0-9a-f]{3,8}$/i, /^[a-z]+$/i],
+        "font-family": [/^[\p{L}\p{N}\s,'"_-]+$/u],
         "font-size": [/^\d+(px|em|rem|%)$/],
         "font-weight": [/^(normal|bold|[1-9]00)$/],
       },

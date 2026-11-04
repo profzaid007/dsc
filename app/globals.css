@@ -694,9 +694,10 @@ input[data-field-width="medium"] {
   }
 }
 
-/* Rich-text editor defaults assign fonts to paragraphs and quotes independently.
-   Arabic articles use the site Arabic face throughout, including pasted text. */
-.cms-rendered.sun-editor-editable:lang(ar),
+/* Override editor defaults while allowing explicit inline authored font choices. */
+.cms-rendered.sun-editor-editable:lang(ar) {
+  font-family: var(--font-arabic), var(--font-geist-sans), Tahoma, Arial, sans-serif;
+}
 .cms-rendered.sun-editor-editable:lang(ar) * {
-  font-family: var(--font-arabic), var(--font-geist-sans), Tahoma, Arial, sans-serif !important;
+  font-family: inherit;
 }
