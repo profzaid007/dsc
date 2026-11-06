@@ -43,6 +43,7 @@ export default function CmsBlogEditorPage() {
   const BackIcon = lang === "ar" ? ArrowRight : ArrowLeft
 
   const [page, setPage] = useState<BlogPage | null>(null)
+  const [recordToCorrect, setRecordToCorrect] = useState<{ slug: string; id: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
@@ -75,6 +76,12 @@ export default function CmsBlogEditorPage() {
       ])
       const rawRecord = rawRecords[0] as Record<string, unknown> | undefined
       if (!rawRecord) {
+        setLoading(false)
+        return
+      }
+      if (typeof rawRecord.title !== "string" || typeof rawRecord.content !== "string") {
+        setPage(null)
+        setRecordToCorrect({ slug, id: String(rawRecord.id) })
         setLoading(false)
         return
       }
@@ -302,7 +309,17 @@ export default function CmsBlogEditorPage() {
           <BackIcon className="h-4 w-4" />
           {t({ en: "Back", ar: "رجوع" }, lang)}
         </Link>
-        <p>{t({ en: "Post not found.", ar: "المنشور غير موجود." }, lang)}</p>
+        {recordToCorrect?.slug === slug ? (
+          <p role="alert">
+            {t({
+              en: "This post is missing its title or content field. Correct the record in PocketBase before editing it here.",
+              ar: "حقل العنوان أو المحتوى مفقود في هذا المنشور. صحّح السجل في PocketBase قبل تعديله هنا.",
+            }, lang)}{" "}
+            <code>{recordToCorrect.id}</code>
+          </p>
+        ) : (
+          <p>{t({ en: "Post not found.", ar: "المنشور غير موجود." }, lang)}</p>
+        )}
       </div>
     )
   }

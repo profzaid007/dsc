@@ -1,5 +1,4 @@
 "use client"
-import { blogField } from "@/lib/blog-content"
 import { usePermissions } from "@/hooks/usePermissions"
 
 import { useEffect, useState } from "react"
@@ -29,6 +28,7 @@ export default function CmsBlogListPage() {
   const { lang } = useLang()
   const [posts, setPosts] = useState<BlogPage[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [creating, setCreating] = useState(false)
   const router = useRouter()
 
@@ -37,6 +37,9 @@ export default function CmsBlogListPage() {
       .getAll()
       .then((data) => {
         setPosts(data)
+      })
+      .catch(() => {
+        setLoadFailed(true)
       })
       .finally(() => {
         setLoading(false)
@@ -123,6 +126,8 @@ export default function CmsBlogListPage() {
             />
           ))}
         </div>
+      ) : loadFailed ? (
+        <p role="alert">{t({ en: "Could not load blog posts. Reload to try again.", ar: "تعذّر تحميل منشورات المدونة. أعد تحميل الصفحة للمحاولة مجددًا." }, lang)}</p>
       ) : posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-muted-foreground">
@@ -163,8 +168,13 @@ export default function CmsBlogListPage() {
                       href={`/cms/blog/${post.slug}`}
                       className="hover:underline"
                     >
-                      {blogField(post, "title")}
+                      {typeof post.title === "string" ? post.title : post.slug}
                     </Link>
+                    {typeof post.title !== "string" && (
+                      <p className="text-sm text-muted-foreground">
+                        {t({ en: "Title needs correction", ar: "العنوان يحتاج إلى تصحيح" }, lang)}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell>{post.author_name || "—"}</TableCell>
                   <TableCell>{formatDate(post.updated)}</TableCell>
@@ -199,7 +209,7 @@ export default function CmsBlogListPage() {
                         variant="ghost"
                         size="icon"
                         disabled={!access.can("cms.delete")}
-                        onClick={() => handleDelete(post.id, blogField(post, "title"))}
+                        onClick={() => handleDelete(post.id, typeof post.title === "string" ? post.title : post.slug)}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
