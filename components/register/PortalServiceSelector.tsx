@@ -34,6 +34,7 @@ interface PortalServiceSelectorProps {
   value?: PortalServiceValue
   onChange: (value: PortalServiceValue) => void
   required?: boolean
+  allowedPortalIds?: ReadonlySet<string>
   /** "text" (default) renders a free-text input, "select" a portal-service dropdown. */
   issueTypeMode?: "select" | "text"
 }
@@ -42,6 +43,7 @@ export function PortalServiceSelector({
   value = { categoryId: "", subCategoryId: "", customCategory: "", customSubCategory: "" },
   onChange,
   required = false,
+  allowedPortalIds,
   issueTypeMode = "text",
 }: PortalServiceSelectorProps) {
   const { lang } = useLang()
@@ -90,14 +92,16 @@ export function PortalServiceSelector({
             />
           </SelectTrigger>
           <SelectContent position="popper" className="max-w-45!">
-            {PORTALS.map((p) => (
+            {PORTALS.filter((p) => !allowedPortalIds || allowedPortalIds.has(p.id)).map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {getPortalLabel(p, lang)}
               </SelectItem>
             ))}
-            <SelectItem value={OTHER_VALUE}>
-              {t({ en: "Other", ar: "أخرى" }, lang)}
-            </SelectItem>
+            {!allowedPortalIds && (
+              <SelectItem value={OTHER_VALUE}>
+                {t({ en: "Other", ar: "أخرى" }, lang)}
+              </SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>

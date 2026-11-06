@@ -19,6 +19,7 @@ import {
   PortalServiceSelector,
   type PortalServiceValue,
 } from "./PortalServiceSelector"
+import { PARENT_CASE_SERVICE_IDS } from "@/lib/portals"
 import { Trash2 } from "lucide-react"
 
 export interface ChildFormData {
@@ -162,6 +163,7 @@ export function ChildFormBlock({
         </div>
 
         <PortalServiceSelector
+          allowedPortalIds={PARENT_CASE_SERVICE_IDS}
           value={data.portalService}
           onChange={(value) => updateField("portalService", value)}
           required

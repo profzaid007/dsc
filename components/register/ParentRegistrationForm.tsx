@@ -21,6 +21,7 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { ChildFormBlock, type ChildFormData } from "./ChildFormBlock"
+import { PARENT_CASE_SERVICE_IDS } from "@/lib/portals"
 import { Plus } from "lucide-react"
 import { authWithPassword, getErrorMessage, getFieldErrors, fieldLabel } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
@@ -33,7 +34,6 @@ import { toast } from "sonner"
 import { RegistrationSubmission } from "@/lib/registration-submission"
 import { validRegistrationPhone } from "@/lib/registration-phone"
 
-const OTHER_VALUE = "other"
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9)
@@ -183,7 +183,7 @@ export function ParentRegistrationForm({
         return false
       }
       if (
-        !child.portalService.categoryId ||
+        !PARENT_CASE_SERVICE_IDS.has(child.portalService.categoryId) ||
         !child.portalService.subCategoryId.trim()
       ) {
         setError(
@@ -191,21 +191,6 @@ export function ParentRegistrationForm({
             {
               en: "please select a service and issue type",
               ar: "يرجى اختيار نوع الخدمة ونوع المشكلة",
-            },
-            lang
-          )}`
-        )
-        return false
-      }
-      if (
-        child.portalService.categoryId === OTHER_VALUE &&
-        !child.portalService.customCategory.trim()
-      ) {
-        setError(
-          `${childLabel}: ${t(
-            {
-              en: "please enter a custom service name",
-              ar: "يرجى إدخال اسم خدمة مخصصة",
             },
             lang
           )}`
@@ -267,10 +252,6 @@ export function ParentRegistrationForm({
             contact: user.contact_number,
           },
           case_details: {
-            custom_category:
-              child.portalService.categoryId === OTHER_VALUE
-                ? child.portalService.customCategory.trim()
-                : undefined,
             custom_sub_category:
               child.portalService.subCategoryId.trim() || undefined,
           },

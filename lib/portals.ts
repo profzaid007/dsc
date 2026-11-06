@@ -1,5 +1,7 @@
 import type { BilingualString } from "@/types/form";
 
+export const PARENT_CASE_SERVICE_IDS: ReadonlySet<string> = new Set(["1", "2", "4"])
+
 export interface PortalService { 
   id: string
   icon: string 
