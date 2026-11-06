@@ -12,6 +12,12 @@ migrate(app => {
     const hasCanonicalContent = c.fields.getByName("content")
     const englishContent = r.getString("content_en")
     const arabicContent = r.getString("content_ar")
+    // The editor selected content_en for the legacy post with slug "new-post".
+    if (!hasCanonicalContent && r.id === "vt56rgypio18iea") {
+      if (englishContent.trim()) values.push({ id: r.id, title, content: englishContent })
+      else conflicts.push(r.id + ":content_en")
+      continue
+    }
     const content = hasCanonicalContent ? r.getString("content") : (englishContent || arabicContent)
     if ((englishContent && arabicContent && englishContent !== arabicContent) ||
         (hasCanonicalContent && ((englishContent && englishContent !== content) || (arabicContent && arabicContent !== content)))) {

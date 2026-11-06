@@ -12,6 +12,7 @@ for(const conflict of [false,true]) test(conflict?'conflicting blog versions sto
  const c=new Collection({name:'blog_pages',type:'base',fields:['title_en','title_ar','content_en','content_ar'].map(name=>({name,type:'text',max:1000000}))});app.save(c);
  const r=new Record(c);r.set('title_en','English title');r.set('title_ar','عنوان عربي');r.set('content_ar','<p>نص عربي</p>');r.set('content_en',${JSON.stringify(conflict?'<p>Different content</p>':'')});app.save(r);
  const fallback=new Record(c);fallback.set('title_en','English fallback');app.save(fallback);
+ const reviewed=new Record(c);reviewed.id='vt56rgypio18iea';reviewed.set('title_ar','عنوان معتمد');reviewed.set('title_en','Legacy English title');reviewed.set('content_ar','<p>نص آخر</p>');reviewed.set('content_en','<p>Selected body</p>');app.save(reviewed);
  });`)
  fs.copyFileSync(path.resolve('pb_migrations',migration),path.join(migrations,migration))
  assert.equal(fs.readFileSync(path.resolve('pb_migrations',migration),'utf8'),fs.readFileSync(path.resolve('backend/pb/pb_migrations',migration),'utf8'))
@@ -22,6 +23,8 @@ for(const conflict of [false,true]) test(conflict?'conflicting blog versions sto
  const r=records.find(record=>record.getString('title')==='عنوان عربي');
  if(!r||r.getString('content')!=='<p>نص عربي</p>')throw Error('Authored text lost');
  if(!records.some(record=>record.getString('title')==='English fallback'))throw Error('English fallback lost');
+ const reviewed=app.findRecordById('blog_pages','vt56rgypio18iea');
+ if(reviewed.getString('title')!=='عنوان معتمد'||reviewed.getString('content')!=='<p>Selected body</p>')throw Error('Editorial choice lost');
  r.set('title','New English title');r.set('content','<p>نص جديد English</p>');app.save(r);
  });`)
  const run=spawnSync(path.resolve('../work/pocketbase-0.31.0/pocketbase.exe'),['migrate','up','--dir',path.join(folder,'data'),'--migrationsDir',migrations],{encoding:'utf8',windowsHide:true})
