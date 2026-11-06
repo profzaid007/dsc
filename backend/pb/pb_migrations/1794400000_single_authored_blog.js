@@ -5,17 +5,19 @@ migrate(app => {
   const conflicts = []
   const values = []
   for (const r of records) {
-    const result = { id: r.id }
-    for (const field of ["title", "content"]) {
-      const canonical = c.fields.getByName(field)
-      const en = r.getString(field + "_en")
-      const ar = r.getString(field + "_ar")
-      const value = canonical ? r.getString(field) : (en || ar)
-      if ((en && ar && en !== ar) || (canonical && ((en && en !== value) || (ar && ar !== value))))
-        conflicts.push(r.id + ":" + field)
-      result[field] = value
+    const arabicTitle = r.getString("title_ar")
+    const title = c.fields.getByName("title")
+      ? r.getString("title")
+      : (arabicTitle.trim() ? arabicTitle : r.getString("title_en"))
+    const hasCanonicalContent = c.fields.getByName("content")
+    const englishContent = r.getString("content_en")
+    const arabicContent = r.getString("content_ar")
+    const content = hasCanonicalContent ? r.getString("content") : (englishContent || arabicContent)
+    if ((englishContent && arabicContent && englishContent !== arabicContent) ||
+        (hasCanonicalContent && ((englishContent && englishContent !== content) || (arabicContent && arabicContent !== content)))) {
+      conflicts.push(r.id + ":content")
     }
-    values.push(result)
+    values.push({ id: r.id, title, content })
   }
   if (conflicts.length) throw new Error("Blog records need correction before removing language fields. Choose one authored value for: " + conflicts.join(", "))
   if (!c.fields.getByName("title")) c.fields.add(new TextField({name:"title",max:5000}))
