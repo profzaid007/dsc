@@ -76,16 +76,6 @@ import {
   normalizeEmail,
 } from "@/lib/validators"
 
-const ALL_ROLES: UserRole[] = [
-  "admin",
-  "individual",
-  "parent",
-  "care_foundation",
-  "organization",
-  "expert",
-  "super_admin",
-]
-
 const roleLabels: Record<string, { en: string; ar: string }> = {
   admin: { en: "Admin", ar: "مشرف" },
   individual: { en: "Individual", ar: "فرد" },
@@ -256,7 +246,8 @@ export function UserManagement({
     return (
       user.name?.toLowerCase().includes(q) ||
       user.email?.toLowerCase().includes(q) ||
-      user.role?.toLowerCase().includes(q)
+      user.role?.toLowerCase().includes(q) ||
+      roleLabels[user.role]?.[lang].toLowerCase().includes(q)
     )
   })
 
@@ -268,14 +259,6 @@ export function UserManagement({
     const cmp = getVal(a).localeCompare(getVal(b))
     return sortDirection === "asc" ? cmp : -cmp
   })
-
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    try {
-      await updateUser(userId, { role: newRole as UserRole })
-    } catch (err) {
-      toast.error(getErrorMessage(err))
-    }
-  }
 
   const handleStatusChange = async (userId: string, isActive: boolean) => {
     try {
@@ -507,8 +490,8 @@ export function UserManagement({
           <Input
             placeholder={
               lang === "ar"
-                ? "ابحث بالاسم أو البريد الإلكتروني أو الدور..."
-                : "Search by name, email, or role..."
+                ? "ابحث بالاسم أو البريد الإلكتروني أو نوع المستخدم..."
+                : "Search by name, email, or user type..."
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -534,7 +517,7 @@ export function UserManagement({
                 {lang === "ar" ? "البريد الإلكتروني" : "Email"}
               </SelectItem>
               <SelectItem value="role">
-                {lang === "ar" ? "الدور" : "Role"}
+                {lang === "ar" ? "نوع المستخدم" : "User Type"}
               </SelectItem>
               <SelectItem value="created">
                 {lang === "ar" ? "تاريخ الإنشاء" : "Created"}
@@ -624,7 +607,7 @@ export function UserManagement({
                   <TableHead>
                     {lang === "ar" ? "البريد الإلكتروني" : "Email"}
                   </TableHead>
-                  <TableHead>{lang === "ar" ? "الدور" : "Role"}</TableHead>
+                  <TableHead>{lang === "ar" ? "نوع المستخدم" : "User Type"}</TableHead>
                   <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
                   <TableHead>{lang === "ar" ? "الحالات" : "Cases"}</TableHead>
                   <TableHead className="text-right">
@@ -643,36 +626,7 @@ export function UserManagement({
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      {user.role === "super_admin" ||
-                      expertsOnly ||
-                      !access.isSuperAdmin ? (
-                        <Badge
-                          variant="outline"
-                          className="bg-purple-50 text-purple-700"
-                        >
-                          {roleLabels[user.role]?.[lang] || user.role}
-                        </Badge>
-                      ) : (
-                        <Select
-                          value={user.role}
-                          onValueChange={(value) =>
-                            handleRoleChange(user.id, value)
-                          }
-                        >
-                          <SelectTrigger className="h-8 w-[140px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ALL_ROLES.filter(
-                              (r) => r !== "super_admin" && r !== "expert"
-                            ).map((role) => (
-                              <SelectItem key={role} value={role}>
-                                {roleLabels[role]?.[lang] || role}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                      {roleLabels[user.role]?.[lang] || user.role}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
