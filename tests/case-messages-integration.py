@@ -4,12 +4,16 @@ import sqlite3, subprocess, tempfile, socket, time, urllib.request, urllib.error
 root=Path.cwd(); runtime=root.parent/'work/pocketbase'; stage=Path(tempfile.mkdtemp(prefix='dsc-case-messages-'))
 for name in ['data','migrations','hooks']: (stage/name).mkdir()
 with sqlite3.connect((runtime/'pb_data/data.db').resolve().as_uri()+'?mode=ro',uri=True) as a, sqlite3.connect(stage/'data/data.db') as b: a.backup(b)
-for migration in ['1794800000_case_messages.js','1794900000_case_documents.js','1795600000_unified_message_inbox.js']:shutil.copy2(root/'pb_migrations'/migration,stage/'migrations'/migration)
+for migration in ['1794800000_case_messages.js','1794900000_case_documents.js','1795600000_unified_message_inbox.js','1796000000_admin_message_visibility.js']:shutil.copy2(root/'pb_migrations'/migration,stage/'migrations'/migration)
 fixture='''migrate(app=>{
  const mail=app.settings();mail.smtp.enabled=false;app.save(mail);
  const users=app.findCollectionByNameOrId("users");
  function user(key,role){const u=new Record(users);u.set("email",key+"@messages.example.test");u.set("name",key);u.set("password","PrivateMessages123!");u.set("role",role);u.set("is_active",true);app.save(u);return u}
- const expert=user("allocated","expert"),foreign=user("foreign","expert"),admin=user("admin","super_admin"),other=user("other","parent"),deniedAdmin=user("denied-admin","admin");
+ const expert=user("allocated","expert"),foreign=user("foreign","expert"),admin=user("admin","super_admin"),other=user("other","parent"),deniedAdmin=user("denied-admin","admin"),reader=user("message-reader","admin");
+ const role=new Record(app.findCollectionByNameOrId("security_roles"));role.set("key","fixture-message-reader");role.set("name_en","Fixture message reader");role.set("is_active",true);app.save(role);
+ const grant=new Record(app.findCollectionByNameOrId("security_role_permissions"));grant.set("role",role.id);grant.set("permission",app.findFirstRecordByFilter("security_permissions",'key = "messages.read"').id);app.save(grant);
+ const assignment=new Record(app.findCollectionByNameOrId("security_user_roles"));assignment.set("user",reader.id);assignment.set("role",role.id);app.save(assignment);
+ reader.set("security_permissions",["messages.read"]);app.save(reader);
  const profile=new Record(app.findCollectionByNameOrId("expert_profiles"));profile.set("user",expert.id);profile.set("public_name_ar","الخبير المختص");profile.set("public_name_en","Allocated Expert");app.save(profile);
  for(const role of ["parent","individual","organization","care_foundation"]){
   const owner=user(role,role),c=new Record(app.findCollectionByNameOrId("cases"));c.set("name","Message case "+role);c.set("user",owner.id);c.set("status","active");app.save(c);
@@ -50,7 +54,7 @@ try:
  def login(key):
   status,data=req('/api/collections/users/auth-with-password',method='POST',body={'identity':key+'@messages.example.test','password':'PrivateMessages123!'});assert status==200,(status,data);return data['token'],data['record']['id']
  tokens={};ids={}
- for role in ['allocated','foreign','admin','denied-admin','other','parent','individual','organization','care_foundation']:tokens[role],ids[role]=login(role)
+ for role in ['allocated','foreign','admin','denied-admin','message-reader','other','parent','individual','organization','care_foundation']:tokens[role],ids[role]=login(role)
  fileTokens={}
  for key in ['allocated','foreign','parent']:
   status,t=req('/api/files/token',tokens[key],'POST',{});assert status==200,(status,t);fileTokens[key]=t['token']
@@ -71,6 +75,12 @@ try:
   status,m=req(path,token,'POST',data,b'Private attachment');assert status==200,(status,m)
   assert m['attachments'];saved=m if role=='parent' else saved
   assert req(path+'/'+m['id'],tokens['allocated'])[0]==200
+  assert req(path+'/'+m['id'],tokens['admin'])[0]==200
+  assert req(path+'/'+m['id'],tokens['denied-admin'])[0]==404
+  assert req(path+'/'+m['id'],tokens['admin'],'PATCH',{'read':True})[0] in [400,403,404]
+  for staff in ['admin','message-reader']:
+   status,admin_inbox=req(path+'?filter=id%3D%22'+m['id']+'%22',tokens[staff])
+   assert status==200 and [r['id'] for r in admin_inbox['items']]==[m['id']],(staff,status,admin_inbox)
   import urllib.parse
   status,filtered=req(path+'?'+urllib.parse.urlencode({'filter':'case = "'+case+'"','expand':'case'}),token)
   assert status==200 and any(r['id']==m['id'] for r in filtered['items']),(status,filtered)

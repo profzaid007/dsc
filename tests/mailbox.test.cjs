@@ -48,6 +48,20 @@ if (require.main === module) {
     assert.deepEqual(model.mailboxMessages(baseProps.messages, 'self', 'all', 'thank', false, baseProps.contacts).map(m => m.id), ['sent'])
     assert.equal(model.mailboxMessages(baseProps.messages, 'self', 'all', 'PRIVATE', false, baseProps.contacts).length, 0)
   })
+  test('administrators can find and open messages between other users without marking them read', () => {
+    const reads = []
+    const contacts = [...baseProps.contacts, { id: 'other', name: 'Case Expert', role: 'expert' }]
+    const h = harness({ isAdmin: true, contacts, onRead: message => reads.push(message.id) })
+    assert.ok(!renderToStaticMarkup(harness().render()).includes('Messages between users'))
+    find(h.render(), node => node.type === 'button' && node.props?.children?.some?.(child => child?.props?.children === 'Messages between users')).props.onClick()
+    assert.deepEqual(model.mailboxMessages(baseProps.messages, 'self', 'between-users', 'Case Expert', false, contacts).map(m => m.id), ['private'])
+    find(h.render(), node => node.key === 'private').props.onClick()
+    const html = renderToStaticMarkup(h.render())
+    assert.match(html, /Admin-Test → Case Expert/)
+    assert.match(html, /Message body private/)
+    assert.doesNotMatch(html, /aria-label="Reply"/)
+    assert.deepEqual(reads, [])
+  })
   test('case context composes linked messages for multiple authorized participants and shows case labels', () => {
     const h = harness({ caseContext: { id: 'case-123', name: 'Review case' }, contacts: [...baseProps.contacts, { id: 'owner', name: 'Owner', role: 'parent' }] })
     find(h.render(), node => node.props?.['aria-label'] === 'New message').props.onClick()
