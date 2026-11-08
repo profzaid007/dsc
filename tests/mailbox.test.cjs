@@ -53,13 +53,19 @@ if (require.main === module) {
     const contacts = [...baseProps.contacts, { id: 'other', name: 'Case Expert', role: 'expert' }]
     const h = harness({ isAdmin: true, contacts, onRead: message => reads.push(message.id) })
     assert.ok(!renderToStaticMarkup(harness().render()).includes('Messages between users'))
-    find(h.render(), node => node.type === 'button' && node.props?.children?.some?.(child => child?.props?.children === 'Messages between users')).props.onClick()
-    assert.deepEqual(model.mailboxMessages(baseProps.messages, 'self', 'between-users', 'Case Expert', false, contacts).map(m => m.id), ['private'])
-    find(h.render(), node => node.key === 'private').props.onClick()
-    const html = renderToStaticMarkup(h.render())
-    assert.match(html, /Admin-Test → Case Expert/)
-    assert.match(html, /Message body private/)
-    assert.doesNotMatch(html, /aria-label="Reply"/)
+    const nav = find(h.render(), node => node.type === 'nav')
+    const folders = nav.props.children[1]
+    assert.deepEqual(folders.map(button => button.key), ['received', 'sent', 'between-users', 'all'])
+    assert.deepEqual(model.mailboxMessages(baseProps.messages, 'self', 'all', '', false, contacts, '', true).map(m => m.id), ['private', 'second', 'first', 'sent'])
+    for (const folder of ['between-users', 'all']) {
+      folders.find(button => button.key === folder).props.onClick()
+      assert.deepEqual(model.mailboxMessages(baseProps.messages, 'self', folder, 'Case Expert', false, contacts, '', true).map(m => m.id), ['private'])
+      find(h.render(), node => node.key === 'private').props.onClick()
+      const html = renderToStaticMarkup(h.render())
+      assert.match(html, /Admin-Test → Case Expert/)
+      assert.match(html, /Message body private/)
+      assert.doesNotMatch(html, /aria-label="Reply"/)
+    }
     assert.deepEqual(reads, [])
   })
   test('case context composes linked messages for multiple authorized participants and shows case labels', () => {

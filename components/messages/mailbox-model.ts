@@ -7,19 +7,21 @@ export function ownMessages(messages: RecordModel[], userId: string) {
   return messages.filter(message => message.sender === userId || message.recipient === userId)
 }
 
-export function mailboxMessages(messages: RecordModel[], userId: string, folder: MailFolder, query: string, unreadOnly: boolean, contacts: MessageContact[], selectedId = "") {
+export function mailboxMessages(messages: RecordModel[], userId: string, folder: MailFolder, query: string, unreadOnly: boolean, contacts: MessageContact[], selectedId = "", canViewBetweenUsers = false) {
   const search = query.trim().toLocaleLowerCase()
   const betweenUsers = folder === "between-users"
   const contactsById = new Map(contacts.map(contact => [contact.id, contact]))
-  const scoped = betweenUsers
-    ? messages.filter(message => message.sender !== userId && message.recipient !== userId)
+  const scoped = canViewBetweenUsers && (folder === "all" || betweenUsers)
+    ? messages
     : ownMessages(messages, userId)
   return scoped.filter(message => {
+    const isBetweenUsers = message.sender !== userId && message.recipient !== userId
+    if (betweenUsers && !isBetweenUsers) return false
     if (folder === "received" && message.recipient !== userId) return false
     if (folder === "sent" && message.sender !== userId) return false
     if (unreadOnly && (message.recipient !== userId || message.read) && message.id !== selectedId) return false
     if (!search) return true
-    const ids = betweenUsers
+    const ids = isBetweenUsers
       ? [message.sender, message.recipient]
       : [message.sender === userId ? message.recipient : message.sender]
     const names = ids.flatMap(id => {
