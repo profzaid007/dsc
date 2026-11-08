@@ -29,6 +29,12 @@ const blank = (): SecurityRole => ({
   permissions: [],
   user_count: 0,
 })
+function formatAuditSnapshot(audit: SecurityAudit, snapshot: unknown) {
+  return JSON.stringify(snapshot, (key, value) =>
+    audit.target_type === "security_roles" && key === "key" ? undefined : value,
+    2
+  )
+}
 export function SecurityManagement() {
   const { lang } = useLang()
   const ar = lang === "ar"
@@ -139,11 +145,18 @@ export function SecurityManagement() {
       )
     )
       return
+    const name = (role.name_en || role.name_ar).trim()
     await mutate(() =>
       securityApi(
         role.id ? "/roles/" + role.id : "/roles",
         role.id ? "PATCH" : "POST",
-        { ...role, name_en: (role.name_en || role.name_ar).trim(), name_ar: (role.name_en || role.name_ar).trim() }
+        {
+          name_en: name,
+          name_ar: name,
+          description: role.description,
+          is_active: role.is_active,
+          permissions: role.permissions,
+        }
       )
     )
   }
@@ -316,7 +329,7 @@ export function SecurityManagement() {
                   </Button>
                   {state.roles
                     .filter((r) =>
-                      (r.name_en + r.name_ar + r.key)
+                      (r.name_en + " " + r.name_ar)
                         .toLowerCase()
                         .includes(query.toLowerCase())
                     )
@@ -365,7 +378,6 @@ export function SecurityManagement() {
                           <div className="dsc-form-grid">
                             {(
                               [
-                                ["key", "Role key", "مفتاح الدور"],
                                 ["name_en", "Role name", "اسم الدور"],
                                 ["description", "Description", "الوصف"],
                               ] as const
@@ -377,7 +389,6 @@ export function SecurityManagement() {
                                 <span>{t(en, arabic)}</span>
                                 <Input
                                   required={key !== "description"}
-                                  disabled={key === "key" && !!role.id}
                                   value={key === "name_en" ? role.name_en || role.name_ar : role[key]}
                                   onChange={(e) =>
                                     setRole({ ...role, [key]: e.target.value, ...(key === "name_en" ? { name_ar: e.target.value } : {}) })
@@ -803,14 +814,14 @@ export function SecurityManagement() {
                                   dir="ltr"
                                   className="max-w-xs overflow-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap"
                                 >
-                                  {JSON.stringify(a.before, null, 2)}
+                                  {formatAuditSnapshot(a, a.before)}
                                 </pre>
                                 <p>{t("After", "بعد")}</p>
                                 <pre
                                   dir="ltr"
                                   className="max-w-xs overflow-auto rounded bg-muted p-2 text-xs break-all whitespace-pre-wrap"
                                 >
-                                  {JSON.stringify(a.after, null, 2)}
+                                  {formatAuditSnapshot(a, a.after)}
                                 </pre>
                               </details>
                             </td>

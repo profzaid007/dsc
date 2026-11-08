@@ -111,7 +111,10 @@ function saveRole(e, create) {
       : app.findRecordById("security_roles", e.request.pathValue("id"))
     const before = create ? null : roleData(app, role)
     if (create) {
-      const key = inputString(body, "key", 80, true)
+      const key =
+        body.key === undefined
+          ? "role-" + $security.randomString(24).toLowerCase()
+          : inputString(body, "key", 80, true)
       if (!/^[a-z][a-z0-9_-]{1,79}$/.test(key))
         throw new BadRequestError(
           "Role key must use lowercase letters, numbers, underscores or hyphens."

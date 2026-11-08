@@ -221,6 +221,27 @@ test("migration preserves administrator access and restricts security administra
     200
   )
 })
+test("roles can be created and renamed without submitting a key", async () => {
+  const input = {
+    name_en: "دور جديد",
+    name_ar: "دور جديد",
+    description: "",
+    is_active: true,
+    permissions: [],
+  }
+  const created = await request("/api/dsc/security/roles", "POST", input)
+  assert.equal(created.status, 200, JSON.stringify(created.data))
+  const role = (await state()).roles.find((role) => role.name_ar === input.name_ar)
+  assert.match(role.key, /^role-[a-z0-9]{24}$/)
+
+  const route = "/api/dsc/security/roles/" + role.id
+  const updated = await request(route, "PATCH", { ...input, name_en: "Renamed" })
+  assert.equal(updated.status, 200, JSON.stringify(updated.data))
+  const renamed = (await state()).roles.find((record) => record.id === role.id)
+  assert.equal(renamed.name_en, "Renamed")
+  assert.equal(renamed.key, role.key)
+})
+
 test("read-only staff can read cases but cannot mutate via direct APIs or public fallback", async () => {
   const role = await createRole("case-reader", ["cases.read"])
   await assign(ids.reader, [role.id])
