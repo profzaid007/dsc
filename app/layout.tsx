@@ -4,11 +4,13 @@ import { cookies } from "next/headers"
 import "./globals.css"
 import "react-datepicker/dist/react-datepicker.css"
 import { AppShell } from "@/components/AppShell"
+import { SITE_URL } from "@/lib/seo"
 import { cn } from "@/lib/utils"
 
 export async function generateMetadata() {
   const lang = (await cookies()).get("lang")?.value
   return {
+    metadataBase: new URL(SITE_URL),
     title: {
       default:
         lang === "ar"
