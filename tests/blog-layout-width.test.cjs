@@ -12,9 +12,10 @@ function loadPage(content,record,lang='ar'){
   '@/lib/blog-content':blogContent,
   '@/lib/bounded-records':{boundedFullList:async()=>[]},
   'next/link':{default:({children,...props})=>React.createElement('a',props,children)},
+  'next/image':{default:props=>React.createElement('img',props)},
   'next/headers':{cookies:async()=>({get:()=>({value:lang})})},
   'next/navigation':{notFound:()=>{throw Error('Not found')}},
-  '@/lib/pb':{default:{filter:()=>'',collection:()=>({getFirstListItem:async()=>record||({id:'post',title:'Article',content:content,category:'',is_published:true})})}},
+  '@/lib/pb':{default:{filter:()=>'',files:{getURL:(_,name)=>`https://files.example/${name}`},collection:()=>({getFirstListItem:async()=>record||({id:'post',title:'Article',content:content,category:'',is_published:true})})}},
   '@/lib/i18n':{t:(labels,lang)=>labels[lang]},
   '@/lib/format-date':{formatDate:()=> '2026-10-17'},
   '@/lib/cms-layout':{isCustomCmsLayout:html=>html.includes('<style>')},
@@ -25,6 +26,13 @@ function loadPage(content,record,lang='ar'){
  new Function('exports','require',code)(exports,name=>name==='react/jsx-runtime'?require(name):mocks[name]??(()=>{throw Error(name)})())
  return exports.default
 }
+
+test('published articles display their uploaded thumbnail',async()=>{
+ const record={id:'post',slug:'post',title:'Article',content:'<p>Article</p>',category:'',is_published:true,thumbnail:['cover.png']}
+ const Page=loadPage('',record,'en')
+ const markup=renderToStaticMarkup(await Page({params:Promise.resolve({slug:'post'})}))
+ assert.match(markup,/<img[^>]+src="https:\/\/files\.example\/cover\.png"/)
+})
 
 for(const lang of ['ar','en'])test('published legacy article renders its '+lang+' title and body without the missing-field server error',async()=>{
  const record={id:'legacy',slug:'legacy',title_ar:'مقال قديم',title_en:'Legacy article',content_ar:'<p>المحتوى الأصلي</p>',content_en:'<p>Original content</p>',category:'',is_published:true}

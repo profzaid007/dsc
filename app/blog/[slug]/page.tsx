@@ -1,5 +1,6 @@
 import { blogField, blogContentLang, publicBlogField } from "@/lib/blog-content"
 import { boundedFullList } from "@/lib/bounded-records"
+import Image from "next/image"
 import Link from "next/link"
 import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
@@ -23,6 +24,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const lang: Lang = cookieStore.get("lang")?.value === "ar" ? "ar" : "en"
 
   let page: BlogPage | null = null
+  let thumbnailUrl: string | null = null
   let categoryLabel = ""
 
   try {
@@ -48,6 +50,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         ? matched.label_ar
         : matched.label_en
       : rawCategory
+    const thumbnail = Array.isArray(record.thumbnail)
+      ? record.thumbnail[0]
+      : record.thumbnail
+    thumbnailUrl = thumbnail ? pb.files.getURL(record, thumbnail) : null
     page = {
       id: record.id as string,
       slug: record.slug as string,
@@ -58,7 +64,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       content: publicBlogField(record, "content", lang),
       is_published: record.is_published as boolean,
       media: (record.media as string[]) || [],
-      thumbnail: "",
+      thumbnail: thumbnail || "",
       author_name: (record.author_name as string) || "",
       created: record.created as string,
       updated: record.updated as string,
@@ -100,6 +106,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </>
           )}
         </div>
+        {thumbnailUrl && (
+          <Image
+            src={thumbnailUrl}
+            alt={blogField(page, "title")}
+            width={864}
+            height={486}
+            className="mx-auto max-h-96 w-auto max-w-full rounded-lg object-contain"
+          />
+        )}
         <h1 dir="auto" className="text-3xl font-bold">
           {blogField(page, "title")}
         </h1>

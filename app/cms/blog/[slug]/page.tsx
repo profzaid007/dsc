@@ -467,6 +467,15 @@ export default function CmsBlogEditorPage() {
               </>
             )}
           </div>
+          {thumbnailUrl && (
+            <Image
+              src={thumbnailUrl}
+              alt={title}
+              width={864}
+              height={486}
+              className="mx-auto max-h-96 w-auto max-w-full rounded-lg object-contain"
+            />
+          )}
         </div>
       </CmsPreviewDialog>
     </div>
