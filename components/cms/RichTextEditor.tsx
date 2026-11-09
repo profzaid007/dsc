@@ -20,7 +20,7 @@ import {
   storeCmsLayout,
 } from "@/lib/cms-layout"
 import { CustomLayoutFrame } from "./CustomLayoutFrame"
-import { sanitizeCmsContent } from "@/lib/sanitize"
+import { GOOGLE_DRIVE_VIDEO_URL, sanitizeCmsContent } from "@/lib/sanitize"
 
 import "suneditor/css/editor"
 import "suneditor/css/contents"
@@ -106,6 +106,19 @@ export function RichTextEditor({
 
       instance = suneditor.create(textarea, {
         plugins,
+        video: {
+          urlPatterns: [GOOGLE_DRIVE_VIDEO_URL],
+          embedQuery: {
+            googleDrive: {
+              pattern: GOOGLE_DRIVE_VIDEO_URL,
+              action: (url: string) => url.replace(
+                GOOGLE_DRIVE_VIDEO_URL,
+                "https://drive.google.com/file/d/$1/preview"
+              ),
+              tag: "iframe",
+            },
+          },
+        },
         externalLibs: {
           codeMirror: { src: CodeMirror },
         },

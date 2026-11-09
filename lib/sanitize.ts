@@ -1,5 +1,8 @@
 import sanitizeHtml from "sanitize-html"
 
+export const GOOGLE_DRIVE_VIDEO_URL =
+  /^https:\/\/drive\.google\.com\/file\/d\/([\w-]+)\/(?:view|preview)\/?(?:[?#][^\s]*)?$/
+
 export function sanitizeCmsContent(html: string, lang?: string): string {
   const clean = sanitizeHtml(html, {
     allowedTags: [
@@ -25,6 +28,7 @@ export function sanitizeCmsContent(html: string, lang?: string): string {
       "www.youtube.com",
       "www.youtube-nocookie.com",
       "player.vimeo.com",
+      "drive.google.com",
     ],
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowProtocolRelative: false,
@@ -43,6 +47,11 @@ export function sanitizeCmsContent(html: string, lang?: string): string {
         tagName,
         attribs: { ...attribs, rel: "noopener noreferrer" },
       }),
+    },
+    exclusiveFilter: ({ tag, attribs }) => {
+      if (tag !== "iframe" || !attribs.src || !URL.canParse(attribs.src)) return false
+      return new URL(attribs.src).hostname === "drive.google.com" &&
+        !/^https:\/\/drive\.google\.com\/file\/d\/[\w-]+\/preview$/.test(attribs.src)
     },
   })
   return lang === "ar"
