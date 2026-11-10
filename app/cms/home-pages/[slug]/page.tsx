@@ -172,10 +172,13 @@ export default function CmsHomePageEditorPage() {
         is_published: !page.is_published,
       })
       setPage(updated)
+      toast.success(lang === "ar" ? "تم تحديث حالة النشر." : "Publication status updated.")
+    } catch (error) {
+      toast.error(getErrorMessage(error, lang))
     } finally {
       setPublishing(false)
     }
-  }, [page])
+  }, [page, lang])
 
   const handleImageUpload = useCallback(
     async (file: File): Promise<string> => {

@@ -84,6 +84,7 @@ export default function CmsPortalServicesPage() {
         title_en: "New Page",
         portal_name: portalId,
       })
+      toast.success(lang === "ar" ? "تم إنشاء صفحة المعلومات." : "Information page created.")
       router.push(`/cms/info/${portalId}/${newPage.slug}`)
     } catch (err) {
       toast.error(getErrorMessage(err))

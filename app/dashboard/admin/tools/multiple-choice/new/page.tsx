@@ -1,4 +1,5 @@
 "use client"
+import { toast } from "sonner"
 import { useFilePreviewUrls } from "@/hooks/useFilePreviewUrls"
 import { useAuth } from "@/hooks/useAuth"
 import { caseTaskPath } from "@/lib/case-task-path"
@@ -245,6 +246,7 @@ export default function MultipleChoiceBuilderPage({
         name: { en: formData.nameEn, ar: formData.nameEn },
         config: finalConfig,
       })
+      toast.success(lang === "ar" ? "تم حفظ الأداة." : "Tool saved.")
       router.push(`/dashboard/admin/tools/multiple-choice/${editId}`)
       return
     }
@@ -260,7 +262,7 @@ export default function MultipleChoiceBuilderPage({
         is_not_template: true,
         config: baseConfig,
         status: "pending",
-        is_visible_to_user: true,
+        is_visible_to_user: pendingEntries.length === 0,
         responses: {},
         media: [],
       })
@@ -276,11 +278,15 @@ export default function MultipleChoiceBuilderPage({
           pb.files.getURL(updated, filename)
         )
         finalConfig = buildFinalConfig(uploadedUrls)
-        await caseToolsCollection.update(assignment.id, { config: finalConfig })
+        await caseToolsCollection.update(assignment.id, {
+          config: finalConfig,
+          is_visible_to_user: true,
+        })
       } else {
         finalConfig = baseConfig
       }
 
+      toast.success(lang === "ar" ? "تم حفظ الأداة ضمن تكليفات الحالة." : "Tool saved to the case assignments.")
       router.push(caseTaskPath(caseId))
     } else {
       // Template (with or without case): create in tools, upload media there
@@ -323,6 +329,7 @@ export default function MultipleChoiceBuilderPage({
         })
       }
 
+      toast.success(lang === "ar" ? "تم حفظ قالب الأداة." : "Tool template saved.")
       router.push(`/dashboard/admin/tools`)
     }
     } catch (error) {

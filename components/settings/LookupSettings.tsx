@@ -1,4 +1,5 @@
 "use client"
+import { toast } from "sonner"
 import { useUiTranslation } from "@/hooks/useUiTranslation"
 import { usePermissions } from "@/hooks/usePermissions"
 
@@ -118,6 +119,7 @@ export function LookupSettings({ type }: { type: LookupType }) {
         ? await updateLookup(editingLookup, payload)
         : await createLookup({ ...payload, type })
       if (!saved) return
+      toast.success(lang === "ar" ? "تم حفظ عنصر القائمة." : "Lookup item saved.")
       setDialogOpen(false)
       resetForm()
       await fetchLookups(type)

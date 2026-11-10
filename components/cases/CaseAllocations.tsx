@@ -174,6 +174,7 @@ export function CaseAllocations({
   const [profilesLoading, setProfilesLoading] = useState(true)
   const [profilesError, setProfilesError] = useState("")
   const [countryFilter, setCountryFilter] = useState("")
+  const [nameFilter, setNameFilter] = useState("")
   const [cityFilter, setCityFilter] = useState("")
   const [specialtyFilter, setSpecialtyFilter] = useState("")
   useEffect(() => {
@@ -193,8 +194,10 @@ export function CaseAllocations({
     (lang === "ar" ? role.role_name_en : role.role_name_ar) || ""
 
   const allExperts = useMemo(() => allocationExpertDirectory(users, expertProfiles, roleMgmtRoles, lang), [users, expertProfiles, roleMgmtRoles, lang])
-  const experts = useMemo(() => filterAllocationExperts(allExperts, { country: countryFilter, city: cityFilter, specialty: specialtyFilter }), [allExperts, countryFilter, cityFilter, specialtyFilter])
-  const hasSearch = Boolean(countryFilter.trim() || cityFilter.trim() || specialtyFilter.trim())
+  const experts = useMemo(() => filterAllocationExperts(allExperts, {
+    name: nameFilter, country: countryFilter, city: cityFilter, specialty: specialtyFilter,
+  }), [allExperts, nameFilter, countryFilter, cityFilter, specialtyFilter])
+  const hasSearch = Boolean(nameFilter.trim() || countryFilter.trim() || cityFilter.trim() || specialtyFilter.trim())
   function selectSearchExpert(id: string) {
     setRows(previous => {
       if (previous.some(row => row.expert_id === id)) return previous
@@ -263,6 +266,7 @@ export function CaseAllocations({
         method: "POST",
         body: { rows: allocationRowsForSave(rows, roleMgmtRoles) },
       })
+      toast.success(lang === "ar" ? "تم حفظ تخصيص الخبراء." : "Expert allocations saved.")
       await refreshAllocations()
       onSaved?.()
     } catch (error) {
@@ -339,7 +343,13 @@ export function CaseAllocations({
         </p>
       )}
       <div className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Input
+              aria-label={lang === "ar" ? "اسم الخبير" : "Expert name"}
+              placeholder={lang === "ar" ? "البحث حسب اسم الخبير" : "Filter by expert name"}
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+            />
             <Input
               aria-label={
                 lang === "ar" ? "بلد الإقامة" : "Country of Residence"
@@ -371,8 +381,13 @@ export function CaseAllocations({
               onChange={(e) => setSpecialtyFilter(e.target.value)}
             />
           </div>
-          {hasSearch && canReadExperts && <ExpertSearchResults experts={experts} lang={lang} loading={profilesLoading} error={profilesError} selectedIds={rows.map(row => row.expert_id)} disabled={isSaving || !selectedCase || !access.can("allocations.create")} onSelect={selectSearchExpert} onClear={() => { setCountryFilter(""); setCityFilter(""); setSpecialtyFilter("") }} />}
-          {!hasSearch && <p className="text-sm text-muted-foreground">{lang === "ar" ? "اكتب البلد أو المدينة أو التخصص لعرض الخبراء المطابقين، أو اضغط إضافة خبير لعرض القائمة." : "Enter a country, city or specialization to see matching experts, or click Add Expert to browse."}</p>}
+          {hasSearch && canReadExperts && <ExpertSearchResults experts={experts} lang={lang} loading={profilesLoading} error={profilesError} selectedIds={rows.map(row => row.expert_id)} disabled={isSaving || !selectedCase || !access.can("allocations.create")} onSelect={selectSearchExpert} onClear={() => {
+            setNameFilter("")
+            setCountryFilter("")
+            setCityFilter("")
+            setSpecialtyFilter("")
+          }} />}
+          {!hasSearch && <p className="text-sm text-muted-foreground">{lang === "ar" ? "اكتب الاسم أو البلد أو المدينة أو التخصص لعرض الخبراء المطابقين، أو اضغط إضافة خبير لعرض القائمة." : "Enter a name, country, city, or specialization to see matching experts, or click Add Expert to browse."}</p>}
           <div className="flex justify-end">
             <Button
               onClick={handleSave}

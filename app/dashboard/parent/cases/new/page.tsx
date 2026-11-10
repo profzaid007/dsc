@@ -255,6 +255,7 @@ export default function NewProfilePage() {
         }),
       }).catch(() => {})
 
+      toast.success(lang === "ar" ? "تم إنشاء الحالة." : "Case created.")
       router.push(`/dashboard/parent/cases/${profileId}`)
     } catch (error) {
       console.error("Failed to create profile:", error)

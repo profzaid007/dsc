@@ -84,6 +84,7 @@ export default function AdminLectureDetailPage({
     setIsSubmitting(true)
     try {
       await updateLecture(id, data)
+      toast.success(lang === "ar" ? "تم حفظ المحاضرة." : "Lecture saved.")
       setIsEditing(false)
     } catch (error) {
       console.error("Failed to update lecture:", error)

@@ -66,6 +66,7 @@ export default function CmsHomePagesListPage() {
         slug: newSlug.trim(),
         title: newTitle.trim(),
       })
+      toast.success(lang === "ar" ? "تم إنشاء الصفحة." : "Page created.")
       setNewSlug("")
       setNewTitle("")
       setShowCreate(false)
@@ -92,6 +93,7 @@ export default function CmsHomePagesListPage() {
         is_published: !page.is_published,
       })
       setPages((prev) => prev.map((p) => (p.id === page.id ? updated : p)))
+      toast.success(lang === "ar" ? "تم تحديث حالة النشر." : "Publication status updated.")
     } catch (err) {
       toast.error(
         t({ en: "Failed to update status.", ar: "فشل تحديث الحالة." }, lang),

@@ -55,6 +55,7 @@ export default function CmsBlogListPage() {
         title: t({ en: "New Post", ar: "منشور جديد" }, lang),
         category: "",
       })
+      toast.success(lang === "ar" ? "تم إنشاء المقال." : "Blog post created.")
       router.push(`/cms/blog/${newPost.slug}`)
     } catch (err) {
       toast.error(getErrorMessage(err))

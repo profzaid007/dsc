@@ -19,6 +19,9 @@ test('country/city/current specialist roles and public specialties filter immedi
  assert.equal(model.filterAllocationExperts(experts,filters('Saudi','عمان')).length,0)
  assert.equal(model.filterAllocationExperts(experts,filters('no-match')).length,0)
  assert.equal(model.filterAllocationExperts(experts,filters('   ')).length,2)
+ for (const name of ['العربي', ' ENGLISH ', 'account'])
+  assert.deepEqual(model.filterAllocationExperts(experts, {...filters(), name}).map(e => e.id), ['jordan'])
+ assert.equal(model.filterAllocationExperts(experts, {...filters('Saudi'), name: 'English'}).length, 0)
  assert.equal(model.allocationExpertDirectory(users,profiles,roles,'en')[0].name,'English Expert')
 })
 test('visible search results show count, context and selection action; distinguish no matches, loading and errors',()=>{

@@ -263,6 +263,7 @@ export function UserManagement({
   const handleStatusChange = async (userId: string, isActive: boolean) => {
     try {
       await updateUser(userId, { is_active: isActive })
+      toast.success(lang === "ar" ? "تم تحديث حالة الحساب." : "Account status updated.")
     } catch (err) {
       toast.error(getErrorMessage(err))
     }

@@ -20,6 +20,7 @@ export default function NewTrainingProgramPage() {
     setIsSubmitting(true)
     try {
       const newId = await addProgram(data)
+      toast.success(lang === "ar" ? "تم إنشاء البرنامج التدريبي." : "Training program created.")
       router.push(`/dashboard/admin/training/${newId}`)
     } catch (error) {
       console.error("Failed to create program:", error)

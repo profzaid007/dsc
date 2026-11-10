@@ -27,6 +27,12 @@ import { usePortals } from "@/hooks/usePortals"
 import { SITE_CONTENT } from "@/lib/site-content"
 import Image from "next/image"
 import { BookConsultDialog } from "../BookConsultDialog"
+import { AdminNotifications } from "./AdminNotifications"
+import { ClientAssignmentNotifications } from "./ClientAssignmentNotifications"
+import { isClientRole } from "@/lib/client-services"
+
+const headerIconClass =
+  "relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#0a3d62] transition-colors hover:bg-[#0a3d62]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
 
 const NAV_LINKS = [
   { en: "Home", ar: "الرئيسية", href: "/" },
@@ -63,6 +69,8 @@ export function Navbar() {
     pathname.startsWith("/dashboard") || pathname.startsWith("/cms")
   const isPortal = pathname.startsWith("/portal/")
   const isAppRoute = isManagementRoute
+  const canReadCases = permissions.can("cases.read")
+  const canReadExperts = permissions.can("experts.read")
 
   const portalId = isPortal ? pathname.split("/portal/")[1] : null
   const portal = portalId ? getPortalById(portalId) : null
@@ -207,7 +215,7 @@ export function Navbar() {
                   title={messagesLabel}
                   aria-current={pathname === "/dashboard/messages" ? "page" : undefined}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#0a3d62] transition-colors hover:bg-[#0a3d62]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className={headerIconClass}
                 >
                   <Mail className="h-5 w-5" aria-hidden="true" />
                   {unreadMessages > 0 && (
@@ -217,6 +225,28 @@ export function Navbar() {
                   )}
                 </Link>
               )}
+
+              {isAuthenticated && isAdmin && isManagementRoute && currentUser &&
+                (canReadCases || canReadExperts) && (
+                  <AdminNotifications
+                    key={currentUser.id}
+                    userId={currentUser.id}
+                    canReadCases={canReadCases}
+                    canReadExperts={canReadExperts}
+                    className={headerIconClass}
+                  />
+                )}
+
+              {isAuthenticated &&
+                isManagementRoute &&
+                currentUser &&
+                isClientRole(currentUser.role) && (
+                  <ClientAssignmentNotifications
+                    key={currentUser.id}
+                    role={currentUser.role}
+                    className={headerIconClass}
+                  />
+                )}
 
               {!isAuthenticated && (
                 <>

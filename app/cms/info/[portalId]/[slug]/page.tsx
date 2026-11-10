@@ -166,6 +166,7 @@ export default function CmsServiceEditorPage() {
           [contentField]: contentValue,
         })
         setPage(updated)
+        toast.success(lang === "ar" ? "تم حفظ صفحة المعلومات." : "Information page saved.")
         setEnTitle(updated.title_en)
         setArTitle(updated.title_ar || "")
         setEnContent(updated.content_en)
@@ -256,10 +257,13 @@ export default function CmsServiceEditorPage() {
       })
       setPage(updated)
       setIsPublished(updated.is_published)
+      toast.success(lang === "ar" ? "تم تحديث حالة النشر." : "Publication status updated.")
+    } catch (error) {
+      toast.error(getErrorMessage(error, lang))
     } finally {
       setPublishing(false)
     }
-  }, [page])
+  }, [page, lang])
 
   const handleImageUpload = useCallback(
     async (file: File): Promise<string> => {

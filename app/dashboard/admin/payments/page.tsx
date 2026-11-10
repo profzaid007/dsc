@@ -1,4 +1,6 @@
 "use client"
+
+import { toast } from "sonner"
 import { CaseName } from "@/components/cases/CaseName"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ProtectedFileLink } from "@/components/ProtectedFileLink"
@@ -135,6 +137,7 @@ export default function AdminPaymentsPage() {
     setErrorMsg(null)
     try {
       await fn()
+      toast.success(lang === "ar" ? "تم حفظ تغييرات الدفع." : "Payment changes saved.")
     } catch (error) {
       setErrorMsg(
         getErrorMessage(error) ||

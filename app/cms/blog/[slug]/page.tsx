@@ -139,6 +139,7 @@ export default function CmsBlogEditorPage() {
           author_name: authorName,
         })
         setPage(updated)
+        toast.success(lang === "ar" ? "تم حفظ المقال." : "Blog post saved.")
         setMainCategory(updated.main_category || "")
         setKeywords(updated.keywords || "")
         setCategory(updated.category)
@@ -195,10 +196,13 @@ export default function CmsBlogEditorPage() {
       })
       setPage(updated)
       setIsPublished(updated.is_published)
+      toast.success(lang === "ar" ? "تم تحديث حالة النشر." : "Publication status updated.")
+    } catch (error) {
+      toast.error(getErrorMessage(error, lang))
     } finally {
       setPublishing(false)
     }
-  }, [page])
+  }, [page, lang])
 
   const handleImageUpload = useCallback(
     async (file: File): Promise<string> => {

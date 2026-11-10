@@ -89,6 +89,7 @@ export default function BlogCategoriesPage() {
         label_en: trimmedLabelEn,
         label_ar: newLabelAr.trim() || undefined,
       })
+      toast.success(lang === "ar" ? "تم إنشاء التصنيف." : "Category created.")
       setNewKey("")
       setNewLabelEn("")
       setNewLabelAr("")
@@ -160,6 +161,7 @@ export default function BlogCategoriesPage() {
         label_ar: editLabelAr.trim() || undefined,
       })
       setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)))
+      toast.success(lang === "ar" ? "تم حفظ التصنيف." : "Category saved.")
       cancelEdit()
     } catch (err) {
       toast.error(

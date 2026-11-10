@@ -20,6 +20,7 @@ export default function NewLecturePage() {
     setIsSubmitting(true)
     try {
       await addLecture(data)
+      toast.success(lang === "ar" ? "تم إنشاء المحاضرة." : "Lecture created.")
       router.push("/dashboard/admin/public-lectures")
     } catch (error) {
       console.error("Failed to create lecture:", error)

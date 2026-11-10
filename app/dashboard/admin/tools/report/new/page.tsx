@@ -181,6 +181,7 @@ export default function ReportBuilderPage({
           name_ar: reportName.en,
           config,
         })
+        toast.success(lang === "ar" ? "تم حفظ التقرير." : "Report saved.")
         router.push(caseTaskPath(selectedCaseId, editAssignmentId))
       } else {
         // Create case document directly in case_tools (no tool template)
@@ -196,6 +197,7 @@ export default function ReportBuilderPage({
         })
 
         // Redirect to assignments page
+        toast.success(lang === "ar" ? "تم حفظ التقرير." : "Report saved.")
         router.push(caseTaskPath(selectedCaseId))
       }
     } catch (error) {

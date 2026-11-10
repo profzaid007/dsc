@@ -334,6 +334,7 @@ export default function TakeSurveyToolPage({
       await updateAssignment(assignmentId, {
         config: updatedConfig as OneToOneMeetingConfig,
       })
+      toast.success(lang === "ar" ? "تم حفظ ملاحظات الجلسة." : "Session notes saved.")
     } catch (error) {
       console.error("Failed to save notes:", error)
       toast.error(getErrorMessage(error))
@@ -403,6 +404,7 @@ export default function TakeSurveyToolPage({
         })
       }
 
+      toast.success(lang === "ar" ? "تم إرسال إجابات التكليف." : "Assignment responses submitted.")
       router.push(`/dashboard/individual/cases/${profile.id}`)
     } catch (error) {
       console.error("Failed to submit:", error)

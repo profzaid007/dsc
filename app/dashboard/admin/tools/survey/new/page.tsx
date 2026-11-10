@@ -1,4 +1,5 @@
 "use client"
+import { toast } from "sonner"
 import { useAuth } from "@/hooks/useAuth"
 import { caseTaskPath } from "@/lib/case-task-path"
 import { CaseName } from "@/components/cases/CaseName"
@@ -230,6 +231,7 @@ export default function SurveyBuilderPage({
         name: { en: formData.nameEn, ar: formData.nameEn },
         config,
       })
+      toast.success(lang === "ar" ? "تم حفظ الاستبيان." : "Survey saved.")
       router.push(`/dashboard/admin/tools/survey/${editId}`)
     } else {
       const toolTypes = await fetchToolTypes()
@@ -250,6 +252,7 @@ export default function SurveyBuilderPage({
           is_visible_to_user: true,
           status: "pending",
         })
+        toast.success(lang === "ar" ? "تم حفظ الاستبيان ضمن تكليفات الحالة." : "Survey saved to the case assignments.")
         router.push(caseTaskPath(caseId))
       } else {
         await addTool({
@@ -259,6 +262,7 @@ export default function SurveyBuilderPage({
           status: "active",
           config,
         })
+        toast.success(lang === "ar" ? "تم حفظ قالب الاستبيان." : "Survey template saved.")
         router.push(`/dashboard/admin/tools`)
       }
     }

@@ -117,11 +117,17 @@ export default function AdminUserDetailPage({
     getDeletionBlockers,
     refresh,
   } = useUsers()
+  const user = users.find((u) => u.id === userId)
+  const isExpert = user?.role === "expert"
+  const canReadCases =
+    access.can("cases.read") && (!isExpert || access.can("allocations.read"))
+  const canAddCase = !isExpert && access.can("cases.create")
   const {
     profiles,
     isLoading: isProfilesLoading,
+    loadError: profilesError,
     refresh: refreshProfiles,
-  } = useProfiles(access.can("cases.read"))
+  } = useProfiles(Boolean(user) && canReadCases, "cases", isExpert ? userId : undefined)
 
   const [activeTab, setActiveTab] = useState("overview")
   const [isEditing, setIsEditing] = useState(false)
@@ -154,8 +160,6 @@ export default function AdminUserDetailPage({
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
 
-  const user = users.find((u) => u.id === userId)
-
   // Experts have a much richer application, so they get their own view.
   const {
     profile: roleProfile,
@@ -180,7 +184,7 @@ export default function AdminUserDetailPage({
       )
     : ""
 
-  const userCases = profiles.filter((p) => p.user === userId)
+  const userCases = isExpert ? profiles : profiles.filter((p) => p.user === userId)
 
   // An admin cannot reset a super admin's password, and neither should anyone
   // reset their own here — the self-serve reset flow covers that.
@@ -360,6 +364,7 @@ export default function AdminUserDetailPage({
 
   const handleAddCase = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canAddCase) return
     setCaseFormError(null)
 
     if (!caseFormData.name) {
@@ -379,6 +384,7 @@ export default function AdminUserDetailPage({
         grade: caseFormData.grade,
         notes: caseFormData.notes,
       })
+      toast.success(lang === "ar" ? "تم إنشاء الحالة." : "Case created.")
       setShowAddCaseModal(false)
       setCaseFormData({
         name: "",
@@ -482,7 +488,7 @@ export default function AdminUserDetailPage({
           <TabsTrigger value="cases">
             {lang === "ar" ? "الحالات" : "Cases"}
             <Badge variant="secondary" className="ms-2">
-              {userCases.length}
+              {canReadCases && !isProfilesLoading && !profilesError ? userCases.length : "–"}
             </Badge>
           </TabsTrigger>
         </TabsList>
@@ -565,23 +571,35 @@ export default function AdminUserDetailPage({
                   {lang === "ar" ? "الحالات" : "Cases"}
                 </CardTitle>
                 <CardDescription>
-                  {lang === "ar"
+                  {isExpert
+                    ? (lang === "ar" ? "الحالات المخصصة لهذا الخبير" : "Cases allocated to this expert")
+                    : lang === "ar"
                     ? `إدارة الحالات لـ ${user.name}`
                     : `Manage cases for ${user.name}`}
                 </CardDescription>
               </div>
-              <Button
-                disabled={!access.can("cases.create")}
-                onClick={() => setShowAddCaseModal(true)}
-              >
-                <Plus className="me-2 h-4 w-4" />
-                {lang === "ar" ? "إضافة حالة" : "Add Case"}
-              </Button>
+              {canAddCase && (
+                <Button onClick={() => setShowAddCaseModal(true)}>
+                  <Plus className="me-2 h-4 w-4" />
+                  {lang === "ar" ? "إضافة حالة" : "Add Case"}
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {isProfilesLoading ? (
                 <div className="py-8 text-center text-muted-foreground">
                   {lang === "ar" ? "جارٍ تحميل الحالات..." : "Loading cases..."}
+                </div>
+              ) : !canReadCases ? (
+                <p className="py-8 text-center text-muted-foreground">
+                  {lang === "ar" ? "لا تتوفر صلاحية عرض الحالات." : "You do not have permission to view these cases."}
+                </p>
+              ) : profilesError ? (
+                <div role="alert" className="space-y-2 py-8 text-center">
+                  <p>{profilesError}</p>
+                  <Button variant="outline" onClick={() => void refreshProfiles()}>
+                    {lang === "ar" ? "إعادة المحاولة" : "Retry"}
+                  </Button>
                 </div>
               ) : userCases.length === 0 ? (
                 <div className="py-8 text-center">
@@ -590,17 +608,16 @@ export default function AdminUserDetailPage({
                     {lang === "ar" ? "لا توجد حالات بعد" : "No cases yet"}
                   </h3>
                   <p className="mb-4 text-muted-foreground">
-                    {lang === "ar"
-                      ? 'لا توجد حالات لهذا المستخدم. انقر على "إضافة حالة" لإنشاء حالة.'
-                      : 'This user has no cases. Click "Add Case" to create one.'}
+                    {isExpert
+                      ? (lang === "ar" ? "لم تُخصص أي حالة لهذا الخبير." : "No cases have been allocated to this expert.")
+                      : (lang === "ar" ? "لا توجد حالات لهذا المستخدم." : "This user has no cases.")}
                   </p>
-                  <Button
-                    disabled={!access.can("cases.create")}
-                    onClick={() => setShowAddCaseModal(true)}
-                  >
-                    <Plus className="me-2 h-4 w-4" />
-                    {lang === "ar" ? "إضافة حالة" : "Add Case"}
-                  </Button>
+                  {canAddCase && (
+                    <Button onClick={() => setShowAddCaseModal(true)}>
+                      <Plus className="me-2 h-4 w-4" />
+                      {lang === "ar" ? "إضافة حالة" : "Add Case"}
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <Table>

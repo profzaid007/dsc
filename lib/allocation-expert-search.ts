@@ -23,6 +23,9 @@ export function allocationExpertDirectory(users: Pick<User, "id" | "role" | "is_
       country: countryLabel(country, lang), city: profile?.city || "",
       specialty: specialty || linkedRoles.map(role => (lang === "ar" ? role.role_name_ar : role.role_name_en) || role.role_name_en || role.role_name_ar).join("، ") || services.map(value => specializationLabel(value, lang)).join("، "),
       search: {
+        name: [user.name, profile?.public_name_ar, profile?.public_name_en]
+          .filter((name): name is string => Boolean(name))
+          .map(searchText),
         country: searchText([country, countryLabel(country, "ar"), countryLabel(country, "en")].join(" ")),
         city: searchText(profile?.city || ""),
         specialty: searchText([profile?.public_specialty_ar, profile?.public_specialty_en, ...linkedRoles.flatMap(role => [role.role_name_ar, role.role_name_en]), ...services.flatMap(value => [value, specializationLabel(value, "ar"), specializationLabel(value, "en")])].filter(Boolean).join(" ")),
@@ -31,7 +34,11 @@ export function allocationExpertDirectory(users: Pick<User, "id" | "role" | "is_
   })
 }
 export type AllocationExpertChoice = ReturnType<typeof allocationExpertDirectory>[number]
-export function filterAllocationExperts(experts: AllocationExpertChoice[], filters: { country: string; city: string; specialty: string }) {
+export function filterAllocationExperts(experts: AllocationExpertChoice[], filters: { name?: string; country: string; city: string; specialty: string }) {
+  const name = searchText(filters.name ?? "")
   const query = { country: searchText(filters.country), city: searchText(filters.city), specialty: searchText(filters.specialty) }
-  return experts.filter(expert => (Object.keys(query) as (keyof typeof query)[]).every(key => !query[key] || expert.search[key].includes(query[key])))
+  return experts.filter(expert =>
+    (!name || expert.search.name.some(value => value.includes(name))) &&
+    (Object.keys(query) as (keyof typeof query)[]).every(key => !query[key] || expert.search[key].includes(query[key]))
+  )
 }

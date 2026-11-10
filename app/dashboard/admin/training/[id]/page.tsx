@@ -228,6 +228,7 @@ export default function AdminTrainingProgramDetailPage({
       await casesCollection.update(enrollee.id, {
         program_status: "attended",
       })
+      toast.success(lang === "ar" ? "تم إصدار الشهادة." : "Certificate issued.")
       await fetchEnrollments()
       setCertDialogOpen(false)
       resetCertForm()
@@ -274,6 +275,7 @@ export default function AdminTrainingProgramDetailPage({
     setIsSubmitting(true)
     try {
       await updateProgram(id, data)
+      toast.success(lang === "ar" ? "تم حفظ البرنامج التدريبي." : "Training program saved.")
       setIsEditing(false)
     } catch (error) {
       console.error("Failed to update program:", error)
@@ -307,6 +309,7 @@ export default function AdminTrainingProgramDetailPage({
       await casesCollection.update(enrollmentId, {
         program_status: enrollmentStatusToCaseStatus(newStatus),
       })
+      toast.success(lang === "ar" ? "تم حفظ حالة التسجيل." : "Enrollment status saved.")
       await fetchEnrollments()
     } catch (error) {
       console.error("Failed to update enrollment status:", error)

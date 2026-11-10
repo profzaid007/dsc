@@ -9,7 +9,8 @@ import pb, { getCurrentUser, getErrorMessage } from "@/lib/pb"
 
 export function useProfiles(
   enabled = true,
-  scope: "cases" | "payments" = "cases"
+  scope: "cases" | "payments" = "cases",
+  allocatedExpertId?: string
 ) {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -19,7 +20,7 @@ export function useProfiles(
   const currentRole: string | undefined = currentUser?.role
 
   const beginRequest = useRequestGuard(
-    `${currentUserId}:${currentRole}:${enabled}:${scope}`
+    `${currentUserId}:${currentRole}:${enabled}:${scope}:${allocatedExpertId}`
   )
 
   const fetchProfiles = useCallback(async () => {
@@ -37,9 +38,9 @@ export function useProfiles(
       let data: Profile[]
       if (scope === "payments") {
         data = await pb.send<Profile[]>("/api/dsc/payments", { method: "GET" })
-      } else if (currentRole === "expert") {
+      } else if (allocatedExpertId || currentRole === "expert") {
         const expertCases = await caseExpertsCollection.getByExpert(
-          currentUserId!
+          allocatedExpertId || currentUserId!
         )
         const caseIds = [
           ...new Set(expertCases.map((ce) => ce.case_id).filter(Boolean)),
@@ -66,7 +67,7 @@ export function useProfiles(
     } finally {
       if (isCurrent()) setIsLoading(false)
     }
-  }, [currentUserId, currentRole, enabled, scope, beginRequest])
+  }, [currentUserId, currentRole, enabled, scope, allocatedExpertId, beginRequest])
 
   useEffect(() => {
     // Fetch external records when the selected scope changes.
