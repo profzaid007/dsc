@@ -9,6 +9,7 @@ import { DateInput } from "@/components/ui/date-input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/hooks/useAuth"
+import { usePermissions } from "@/hooks/usePermissions"
 
 type Kind="assessment"|"report"|"plan"|"survey"|"multiple_answer"
 type Row={id:string;[key:string]:unknown}
@@ -26,14 +27,16 @@ function fresh(kind:Kind):Config{
 export function TemplateWorkspace({caseId,onSent,initialKind="plan",lockKind=false}:{caseId?:string;onSent?:()=>void;initialKind?:Kind;lockKind?:boolean}){
  const {lang}=useLang(),ar=lang==="ar",t=(a:string,b:string)=>ar?a:b
  const {currentUser}=useAuth(),privateMode=currentUser?.role==="expert"
+ const access=usePermissions()
+ const reviewMode=!caseId&&(currentUser?.role==="admin"||currentUser?.role==="super_admin")
  const [kind,setKind]=useState<Kind>(initialKind),[templates,setTemplates]=useState<Template[]>([]),[source,setSource]=useState(""),[name,setName]=useState(""),[config,setConfig]=useState<Config>(()=>fresh(initialKind))
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[population,setPopulation]=useState({age:"",sex:"",language:"",group:""})
  const [draftId,setDraftId]=useState(""),[drafts,setDrafts]=useState<Draft[]>([])
  const generation=useRef(0),submitting=useRef(false)
  useEffect(()=>{const c=new AbortController();Promise.all([
-  pb.send<{templates:Template[]}>("/api/dsc/tool-templates",{method:"GET",signal:c.signal,requestKey:null}),
+  pb.send<{templates:Template[]}>(reviewMode?"/api/dsc/tool-templates?review=1":"/api/dsc/tool-templates",{method:"GET",signal:c.signal,requestKey:null}),
   caseId?pb.send<{drafts:Draft[]}>(`/api/dsc/cases/${encodeURIComponent(caseId)}/template-drafts`,{method:"GET",signal:c.signal,requestKey:null}):Promise.resolve({drafts:[]})
- ]).then(([catalogue,saved])=>{setTemplates(catalogue.templates);setDrafts(saved.drafts)}).catch(e=>{if(!c.signal.aborted)setError(getErrorMessage(e,lang))}).finally(()=>{if(!c.signal.aborted)setLoading(false)});return()=>c.abort()},[lang,caseId])
+ ]).then(([catalogue,saved])=>{setTemplates(catalogue.templates);setDrafts(saved.drafts)}).catch(e=>{if(!c.signal.aborted)setError(getErrorMessage(e,lang))}).finally(()=>{if(!c.signal.aborted)setLoading(false)});return()=>c.abort()},[lang,caseId,reviewMode])
 
  function changeKind(next:Kind){setDraftId("");generation.current++;setKind(next);setSource("");setName("");setConfig(fresh(next));setError("");setNotice("")}
  async function select(value:string){
@@ -66,12 +69,25 @@ export function TemplateWorkspace({caseId,onSent,initialKind="plan",lockKind=fal
    else{setDraftId("");const saved=await pb.send<Template>("/api/dsc/tool-templates",{method:"POST",body:payload,requestKey:null});setTemplates(prev=>[saved,...prev]);setSource(saved.id);setNotice(privateMode?t("حُفظ قالب خاص بحسابك لاستخدامه لاحقًا.","Saved as a private template for later use."):t("تم حفظ القالب العام.","Public template saved."))}
   }catch(e){setError(getErrorMessage(e,lang))}finally{submitting.current=false;setBusy(false)}
  }
+ async function approve(){
+  if(submitting.current||!window.confirm(t("هل تريد اعتماد النسخة المحفوظة وإتاحتها للجميع؟","Approve the saved version and make it available to everyone?")))return
+  submitting.current=true;setBusy(true);setError("");setNotice("")
+  try{
+   const approved=await pb.send<Template>(`/api/dsc/tool-templates/${encodeURIComponent(source)}/approve`,{method:"POST",requestKey:null})
+   setTemplates(prev=>prev.map(item=>item.id===approved.id?approved:item))
+   setName(approved.name)
+   setConfig(structuredClone(approved.config||{}))
+   setNotice(t("تم اعتماد القالب وإتاحته للجميع.","Template approved and made available to everyone."))
+  }catch(e){setError(getErrorMessage(e,lang))}finally{submitting.current=false;setBusy(false)}
+ }
  const ready=!caseId||!!source
+ const reviewing=reviewMode&&templates.some(item=>item.id===source&&item.scope==="private")
  return <section className="space-y-5" dir={ar?"rtl":"ltr"}>
-  <h2 className="text-xl font-bold">{caseId?t("اختيار قالب وتعديله","Choose and customize a template"):t("صنع القوالب العامة","Create public templates")}</h2>
+  <h2 className="text-xl font-bold">{caseId?t("اختيار قالب وتعديله","Choose and customize a template"):t("إدارة القوالب","Manage templates")}</h2>
+  {reviewMode&&<p className="text-sm text-muted-foreground">{t("اختر قالبًا خاصًا من القائمة لمراجعته واعتماده كقالب عام.","Select a private template to review it and approve it for everyone.")}</p>}
   <div className="space-y-2"><Label htmlFor="template-kind">{t("نوع الأداة","Tool type")}</Label><select id="template-kind" className="h-11 w-full rounded border bg-background px-3" value={kind} disabled={busy||lockKind} onChange={e=>changeKind(e.target.value as Kind)}>{kinds.filter(item=>!lockKind||item.key===initialKind).map(item=><option key={item.key} value={item.key}>{ar?item.ar:item.en}</option>)}</select></div>
   {loading&&<p role="status">{t("جارٍ تحميل القوالب…","Loading templates…")}</p>}
-  <div className="space-y-2"><Label htmlFor="template-source">{t("القالب","Template")}</Label><select id="template-source" className="h-11 w-full rounded border bg-background px-3" disabled={loading||busy} value={source} onChange={e=>e.target.value?void select(e.target.value):changeKind(kind)}><option value="">{caseId?t("اختر قالبًا","Select a template"):t("قالب جديد أو اختر قالبًا لنسخه","New template or select one to copy")}</option>{templates.filter(item=>item.kind===kind).map(item=><option key={item.id} value={item.id}>{item.name} · {item.scope==="private"?t("خاص بي","My private template"):t("عام","Public")}</option>)}</select></div>
+  <div className="space-y-2"><Label htmlFor="template-source">{t("القالب","Template")}</Label><select id="template-source" className="h-11 w-full rounded border bg-background px-3" disabled={loading||busy} value={source} onChange={e=>e.target.value?void select(e.target.value):changeKind(kind)}><option value="">{caseId?t("اختر قالبًا","Select a template"):t("قالب جديد أو اختر قالبًا لنسخه","New template or select one to copy")}</option>{templates.filter(item=>item.kind===kind).map(item=><option key={item.id} value={item.id}>{item.name} · {item.scope==="private"?(reviewMode?t("قالب خبير خاص","Private expert template"):t("خاص بي","My private template")):t("عام","Public")}</option>)}</select></div>
   {caseId&&drafts.length>0&&<div className="space-y-2"><Label htmlFor="resume-template-draft">{t("المسودات المحفوظة لهذه الحالة","Saved drafts for this case")}</Label><select id="resume-template-draft" className="h-11 w-full rounded border" value={draftId} disabled={busy} onChange={e=>{const draft=drafts.find(d=>d.id===e.target.value),template=templates.find(item=>item.id===draft?.source);if(!draft||!template)return;generation.current++;setKind(template.kind);setSource(draft.source);setName(draft.name);setConfig(structuredClone(draft.config));setDraftId(draft.id);setPopulation({age:String(draft.population?.age||""),sex:String(draft.population?.sex||""),language:String(draft.population?.language||""),group:String(draft.population?.group||"")});setError("");setNotice("")}}><option value="">{t("اختر مسودة لاستكمالها","Select a draft to resume")}</option>{drafts.map(d=><option key={d.id} value={d.id}>{d.name}</option>)}</select></div>}
   {!caseId&&kind==="assessment"&&!source?<Button asChild><Link href="/dashboard/admin/tools/assessments">{t("صنع مقياس جديد","Build a new assessment")}</Link></Button>:null}
   {caseId&&!source&&!loading&&<p>{t("اختر قالبًا من النوع المحدد لتعديله قبل الإرسال.","Select a template of this type to customize before sending.")}</p>}
@@ -84,6 +100,11 @@ export function TemplateWorkspace({caseId,onSent,initialKind="plan",lockKind=fal
    {kind==="assessment"&&<>{text("instructions",t("تعليمات المقياس","Assessment instructions"),true)}{text("referencePeriod",t("الفترة المرجعية","Reference period"))}<p className="text-sm text-muted-foreground">{t("تعديل نصوص هذه النسخة لا يغيّر المقياس العام أو التكليفات السابقة. تُحفظ قواعد التصحيح مع النسخة.","Changes to this copy do not change the public assessment or previous assignments. Scoring rules are retained in the copy.")}</p>{rows("questions").map((q,i)=><div key={q.id} className="space-y-2"><Label htmlFor={`scale-question-${q.id}`}>{t("السؤال","Question")} {i+1}</Label><Textarea id={`scale-question-${q.id}`} dir="auto" value={String(q.text||"")} onChange={e=>rowChange("questions",i,{text:e.target.value})} /></div>)}{caseId&&<div className="grid gap-3 sm:grid-cols-2">{Object.entries(population).map(([key,value])=><div key={key}><Label htmlFor={`population-${key}`}>{({age:t("العمر","Age"),sex:t("الجنس","Sex"),language:t("اللغة","Language"),group:t("المجموعة المعيارية","Norm group")})[key as keyof typeof population]}</Label><Input id={`population-${key}`} value={value} onChange={e=>{setDraftId("");setPopulation(p=>({...p,[key]:e.target.value}))}} /></div>)}</div>}</>}
    <div className="flex flex-wrap gap-3"><Button type="button" variant="outline" onClick={()=>void save("private")}>{privateMode?t("حفظ كقالب خاص بي","Save as my private template"):t("حفظ القالب العام","Save public template")}</Button>{caseId&&<><Button type="button" variant="outline" onClick={()=>void save("draft")}>{t("حفظ التعديلات كمسودة","Save changes as draft")}</Button><Button type="button" disabled={busy||!name.trim()} onClick={()=>void save("send")}>{busy?t("جارٍ الحفظ…","Saving…"):t("إرسال إلى الحالة لتعبئته","Send to the case to complete")}</Button></>}</div>
   </fieldset>}
+  {reviewing&&access.can("tools.create")&&(
+   <Button type="button" disabled={busy} onClick={()=>void approve()}>
+    {t("اعتماد النسخة المحفوظة كقالب عام","Approve saved version as public")}
+   </Button>
+  )}
   {error&&<p role="alert" className="text-destructive">{error}</p>}{notice&&<p role="status" className="text-green-700">{notice}</p>}
  </section>
 }

@@ -25,6 +25,7 @@ export interface PaymentBankDetails {
   account_number: string
   iban: string
   beneficiary: string
+  notes: string
 }
 
 export const DEFAULT_BANK_DETAILS: PaymentBankDetails = {
@@ -33,6 +34,7 @@ export const DEFAULT_BANK_DETAILS: PaymentBankDetails = {
   account_number: "",
   iban: "",
   beneficiary: "",
+  notes: "",
 }
 
 export function formatAmount(

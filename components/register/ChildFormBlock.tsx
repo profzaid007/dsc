@@ -78,9 +78,8 @@ export function ChildFormBlock({
       <CardContent className="space-y-4">
         <div className="dsc-form-grid">
           <div className="space-y-2">
-            <Label>
+            <Label required>
               {t({ en: "Child Name", ar: "اسم الطفل" }, lang)}
-              <span className="text-red-500 ml-1">*</span>
             </Label>
             <Input
               value={data.name}
@@ -93,9 +92,8 @@ export function ChildFormBlock({
           </div>
 
           <div className="space-y-2">
-            <Label>
+            <Label required>
               {t({ en: "Date of Birth", ar: "تاريخ الميلاد" }, lang)}
-              <span className="text-red-500 ml-1">*</span>
             </Label>
             <DateInput
               value={data.date_of_birth}
@@ -105,9 +103,8 @@ export function ChildFormBlock({
           </div>
 
           <div className="space-y-2">
-            <Label>
+            <Label required>
               {t({ en: "Gender", ar: "الجنس" }, lang)}
-              <span className="text-red-500 ml-1">*</span>
             </Label>
             <Select
               value={data.gender}
@@ -147,9 +144,8 @@ export function ChildFormBlock({
           </div>
 
           <div className="space-y-2">
-            <Label>
+            <Label required>
               {t({ en: "Relationship to Child", ar: "صلة القرابة بالطفل" }, lang)}
-              <span className="text-red-500 ml-1">*</span>
             </Label>
             <Input
               value={data.relationship}

@@ -33,7 +33,7 @@ test('visible search results show count, context and selection action; distingui
  function find(node){if(!node||typeof node!=='object')return; if(node.props?.onClick&&node.props.children==='اختيار الخبير')return node;for(const item of [node.props?.children].flat(Infinity)){const found=find(item);if(found)return found}}
  find(tree).props.onClick();assert.deepEqual(selected,['jordan'])
  assert.ok(renderToStaticMarkup(ExpertSearchResults({...props,experts:[]})).includes('لا يوجد خبراء يطابقون'))
- assert.ok(renderToStaticMarkup(ExpertSearchResults({...props,loading:true})).includes('جارٍ البحث'))
+ assert.ok(renderToStaticMarkup(ExpertSearchResults({...props,loading:true})).includes('جارٍ تحميل الخبراء'))
  assert.ok(renderToStaticMarkup(ExpertSearchResults({...props,error:'Load failed'})).includes('role="alert"'))
  assert.equal(find(ExpertSearchResults({...props,selectedIds:['jordan','saudi']})),undefined)
 })

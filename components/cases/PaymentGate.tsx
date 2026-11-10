@@ -247,6 +247,16 @@ export function PaymentGate({
                       : "Bank transfer details will be available soon."}
                   </p>
                 )}
+              {bankDetails.notes.trim() && (
+                <div>
+                  <p className="text-muted-foreground">
+                    {lang === "ar" ? "ملاحظات" : "Notes"}
+                  </p>
+                  <p className="whitespace-pre-wrap break-words" dir="auto">
+                    {bankDetails.notes}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

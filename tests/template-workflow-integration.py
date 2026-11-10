@@ -31,6 +31,11 @@ for(const kind of Object.keys(configs)){
  const priv=await req('/api/dsc/tool-templates',expert,'POST',{kind,name:'My '+kind,config:modified,source:pub.data.id,owner:''});assert.equal(priv.status,201,JSON.stringify(priv.data));assert.equal(priv.data.scope,'private');
  assert.equal((await req('/api/dsc/tool-templates/'+priv.data.id,peer)).status,403);
  const peers=await req('/api/dsc/tool-templates',peer);assert.ok(!peers.data.templates.some(t=>t.id===priv.data.id));
+ const reviewPath='/api/dsc/tool-templates?review=1', privatePath='/api/dsc/tool-templates/'+priv.data.id;
+ assert.ok((await req(reviewPath,admin)).data.templates.some(t=>t.id===priv.data.id&&t.scope==='private'));
+ assert.equal((await req(privatePath,admin)).data.config.instructions,'Private edit');
+ assert.ok(!(await req(reviewPath,peer)).data.templates.some(t=>t.id===priv.data.id));
+ assert.equal((await req(privatePath+'/approve',expert,'POST',{})).status,403);
  assert.equal((await req('/api/dsc/tool-templates/'+pub.data.id,expert)).data.config.instructions,undefined);
  const draft=await req('/api/dsc/cases/'+caseId+'/template-drafts',expert,'POST',{source:priv.data.id,name:'Case '+kind,config:modified});assert.equal(draft.status,201,JSON.stringify(draft.data));assert.ok((await req('/api/dsc/cases/'+caseId+'/template-drafts',expert)).data.drafts.some(d=>d.id===draft.data.id));assert.ok(!(await req('/api/dsc/cases/'+caseId+'/template-drafts',peer)).data.drafts.some(d=>d.id===draft.data.id));assert.equal((await req('/api/dsc/cases/'+caseId+'/template-assignment',peer,'POST',{draft:draft.data.id})).status,403);
  const assigned=await req('/api/dsc/cases/'+caseId+'/template-assignment',expert,'POST',{draft:draft.data.id,case:'foreign',config:{forged:true}});assert.equal(assigned.status,201,JSON.stringify(assigned.data));
@@ -39,6 +44,11 @@ for(const kind of Object.keys(configs)){
  modified.instructions='Changed after sending';await req('/api/dsc/tool-templates',expert,'POST',{kind,name:'Later '+kind,config:modified,source:priv.data.id});assert.equal((await req(taskPath,parent)).data.config.instructions,'Private edit');
  assert.equal((await req(taskPath,parent,'PATCH',{responses:{general:'My response'},status:'completed'})).status,200);
  assert.equal((await req(taskPath,parent,'PATCH',{config:{forged:true}})).status,404);
+ const approved=await req(privatePath+'/approve',admin,'POST',{config:{forged:true}});
+ assert.equal(approved.status,200,JSON.stringify(approved.data));assert.equal(approved.data.id,priv.data.id);assert.equal(approved.data.scope,'public');
+ assert.equal((await req(privatePath,peer)).data.config.instructions,'Private edit');
+ assert.ok((await req('/api/dsc/tool-templates',peer)).data.templates.some(t=>t.id===priv.data.id&&t.scope==='public'));
+ assert.equal((await req(privatePath+'/approve',admin,'POST',{})).data.id,priv.data.id);
 }
 const catalogue=await req('/api/dsc/tool-templates',expert);const scale=catalogue.data.templates.find(t=>t.name==='Template scale');assert.ok(scale);
 const scaleDetail=await req('/api/dsc/tool-templates/'+scale.id,expert);const scaleConfig=scaleDetail.data.config;scaleConfig.questions[0].text='Customized question';

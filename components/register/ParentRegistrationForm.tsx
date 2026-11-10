@@ -305,9 +305,8 @@ export function ParentRegistrationForm({
 
           <div className="dsc-form-grid">
             <div className="space-y-2">
-              <Label>
+              <Label required>
                 {t({ en: "Name", ar: "الاسم" }, lang)}
-                <span className="ml-1 text-red-500">*</span>
               </Label>
               <Input
                 value={name}
@@ -323,9 +322,8 @@ export function ParentRegistrationForm({
             </div>
 
             <div className="space-y-2">
-              <Label>
+              <Label required>
                 {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
-                <span className="ml-1 text-red-500">*</span>
               </Label>
               <div dir="ltr" className="flex gap-2">
                 <Select value={countryCode} onValueChange={setCountryCode}>
@@ -364,9 +362,8 @@ export function ParentRegistrationForm({
             </div>
 
             <div className="space-y-2">
-              <Label>
+              <Label required>
                 {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
-                <span className="ml-1 text-red-500">*</span>
               </Label>
               <EmailInput
                 value={email}
@@ -377,9 +374,8 @@ export function ParentRegistrationForm({
             </div>
 
             <div className="space-y-2">
-              <Label>
+              <Label required>
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
-                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={password}
@@ -402,9 +398,8 @@ export function ParentRegistrationForm({
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label>
+              <Label required>
                 {t({ en: "Confirm Password", ar: "تأكيد كلمة المرور" }, lang)}
-                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={confirmPassword}

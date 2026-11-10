@@ -19,9 +19,11 @@ export function ExpertPublicDetailsFields({
   onChange,
   namesOnly = false,
   omitNames = false,
+  omitSpecialties = false,
 }: {
   namesOnly?: boolean
   omitNames?: boolean
+  omitSpecialties?: boolean
   values: ExpertPublicDetails
   onChange: (change: Partial<ExpertPublicDetails>) => void
 }) {
@@ -78,16 +80,28 @@ export function ExpertPublicDetailsFields({
       <p className="text-sm text-muted-foreground">
         {t(
           {
-            en: "Enter the text visitors will see in each language. These display specialties do not change the services used for case assignment.",
-            ar: "أدخل النص الذي سيظهر للزوار بكل لغة. لا يغيّر نص التخصص المعروض الخدمات المستخدمة لإسناد الحالات.",
+            en: omitSpecialties
+              ? "Enter the certificate title visitors will see in each language."
+              : "Enter the text visitors will see in each language. These display specialties do not change the services used for case assignment.",
+            ar: omitSpecialties
+              ? "أدخل عنوان الشهادة الذي سيظهر للزوار بكل لغة."
+              : "أدخل النص الذي سيظهر للزوار بكل لغة. لا يغيّر نص التخصص المعروض الخدمات المستخدمة لإسناد الحالات.",
           },
           lang
         )}
       </p></>}
       <div className="dsc-form-grid">
-        {fields.filter((field) => namesOnly ? field.key.startsWith("publicName") : omitNames ? !field.key.startsWith("publicName") : true).map((field) => (
+        {fields.filter(({ key }) => {
+          const isName = key.startsWith("publicName")
+          if (namesOnly) return isName
+          if (omitNames && isName) return false
+          return !omitSpecialties || !key.startsWith("publicSpecialty")
+        }).map((field) => (
           <div key={field.key} className="space-y-2">
-            <Label htmlFor={`expert-${field.key}`}>
+            <Label
+              htmlFor={`expert-${field.key}`}
+              required={field.key.startsWith("publicName")}
+            >
               {t({ en: field.en, ar: field.ar }, lang)}
             </Label>
             <Input

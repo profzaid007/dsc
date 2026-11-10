@@ -108,7 +108,7 @@ function ExpertCombobox({
         <Command>
           <CommandInput
             placeholder={
-              lang === "ar" ? "البحث عن الخبراء..." : "Search experts..."
+              lang === "ar" ? "تصفية الخبراء..." : "Search experts..."
             }
           />
           <CommandList>
@@ -346,7 +346,7 @@ export function CaseAllocations({
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Input
               aria-label={lang === "ar" ? "اسم الخبير" : "Expert name"}
-              placeholder={lang === "ar" ? "البحث حسب اسم الخبير" : "Filter by expert name"}
+              placeholder={lang === "ar" ? "التصفية حسب اسم الخبير" : "Filter by expert name"}
               value={nameFilter}
               onChange={(e) => setNameFilter(e.target.value)}
             />
@@ -356,7 +356,7 @@ export function CaseAllocations({
               }
               placeholder={
                 lang === "ar"
-                  ? "البحث حسب بلد الإقامة"
+                  ? "التصفية حسب بلد الإقامة"
                   : "Filter by country of residence"
               }
               value={countryFilter}
@@ -366,7 +366,7 @@ export function CaseAllocations({
               aria-label={lang === "ar" ? "مدينة الإقامة" : "City of Residence"}
               placeholder={
                 lang === "ar"
-                  ? "البحث حسب مدينة الإقامة"
+                  ? "التصفية حسب مدينة الإقامة"
                   : "Filter by city of residence"
               }
               value={cityFilter}
@@ -375,7 +375,7 @@ export function CaseAllocations({
             <Input
               aria-label={lang === "ar" ? "التخصص" : "Specialization"}
               placeholder={
-                lang === "ar" ? "البحث حسب التخصص" : "Filter by specialization"
+                lang === "ar" ? "التصفية حسب التخصص" : "Filter by specialization"
               }
               value={specialtyFilter}
               onChange={(e) => setSpecialtyFilter(e.target.value)}

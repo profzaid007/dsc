@@ -2,7 +2,7 @@ module.exports = (e) => {
   const b = e.requestInfo().body
   const u = b.user || {},
     p = b.profile || {},
-    cases = b.cases || []
+    submittedCases = b.cases || []
   const roles = {
     individual: "individual_profiles",
     parent: "parent_profiles",
@@ -15,8 +15,10 @@ module.exports = (e) => {
   if (!roles[u.role]) invalid("role", "registration_account_type", "Select a supported account type.")
   if (p.collection !== roles[u.role])
     throw new BadRequestError("The registration form selected the wrong profile type. Reload the form before trying again. No account was created.")
-  if (!Array.isArray(cases) || cases.length > 30)
+  if (!Array.isArray(submittedCases) || submittedCases.length > 30)
     invalid("children", "registration_children_limit", "You can register at most 30 children at a time.")
+  // Older organization forms submitted the organization itself as a case.
+  const cases = u.role === "organization" ? [] : submittedCases
   const text = (value, required, max, field) => {
     if (value !== undefined && typeof value !== "string")
       invalid(field, "registration_text_type", "Enter text in this field.")

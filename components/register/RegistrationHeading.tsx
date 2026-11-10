@@ -29,6 +29,18 @@ export function RegistrationHeading({ title }: { title: BilingualString }) {
           lang
         )}
       </p>
+      <p>
+        <span className="me-1 font-bold text-red-600" aria-hidden="true">
+          *
+        </span>
+        {t(
+          {
+            en: "Required fields are marked with an asterisk.",
+            ar: "الحقول الإلزامية مميزة بنجمة.",
+          },
+          lang
+        )}
+      </p>
     </header>
   )
 }

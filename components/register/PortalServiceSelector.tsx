@@ -78,9 +78,8 @@ export function PortalServiceSelector({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>
+        <Label required={required}>
           {t({ en: "Service Type", ar: "نوع الخدمة" }, lang)}
-          {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
         <Select disabled={isLoading} value={categoryId} onValueChange={handleCategoryChange}>
           <SelectTrigger>
@@ -109,12 +108,11 @@ export function PortalServiceSelector({
       {error && <p role="alert" className="text-sm text-red-700">{lang === "ar" ? "تعذر تحميل البوابات." : "Unable to load portals."} <button type="button" className="underline" onClick={() => void reload()}>{lang === "ar" ? "إعادة المحاولة" : "Retry"}</button></p>}
       {isCustomCategory && (
         <div className="space-y-2">
-          <Label>
+          <Label required={required}>
             {t(
               { en: "Custom service type", ar: "اسم نوع الخدمة المخصص" },
               lang
             )}
-            {required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           <Input
             value={customCategory}
@@ -132,9 +130,8 @@ export function PortalServiceSelector({
 
       {categoryId && (
         <div className="space-y-2">
-          <Label>
+          <Label required={required}>
             {t({ en: "Issue Type", ar: "نوع المشكلة" }, lang)}
-            {required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           {issueTypeMode === "text" ? (
             <Input
@@ -179,12 +176,11 @@ export function PortalServiceSelector({
 
       {issueTypeMode === "select" && isCustomSubCategory && (
         <div className="space-y-2">
-          <Label>
+          <Label required={required}>
             {t(
               { en: "Custom issue type", ar: "اسم نوع المشكلة المخصص" },
               lang
             )}
-            {required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           <Input
             value={customSubCategory}

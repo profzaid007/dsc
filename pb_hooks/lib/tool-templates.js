@@ -6,6 +6,9 @@ function actor(e,app,write=false){
  if(u.getString("role")!=="expert")policy.requirePermission(app,u,write?"tools.create":"tools.read")
  return u
 }
+function isAdmin(u){
+ return ["admin","super_admin"].includes(u.getString("role"))
+}
 function clean(config){
  if(!config||typeof config!=="object"||Array.isArray(config)||JSON.stringify(config).length>900000)throw new BadRequestError("Invalid template configuration.")
  const copy=JSON.parse(JSON.stringify(config))
@@ -13,10 +16,10 @@ function clean(config){
  return copy
 }
 function dto(r){return {id:"saved:"+r.id,name:r.getString("name"),kind:r.getString("kind"),scope:r.getString("owner")?"private":"public",config:h.json(r,"config",{}),sourceAssessment:r.getString("source_assessment")}}
-function load(app,u,id){
+function load(app,u,id,review=false){
  const parts=String(id).split(":");if(parts.length!==2)throw new BadRequestError("Select a template.")
  if(parts[0]==="saved"){
-  const r=app.findRecordById("case_tool_templates",parts[1]);if(r.getString("owner")&&r.getString("owner")!==u.id)throw new ForbiddenError("Private template access denied.")
+  const r=app.findRecordById("case_tool_templates",parts[1]);if(r.getString("owner")&&r.getString("owner")!==u.id&&!review)throw new ForbiddenError("Private template access denied.")
   return dto(r)
  }
  if(parts[0]==="tool"){
@@ -46,7 +49,9 @@ function validate(t){
 }
 function list(e){
  const u=actor(e,e.app),out=[]
- for(const r of h.find(e.app,"case_tool_templates",'owner = "" || owner = {:id}',{id:u.id}))out.push(dto(r))
+ const review=isAdmin(u)&&e.request.url.query().get("review")==="1"
+ const saved=review?h.find(e.app,"case_tool_templates","",{}):h.find(e.app,"case_tool_templates",'owner = "" || owner = {:id}',{id:u.id})
+ for(const r of saved)out.push(dto(r))
  const types={};for(const r of h.find(e.app,"lookups",'type = "tool_types"',{}))types[r.id]=r.getString("key")
  for(const r of h.find(e.app,"tools",'status = "active"',{})){
   const kind=types[r.getString("type")]
@@ -55,7 +60,28 @@ function list(e){
  for(const r of h.find(e.app,"assessments",'status = "published"',{}))out.push({id:"assessment:"+r.id,name:r.getString("name"),kind:"assessment",scope:"public"})
  return e.json(200,{templates:out.map(t=>({id:t.id,name:t.name,kind:t.kind,scope:t.scope}))})
 }
-function detail(e){const u=actor(e,e.app);return e.json(200,load(e.app,u,e.request.pathValue("id")))}
+function detail(e){const u=actor(e,e.app);return e.json(200,load(e.app,u,e.request.pathValue("id"),isAdmin(u)))}
+function approve(e){
+ let result
+ e.app.runInTransaction(app=>{
+  const u=actor(e,app)
+  if(!isAdmin(u))throw new ForbiddenError()
+  policy.requirePermission(app,u,"tools.create")
+  const [type,id,extra]=e.request.pathValue("id").split(":")
+  if(type!=="saved"||!id||extra!==undefined)throw new BadRequestError("Select a saved private template.")
+  const r=app.findRecordById("case_tool_templates",id)
+  const owner=r.getString("owner")
+  if(owner){
+   const t=validate(dto(r))
+   r.set("config",t.config)
+   r.set("owner","")
+   app.save(r)
+   policy.audit(app,u,"template.approve","case_tool_templates",r.id,{owner},{kind:t.kind,private:false})
+  }
+  result=dto(r)
+ })
+ return e.json(200,result)
+}
 function save(e){
  let result
  e.app.runInTransaction(app=>{
@@ -117,4 +143,4 @@ function assign(e){
  })
  return e.json(201,result)
 }
-module.exports={list,detail,save,assign,drafts,saveDraft}
+module.exports={list,detail,save,approve,assign,drafts,saveDraft}

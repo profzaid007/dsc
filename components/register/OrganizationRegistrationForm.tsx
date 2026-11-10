@@ -21,10 +21,6 @@ import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import { COUNTRY_CODES } from "@/lib/country-codes"
 import { ORGANIZATION_TYPES } from "@/lib/organization-types"
-import {
-  PortalServiceSelector,
-  type PortalServiceValue,
-} from "./PortalServiceSelector"
 import { authWithPassword, getErrorMessage, getFieldErrors } from "@/lib/pb"
 import { getDashboardPath } from "@/lib/dashboard-routes"
 import {
@@ -36,7 +32,6 @@ import { toast } from "sonner"
 import { RegistrationSubmission } from "@/lib/registration-submission"
 import { validRegistrationPhone } from "@/lib/registration-phone"
 
-const OTHER_VALUE = "other"
 
 export function OrganizationRegistrationForm({
   onSuccess,
@@ -52,25 +47,17 @@ export function OrganizationRegistrationForm({
 
   const [name, setName] = useState("")
   const [organizationName, setOrganizationName] = useState("")
-  const [representativeName, setRepresentativeName] = useState("")
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [contactNumber, setContactNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [portalService, setPortalService] = useState<PortalServiceValue>({
-    categoryId: "",
-    subCategoryId: "",
-    customCategory: "",
-    customSubCategory: "",
-  })
   const [notes, setNotes] = useState("")
   const [organizationType, setOrganizationType] = useState("")
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
   const [address, setAddress] = useState("")
   const [website, setWebsite] = useState("")
-  const [representativeNumber, setRepresentativeNumber] = useState("")
   const [representativeTitle, setRepresentativeTitle] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -126,37 +113,6 @@ export function OrganizationRegistrationForm({
       return false
     }
 
-    if (
-      !isCareFoundation &&
-      (!portalService.categoryId || !portalService.subCategoryId.trim())
-    ) {
-      setError(
-        t(
-          {
-            en: "Please select a service and issue type",
-            ar: "يرجى اختيار نوع الخدمة ونوع المشكلة",
-          },
-          lang
-        )
-      )
-      return false
-    }
-    if (
-      !isCareFoundation &&
-      portalService.categoryId === OTHER_VALUE &&
-      !portalService.customCategory.trim()
-    ) {
-      setError(
-        t(
-          {
-            en: "Please enter a custom service name",
-            ar: "يرجى إدخال اسم خدمة مخصصة",
-          },
-          lang
-        )
-      )
-      return false
-    }
     return true
   }
 
@@ -194,38 +150,11 @@ export function OrganizationRegistrationForm({
         city: city.trim(),
         ...(isCareFoundation ? { address: address.trim() } : {}),
         website: website.trim(),
-        responsible_person_name: isCareFoundation
-          ? cleanName
-          : representativeName.trim(),
+        responsible_person_name: cleanName,
         responsible_person_title: representativeTitle.trim(),
-        responsible_person_phone: isCareFoundation
-          ? `${countryCode} ${contactNumber.trim()}`.trim()
-          : representativeNumber.trim(),
+        responsible_person_phone: `${countryCode} ${contactNumber.trim()}`.trim(),
         notes: notes.trim(),
       })
-
-      if (!isCareFoundation)
-        registration.case({
-          user: user.id,
-          name: cleanOrganizationName,
-          portal_type: portalService.categoryId,
-          service_type: portalService.subCategoryId.trim(),
-          notes: notes.trim(),
-          status: "pending",
-          user_details: {
-            name: user.name,
-            email: user.email,
-            contact: user.contact_number,
-          },
-          case_details: {
-            custom_category:
-              portalService.categoryId === OTHER_VALUE
-                ? portalService.customCategory.trim()
-                : undefined,
-            custom_sub_category:
-              portalService.subCategoryId.trim() || undefined,
-          },
-        })
 
       await registration.submit()
 
@@ -256,14 +185,13 @@ export function OrganizationRegistrationForm({
 
   const foundationNameField = (
     <div className="space-y-2">
-      <Label>
+      <Label required>
         {t(
           isCareFoundation
             ? { en: "Foundation Name", ar: "اسم مؤسسة الرعاية" }
-            : { en: "Organization Name", ar: "اسم المؤسسة" },
+            : { en: "Organization Name", ar: "اسم الجهة" },
           lang
         )}
-        <span className="ml-1 text-red-500">*</span>
       </Label>
       <Input
         value={organizationName}
@@ -282,14 +210,13 @@ export function OrganizationRegistrationForm({
 
   const nameField = (
     <div className="space-y-2">
-      <Label>
+      <Label required>
         {t(
           isCareFoundation
             ? { en: "Responsible Person’s Name", ar: "اسم الشخص المسؤول" }
-            : { en: "Name", ar: "الاسم" },
+            : { en: "Organization Representative’s Name", ar: "اسم ممثل الجهة" },
           lang
         )}
-        <span className="ml-1 text-red-500">*</span>
       </Label>
       <Input
         value={name}
@@ -306,9 +233,8 @@ export function OrganizationRegistrationForm({
   )
   const mobileField = (
     <div className="space-y-2">
-      <Label>
+      <Label required>
         {t({ en: "Mobile Number", ar: "رقم الجوال" }, lang)}
-        <span className="ml-1 text-red-500">*</span>
       </Label>
       <div dir="ltr" className="flex gap-2">
         <Select value={countryCode} onValueChange={setCountryCode}>
@@ -345,9 +271,8 @@ export function OrganizationRegistrationForm({
   )
   const emailField = (
     <div className="space-y-2">
-      <Label>
+      <Label required>
         {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
-        <span className="ml-1 text-red-500">*</span>
       </Label>
       <EmailInput
         value={email}
@@ -369,7 +294,7 @@ export function OrganizationRegistrationForm({
                     en: "Care Foundation Registration",
                     ar: "تسجيل مؤسسة الرعاية",
                   }
-                : { en: "Organization Registration", ar: "تسجيل مؤسسة" },
+                : { en: "Organization Registration", ar: "تسجيل جهة" },
               lang
             )}
           </CardTitle>
@@ -384,6 +309,7 @@ export function OrganizationRegistrationForm({
           {isCareFoundation && (
             <div className="dsc-form-grid">{foundationNameField}</div>
           )}
+          {!isCareFoundation && foundationNameField}
 
           {isCareFoundation && (
             <fieldset className="rounded-lg border border-border p-4">
@@ -416,16 +342,31 @@ export function OrganizationRegistrationForm({
           <div className="dsc-form-grid">
             {!isCareFoundation && nameField}
 
-            {!isCareFoundation && foundationNameField}
+            {!isCareFoundation && (
+              <div className="space-y-2">
+                <Label htmlFor="representative-title">
+                  {t({ en: "Representative’s Role", ar: "صفة الممثل" }, lang)}
+                </Label>
+                <Input
+                  id="representative-title"
+                  value={representativeTitle}
+                  onChange={(e) => setRepresentativeTitle(e.target.value)}
+                  autoComplete="organization-title"
+                  placeholder={t(
+                    { en: "e.g. HR Manager", ar: "مثال: مدير الموارد البشرية" },
+                    lang
+                  )}
+                />
+              </div>
+            )}
 
             {!isCareFoundation && mobileField}
 
             {!isCareFoundation && emailField}
 
             <div className="space-y-2">
-              <Label>
+              <Label required>
                 {t({ en: "Password", ar: "كلمة المرور" }, lang)}
-                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={password}
@@ -448,9 +389,8 @@ export function OrganizationRegistrationForm({
             </div>
 
             <div className="space-y-2">
-              <Label>
+              <Label required>
                 {t({ en: "Confirm Password", ar: "تأكيد كلمة المرور" }, lang)}
-                <span className="ml-1 text-red-500">*</span>
               </Label>
               <PasswordInput
                 value={confirmPassword}
@@ -482,7 +422,7 @@ export function OrganizationRegistrationForm({
           <div className="dsc-form-grid">
             <div className="space-y-2">
               <Label>
-                {t({ en: "Organization Type", ar: "نوع المؤسسة" }, lang)}
+                {t({ en: "Organization Type", ar: isCareFoundation ? "نوع المؤسسة" : "نوع الجهة" }, lang)}
               </Label>
               <Select
                 value={organizationType}
@@ -571,85 +511,13 @@ export function OrganizationRegistrationForm({
               />
             </div>
 
-            {!isCareFoundation && (
-              <div className="space-y-2">
-                <Label>
-                  {t({ en: "Representative Name", ar: "اسم الممثل" }, lang)}
-                  <span className="ml-1 text-red-500">*</span>
-                </Label>
-                <Input
-                  aria-invalid={!!fieldErrors.representativeName}
-                  value={representativeName}
-                  onChange={(e) => setRepresentativeName(e.target.value)}
-                  placeholder={t(
-                    { en: "e.g. Mohammed Al-Rashid", ar: "مثال: محمد الراشد" },
-                    lang
-                  )}
-                />
-              </div>
-            )}
-            {!isCareFoundation && (
-              <>
-                <div className="space-y-2">
-                  <Label>
-                    {t({ en: "Representative Number", ar: "رقم الممثل" }, lang)}
-                  </Label>
-                  <Input
-                    value={representativeNumber}
-                    onChange={(e) => setRepresentativeNumber(e.target.value)}
-                    placeholder={t(
-                      { en: "e.g. 55 000 0000", ar: "مثال: 55 000 0000" },
-                      lang
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>
-                    {t(
-                      {
-                        en: "Representative Title",
-                        ar: "المسمى الوظيفي للممثل",
-                      },
-                      lang
-                    )}
-                  </Label>
-                  <Input
-                    value={representativeTitle}
-                    onChange={(e) => setRepresentativeTitle(e.target.value)}
-                    placeholder={t(
-                      {
-                        en: "e.g. HR Manager",
-                        ar: "مثال: مدير الموارد البشرية",
-                      },
-                      lang
-                    )}
-                  />
-                </div>
-              </>
-            )}
           </div>
-
-          {!isCareFoundation && (
-            <PortalServiceSelector
-              value={portalService}
-              onChange={setPortalService}
-              required
-            />
-          )}
 
           <div className="space-y-2">
             <Label>{t({ en: "Notes", ar: "ملاحظات" }, lang)}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={t(
-                {
-                  en: "Add any additional notes about this case...",
-                  ar: "أضف أي ملاحظات إضافية حول هذه الحالة...",
-                },
-                lang
-              )}
               rows={3}
             />
           </div>

@@ -1,6 +1,7 @@
 routerAdd("GET","/api/dsc/tool-templates",e=>require(__hooks+"/lib/tool-templates.js").list(e),$apis.requireAuth("users"))
 routerAdd("GET","/api/dsc/tool-templates/{id}",e=>require(__hooks+"/lib/tool-templates.js").detail(e),$apis.requireAuth("users"))
 routerAdd("POST","/api/dsc/tool-templates",e=>require(__hooks+"/lib/tool-templates.js").save(e),$apis.requireAuth("users"))
+routerAdd("POST","/api/dsc/tool-templates/{id}/approve",e=>require(__hooks+"/lib/tool-templates.js").approve(e),$apis.requireAuth("users"))
 routerAdd("POST","/api/dsc/cases/{id}/template-assignment",e=>require(__hooks+"/lib/tool-templates.js").assign(e),$apis.requireAuth("users"))
 routerAdd("GET","/api/dsc/cases/{id}/template-drafts",e=>require(__hooks+"/lib/tool-templates.js").drafts(e),$apis.requireAuth("users"))
 routerAdd("POST","/api/dsc/cases/{id}/template-drafts",e=>require(__hooks+"/lib/tool-templates.js").saveDraft(e),$apis.requireAuth("users"))

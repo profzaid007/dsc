@@ -310,14 +310,6 @@ export function ExpertApplicationForm({
         "public_qualification_ar",
         publicDetails.publicQualificationAr.trim()
       )
-      extraFormData.set(
-        "public_specialty_en",
-        publicDetails.publicSpecialtyEn.trim()
-      )
-      extraFormData.set(
-        "public_specialty_ar",
-        publicDetails.publicSpecialtyAr.trim()
-      )
       extraFormData.set("short_bio_en", bioEn)
       extraFormData.set("short_bio_ar", bioAr)
       extraFormData.set("availability", availability)
@@ -489,9 +481,8 @@ export function ExpertApplicationForm({
 
               <div className="dsc-form-grid">
                 <div className="space-y-2">
-                  <Label>
+                  <Label required>
                     {t({ en: "Email", ar: "البريد الإلكتروني" }, lang)}
-                    <span className="ml-1 text-red-500">*</span>
                   </Label>
                   <EmailInput
                     value={email}
@@ -538,9 +529,8 @@ export function ExpertApplicationForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>
+                  <Label required>
                     {t({ en: "Password", ar: "كلمة المرور" }, lang)}
-                    <span className="ml-1 text-red-500">*</span>
                   </Label>
                   <PasswordInput
                     value={password}
@@ -572,12 +562,11 @@ export function ExpertApplicationForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>
+                  <Label required>
                     {t(
                       { en: "Confirm Password", ar: "تأكيد كلمة المرور" },
                       lang
                     )}
-                    <span className="ml-1 text-red-500">*</span>
                   </Label>
                   <PasswordInput
                     value={passwordConfirm}
@@ -934,6 +923,7 @@ export function ExpertApplicationForm({
 
               <ExpertPublicDetailsFields
                 omitNames
+                omitSpecialties
                 values={publicDetails}
                 onChange={(change) =>
                   setPublicDetails((current) => ({ ...current, ...change }))
@@ -971,7 +961,9 @@ export function ExpertApplicationForm({
                 ] as const
               ).map((field) => (
                 <div key={field.key} className="space-y-2">
-                  <Label htmlFor={field.key}>{field.label}</Label>
+                  <Label htmlFor={field.key} required>
+                    {field.label}
+                  </Label>
                   <Textarea
                     id={field.key}
                     dir={field.dir}

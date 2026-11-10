@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Landmark, Loader2 } from "lucide-react"
 
 export default function PaymentSettingsPage() {
@@ -205,6 +206,20 @@ export default function PaymentSettingsPage() {
                   setFormData({ ...formData, iban: e.target.value })
                 }
                 placeholder="SA0000000000000000000000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payment_notes">
+                {lang === "ar" ? "ملاحظات" : "Notes"}
+              </Label>
+              <Textarea
+                id="payment_notes"
+                dir="auto"
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
               />
             </div>
 

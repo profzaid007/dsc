@@ -19,9 +19,11 @@ export function usePaymentSettings() {
       const record = records[0]
       const stored = record?.payment_bank_details
       if (stored && typeof stored === "object") {
+        const details = stored as Partial<PaymentBankDetails>
         setBankDetails({
           ...DEFAULT_BANK_DETAILS,
-          ...(stored as Partial<PaymentBankDetails>),
+          ...details,
+          notes: typeof details.notes === "string" ? details.notes : DEFAULT_BANK_DETAILS.notes,
         })
       }
     } catch (error) {

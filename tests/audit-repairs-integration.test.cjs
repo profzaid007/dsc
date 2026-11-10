@@ -41,6 +41,7 @@ test("audit repairs: atomic registration, permissions, publication and concurren
       s.close(() => resolve(p))
     })
   })
+  const quotaSecret = require("node:crypto").randomBytes(32).toString("hex")
   const server = spawn(
     binary,
     [
@@ -51,7 +52,7 @@ test("audit repairs: atomic registration, permissions, publication and concurren
       "--http",
       `127.0.0.1:${port}`,
     ],
-    { windowsHide: true }
+    { windowsHide: true, env: { ...process.env, DSC_MESSAGING_QUOTA_SECRET: quotaSecret } }
   )
   let logs = ""
   server.stdout.on("data", (x) => (logs += x))
@@ -63,6 +64,7 @@ test("audit repairs: atomic registration, permissions, publication and concurren
       headers: {
         ...(body ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: "Bearer " + token } : {}),
+        ...(url === "/api/dsc/messaging-quota" ? { "X-DSC-Quota-Secret": quotaSecret } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
     })
@@ -159,11 +161,17 @@ test("audit repairs: atomic registration, permissions, publication and concurren
             service_type: "Assessment",
           },
         ]
-      assert.equal(
-        (await req("/api/dsc/register", "POST", data)).status,
-        200,
-        role
-      )
+      if (role === "organization")
+        data.cases = [{ name: "Organization", portal_type: "Support", service_type: "Assessment" }]
+      const result = await req("/api/dsc/register", "POST", data)
+      assert.equal(result.status, 200, role)
+      if (role === "organization") {
+        const filter = "?filter=" + encodeURIComponent('user="' + result.data.id + '"')
+        const projects = await req("/api/collections/cases/records" + filter, "GET", null, admin)
+        assert.equal(projects.data.totalItems, 0)
+        const profile = await req("/api/collections/organization_profiles/records" + filter, "GET", null, admin)
+        assert.equal(profile.data.items[0]?.organization_name, "Organization")
+      }
     }
     const parents = await req("/api/collections/parent_profiles/records", "GET", null, admin)
     assert.equal(parents.data.items.find((p) => p.city_of_residence === "Riyadh")?.city_of_residence, "Riyadh")
