@@ -20,7 +20,6 @@ import { ShieldCheck } from "lucide-react"
 
 const blank = (): SecurityRole => ({
   id: "",
-  key: "",
   name_en: "",
   name_ar: "",
   description: "",

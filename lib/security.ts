@@ -55,7 +55,6 @@ export const refreshPermissions = () =>
   window.dispatchEvent(new Event("dsc:permissions-changed"))
 export type SecurityRole = {
   id: string
-  key: string
   name_en: string
   name_ar: string
   description: string

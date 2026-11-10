@@ -64,17 +64,16 @@ async function state() {
   assert.equal(r.status, 200, JSON.stringify(r.data))
   return r.data
 }
-async function createRole(key, permissions) {
+async function createRole(name, permissions) {
   const r = await request("/api/dsc/security/roles", "POST", {
-    key,
-    name_en: key,
+    name_en: name,
     name_ar: "دور تجريبي",
     description: "Integration test",
     is_active: true,
     permissions,
   })
   assert.equal(r.status, 200, JSON.stringify(r.data))
-  return (await state()).roles.find((role) => role.key === key)
+  return (await state()).roles.find((role) => role.name_en === name)
 }
 async function assign(id, roles) {
   const r = await request(`/api/dsc/security/users/${id}/roles`, "PUT", {
@@ -121,6 +120,7 @@ before(async () => {
     "1794100300_messaging_quotas.js",
     "1795100000_general_role_assignment.js",
     "1795500000_expert_review_status.js",
+    "1796200000_security_role_sequence.js",
   ])
     fs.copyFileSync(
       path.join(root, "pb_migrations", name),
@@ -198,7 +198,7 @@ after(async () => {
 test("migration preserves administrator access and restricts security administration", async () => {
   const s = await state()
   assert.equal(s.roles.length, 1)
-  assert.equal(s.roles[0].key, "administrator")
+  assert.equal(s.roles[0].is_system, true)
   assert.equal(s.roles[0].user_count, 2)
   const me = await request("/api/dsc/security/me", "GET", undefined, adminToken)
   assert.ok(me.data.permissions.includes("cases.delete"))
@@ -221,7 +221,7 @@ test("migration preserves administrator access and restricts security administra
     200
   )
 })
-test("roles can be created and renamed without submitting a key", async () => {
+test("roles can be created and renamed without exposing their internal key", async () => {
   const input = {
     name_en: "دور جديد",
     name_ar: "دور جديد",
@@ -232,14 +232,20 @@ test("roles can be created and renamed without submitting a key", async () => {
   const created = await request("/api/dsc/security/roles", "POST", input)
   assert.equal(created.status, 200, JSON.stringify(created.data))
   const role = (await state()).roles.find((role) => role.name_ar === input.name_ar)
-  assert.match(role.key, /^role-[a-z0-9]{24}$/)
+  assert.ok(role?.id)
+  assert.equal(Object.hasOwn(role, "key"), false)
+
+  const legacy = await request("/api/dsc/security/roles", "POST", {
+    ...input, name_en: "Legacy form", name_ar: "", key: "",
+  })
+  assert.equal(legacy.status, 200, JSON.stringify(legacy.data))
 
   const route = "/api/dsc/security/roles/" + role.id
   const updated = await request(route, "PATCH", { ...input, name_en: "Renamed" })
   assert.equal(updated.status, 200, JSON.stringify(updated.data))
   const renamed = (await state()).roles.find((record) => record.id === role.id)
   assert.equal(renamed.name_en, "Renamed")
-  assert.equal(renamed.key, role.key)
+  assert.equal(Object.hasOwn(renamed, "key"), false)
 })
 
 test("read-only staff can read cases but cannot mutate via direct APIs or public fallback", async () => {
@@ -324,7 +330,7 @@ test("read-only staff can read cases but cannot mutate via direct APIs or public
 })
 test("role union, revocation, deactivation, and reactivation apply without login", async () => {
   const extra = await createRole("tool-reader", ["tools.read"])
-  const initial = (await state()).roles.find((r) => r.key === "case-reader")
+  const initial = (await state()).roles.find((r) => r.name_en === "case-reader")
   await assign(ids.reader, [initial.id, extra.id])
   assert.equal(
     (await request(records("tools"), "GET", undefined, readerToken)).status,
@@ -392,7 +398,7 @@ test("any account can receive roles; delegation is limited to the actor's capaci
     200
   )
   const administrator = (await state()).roles.find(
-    (r) => r.key === "administrator"
+    (r) => r.is_system
   )
   assert.equal(
     (
@@ -446,7 +452,7 @@ test("any account can receive roles; delegation is limited to the actor's capaci
     403
   )
   await assign(ids.reader, [
-    (await state()).roles.find((r) => r.key === "case-reader").id,
+    (await state()).roles.find((r) => r.name_en === "case-reader").id,
   ])
 })
 
@@ -482,7 +488,7 @@ test("invalid grants, arbitrary role assignments, and deleting assigned/system r
     (await request("/api/dsc/security/roles/" + system.id, "DELETE")).status,
     400
   )
-  const role = s.roles.find((r) => r.key === "case-reader")
+  const role = s.roles.find((r) => r.name_en === "case-reader")
   await assign(ids.reader, [role.id])
   assert.equal(
     (await request("/api/dsc/security/roles/" + role.id, "DELETE")).status,
@@ -908,7 +914,7 @@ test("allocation replacement enforces create, update and delete independently", 
   assert.equal(unchanged.status, 200)
 })
 test("realtime subscriptions do not deliver protected records after role revocation", async () => {
-  const role = (await state()).roles.find((r) => r.key === "case-reader")
+  const role = (await state()).roles.find((r) => r.name_en === "case-reader")
   await assign(ids.reader, [role.id])
   const controller = new AbortController()
   const connection = await fetch(base + "/api/realtime", {
