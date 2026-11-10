@@ -28,7 +28,15 @@ module.exports=(e,action)=>{
  const u=policy.freshUser(e.app,e.auth),b=e.requestInfo().body||{},id=e.request.pathValue('id')
  if(action==='case'){
   h.actor(e);h.allowedCase(e.app,u,id)
-  const sessions=h.find(e.app,'assessment_sessions','case = {:id}',{id}).map(s=>h.sessionDto(e.app,s,false))
+  const operatorNames = new Map()
+  const sessions = h.find(e.app, 'assessment_sessions', 'case = {:id}', { id }).map(record => {
+   const session = h.sessionDto(e.app, record, false)
+   if (!operatorNames.has(session.operator)) {
+    const operator = h.find(e.app, 'users', 'id = {:id}', { id: session.operator })[0]
+    operatorNames.set(session.operator, operator?.getString('name').trim() || '')
+   }
+   return { ...session, operator_name: operatorNames.get(session.operator) }
+  })
   const assessments=h.find(e.app,'assessments','status = "published"',{}).map(r=>({id:r.id,name:r.getString('name'),version:r.getString('version')}))
   return e.json(200,{sessions,assessments,canAssign:u.getString('role')==='expert'||h.permit(e.app,u,'tools.create')})
  }

@@ -179,7 +179,10 @@ export default function ExpertCaseDetailPage({
     icon: <span role="img" aria-label={ar ? "مقياس / تقييم" : "Assessment"} title={ar ? "مقياس / تقييم" : "Assessment"}><ClipboardCheck aria-hidden="true" className="size-4" /></span>,
     id: `assessment:${session.id}`, name: session.snapshot.name, status: session.status,
     typeKey: "assessment", typeLabel: ar ? "مقياس / تقييم" : "Assessment",
-    date: session.assigned_at || session.created, category: ar ? "مقياس / تقييم" : "Assessment",
+    date: session.assigned_at || session.created,
+    category: session.operator_name
+      ? (ar ? `أضافه ${session.operator_name}` : `Added by ${session.operator_name}`)
+      : (ar ? "اسم المُضيف غير متاح" : "Added by an unknown user"),
     content: <AssignmentAssessmentDetail key={session.id} id={session.id} ar={ar} />,
     actions: <span className="inline-flex items-center gap-2 text-xs text-slate-600"><ClipboardCheck className="size-4" />{ar ? "التقرير الكامل متاح من تبويب النتائج والتقارير." : "Full reports are available in Results & reports."}</span>,
   })))
