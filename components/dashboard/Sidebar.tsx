@@ -30,7 +30,6 @@ import {
   Calendar,
   Mail,
   UserCircle,
-  StickyNote,
   Menu,
   X,
 } from "lucide-react"
@@ -119,11 +118,6 @@ const expertNavigation: NavItem[] = [
     name: { en: "Profile", ar: "الملف الشخصي" },
     href: "/dashboard/expert/profile",
     icon: UserCircle,
-  },
-  {
-    name: { en: "Notes", ar: "الملاحظات" },
-    href: "/dashboard/expert/notes",
-    icon: StickyNote,
   },
 ]
 

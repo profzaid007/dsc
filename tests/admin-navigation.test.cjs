@@ -22,6 +22,9 @@ function load(file, context){
   '@/lib/i18n':{t:(x,lang)=>x[lang]},
   '@/lib/site-content':{SITE_CONTENT:{nav:{bookConsultation:{ar:'حجز',en:'Book'}}}},
   '../BookConsultDialog':{BookConsultDialog:()=>null},
+  './AdminNotifications':{AdminNotifications:()=>React.createElement('button',{'data-notifications':'admin'},'Admin notifications')},
+  './ClientAssignmentNotifications':{ClientAssignmentNotifications:()=>React.createElement('button',{'data-notifications':'client'},'Assignment notifications')},
+  '@/lib/client-services':{isClientRole:role=>['parent','individual','organization','care_foundation'].includes(role)},
   '@/components/ui/button':{Button:({children,...props})=>React.createElement('button',props,children)},
   '@/components/smart-link':{SmartLink:Link},
   '@/lib/utils':{cn:(...args)=>args.filter(x=>typeof x==='string').join(' ')},
@@ -89,6 +92,8 @@ test('header message shortcut supports every account type, respects admin access
    assert.ok(html.includes('href="/dashboard/messages"'))
    assert.ok(html.includes(lang==='ar' ? 'الرسائل، 3 غير مقروءة' : 'Messages, 3 unread'))
    assert.ok(html.includes('aria-current="page"'))
+   assert.equal(html.includes('data-notifications="admin"'),['admin','super_admin'].includes(role))
+   assert.equal(html.includes('data-notifications="client"'),['parent','individual','organization','care_foundation'].includes(role))
   }
  }
  for(const context of [{auth:false},{admin:true,cms:false}]) {

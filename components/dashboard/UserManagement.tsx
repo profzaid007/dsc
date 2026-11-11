@@ -169,9 +169,46 @@ export function UserManagement({
     loadError: usersLoadError,
     refresh: retryUsers,
   } = useUsers()
-  const { profiles, isLoading: isProfilesLoading } = useProfiles(
-    access.can("cases.read")
+  const { profiles, isLoading: isProfilesLoading, loadError: profilesError } = useProfiles(
+    !expertsOnly && access.can("cases.read")
   )
+  const allocationScope = expertsOnly && access.can("cases.read") && access.can("allocations.read")
+    ? pb.authStore.record?.id || ""
+    : ""
+  const [allocationCounts, setAllocationCounts] = useState<{
+    scope: string
+    counts: Record<string, number>
+    error: boolean
+  } | null>(null)
+  const [allocationReload, setAllocationReload] = useState(0)
+  useEffect(() => {
+    if (!allocationScope) return
+    const controller = new AbortController()
+    void boundedFullList<{ expert_id: string; case_id: string }>(
+      pb.collection("case_experts"),
+      { fields: "expert_id,case_id", requestKey: null, signal: controller.signal }
+    ).then(records => {
+      if (controller.signal.aborted) return
+      const linkedCases = new Map<string, Set<string>>()
+      for (const record of records) {
+        if (!record.expert_id || !record.case_id) continue
+        const cases = linkedCases.get(record.expert_id) || new Set<string>()
+        cases.add(record.case_id)
+        linkedCases.set(record.expert_id, cases)
+      }
+      setAllocationCounts({
+        scope: allocationScope,
+        counts: Object.fromEntries([...linkedCases].map(([expert, cases]) => [expert, cases.size])),
+        error: false,
+      })
+    }).catch(() => {
+      if (!controller.signal.aborted)
+        setAllocationCounts({ scope: allocationScope, counts: {}, error: true })
+    })
+    return () => controller.abort()
+  }, [allocationScope, allocationReload])
+  const currentAllocationCounts = allocationScope && allocationCounts?.scope === allocationScope
+    ? allocationCounts : null
 
   const [expertNames, setExpertNames] = useState<ExpertProfile[]>([])
   useEffect(() => {
@@ -231,13 +268,17 @@ export function UserManagement({
 
   const isLoading = isUsersLoading || isProfilesLoading
 
-  const caseCounts = useMemo(() => {
+  const ownedCaseCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     profiles.forEach((p) => {
       counts[p.user] = (counts[p.user] || 0) + 1
     })
     return counts
   }, [profiles])
+  const caseCounts = expertsOnly ? currentAllocationCounts?.counts || {} : ownedCaseCounts
+  const caseCountsAvailable = expertsOnly
+    ? Boolean(currentAllocationCounts && !currentAllocationCounts.error)
+    : access.can("cases.read") && !isProfilesLoading && !profilesError
 
   const filteredUsers = users.filter((user) => {
     if ((user.role === "expert") !== expertsOnly) return false
@@ -599,6 +640,17 @@ export function UserManagement({
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {expertsOnly && currentAllocationCounts?.error && (
+              <p role="alert" className="mb-4 text-sm text-destructive">
+                {lang === "ar" ? "تعذر تحميل أعداد الحالات." : "Could not load case counts."}
+                <Button variant="link" onClick={() => {
+                  setAllocationCounts(null)
+                  setAllocationReload(value => value + 1)
+                }}>
+                  {lang === "ar" ? "إعادة المحاولة" : "Retry"}
+                </Button>
+              </p>
+            )}
             <Table>
               <TableHeader>
                 <TableRow>
@@ -610,7 +662,9 @@ export function UserManagement({
                   </TableHead>
                   <TableHead>{lang === "ar" ? "نوع المستخدم" : "User Type"}</TableHead>
                   <TableHead>{lang === "ar" ? "الحالة" : "Status"}</TableHead>
-                  <TableHead>{lang === "ar" ? "الحالات" : "Cases"}</TableHead>
+                  <TableHead>{expertsOnly
+                    ? (lang === "ar" ? "الحالات المخصصة" : "Allocated cases")
+                    : (lang === "ar" ? "الحالات" : "Cases")}</TableHead>
                   <TableHead className="text-right">
                     {lang === "ar" ? "الإجراءات" : "Actions"}
                   </TableHead>
@@ -660,7 +714,7 @@ export function UserManagement({
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-muted-foreground">
-                        {caseCounts[user.id] || 0}
+                        {caseCountsAvailable ? caseCounts[user.id] || 0 : "—"}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
@@ -677,7 +731,7 @@ export function UserManagement({
                           (access.isSuperAdmin ||
                             !["admin", "super_admin"].includes(user.role)) &&
                           user.role !== "super_admin" &&
-                          (caseCounts[user.id] || 0) === 0 && (
+                          caseCountsAvailable && (caseCounts[user.id] || 0) === 0 && (
                             <Button
                               variant="ghost"
                               size="sm"
