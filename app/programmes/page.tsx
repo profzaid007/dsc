@@ -184,9 +184,9 @@ export default function ProgrammesPage() {
         : t("In progress", "قيد التنفيذ")
   const modeLabel = (s: string) =>
     s === "online"
-      ? t("Online", "عبر الشبكة")
+      ? t("Online", "أون لاين")
       : s === "hybrid"
-        ? t("Hybrid", "حضوري وعبر الشبكة")
+        ? t("Hybrid", "هايبرد")
         : t("In person", "حضوري")
   const typeEvents = events.filter(
     (event) => !filters.kind || event.kind === filters.kind

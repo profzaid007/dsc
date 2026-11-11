@@ -233,8 +233,8 @@ export function ProgramForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="in_person">{lang === "ar" ? "حضوري" : "In person"}</SelectItem>
-                  <SelectItem value="online">{lang === "ar" ? "عبر الشبكة" : "Online"}</SelectItem>
-                  {formData.type === "hybrid" && <SelectItem value="hybrid" disabled>{lang === "ar" ? "حضوري وعبر الشبكة (قيمة سابقة)" : "Hybrid (previous value)"}</SelectItem>}
+                  <SelectItem value="online">{lang === "ar" ? "أون لاين" : "Online"}</SelectItem>
+                  <SelectItem value="hybrid">{lang === "ar" ? "هايبرد" : "Hybrid"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
