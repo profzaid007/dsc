@@ -32,6 +32,7 @@ import {
   UserCircle,
   Menu,
   X,
+  Info,
 } from "lucide-react"
 
 type NavItem = {
@@ -41,6 +42,12 @@ type NavItem = {
   superAdminOnly?: boolean
   unread?: number
 }
+
+const publicNavigation: NavItem[] = [
+  { name: { en: "Blog", ar: "المدونة" }, href: "/blog", icon: BookOpen },
+  { name: { en: "Training", ar: "التدريب" }, href: "/programmes/training_programmes", icon: GraduationCap },
+  { name: { en: "About Us", ar: "من نحن" }, href: "/about-us", icon: Info },
+]
 
 const adminNavigation: NavItem[] = [
   {
@@ -303,6 +310,7 @@ export function DashboardSidebar() {
                         : isParent
                           ? parentNavigation
                           : []),
+                  ...publicNavigation,
                   ...adminNavigation.filter((item) => {
                     const key = routePermission(item.href)
                     return !roleNavigation.some(link => link.href === item.href) && !(isExpert && item.href === "/dashboard/admin/cases") && !!key && permissions.can(key)
@@ -484,6 +492,9 @@ export function DashboardSidebar() {
                 )
               )}
             </>
+          )}
+          {!isAdmin && currentUser && publicNavigation.map((item) =>
+            renderNavItem(item, pathname, lang, false, isCollapsed)
           )}
         </nav>
 

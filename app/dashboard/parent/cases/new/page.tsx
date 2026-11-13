@@ -64,6 +64,7 @@ export default function NewProfilePage() {
   const { addProfile } = useProfiles()
   const servicePortals = PORTALS.filter((portal) => PARENT_CASE_SERVICE_IDS.has(portal.id))
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [preferredExpert, setPreferredExpert] = useState("")
 
   const [formData, setFormData] = useState({
     name: "",
@@ -224,6 +225,7 @@ export default function NewProfilePage() {
         case_details: isTraining
           ? undefined
           : {
+              preferred_expert: preferredExpert.trim() || undefined,
               custom_category:
                 portalService.categoryId === OTHER_VALUE
                   ? portalService.customCategory
@@ -411,6 +413,18 @@ export default function NewProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="preferred-expert">
+                {t({ en: "Do you prefer a specific expert?", ar: "هل تفضل خبيرا محددا؟" }, lang)}
+              </Label>
+              <Input
+                id="preferred-expert"
+                value={preferredExpert}
+                onChange={(e) => setPreferredExpert(e.target.value)}
+                maxLength={250}
+                dir="auto"
+              />
+            </div>
             <div className="space-y-2">
               <Label>
                 {t({ en: "Service Type", ar: "نوع الخدمة" }, lang)}

@@ -227,6 +227,12 @@ export default function ProfileDetailPage({
                   </CardContent>
                 </Card>
 
+                {typeof profile.case_details?.preferred_expert === "string" && profile.case_details.preferred_expert.trim() && (
+                  <div className="rounded-lg border p-3">
+                    <p className="text-sm text-muted-foreground">{lang === "ar" ? "الخبير المفضل" : "Preferred expert"}</p>
+                    <p dir="auto" className="mt-1 text-sm font-medium [overflow-wrap:anywhere]">{profile.case_details.preferred_expert}</p>
+                  </div>
+                )}
                 {profile.notes && (
                   <Card className="lg:col-span-2">
                     <CardHeader>
