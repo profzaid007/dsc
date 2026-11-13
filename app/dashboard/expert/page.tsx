@@ -12,12 +12,19 @@ import { PageLoader } from "@/components/ui/page-loader"
 import { DataError } from "@/components/ui/data-error"
 import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/format-date"
+import { profileFileUrl, profilePhotoName, useExpertProfile } from "@/hooks/useExpertProfile"
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar"
+import { expertDisplayName } from "@/lib/expert-display-name"
 
 export default function ExpertDashboardPage() {
   const { currentUser } = useAuth()
   const { lang } = useLang(), ar = lang === "ar"
   const { profiles, isLoading, loadError, refresh } = useProfiles(currentUser?.role === "expert")
   const tasks = useAssignments()
+  const expert = useExpertProfile(currentUser?.id)
+  const expertName = expertDisplayName(expert.profile, lang, currentUser?.name ?? "")
+  const biography = (ar ? expert.profile?.short_bio_ar : expert.profile?.short_bio_en)?.trim()
+    || (ar ? expert.profile?.short_bio_en : expert.profile?.short_bio_ar)?.trim()
   if (isLoading) return <PageLoader />
   if (loadError) return <DataError message={loadError} onRetry={refresh} />
   const caseIds = new Set(profiles.map(profile => profile.id))
@@ -32,6 +39,24 @@ export default function ExpertDashboardPage() {
   ]
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-bold">{ar ? "لوحة تحكم الخبير" : "Expert Dashboard"}</h1><p className="text-muted-foreground">{ar ? "مرحبًا بعودتك،" : "Welcome back,"} {currentUser?.name}</p></div><Button variant="outline" onClick={() => { void refresh(); void tasks.refresh() }}>{ar ? "تحديث" : "Refresh"}</Button></div>
+    <Card>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+        <CardTitle>{ar ? "الملف التعريفي" : "Expert profile"}</CardTitle>
+        <Link className="text-sm text-primary underline" href="/dashboard/expert/profile">{ar ? "تعديل الملف الشخصي" : "Edit profile"}</Link>
+      </CardHeader>
+      <CardContent>
+        {expert.isLoading ? <p role="status" className="text-sm text-muted-foreground">{ar ? "جارٍ تحميل الملف..." : "Loading profile..."}</p>
+          : expert.loadError ? <p role="alert" className="text-sm text-destructive">{expert.loadError}</p>
+          : <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+            <div className="shrink-0"><ProfileAvatar name={expertName} photoUrl={profileFileUrl(expert.profile, profilePhotoName(expert.profile), expert.fileToken)} className="h-28 w-28" /></div>
+            <div className="min-w-0 flex-1 space-y-2">
+              <h2 dir="auto" className="text-lg font-semibold [overflow-wrap:anywhere]">{expertName}</h2>
+              <h3 className="text-sm font-medium">{ar ? "النبذة التعريفية" : "About me"}</h3>
+              <p dir="auto" className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{biography || (ar ? "أضف نبذة تعريفية من ملفك الشخصي." : "Add a short biography from your profile.")}</p>
+            </div>
+          </div>}
+      </CardContent>
+    </Card>
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">{stats.map(({ label, value, icon: Icon }) => <Card key={label}><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">{label}</CardTitle><Icon aria-hidden="true" className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>)}</div>
     {tasks.loadError && <div role="alert" className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm"><p>{ar ? "تعذر تحميل إحصاءات التكليفات: " : "Could not load assignment counts: "}{tasks.loadError}</p><Button variant="link" onClick={() => void tasks.refresh()}>{ar ? "إعادة المحاولة" : "Retry"}</Button></div>}
     <Card><CardHeader className="flex flex-row items-center justify-between gap-3"><CardTitle>{ar ? "أحدث الحالات المسندة" : "Recent assigned cases"}</CardTitle><Link className="text-sm text-primary underline" href="/dashboard/expert/cases">{ar ? "عرض جميع الحالات" : "View all cases"}</Link></CardHeader><CardContent>{recent.length ? <ul className="divide-y">{recent.map(profile => <li key={profile.id}><Link href={`/dashboard/expert/cases/${encodeURIComponent(profile.id)}`} className="flex flex-wrap items-center justify-between gap-3 rounded-lg p-3 hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"><span className="font-semibold [overflow-wrap:anywhere]"><CaseName profile={profile} /></span><span className="text-xs text-muted-foreground">{formatDate(profile.created)}</span></Link></li>)}</ul> : <p className="text-sm text-muted-foreground">{ar ? "لا توجد حالات مسندة إليك بعد." : "No cases assigned yet."}</p>}</CardContent></Card>

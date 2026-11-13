@@ -44,11 +44,51 @@ export default function AnswerMatrix({
       </p>
     )
   return (
-    <div className="space-y-5" dir={ar ? "rtl" : "ltr"}>
+    <div className="min-w-0 space-y-5" dir={ar ? "rtl" : "ltr"}>
+      <div className="space-y-2 md:hidden">
+        {groups.flatMap((group) => group.rows).map((question) => (
+          <fieldset key={question.id} className="min-w-0 rounded-lg border border-slate-300 bg-white p-2" disabled={disabled}>
+            <legend className="max-w-full px-1 text-sm font-semibold leading-6 text-slate-900 [overflow-wrap:anywhere]">
+              <span className="me-2 text-slate-500">{question.order}.</span>
+              {question.text}
+            </legend>
+            <div className="grid grid-cols-2 gap-1.5">
+              {question.options.map((option) => {
+                const selected = answers[question.id] === option.id
+                return (
+                  <label key={option.id} className={`flex min-h-11 min-w-0 items-center gap-2 rounded-md border px-2 py-1 text-sm ${selected ? "border-sky-600 bg-sky-100" : "border-slate-200 bg-white"} ${disabled ? "cursor-default" : "cursor-pointer hover:border-sky-500"}`}>
+                    <input
+                      type="radio"
+                      className="h-5 w-5 shrink-0 accent-[#0b4263] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary disabled:opacity-70"
+                      name={`${prefix}-mobile-question-${question.id}`}
+                      value={option.id}
+                      checked={selected}
+                      disabled={disabled}
+                      onChange={() => onChange(question.id, option.id)}
+                    />
+                    <span className="min-w-0 [overflow-wrap:anywhere]">{option.label}</span>
+                  </label>
+                )
+              })}
+            </div>
+            {allowClear && !disabled && (
+              <button
+                type="button"
+                disabled={!answers[question.id]}
+                className="mt-1 min-h-11 rounded px-2 text-xs text-slate-600 underline hover:bg-slate-100 disabled:opacity-30"
+                aria-label={`${ar ? "مسح إجابة" : "Clear answer for"} ${question.order}. ${question.text}`}
+                onClick={() => onChange(question.id, "")}
+              >
+                {ar ? "مسح الإجابة" : "Clear answer"}
+              </button>
+            )}
+          </fieldset>
+        ))}
+      </div>
       {groups.map((group, index) => (
         <div
           key={`${group.key}-${index}`}
-          className="max-h-[70vh] overflow-auto rounded-lg border border-slate-300 bg-white focus-visible:outline-2 focus-visible:outline-primary"
+          className="hidden max-h-[70vh] overflow-auto rounded-lg border border-slate-300 bg-white focus-visible:outline-2 focus-visible:outline-primary md:block"
           role="region"
           aria-label={
             ar

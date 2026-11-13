@@ -81,8 +81,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const customLayout = isCustomCmsLayout(content)
 
   return (
-    <div className={customLayout ? "w-full min-w-0 py-12" : "mx-auto w-full max-w-4xl px-6 py-12"}>
-      <div className={customLayout ? "mx-auto w-full max-w-7xl px-6" : undefined}>
+    <div className={customLayout ? "w-full min-w-0 py-12 lg:px-8" : "mx-auto w-full min-w-0 max-w-4xl px-3 py-12 sm:px-6 lg:max-w-none lg:px-8"}>
+      <div className={customLayout ? "mx-auto w-full min-w-0 max-w-7xl px-3 sm:px-6 lg:max-w-none lg:px-0" : undefined}>
       <Link
         href="/blog"
         className="mb-6 inline-block text-sm text-muted-foreground hover:underline"
@@ -91,7 +91,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       </Link>
 
       <div className="mb-8 space-y-2">
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground [overflow-wrap:anywhere]">
           <span className="rounded-md bg-gray-100 px-2 py-0.5 capitalize">
             {categoryLabel}
           </span>
@@ -115,7 +115,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             className="mx-auto max-h-96 w-auto max-w-full rounded-lg object-contain"
           />
         )}
-        <h1 dir="auto" className="text-3xl font-bold">
+        <h1 dir="auto" className="text-3xl font-bold [overflow-wrap:anywhere]">
           {blogField(page, "title")}
         </h1>
       </div>
@@ -124,6 +124,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <CmsContent
         html={content}
         lang={blogContentLang(content)}
+        className={customLayout ? undefined : "w-full min-w-0 !p-0 [overflow-wrap:anywhere] [&_ol]:!ps-5 [&_ol]:!pe-0 [&_ul]:!ps-5 [&_ul]:!pe-0"}
       />
     </div>
   )

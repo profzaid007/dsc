@@ -14,7 +14,7 @@ const render=(props)=>renderToStaticMarkup(React.createElement(AnswerMatrix,{que
 test('common options use one matrix with shared column headings and unique radio group per question',()=>{
  const html=render()
  assert.equal((html.match(/<table/g)||[]).length,1)
- const inputs=html.match(/<input[^>]*>/g)
+ const inputs=html.match(/<input[^>]*>/g).filter(input=>!input.includes('-mobile-question-'))
  assert.equal(inputs.length,4)
  const names=inputs.map(s=>s.match(/name="([^"]+)"/)[1])
  assert.equal(names[0],names[1]);assert.equal(names[2],names[3]);assert.notEqual(names[0],names[2])
@@ -37,7 +37,7 @@ test('mixed options keep exact per-row IDs/labels and preserve global order in c
 })
 test('locked/busy matrices disable every radio and omit clear controls without losing saved selection',()=>{
  const html=render({disabled:true})
- const radios=html.match(/<input[^>]*>/g)
+ const radios=html.match(/<input[^>]*>/g).filter(input=>!input.includes('-mobile-question-'))
  assert.equal(radios.length,4)
  assert.ok(radios.every(s=>s.includes('disabled=""')))
  assert.ok(radios[1].includes('checked=""'))
@@ -53,4 +53,25 @@ test('introduction, reference period and respondent notice render as escaped pla
  for(const text of ['المقدمة والتعليمات','الفترة الزمنية المرجعية','تنبيه للمجيب','خلال الأسبوع الماضي','يمكن طلب توضيح'])assert.ok(html.includes(text))
  assert.ok(html.includes('&lt;script&gt;'));assert.equal(html.includes('<script>'),false);assert.ok(html.includes('whitespace-pre-wrap'))
  assert.equal(renderToStaticMarkup(React.createElement(target.default,{})),'')
+})
+
+for (const lang of ['ar', 'en']) test('compact mobile cards retain labeled choices and independent saved answers in '+lang,()=>{
+ const html=render({lang})
+ const cards=html.match(/<fieldset[\s\S]*?<\/fieldset>/g)
+ assert.equal(cards.length,2)
+ assert.ok(html.includes('space-y-2 md:hidden'))
+ for(const card of cards){
+  assert.ok(card.includes('<legend'))
+  assert.ok(card.includes('grid-cols-2'))
+  assert.ok(card.includes('min-h-11'))
+  assert.ok(card.includes('أبدًا'));assert.ok(card.includes('غالبًا'))
+ }
+ const inputs=cards.flatMap(card=>card.match(/<input[^>]*>/g))
+ assert.ok(inputs[1].includes('checked=""'))
+ assert.ok(inputs.slice(2).every(input=>!input.includes('checked=""')))
+ assert.ok(inputs.every(input=>input.includes('-mobile-question-')))
+ assert.equal(new Set(inputs.map(input=>input.match(/name="([^\"]+)"/)[1])).size,2)
+ const locked=render({lang,disabled:true}).match(/<fieldset[\s\S]*?<\/fieldset>/g)
+ assert.ok(locked.every(card=>!card.includes('<button') && card.match(/<input[^>]*>/g).every(input=>input.includes('disabled=""'))))
+ assert.ok(!render({allowClear:false}).includes('<button'))
 })
