@@ -266,7 +266,31 @@ export function SecurityManagement() {
             {t(
               "Control staff access with roles and explicit module permissions.",
               "إدارة وصول الموظفين عبر الأدوار وصلاحيات الوحدات."
+            )}{" "}
+            <strong>
+              {t(
+                "The configurable security roles are primarily for Admin accounts.",
+                "الأدوار الأمنية القابلة للتخصيص مخصصة بشكل أساسي لحسابات المسؤولين."
+              )}
+            </strong>{" "}
+            {t("Keep ", "احتفظ بـ ")}
+            <strong>
+              {t(
+                "Parent, Individual, Organization, Care Foundation, and Expert as account types",
+                "ولي الأمر، والفرد، والمنظمة، ومؤسسة الرعاية، والخبير كأنواع حسابات"
+              )}
+            </strong>
+            {t(
+              ". Use security roles for staff responsibilities such as ",
+              ". استخدم الأدوار الأمنية لمسؤوليات الموظفين مثل "
             )}
+            <strong>
+              {t(
+                "Finance, Case Coordination, and Content Editing",
+                "الشؤون المالية، وتنسيق الحالات، وتحرير المحتوى"
+              )}
+            </strong>
+            .
           </p>
         </div>
         <Link
