@@ -78,6 +78,15 @@ test('mobile public links remain visible for non-admin accounts and hidden for a
  }
 })
 
+test('desktop header shows public links for non-admin accounts in both languages',()=>{
+ for(const role of ['parent','care_foundation','individual','organization','expert','admin']) for(const lang of ['ar','en']) {
+  const {Navbar}=load('components/layout/Navbar.tsx',{path:'/dashboard/parent',role,admin:role==='admin',cms:false,lang})
+  const html=renderToStaticMarkup(React.createElement(Navbar))
+  const nav=html.match(/<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
+  for(const href of ['/about-us','/blog','/programmes','/contact-us']) assert.equal(nav.includes(`href="${href}"`),role!=='admin',`${role}/${lang}: ${href}`)
+ }
+})
+
 test('guests see public navigation without account management actions',()=>{
  const {Navbar}=load('components/layout/Navbar.tsx',{path:'/about-us',auth:false,admin:false,super:false,cms:false})
  const html=renderToStaticMarkup(React.createElement(Navbar))

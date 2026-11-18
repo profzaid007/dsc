@@ -126,7 +126,7 @@ export function Navbar() {
                 className="col-start-2 hidden flex-nowrap items-center justify-center gap-0 2xl:flex"
                 aria-label={ui("Main navigation")}
               >
-                {(isAuthenticated ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map(
+                {(isAuthenticated && isAdmin ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map(
                   (item, i) => {
                     const isActive = pathname === item.href
                     return (
