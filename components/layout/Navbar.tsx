@@ -326,7 +326,7 @@ export function Navbar() {
             className="max-h-[75dvh] overflow-y-auto border-t border-gray-200 2xl:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-3">
-              {(isAuthenticated ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map(
+              {(isAuthenticated && isAdmin ? NAV_LINKS.slice(0, 1) : NAV_LINKS).map(
                 (item, i) => {
                   const isActive = pathname === item.href
                   return (

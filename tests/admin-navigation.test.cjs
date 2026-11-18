@@ -8,7 +8,7 @@ function load(file, context){
  const exports={}
  const Link=({children,href,...props})=>React.createElement('a',{...props,href},children)
  const mocks={
-  react: context.mobileOpen ? { ...React, useState: initial => [initial === null ? context.path : typeof initial === 'function' ? initial() : initial, () => {}] } : React,
+  react: context.mobileOpen ? { ...React, useState: initial => [initial === null ? context.path : initial === false ? true : typeof initial === 'function' ? initial() : initial, () => {}] } : React,
   'next/navigation':{usePathname:()=>context.path,useRouter:()=>({push(){}})},
   'next/link':{__esModule:true,default:Link},
   'next/image':{__esModule:true,default:()=>null},
@@ -67,6 +67,15 @@ test('logged-in main navigation replaces public links and retains Home',()=>{
  const nav=html.match(/<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
  for(const label of ['لوحة التحكم','إدارة الأمان','إدارة المحتوى','تسجيل الخروج']) assert.ok(nav.includes(label))
  assert.equal((html.match(/href="\/dashboard"/g)||[]).length,1)
+})
+
+test('mobile public links remain visible for non-admin accounts and hidden for admins',()=>{
+ for(const lang of ['ar','en']) for(const role of ['expert','parent','individual','organization','care_foundation','admin']) {
+  const {Navbar}=load('components/layout/Navbar.tsx',{path:'/dashboard',role,admin:role==='admin',mobileOpen:true,lang})
+  const html=renderToStaticMarkup(React.createElement(Navbar))
+  const nav=html.match(/<nav[^>]*id="public-mobile-navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
+  for(const href of ['/about-us','/blog','/programmes','/contact-us']) assert.equal(nav.includes(`href="${href}"`),role!=='admin',`${role}/${lang}: ${href}`)
+ }
 })
 
 test('guests see public navigation without account management actions',()=>{
