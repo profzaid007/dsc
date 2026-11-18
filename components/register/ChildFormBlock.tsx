@@ -1,18 +1,12 @@
 "use client"
 
+import { useId } from "react"
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { t } from "@/lib/i18n"
 import { useLang } from "@/lib/lang-context"
 import {
@@ -49,6 +43,7 @@ export function ChildFormBlock({
   canRemove,
 }: ChildFormBlockProps) {
   const { lang } = useLang()
+  const genderGroupId = useId()
 
   const updateField = <K extends keyof ChildFormData>(
     field: K,
@@ -102,32 +97,30 @@ export function ChildFormBlock({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label required>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">
               {t({ en: "Gender", ar: "الجنس" }, lang)}
-            </Label>
-            <Select
-              value={data.gender}
-              onValueChange={(value) => updateField("gender", value)}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={t(
-                    { en: "Select gender", ar: "اختر الجنس" },
-                    lang
-                  )}
-                />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="male">
-                  {t({ en: "Male", ar: "ذكر" }, lang)}
-                </SelectItem>
-                <SelectItem value="female">
-                  {t({ en: "Female", ar: "أنثى" }, lang)}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <span aria-hidden="true" className="ms-1 text-red-500">*</span>
+            </legend>
+            <div className="flex flex-wrap gap-3">
+              {([
+                { value: "male", en: "Male", ar: "ذكر" },
+                { value: "female", en: "Female", ar: "أنثى" },
+              ] as const).map((option) => (
+                <label key={option.value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-input px-4 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                  <input
+                    type="radio"
+                    name={`child-${genderGroupId}-gender`}
+                    value={option.value}
+                    checked={data.gender === option.value}
+                    onChange={() => updateField("gender", option.value)}
+                    className="size-4 accent-primary"
+                  />
+                  {t(option, lang)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           <div className="space-y-2">
             <Label>
