@@ -20,6 +20,7 @@ import { useAdminDashboard } from "@/hooks/useAdminDashboard"
 import type { DashboardSnapshot } from "@/lib/admin-dashboard"
 import { useLang } from "@/lib/lang-context"
 import { securityModules } from "@/lib/security"
+import { paymentStatusLabels } from "@/lib/payment"
 import styles from "./AdminStatisticsDashboard.module.css"
 
 const metrics = [
@@ -67,10 +68,9 @@ const metrics = [
   },
 ] as const
 const labels: Record<string, [string, string]> = {
-  pending: ["Pending", "قيد الانتظار"],
-  awaiting_payment: ["Awaiting payment", "بانتظار الدفع"],
-  under_review: ["Payment under review", "الدفع قيد المراجعة"],
-  active: ["Active", "نشط"],
+  ...Object.fromEntries(
+    Object.entries(paymentStatusLabels).map(([key, label]) => [key, [label.en, label.ar]])
+  ),
   other: ["Other", "أخرى"],
   expert: ["Experts", "الخبراء"],
   parent: ["Parents", "أولياء الأمور"],

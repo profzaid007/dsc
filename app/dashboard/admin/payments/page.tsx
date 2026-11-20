@@ -230,24 +230,24 @@ export default function AdminPaymentsPage() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0">
+          <TabsList className="grid w-full grid-cols-2 group-data-horizontal/tabs:h-auto sm:flex sm:flex-wrap">
             {QUEUE_TABS.map((t) => (
-              <TabsTrigger key={t.value} value={t.value}>
+              <TabsTrigger key={t.value} value={t.value} className="h-auto min-w-0 whitespace-normal">
                 {t.value === "all"
                   ? lang === "ar"
                     ? "الكل"
                     : "All"
                   : paymentStatusLabels[t.statuses[0]][lang]}
-                <Badge variant="secondary" className="ms-2">
+                <Badge variant="secondary" className="ms-2 shrink-0">
                   {counts[t.value]}
                 </Badge>
               </TabsTrigger>
             ))}
           </TabsList>
 
-          <TabsContent value={activeTab}>
-            <Card>
+          <TabsContent value={activeTab} className="min-w-0">
+            <Card className="min-w-0">
               <CardHeader>
                 <CardTitle>
                   {lang === "ar" ? "قائمة الانتظار" : "Queue"}
@@ -258,7 +258,7 @@ export default function AdminPaymentsPage() {
                     : `${visibleCases.length} case(s)`}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="min-w-0">
                 {visibleCases.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
                     {lang === "ar"
