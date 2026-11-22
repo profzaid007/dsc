@@ -1269,7 +1269,7 @@ test("messaging quotas reject anonymous and incorrect credentials without consum
 })
 
 test("reset responses do not reveal whether an email is registered", async () => {
-  const known = await request("/api/collections/users/request-password-reset", "POST", {email:"customer@fixture.test"}, null)
+  const known = await request("/api/collections/users/request-password-reset", "POST", {email:"admin@fixture.test"}, null)
   const unknown = await request("/api/collections/users/request-password-reset", "POST", {email:"unknown@fixture.test"}, null)
   assert.equal(known.status, 204)
   assert.equal(unknown.status, known.status)

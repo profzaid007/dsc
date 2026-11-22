@@ -1,5 +1,12 @@
 # Security hardening — 22 November 2026
 
+Production activation was verified on 22 November: the application and
+`_superusers` both require password plus email OTP for administrative sign-ins.
+Netlify's deploy post-processing accepted both programmatic rate rules, and a
+bounded live API check returned 429 after crossing the limit. Production CSP
+nonces matched all rendered script tags. Build logs are now private. The owner
+chose to retain the existing environment-variable deploy contexts.
+
 The application now uses a per-response nonce CSP, denies framing, restricts
 browser capabilities, and supports PocketBase password plus email OTP MFA.
 HTML responses must remain dynamic and uncached so the nonce in the response
