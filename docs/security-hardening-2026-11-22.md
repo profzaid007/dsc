@@ -1,14 +1,15 @@
 # Security hardening — 22 November 2026
 
-Production activation was verified on 22 November: the application and
-`_superusers` both require password plus email OTP for administrative sign-ins.
+Production activation was verified on 22 November. At the owner's explicit
+request, MFA and standalone email OTP are disabled for both application users
+and PocketBase `_superusers`; administrative sign-in uses passwords.
 Netlify's deploy post-processing accepted both programmatic rate rules, and a
 bounded live API check returned 429 after crossing the limit. Production CSP
 nonces matched all rendered script tags. Build logs are now private. The owner
 chose to retain the existing environment-variable deploy contexts.
 
-The application now uses a per-response nonce CSP, denies framing, restricts
-browser capabilities, and supports PocketBase password plus email OTP MFA.
+The application now uses a per-response nonce CSP, denies framing, and restricts
+browser capabilities. Sign-in uses PocketBase password authentication.
 HTML responses must remain dynamic and uncached so the nonce in the response
 matches Next.js scripts. Inline styles remain allowed for React and the rich-text
 editor; inline script event handlers and unsigned parser-inserted scripts are denied.
@@ -38,12 +39,16 @@ the key separately from backups. This encrypts sensitive PocketBase settings,
 not the entire database or upload directory. Root volume encryption requires
 separate infrastructure work.
 
-Enable administrative MFA only after deploying the compatible login UI and
-confirming SMTP readiness: `users.otp.enabled = true`, `users.otp.length = 8`,
-`users.mfa.enabled = true`, and `users.mfa.rule = 'role = "admin" || role = "super_admin"'`.
-PocketBase's built-in administrative UI supports its own `_superusers` MFA.
-Preserve an authorized recovery path and verify actual delivery with the owner;
-never log OTPs or signing secrets. Automated tests intercept all fixture mail.
+The 22 November automatic B2 backup was downloaded to a private disposable
+directory. A signed object HEAD confirmed `AES256` server-side encryption.
+SQLite integrity checks passed, and the extracted copy started successfully
+with PocketBase 0.31.0 after disabling outgoing mail and automatic backups in
+that copy. Production was not restored. Temporary database/archive copies were
+removed after verification; only a non-sensitive receipt remains.
+
+Administrative MFA and OTP must remain disabled per the owner's choice. The
+MFA challenge UI was removed. Do not re-enable the server setting without an
+explicit decision and a compatible, tested login flow.
 
 Netlify source-based edge limits are 60 requests/minute/IP/domain on `/api/*`
 and 600 on `/*`. These limits are distinct from the messaging delivery quotas.
@@ -56,7 +61,7 @@ older Next.js and is removed. Next.js and eslint-config-next are patched to
 Netlify's Linux builders; local Windows Node middleware packaging has adapter
 limitations. The application does not depend on local adapter modifications.
 
-Validation: 24 isolated PocketBase 0.31.0 integration tests, HTML sanitization
+Validation: 23 isolated PocketBase 0.31.0 integration tests, HTML sanitization
 and permission tests, TypeScript, changed-file lint, production compilation,
 and a local parser-injection probe confirming CSP blocks the unsigned script.
 No live business records are used by the tests.

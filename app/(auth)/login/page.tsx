@@ -73,8 +73,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [challenge, setChallenge] = useState<{ mfaId: string; otpId: string } | null>(null)
-  const [code, setCode] = useState("")
 
   const [forgotOpen, setForgotOpen] = useState(false)
   const [resetEmail, setResetEmail] = useState("")
@@ -84,7 +82,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || (!challenge && !password)) {
+    if (!email || !password) {
       setError(
         t(
           { en: "Please enter email and password", ar: "يرجى إدخال البريد الإلكتروني وكلمة المرور" },
@@ -97,22 +95,14 @@ export default function LoginPage() {
       setError(t(EMAIL_INVALID_MESSAGE, lang))
       return
     }
-    if (challenge && !/^\d{8}$/.test(code)) {
-      setError(lang === "ar" ? "أدخل رمز التحقق المكوّن من ثمانية أرقام." : "Enter the eight-digit verification code.")
-      return
-    }
 
     setIsLoading(true)
     setError("")
 
-    const result = await login(normalizeEmail(email), password, challenge ? { ...challenge, code } : undefined)
+    const result = await login(normalizeEmail(email), password)
 
     if (result.success) {
       router.push(getDashboardPath(result.role))
-    } else if (result.mfaId && result.otpId) {
-      setChallenge({ mfaId: result.mfaId, otpId: result.otpId })
-      setPassword("")
-      setIsLoading(false)
     } else {
       setError(
         result.error ||
@@ -236,7 +226,6 @@ export default function LoginPage() {
                     placeholder="your@email.com"
                     value={email}
                     onChange={setEmail}
-                    disabled={!!challenge}
                     required
                   />
                 </div>
@@ -266,17 +255,9 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
-                    required={!challenge}
-                    disabled={!!challenge}
+                    required
                   />
                 </div>
-                {challenge && (
-                  <div className="space-y-2">
-                    <Label htmlFor="mfa-code">{lang === "ar" ? "رمز التحقق المرسل إلى بريدك" : "Verification code sent to your email"}</Label>
-                    <input id="mfa-code" className="h-10 w-full rounded-md border px-3" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ""))} minLength={8} maxLength={8} required autoFocus />
-                    <button type="button" className="text-sm underline" onClick={() => { setChallenge(null); setCode(""); setError("") }}>{lang === "ar" ? "العودة لتسجيل الدخول" : "Back to sign in"}</button>
-                  </div>
-                )}
                 <Button
                   type="submit"
                   className="group relative h-10 w-full overflow-hidden rounded-lg text-base font-semibold shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
