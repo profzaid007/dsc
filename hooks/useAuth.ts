@@ -24,7 +24,7 @@ export function useAuth() {
   const refreshAuth = useCallback(() => {
     const user = getCurrentUser()
     if (user && user.is_active === false) {
-      pbLogout()
+      pb.authStore.clear()
       setCurrentUser(null)
       setIsAuthenticated(false)
       setIsAdmin(false)
@@ -49,9 +49,11 @@ export function useAuth() {
     }
   }, [refreshAuth])
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, verification?: { otpId: string; mfaId: string; code: string }) => {
     try {
-      const authData = await authWithPassword(email, password)
+      const authData = verification
+        ? await pb.collection("users").authWithOTP(verification.otpId, verification.code, { mfaId: verification.mfaId })
+        : await authWithPassword(email, password)
       const user = authData.record as unknown as User
       if (user && user.is_active === false) {
         await pbLogout()
@@ -78,6 +80,15 @@ export function useAuth() {
       refreshAuth()
       return { success: true as const, role: user.role }
     } catch (error: unknown) {
+      const mfaId = (error as { response?: { mfaId?: unknown } }).response?.mfaId
+      if (!verification && typeof mfaId === "string" && mfaId) {
+        try {
+          const otp = await pb.collection("users").requestOTP(email)
+          return { success: false as const, mfaId, otpId: otp.otpId }
+        } catch (otpError) {
+          return { success: false as const, error: getErrorMessage(otpError) }
+        }
+      }
       const status = (error as { status?: number } | null)?.status
       if (status === 400 || status === 401) {
         return {

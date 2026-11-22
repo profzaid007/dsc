@@ -1,0 +1,23 @@
+function hardenCollections(app) {
+  const images = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+  const documents = ["application/pdf", "image/jpeg", "image/png", "image/webp", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+  const media = [...images, "application/pdf", "video/mp4", "video/webm", "audio/mpeg", "audio/wav", "audio/ogg"]
+  for (const collection of app.findAllCollections()) {
+    if (collection.type === "view" || collection.name.startsWith("_")) continue
+    let changed = false
+    for (const field of collection.fields) {
+      if ((typeof field.type === "function" ? field.type() : field.type) !== "file") continue
+      const name = typeof field.getName === "function" ? field.getName() : field.name
+      const photo = ["avatar", "profile_photo", "thumbnail", "picture", "icon"].includes(name)
+      field.maxSize = (photo ? 5 : name === "media" ? 100 : 10) * 1024 * 1024
+      field.mimeTypes = photo ? images : name === "media" ? media : documents
+      changed = true
+    }
+    if (collection.name === "users") {
+      collection.authToken.duration = 8 * 60 * 60
+      changed = true
+    }
+    if (changed) app.save(collection)
+  }
+}
+module.exports = hardenCollections

@@ -88,11 +88,28 @@ before(async () => {
   )
   const migrations = path.join(fixture, "migrations")
   fs.mkdirSync(migrations)
+  const hooksDir = path.join(fixture, "hooks")
+  fs.cpSync(path.join(root, "pb_hooks"), hooksDir, { recursive: true })
+  // Fixture-only mail interception and configuration routes never reach deployment.
+  fs.writeFileSync(path.join(hooksDir, "test-mail.pb.js"), `
+    onMailerSend(e => { const match=e.message.html.match(/\\b[0-9]{8}\\b/); if(match)e.app.store().set('testOtp',match[0]); });
+    routerAdd('POST','/__test/mfa',e=>{
+      if(e.auth.getString('role')!=='super_admin')throw new ForbiddenError();
+      const c=e.app.findCollectionByNameOrId('users');c.mfa.enabled=e.requestInfo().body.enabled===true;
+      c.mfa.rule='role = "admin" || role = "super_admin"';c.otp.enabled=true;c.otp.length=8;e.app.save(c);
+      return e.json(200,{ok:true});
+    },$apis.requireAuth('users'));
+    routerAdd('GET','/__test/otp',e=>{
+      if(e.auth.getString('role')!=='super_admin')throw new ForbiddenError();
+      return e.json(200,{code:e.app.store().get('testOtp')});
+    },$apis.requireAuth('users'));
+  `)
   const schema = process.env.SECURITY_TEST_CANONICAL
     ? fs.readFileSync(path.join(root, "backend/pb/pb_schema.json"), "utf8")
     : JSON.stringify(require("../tools/security-base-schema.cjs")(root))
   const bootstrap = `migrate(app => {
     app.importCollectionsByMarshaledJSON(${JSON.stringify(schema)},false);
+    const settings=app.settings();settings.smtp.enabled=true;settings.smtp.host='127.0.0.1';settings.smtp.port=25252;app.save(settings);
     const users=app.findCollectionByNameOrId('users');
     const data=${JSON.stringify([
       [ids.super, "super@fixture.test", "super_admin", true],
@@ -121,6 +138,7 @@ before(async () => {
     "1795100000_general_role_assignment.js",
     "1795500000_expert_review_status.js",
     "1796200000_security_role_sequence.js",
+    "1796400000_security_hardening.js",
   ])
     fs.copyFileSync(
       path.join(root, "pb_migrations", name),
@@ -152,7 +170,7 @@ before(async () => {
       `--http=127.0.0.1:${actualPort}`,
       `--dir=${dataDir}`,
       `--migrationsDir=${migrations}`,
-      `--hooksDir=${path.join(root, "pb_hooks")}`,
+      `--hooksDir=${hooksDir}`,
     ],
     { windowsHide: true, stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, DSC_MESSAGING_QUOTA_SECRET: quotaSecret } }
   )
@@ -795,8 +813,8 @@ test("protected files require both a valid file token and current permission", a
   const body = new FormData()
   body.set(
     "payment_slip",
-    new Blob(["fixture receipt"], { type: "text/plain" }),
-    "receipt.txt"
+    new Blob(["%PDF-1.4\nfixture receipt\n%%EOF"], { type: "application/pdf" }),
+    "receipt.pdf"
   )
   const upload = await fetch(base + records("cases") + "/" + ids.case, {
     method: "PATCH",
@@ -1248,4 +1266,42 @@ test("messaging quotas reject anonymous and incorrect credentials without consum
     })
     assert.equal(response.status, i < 30 ? 200 : 429)
   }
+})
+
+test("reset responses do not reveal whether an email is registered", async () => {
+  const known = await request("/api/collections/users/request-password-reset", "POST", {email:"customer@fixture.test"}, null)
+  const unknown = await request("/api/collections/users/request-password-reset", "POST", {email:"unknown@fixture.test"}, null)
+  assert.equal(known.status, 204)
+  assert.equal(unknown.status, known.status)
+  assert.deepEqual(unknown.data, known.data)
+})
+
+test("administrator MFA requires a second method and accepts a single-use email code", async () => {
+  assert.equal((await request("/__test/mfa", "POST", {enabled:true})).status, 200)
+  try {
+    const first = await request("/api/collections/users/auth-with-password", "POST", {identity:"admin@fixture.test",password}, null)
+    assert.equal(first.status, 401)
+    assert.ok(first.data.mfaId)
+    const otp = await request("/api/collections/users/request-otp", "POST", {email:"admin@fixture.test"}, null)
+    assert.equal(otp.status, 200)
+    const code = (await request("/__test/otp")).data.code
+    assert.match(code, /^\d{8}$/)
+    const second = await request("/api/collections/users/auth-with-otp", "POST", {otpId:otp.data.otpId,password:code,mfaId:first.data.mfaId}, null)
+    assert.equal(second.status, 200, JSON.stringify(second.data))
+    const replay = await request("/api/collections/users/auth-with-otp", "POST", {otpId:otp.data.otpId,password:code,mfaId:first.data.mfaId}, null)
+    assert.notEqual(replay.status, 200)
+  } finally {
+    assert.equal((await request("/__test/mfa", "POST", {enabled:false})).status, 200)
+  }
+})
+
+test("logout invalidates existing tokens and does not affect another account", async () => {
+  const email = "logout@fixture.test"
+  assert.equal((await request(records("users"), "POST", {email,password,passwordConfirm:password,name:"Logout fixture",role:"individual",is_active:true})).status, 200)
+  const token = await login(email)
+  assert.equal((await request("/api/dsc/auth/logout", "POST", {}, null)).status, 401)
+  assert.equal((await request("/api/dsc/auth/logout", "POST", {}, token)).status, 204)
+  assert.equal((await request("/api/collections/users/auth-refresh", "POST", {}, token)).status, 401)
+  assert.equal((await request("/api/dsc/security/me", "GET", undefined, superToken)).status, 200)
+  assert.ok(await login(email))
 })

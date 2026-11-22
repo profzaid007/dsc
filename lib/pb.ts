@@ -54,6 +54,14 @@ export async function refreshAuth() {
 }
 
 export async function logout() {
+  if (pb.authStore.isValid) {
+    try {
+      await pb.send("/api/dsc/auth/logout", { method: "POST", requestKey: null })
+    } catch (error) {
+      const status = (error as { status?: number }).status
+      if (status !== 401 && status !== 403) throw error
+    }
+  }
   pb.authStore.clear()
 }
 
@@ -400,7 +408,7 @@ export function handlePocketBaseError(
 ): string {
   const responseCode = (error as {response?:{code?:string}} | null)?.response?.code
   if (responseCode === "password_reset_email_invalid") return t({en:"Enter a valid email address, such as name@example.com.",ar:"أدخل بريدًا إلكترونيًا صحيحًا، مثل name@example.com"},lang)
-  if (responseCode === "password_reset_email_not_registered") return t({en:"This email address is not registered.",ar:"هذا البريد غير مسجل"},lang)
+  if (responseCode === "password_reset_email_not_registered") return t({en:"If an account matches this email, you will receive a password reset link.",ar:"إذا كان هناك حساب مرتبط بهذا البريد، فستصلك رسالة لإعادة تعيين كلمة المرور."},lang)
   if (responseCode === "password_reset_email_unavailable") return t({en:"Password reset email is unavailable because the server email service is not configured. Contact the administrator.",ar:"تعذر إرسال رابط استعادة كلمة المرور لأن خدمة البريد غير معدّة على الخادم. تواصل مع المسؤول لإعدادها."},lang)
   const details = error as { message?: string; status?: number } | null
   if (details?.message?.includes("fetch")) {

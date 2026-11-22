@@ -267,8 +267,8 @@ export function ResetPasswordDialog({
           <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
             {t(
               {
-                en: "The previous password stops working immediately. Any sessions already open on other devices stay signed in.",
-                ar: "كلمة المرور السابقة تتوقف عن العمل فوراً. أما الجلسات المفتوحة على أجهزة أخرى فتبقى مسجّلة الدخول.",
+                en: "The previous password and existing sign-in tokens stop working immediately. Other devices must sign in again.",
+                ar: "تتوقف كلمة المرور السابقة ورموز الدخول الحالية فورًا. يجب تسجيل الدخول مجددًا على الأجهزة الأخرى.",
               },
               lang
             )}

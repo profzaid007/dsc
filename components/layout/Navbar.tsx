@@ -181,12 +181,12 @@ export function Navbar() {
                         if (
                           !window.confirm(
                             lang === "ar"
-                              ? "هل تريد تسجيل الخروج؟"
-                              : "Log out of your account?"
+                              ? "هل تريد تسجيل الخروج من جميع الأجهزة؟"
+                              : "Log out on all devices?"
                           )
                         )
                           return
-                        await logout()
+                        try { await logout() } catch { window.alert(lang === "ar" ? "تعذر إبطال الجلسات. تحقق من الاتصال وحاول مجددًا." : "Unable to revoke sessions. Check your connection and try again."); return }
                         router.push("/login")
                       }}
                       className={headerActionClass}
@@ -435,13 +435,13 @@ export function Navbar() {
                       if (
                         !window.confirm(
                           lang === "ar"
-                            ? "هل تريد تسجيل الخروج؟"
-                            : "Log out of your account?"
+                            ? "هل تريد تسجيل الخروج من جميع الأجهزة؟"
+                            : "Log out on all devices?"
                         )
                       )
                         return
                       setMobileMenuOpen(false)
-                      await logout()
+                      try { await logout() } catch { window.alert(lang === "ar" ? "تعذر إبطال الجلسات. تحقق من الاتصال وحاول مجددًا." : "Unable to revoke sessions. Check your connection and try again."); return }
                       router.push("/")
                     }}
                     className={
