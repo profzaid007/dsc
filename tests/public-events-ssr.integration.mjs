@@ -25,3 +25,11 @@ for(const lang of ['ar','en']){
 for(const type of ['public_lectures','training_programmes']){
  const r=await fetch(`${base}/en/programmes/${type}/zzzzzzzzzzzzzzz`);assert.equal(r.status,404,type+' missing detail')
 }
+
+// Every event URL advertised to crawlers must resolve to actual public content.
+const sitemap = await (await fetch(base + '/sitemap.xml')).text()
+const eventPaths = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)]
+  .map(match => new URL(match[1]).pathname)
+  .filter(path => /\/programmes\/(public_lectures|training_programmes)\/[^/]+$/.test(path))
+for (const path of eventPaths) await read(path)
+console.log(`PASS ${eventPaths.length} sitemap-listed event detail URLs`)

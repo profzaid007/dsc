@@ -67,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       safeList("home_pages", { filter: "is_published = true", sort: "-updated" }),
       safeList("info_pages", { filter: "is_published = true", sort: "order" }),
       safeList("portals", { filter: 'is_deleted = false && portal_key != "3"', sort: "order" }),
-      safeList("public_lectures_public", { sort: "-created" }),
+      safeList("public_lectures_public", { filter: 'status = "published" || status = "completed"', sort: "-created" }),
       safeList("programs", {
         filter: 'status = "published" || status = "in_progress" || status = "completed"',
         sort: "-created",

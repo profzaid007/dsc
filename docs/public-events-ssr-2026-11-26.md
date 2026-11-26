@@ -15,3 +15,5 @@ Validation includes:
 - Existing navigation and event image-upload regressions, TypeScript, lint and production build checks.
 
 No backend migration or data changes are required for this release.
+
+The full post-deployment sitemap audit also found an existing draft lecture in the test sitemap. The follow-up sitemap filter now matches public lecture visibility (published/completed), and the integration check follows every sitemap-listed event detail URL to prevent advertising unpublished pages.
