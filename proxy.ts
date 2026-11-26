@@ -6,15 +6,17 @@ export function proxy(request: NextRequest) {
   const language = pathLanguage(pathname)
   const barePath = stripLocale(pathname)
   const publicPage = isPublicPath(barePath)
-  // Netlify applies some next.config redirects after rewrites. Redirect the
-  // retired portal before rewriting so the original URL language is retained.
+  // This portal is permanently removed. Internal links use portal 4 directly.
   if (barePath === "/portal/3" || barePath === "/portal/3/") {
-    const target = request.nextUrl.clone()
     const lang = language || (request.cookies.get("lang")?.value === "ar" ? "ar" : "en")
-    target.pathname = localizedPath("/portal/4", lang)
-    const response = NextResponse.redirect(target, 308)
-    response.headers.set("Cache-Control", "private, no-store")
-    return response
+    return new NextResponse(
+      lang === "ar" ? "تمت إزالة هذه الصفحة نهائيًا." : "This page has been permanently removed.",
+      { status: 410, headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store",
+      } }
+    )
   }
   if (publicPage && !language && !isArticlePath(barePath)) {
     const target = request.nextUrl.clone()

@@ -32,3 +32,7 @@ Netlify production and test projects both track `origin/dr-badr`; the release's 
 ## Netlify redirect ordering
 
 The first production HTML check confirmed content and bilingual metadata, but found that Netlify resolved the old portal redirect after the locale rewrite, discarding the URL language. The proxy now redirects the retired portal before rewriting. Regression coverage verifies permanent redirects, language and query preservation. The follow-up Git release includes this hosting-specific correction.
+
+## Permanent removal of portal 3
+
+At the owner's subsequent request, the redirect has been removed. Requests to `/portal/3`, `/ar/portal/3` and `/en/portal/3` now return HTTP 410 Gone with no Location header. Public internal links continue to point directly to portal 4; portal 3 remains excluded from public listings and the sitemap. This supersedes the redirect behavior described above. Education retains its original ten services.

@@ -38,14 +38,13 @@ test("articles stay independent and protected routes ignore spoofed metadata pat
 })
 
 
-test("retired portal redirects before rewrites and preserves language and query", () => {
-  for (const lang of ["ar", "en"]) {
-    const response = proxy(new NextRequest(`https://dsc.ac/${lang}/portal/3?from=programmes`))
-    assert.equal(response.status, 308)
-    assert.equal(response.headers.get("location"), `https://dsc.ac/${lang}/portal/4?from=programmes`)
+test("retired portal is gone in every URL language without redirecting or rewriting", async () => {
+  for (const path of ["/portal/3", "/ar/portal/3", "/en/portal/3", "/portal/3/", "/ar/portal/3?from=programmes"]) {
+    const response = proxy(new NextRequest(`https://dsc.ac${path}`, { headers: { cookie: "lang=ar" } }))
+    assert.equal(response.status, 410)
+    assert.equal(response.headers.get("location"), null)
     assert.equal(response.headers.get("x-middleware-rewrite"), null)
+    assert.equal(response.headers.get("x-robots-tag"), "noindex")
+    assert.ok((await response.text()).length > 0)
   }
-  const response = proxy(new NextRequest("https://dsc.ac/portal/3", { headers: { cookie: "lang=ar" } }))
-  assert.equal(response.status, 308)
-  assert.equal(response.headers.get("location"), "https://dsc.ac/ar/portal/4")
 })
