@@ -1,3 +1,4 @@
+import { canonicalPortalHref } from "@/lib/portal-routing"
 import sanitizeHtml from "sanitize-html"
 import { DomUtils, parseDocument } from "htmlparser2"
 
@@ -110,6 +111,7 @@ export function buildCmsLayoutDocument(
         tagName,
         attribs: {
           ...attributes,
+          ...(attributes.href ? { href: canonicalPortalHref(attributes.href) } : {}),
           target: attributes.href?.startsWith("#") ? "_self" : "_blank",
           rel: "noopener noreferrer",
         },

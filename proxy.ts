@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
+import { pathLanguage, stripLocale, localizedPath, isPublicPath, isArticlePath } from "@/lib/locale-routing"
 
 export function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const language = pathLanguage(pathname)
+  const barePath = stripLocale(pathname)
+  const publicPage = isPublicPath(barePath)
+  if (publicPage && !language && !isArticlePath(barePath)) {
+    const target = request.nextUrl.clone()
+    target.pathname = localizedPath(barePath, request.cookies.get("lang")?.value === "ar" ? "ar" : "en")
+    const response = NextResponse.redirect(target, 307)
+    response.headers.set("Cache-Control", "private, no-store")
+    return response
+  }
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
   const backend = new URL(process.env.NEXT_PUBLIC_POCKETBASE_URL || "http://127.0.0.1:8090")
   const development = process.env.NODE_ENV === "development"
@@ -25,7 +37,20 @@ export function proxy(request: NextRequest) {
   const headers = new Headers(request.headers)
   headers.set("x-nonce", nonce)
   headers.set("Content-Security-Policy", policy)
-  const response = NextResponse.next({ request: { headers } })
+  // Never trust a client-provided path header used for metadata.
+  headers.delete("x-public-path")
+  if (publicPage) headers.set("x-public-path", barePath)
+  if (publicPage && language) {
+    const cookieRequest = new NextRequest(request.url, { headers })
+    cookieRequest.cookies.set("lang", language)
+    headers.set("cookie", cookieRequest.headers.get("cookie") || "")
+  }
+  const target = request.nextUrl.clone()
+  target.pathname = barePath
+  const response = publicPage && language
+    ? NextResponse.rewrite(target, { request: { headers } })
+    : NextResponse.next({ request: { headers } })
+  if (publicPage && language) response.cookies.set("lang", language, { path: "/", maxAge: 31536000, sameSite: "lax" })
   response.headers.set("Content-Security-Policy", policy)
   response.headers.set("Cache-Control", "private, no-store")
   return response

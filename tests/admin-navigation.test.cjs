@@ -32,7 +32,7 @@ function load(file, context){
   './SecuritySidebar':{SecuritySidebar:()=>React.createElement('div',null,'Security sections')},
  }
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText
- new Function('exports','require',code)(exports,name=>mocks[name]||require(name))
+ new Function('exports','require',code)(exports,name=>name === '@/lib/locale-routing' ? load('lib/locale-routing.ts',context) : mocks[name]||require(name))
  return exports
 }
 test('admin header exposes management and logout actions with their access restrictions',()=>{
@@ -74,7 +74,7 @@ test('mobile public links remain visible for non-admin accounts and hidden for a
   const {Navbar}=load('components/layout/Navbar.tsx',{path:'/dashboard',role,admin:role==='admin',mobileOpen:true,lang})
   const html=renderToStaticMarkup(React.createElement(Navbar))
   const nav=html.match(/<nav[^>]*id="public-mobile-navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
-  for(const href of ['/about-us','/blog','/programmes','/contact-us']) assert.equal(nav.includes(`href="${href}"`),role!=='admin',`${role}/${lang}: ${href}`)
+  for(const href of ['/about-us','/blog','/programmes','/contact-us']) assert.equal(nav.includes(`href="/${lang}${href}"`),role!=='admin',`${role}/${lang}: ${href}`)
  }
 })
 
@@ -83,7 +83,7 @@ test('desktop header shows public links for non-admin accounts in both languages
   const {Navbar}=load('components/layout/Navbar.tsx',{path:'/dashboard/parent',role,admin:role==='admin',cms:false,lang})
   const html=renderToStaticMarkup(React.createElement(Navbar))
   const nav=html.match(/<nav[^>]*aria-label="Main navigation"[^>]*>([\s\S]*?)<\/nav>/)[1]
-  for(const href of ['/about-us','/blog','/programmes','/contact-us']) assert.equal(nav.includes(`href="${href}"`),role!=='admin',`${role}/${lang}: ${href}`)
+  for(const href of ['/about-us','/blog','/programmes','/contact-us']) assert.equal(nav.includes(`href="/${lang}${href}"`),role!=='admin',`${role}/${lang}: ${href}`)
  }
 })
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { PublicPortalsContext, type PublicPortalsState } from "@/lib/public-portals-context"
 import { Toaster } from "sonner"
 import { LangProvider, useLang } from "@/lib/lang-context"
 import { DirectionProvider } from "@/components/form/DirectionProvider"
@@ -27,13 +28,17 @@ function Shell({ children }: { children: React.ReactNode }) {
 export function AppShell({
   children,
   initialLang,
+  publicPortals,
 }: {
   children: React.ReactNode
   initialLang?: Lang
+  publicPortals?: PublicPortalsState
 }) {
   return (
+    <PublicPortalsContext.Provider value={publicPortals || null}>
     <LangProvider initialLang={initialLang}>
       <Shell>{children}</Shell>
     </LangProvider>
+    </PublicPortalsContext.Provider>
   )
 }

@@ -1,3 +1,4 @@
+import { canonicalPortalHref } from "@/lib/portal-routing"
 import sanitizeHtml from "sanitize-html"
 
 export const GOOGLE_DRIVE_VIDEO_URL =
@@ -45,7 +46,7 @@ export function sanitizeCmsContent(html: string, lang?: string): string {
     transformTags: {
       a: (tagName, attribs) => ({
         tagName,
-        attribs: { ...attribs, rel: "noopener noreferrer" },
+        attribs: { ...attribs, ...(attribs.href ? { href: canonicalPortalHref(attribs.href) } : {}), rel: "noopener noreferrer" },
       }),
     },
     exclusiveFilter: ({ tag, attribs }) => {

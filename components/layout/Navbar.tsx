@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
+import { stripLocale, localizedPath, isPublicPath } from "@/lib/locale-routing"
 import { useLang } from "@/lib/lang-context"
 import { usePermissions } from "@/hooks/usePermissions"
 import { useUserDisplayName } from "@/hooks/useUserDisplayName"
@@ -45,7 +46,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const ui = useUiTranslation()
 
-  const pathname = usePathname()
+  const pathname = stripLocale(usePathname())
   const { lang, toggleLang } = useLang()
   const { portals: PORTALS } = usePortals()
   const getPortalById = (id: string) =>
@@ -132,7 +133,7 @@ export function Navbar() {
                     return (
                       <Link
                         key={i}
-                        href={item.href}
+                        href={isPublicPath(item.href) ? localizedPath(item.href, lang) : item.href}
                         className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                           isActive
                             ? "bg-[#0a3d62]/10 text-[#0a3d62]"
@@ -201,12 +202,16 @@ export function Navbar() {
 
             {/* Right: Language + Auth + Consult */}
             <div className="col-start-3 flex min-w-0 flex-nowrap items-center justify-end gap-2">
-              <button
-                onClick={toggleLang}
+              <a
+                href={isPublicPath(pathname) ? localizedPath(pathname, lang === "en" ? "ar" : "en") : "#"}
+                hrefLang={lang === "en" ? "ar" : "en"}
+                onClick={(event) => {
+                  if (!isPublicPath(pathname)) { event.preventDefault(); toggleLang() }
+                }}
                 className="min-h-11 shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-[#0a3d62]/5 hover:text-[#0076a3]"
               >
                 {t({ en: "العربية", ar: "English" }, lang)}
-              </button>
+              </a>
 
               {canReadMessages && (
                 <Link
@@ -285,12 +290,14 @@ export function Navbar() {
                   variant="default"
                   size="sm"
                   className="hidden h-auto max-w-[9.5rem] shrink items-center gap-2 rounded-full px-5 py-1 whitespace-normal 2xl:flex"
-                  onClick={() => setConsultOpen(true)}
+                  asChild
                 >
+                  <a href={localizedPath("/consultation", lang)} onClick={(event) => { event.preventDefault(); setConsultOpen(true) }}>
                   <Calendar className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 text-start leading-snug">
                     {t(SITE_CONTENT.nav.bookConsultation, lang)}
                   </span>
+                  </a>
                 </Button>
               )}
 
@@ -332,7 +339,7 @@ export function Navbar() {
                   return (
                     <Link
                       key={i}
-                      href={item.href}
+                      href={isPublicPath(item.href) ? localizedPath(item.href, lang) : item.href}
                       className={`flex min-h-11 items-center rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
                         isActive
                           ? "bg-[#0a3d62]/10 text-[#0a3d62]"
@@ -458,13 +465,12 @@ export function Navbar() {
                 variant="default"
                 size="sm"
                 className="min-h-11 w-fit justify-start gap-2 rounded-full py-5"
-                onClick={() => {
-                  setMobileMenuOpen(false)
-                  setConsultOpen(true)
-                }}
+                asChild
               >
+                <a href={localizedPath("/consultation", lang)} onClick={(event) => { event.preventDefault(); setMobileMenuOpen(false); setConsultOpen(true) }}>
                 <Calendar className="h-4 w-4" />
                 {t(SITE_CONTENT.nav.bookConsultation, lang)}
+                </a>
               </Button>
             </div>
           </nav>

@@ -8,6 +8,12 @@ const localPocketBase = ["localhost", "127.0.0.1", "[::1]"].includes(
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
+  async redirects() {
+    return [
+      { source: "/portal/3", destination: "/portal/4", permanent: true },
+      { source: "/:lang(ar|en)/portal/3", destination: "/:lang/portal/4", permanent: true },
+    ]
+  },
   async headers() {
     return [{
       source: "/:path*",

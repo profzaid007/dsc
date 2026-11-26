@@ -31,6 +31,7 @@ export default function CmsLayout({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
+          <div className="mb-5 flex justify-end"><Link href="/cms/seo" className="rounded-md border px-3 py-2 text-sm font-semibold">{lang === "ar" ? "عناوين الصفحات" : "Page titles"}</Link></div>
           {children}
         </main>
       </div>

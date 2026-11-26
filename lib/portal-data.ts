@@ -1,3 +1,4 @@
+import { canonicalPortalId } from "@/lib/portal-routing"
 import { boundedFullList } from "@/lib/bounded-records"
 import pb from "@/lib/pb"
 import type { Portal } from "@/lib/portals"
@@ -39,12 +40,14 @@ export async function getPortals(includeDeleted = false): Promise<Portal[]> {
   const rows = await boundedFullList(pb
     .collection("portals"), {
       sort: "order,created",
-      filter: includeDeleted ? "" : "is_deleted=false",
+      filter: includeDeleted ? "" : 'is_deleted=false && portal_key != "3"',
+      signal: AbortSignal.timeout(10000),
       requestKey: null,
     })
   return rows.map(portalFromRecord)
 }
 export async function getPortalById(id: string): Promise<Portal | undefined> {
+  id = canonicalPortalId(id)
   const rows = await pb
     .collection("portals")
     .getList(1, 1, {

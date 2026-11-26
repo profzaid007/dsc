@@ -1,21 +1,33 @@
 import { Geist, Geist_Mono, Noto_Sans_Arabic } from "next/font/google"
-import { cookies } from "next/headers"
+import { localizedPath, isArticlePath } from "@/lib/locale-routing"
+import { cookies, headers } from "next/headers"
 
 import "./globals.css"
 import "react-datepicker/dist/react-datepicker.css"
+import { getPublicPortals } from "@/lib/public-portals"
 import { AppShell } from "@/components/AppShell"
+import { getPageTitle } from "@/lib/page-seo"
 import { SITE_URL } from "@/lib/seo"
 import { cn } from "@/lib/utils"
 
 export async function generateMetadata() {
   const lang = (await cookies()).get("lang")?.value
+  const path = (await headers()).get("x-public-path")
+  const language = lang === "ar" ? "ar" : "en"
   return {
+    ...(path ? {
+      alternates: {
+        canonical: `${SITE_URL}${isArticlePath(path) ? path : localizedPath(path, language)}`,
+        // An article is one authored record, not a pair of translated pages.
+        ...(!isArticlePath(path) ? { languages: {
+          ar: `${SITE_URL}${localizedPath(path, "ar")}`,
+          en: `${SITE_URL}${localizedPath(path, "en")}`,
+        } } : {}),
+      },
+    } : {}),
     metadataBase: new URL(SITE_URL),
     title: {
-      default:
-        lang === "ar"
-          ? "DSC — استشارية أسرار التطور"
-          : "DSC — Development Secrets Consultancy",
+      default: path ? await getPageTitle(path) : (language === "ar" ? "استشارية أسرار التطور | DSC" : "Development Secrets Consultancy | DSC"),
       template: "%s | DSC",
     },
   }
@@ -40,6 +52,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const publicPortals = await getPublicPortals()
   const cookieStore = await cookies()
   const initialLang = cookieStore.get("lang")?.value === "ar" ? "ar" : "en"
 
@@ -63,7 +76,7 @@ export default async function RootLayout({
       </head>
 
       <body>
-        <AppShell initialLang={initialLang}>{children}</AppShell>
+        <AppShell initialLang={initialLang} publicPortals={publicPortals}>{children}</AppShell>
       </body>
     </html>
   )

@@ -1,5 +1,6 @@
 "use client"
 
+import { canonicalPortalId } from "@/lib/portal-routing"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Search, ArrowRight, X } from "lucide-react"
@@ -50,7 +51,7 @@ export function ServiceSearch({ portals }: { portals: Portal[] }) {
     const needle = normalize(query)
     if (!needle) return []
     return portals.flatMap((portal) => {
-      const published = pages.filter((page) => page.portal_name === portal.id)
+      const published = pages.filter((page) => canonicalPortalId(page.portal_name || "") === portal.id)
       const entries = published.map((page) => ({
         key: page.id,
         name: localizedField(page, lang, "title"),

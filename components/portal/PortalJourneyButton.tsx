@@ -1,7 +1,7 @@
 "use client"
 
 import type { CSSProperties } from "react"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 import { useLang } from "@/lib/lang-context"
@@ -22,26 +22,16 @@ export function PortalJourneyButton({
   className?: string
   style?: CSSProperties
 }) {
-  const { currentUser, isAuthenticated, isLoading } = useAuth()
+  const { currentUser, isAuthenticated } = useAuth()
   const { lang } = useLang()
-  const router = useRouter()
   return (
     <Button
       size="lg"
       className={className}
       style={style}
-      disabled={isLoading}
-      onClick={() =>
-        router.push(
-          portalJourneyHref(
-            portalId,
-            isAuthenticated ? currentUser?.role : undefined,
-            registrationType
-          )
-        )
-      }
+      asChild
     >
-      {t(label, lang)}
+      <Link href={portalJourneyHref(portalId, isAuthenticated ? currentUser?.role : undefined, registrationType)}>{t(label, lang)}</Link>
     </Button>
   )
 }

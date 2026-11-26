@@ -42,11 +42,12 @@ import {
   normalizeEmail,
 } from "@/lib/validators"
 interface Props {
+  inline?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function BookConsultDialog({ open, onOpenChange }: Props) {
+export function BookConsultDialog({ open, onOpenChange, inline = false }: Props) {
   const [name, setName] = useState("")
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [contact, setContact] = useState("")
@@ -149,9 +150,11 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
     }, 200)
   }
 
+  const Content = inline ? "section" : DialogContent
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
+      <Content
         className={styles.dialog}
         dir={lang === "ar" ? "rtl" : "ltr"}
       >
@@ -395,7 +398,7 @@ export function BookConsultDialog({ open, onOpenChange }: Props) {
             </Button>
           </form>
         )}
-      </DialogContent>
+      </Content>
     </Dialog>
   )
 }

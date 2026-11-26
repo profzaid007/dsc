@@ -9,36 +9,11 @@ import { usePortals } from "@/hooks/usePortals"
 import { ArrowRight } from "lucide-react"
 import { PortalIcon } from "@/components/portal/PortalIcon"
 import { ServiceSearch } from "./ServiceSearch"
-const SERVICE_DESCRIPTIONS: Record<string, { en: string; ar: string }> = {
-  "anxiety-support": {
-    en: "Professional guidance for anxiety management",
-    ar: "إرشاد متخصص لإدارة القلق",
-  },
-  "autism-spectrum-disorder": {
-    en: "Comprehensive evaluation and personalized support plan",
-    ar: "تقييم شامل وخطط دعم مخصصة",
-  },
-  "curriculum-design": {
-    en: "Build modern, effective learning curricula",
-    ar: "بناء منهج تعليمي حديث وفعّال",
-  },
-  "strategic-planning": {
-    en: "Organizational strategy and goal alignment",
-    ar: "استراتيجية مؤسسية ومواءمة الأهداف",
-  },
-}
-
-const POPULAR_SERVICES = [
-  { portalId: "1", serviceId: "autism-spectrum-disorder" },
-  { portalId: "2", serviceId: "anxiety-support" },
-  { portalId: "4", serviceId: "curriculum-design" },
-  { portalId: "5", serviceId: "strategic-planning" },
-]
-
-export function PortalDiscovery() {
+export function PortalDiscovery({ services = [] }: { services?: import("@/lib/public-portals").HomepageService[] }) {
   const { lang } = useLang()
   const { portals: PORTALS, isLoading, error, reload } = usePortals()
   const ar = lang === "ar"
+  const availableServices = services.filter(service => PORTALS.some(portal => portal.id === service.portalId))
   return (
     <section id="support" className={styles.discovery} dir={ar ? "rtl" : "ltr"}>
       <div className={styles.container}>
@@ -92,24 +67,18 @@ export function PortalDiscovery() {
             )
           })}
         </div>
-        <div className={styles.services}>
+        {availableServices.length > 0 && <div className={styles.services}>
           <div className={styles.servicesHeading}>
-            <h3>{ar ? "الخدمات الأكثر طلباً" : "Popular services"}</h3>
+            <h3>{ar ? "استكشف الخدمات المتاحة" : "Explore available services"}</h3>
             <span>{ar ? "ابدأ بما يهمك" : "A good place to start"}</span>
           </div>
           <div className={styles.serviceGrid}>
-            {POPULAR_SERVICES.map((item) => {
-              const portal = PORTALS.find((p) => p.id === item.portalId)
-              const service = portal?.services.find(
-                (s) => s.id === item.serviceId
-              )
-              const desc = SERVICE_DESCRIPTIONS[item.serviceId]
-              if (!portal || !service) return null
-
+            {availableServices.map((service) => {
+              const portal = PORTALS.find(portal => portal.id === service.portalId)!
               return (
                 <Link
-                  key={item.serviceId}
-                  href={`/portal/${portal.id}`}
+                  key={service.id}
+                  href={`/info/${service.slug}`}
                   className={styles.service}
                   style={{ "--portal-color": portal.accent } as CSSProperties}
                 >
@@ -117,7 +86,6 @@ export function PortalDiscovery() {
                     <PortalIcon name={portal.icon} size={19} />
                   </span>
                   <h4>{t(service.name, lang)}</h4>
-                  <p>{desc ? t(desc, lang) : ""}</p>
                   <span className={styles.book}>
                     {ar ? "احجز الآن" : "Book now"}
                     <ArrowRight size={14} />
@@ -126,7 +94,7 @@ export function PortalDiscovery() {
               )
             })}
           </div>
-        </div>
+        </div>}
       </div>
     </section>
   )

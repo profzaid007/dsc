@@ -30,7 +30,7 @@ export function metaDescription(
 
 export const SITE_NAME = "Development Secrets Consultancy (DSC)"
 
-export function buildMetadata({
+export async function buildMetadata({
   title,
   description,
   path,
@@ -38,14 +38,16 @@ export function buildMetadata({
   title: string
   description: string
   path: string
-}): Metadata {
+}): Promise<Metadata> {
+  const { getPageTitle } = await import("@/lib/page-seo")
+  const pageTitle = await getPageTitle(path, title)
   const url = absoluteUrl(path)
   return {
-    title,
+    title: { absolute: pageTitle },
     description,
-    alternates: { canonical: url },
+    // Path-specific canonical and language alternates are supplied by the root layout.
     openGraph: {
-      title,
+      title: pageTitle,
       description,
       url,
       siteName: SITE_NAME,

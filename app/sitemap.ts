@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next"
 import type { RecordModel } from "pocketbase"
 import { boundedFullList } from "@/lib/bounded-records"
 import pb from "@/lib/pb"
+import { localizedPath } from "@/lib/locale-routing"
 import { absoluteUrl } from "@/lib/seo"
 
 /**
@@ -29,6 +30,7 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = [
     priority: 0.8,
   },
   { url: absoluteUrl("/blog"), changeFrequency: "daily", priority: 0.8 },
+  { url: absoluteUrl("/consultation"), changeFrequency: "yearly", priority: 0.6 },
   { url: absoluteUrl("/contact-us"), changeFrequency: "yearly", priority: 0.6 },
   { url: absoluteUrl("/privacy-policy"), changeFrequency: "yearly", priority: 0.2 },
   { url: absoluteUrl("/terms"), changeFrequency: "yearly", priority: 0.2 },
@@ -64,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
       safeList("home_pages", { filter: "is_published = true", sort: "-updated" }),
       safeList("info_pages", { filter: "is_published = true", sort: "order" }),
-      safeList("portals", { filter: "is_deleted = false", sort: "order" }),
+      safeList("portals", { filter: 'is_deleted = false && portal_key != "3"', sort: "order" }),
       safeList("public_lectures_public", { sort: "-created" }),
       safeList("programs", {
         filter: 'status = "published" || status = "in_progress" || status = "completed"',
@@ -122,13 +124,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [
+  const bilingualEntries: MetadataRoute.Sitemap = [
     ...STATIC_ROUTES,
-    ...blogEntries,
     ...cmsEntries,
     ...infoEntries,
     ...portalEntries,
     ...lectureEntries,
     ...programmeEntries,
+  ]
+  return [
+    ...bilingualEntries.flatMap((entry) => {
+      const path = new URL(entry.url).pathname
+      const languages = { ar: absoluteUrl(localizedPath(path, "ar")), en: absoluteUrl(localizedPath(path, "en")) }
+      return (["ar", "en"] as const).map(lang => ({ ...entry, url: languages[lang], alternates: { languages } }))
+    }),
+    ...blogEntries,
   ]
 }

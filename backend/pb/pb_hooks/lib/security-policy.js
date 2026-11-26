@@ -87,6 +87,7 @@ const collectionModules = {
   event_certificates: "training",
   public_lectures: "lectures",
   event_registrations: "events",
+  page_seo: "cms",
   home_pages: "cms",
   info_pages: "cms",
   blog_pages: "cms",
@@ -100,6 +101,7 @@ const collectionModules = {
 // (or every signed-in user). Staff grants govern their management screens and
 // writes; allocating an expert must not require settings-administration access.
 const publicReadCollections = [
+  "page_seo",
   "lookups",
   "tool_types",
   "roles_management",

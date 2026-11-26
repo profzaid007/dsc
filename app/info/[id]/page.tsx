@@ -1,3 +1,4 @@
+import { canonicalPortalId } from "@/lib/portal-routing"
 import Link from "next/link"
 import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
@@ -29,7 +30,7 @@ export default async function InfoPage({ params }: InfoPageProps) {
 
   const page = record as InfoPage | null
   const isPublished = !!page?.is_published
-  const portalId = page?.portal_name
+  const portalId = page?.portal_name ? canonicalPortalId(page.portal_name) : undefined
   const infoPortal = portalId ? await getPortalById(portalId) : undefined
   const backHref = portalId ? `/portal/${portalId}` : "/"
   const title = page ? localizedField(page, lang, "title") : ""

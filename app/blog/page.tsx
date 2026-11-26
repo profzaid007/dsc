@@ -12,9 +12,9 @@ export default async function BlogPage() {
   let fetchFailed = false
   try {
     const [catRecords, records] = await Promise.all([
-      boundedFullList(pb.collection("blog_categories")),
+      boundedFullList(pb.collection("blog_categories"), { signal: AbortSignal.timeout(8000) }).catch(() => []),
       boundedFullList(pb
-        .collection("blog_pages"), { filter: "is_published = true", sort: "-created" }),
+        .collection("blog_pages"), { filter: "is_published = true", sort: "-created", signal: AbortSignal.timeout(8000) }),
     ])
     categories = catRecords.map((record) => ({
       id: record.id,

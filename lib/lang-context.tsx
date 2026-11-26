@@ -8,7 +8,8 @@ import {
   useState,
   useSyncExternalStore,
 } from "react"
-import { useRouter } from "next/navigation"
+import { pathLanguage } from "@/lib/locale-routing"
+import { usePathname, useRouter } from "next/navigation"
 import { setCurrentLang } from "@/lib/current-lang"
 import type { Lang } from "@/types/form"
 
@@ -41,13 +42,14 @@ export function LangProvider({
   initialLang?: Lang
 }) {
   const router = useRouter()
+  const urlLang = pathLanguage(usePathname())
   const [selectedLang, setLang] = useState<Lang | undefined>(initialLang)
   const cookieLang = useSyncExternalStore(
     () => () => {},
     () => (getCookie(LANG_COOKIE) === "ar" ? "ar" : "en"),
     () => initialLang || "en"
   )
-  const lang: Lang = selectedLang || cookieLang
+  const lang: Lang = urlLang || selectedLang || cookieLang
   const initialized = useRef(false)
 
   useEffect(() => {

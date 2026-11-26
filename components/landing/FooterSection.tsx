@@ -11,7 +11,7 @@ export function FooterSection() {
   const ui = useUiTranslation()
 
   const { lang } = useLang()
-  const { portals: PORTALS } = usePortals()
+  const { portals: PORTALS, error } = usePortals()
 
   return (
     <footer
@@ -96,6 +96,7 @@ export function FooterSection() {
             <h2 className="text-start text-sm font-semibold tracking-wider text-white uppercase md:text-center">
               {t({ en: "Main Portals", ar: "البوابات الرئيسية" }, lang)}
             </h2>
+            {PORTALS.length === 0 && <p className="text-sm text-white/75">{t(error ? { en: "Portals are temporarily unavailable.", ar: "البوابات غير متاحة مؤقتًا." } : { en: "No portals are currently available.", ar: "لا توجد بوابات متاحة حاليًا." }, lang)} <Link href="/contact-us" className="underline">{t({ en: "Contact us", ar: "تواصل معنا" }, lang)}</Link></p>}
             <nav className="grid grid-cols-1 gap-y-1 md:grid-cols-2 md:gap-x-4">
               {PORTALS.map((portal, i) => (
                 <Link
