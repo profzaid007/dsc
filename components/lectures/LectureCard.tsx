@@ -1,5 +1,8 @@
 "use client"
 
+import { usePublicEventTime } from "@/components/PublicEventTime"
+import { publicEventDate, publicEventDateLabel } from "@/lib/public-event-dates"
+import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -7,12 +10,12 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin } from "lucide-react"
 import type { Lecture } from "@/types/lecture"
 import { useLang } from "@/lib/lang-context"
-import { formatDate } from "@/lib/format-date"
 
 interface LectureCardProps {
   lecture: Lecture
   onRegister?: () => void
   onView?: () => void
+  viewHref?: string
   isRegistered?: boolean
   showStatus?: boolean
 }
@@ -37,20 +40,24 @@ export function LectureCard({
   lecture,
   onRegister,
   onView,
+  viewHref,
   isRegistered = false,
   showStatus = false,
 }: LectureCardProps) {
   const { lang } = useLang()
+  const clock = usePublicEventTime()
+  const hydrated = clock?.hydrated ?? true
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = publicEventDate(dateString, hydrated)
     return date.toLocaleTimeString(lang === "ar" ? "ar-AE" : "en-US", {
       hour: "2-digit",
       minute: "2-digit",
+      ...(!hydrated ? { timeZone: "UTC" } : {}),
     })
   }
 
-  const isPast = new Date(lecture.schedule.dateTime) < new Date()
+  const isPast = publicEventDate(lecture.schedule.dateTime, hydrated).getTime() < (clock?.now ?? new Date().getTime())
   const isUpcoming = !isPast
 
   // A single corner badge, highest priority first. Upcoming and Past are
@@ -104,7 +111,7 @@ export function LectureCard({
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{formatDate(lecture.schedule.dateTime)}</span>
+          <span>{publicEventDateLabel(lecture.schedule.dateTime, hydrated)}</span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -125,11 +132,15 @@ export function LectureCard({
         </p>
 
         <div className="flex gap-2 pt-2">
-          {onView && (
+          {viewHref ? (
+            <Button variant="outline" className="flex-1" asChild>
+              <Link href={viewHref}>{lang === "ar" ? "عرض التفاصيل" : "View Details"}</Link>
+            </Button>
+          ) : onView ? (
             <Button variant="outline" className="flex-1" onClick={onView}>
               {lang === "ar" ? "عرض التفاصيل" : "View Details"}
             </Button>
-          )}
+          ) : null}
           {onRegister && !isPast && !isRegistered && (
             <Button
               className="flex-1"

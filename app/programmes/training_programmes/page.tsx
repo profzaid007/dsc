@@ -1,110 +1,23 @@
-"use client"
-
-import { matchesContentSearch } from "@/lib/content-search"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Input } from "@/components/ui/input"
-import { useLang } from "@/lib/lang-context"
-import { trainingProgramsCollection } from "@/lib/pb-training"
-import { ProgramCard } from "@/components/training"
-import type { TrainingProgram } from "@/types/training"
-import { Search, GraduationCap } from "lucide-react"
-import { toast } from "sonner"
-import { getErrorMessage } from "@/lib/pb"
-
-export default function TrainingProgrammesPage() {
-  const router = useRouter()
-  const { lang } = useLang()
-  const [programs, setPrograms] = useState<TrainingProgram[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await trainingProgramsCollection.getPublished()
-        setPrograms(data)
-      } catch (err) {
-        console.error("Failed to load training programmes:", err)
-        toast.error(getErrorMessage(err))
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    load()
-  }, [])
-
-  const filtered = searchTerm
-    ? programs.filter(
-        (p) =>
-          matchesContentSearch(searchTerm, p.title[lang], p.trainer.name[lang], p.keywords)
-      )
-    : programs
-
-  const handleView = (id: string) => {
-    router.push(`/programmes/training_programmes/${id}`)
+import { getPublicEventClock } from "@/lib/public-events"
+import { PublicEventTime } from "@/components/PublicEventTime"
+import { getPublicPrograms } from "@/lib/public-events"
+import { PublicEventsUnavailable } from "@/components/PublicEventsUnavailable"
+import TrainingProgrammesListing from "./TrainingProgrammesListing"
+export default async function TrainingProgrammesPage() {
+  let data
+  try {
+    data = await getPublicPrograms()
+  } catch {
+    return <PublicEventsUnavailable />
   }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">
-          {lang === "ar" ? "جاري التحميل..." : "Loading..."}
-        </p>
-      </div>
-    )
-  }
-
   return (
-    <div className="container mx-auto space-y-6 px-4 py-8">
-      <div>
-        <h1 className="text-2xl font-bold text-primary">
-          {lang === "ar" ? "البرامج التدريبية" : "Training Programmes"}
-        </h1>
-        <p className="text-muted-foreground">
-          {lang === "ar"
-            ? "تصفح البرامج التدريبية المتاحة"
-            : "Browse available training programmes"}
-        </p>
-      </div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder={
-            lang === "ar"
-              ? "البحث في البرامج التدريبية..."
-              : "Search programmes by title, trainer or keywords..."
-          }
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 max-w-md"
-        />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="py-12 text-center">
-          <GraduationCap className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="mb-2 text-lg font-medium">
-            {lang === "ar" ? "لا توجد برامج تدريبية" : "No training programmes found"}
-          </h3>
-          <p className="text-muted-foreground">
-            {lang === "ar"
-              ? "لم يتم العثور على برامج تدريبية متاحة"
-              : "No available training programmes found"}
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((program) => (
-            <ProgramCard
-              key={program.id}
-              program={program}
-              onView={() => handleView(program.id)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <PublicEventTime initialNow={getPublicEventClock()}>
+      <TrainingProgrammesListing
+        programs={data.filter(
+          (program) =>
+            program.status === "published" || program.status === "in_progress"
+        )}
+      />
+    </PublicEventTime>
   )
 }

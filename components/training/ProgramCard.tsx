@@ -1,5 +1,8 @@
 "use client"
 
+import { usePublicEventTime } from "@/components/PublicEventTime"
+import { publicEventDate, publicEventDateLabel } from "@/lib/public-event-dates"
+import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -7,12 +10,12 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin, Users, BookOpen } from "lucide-react"
 import type { TrainingProgram } from "@/types/training"
 import { useLang } from "@/lib/lang-context"
-import { formatDate } from "@/lib/format-date"
 
 interface ProgramCardProps {
   program: TrainingProgram
   onRegister?: () => void
   onView?: () => void
+  viewHref?: string
   isRegistered?: boolean
   isFull?: boolean
   showStatus?: boolean
@@ -46,16 +49,19 @@ export function ProgramCard({
   program,
   onRegister,
   onView,
+  viewHref,
   isRegistered = false,
   isFull = false,
   showStatus = false,
 }: ProgramCardProps) {
   const { lang } = useLang()
+  const clock = usePublicEventTime()
+  const hydrated = clock?.hydrated ?? true
 
-  const isPast = new Date(program.schedule.endDate) < new Date()
+  const isPast = publicEventDate(program.schedule.endDate, hydrated).getTime() < (clock?.now ?? new Date().getTime())
   // "Upcoming" means not yet started. A programme that has started but not yet
   // finished is in progress: neither upcoming nor past, so it gets no tag.
-  const isUpcoming = !isPast && new Date(program.schedule.startDate) >= new Date()
+  const isUpcoming = !isPast && publicEventDate(program.schedule.startDate, hydrated).getTime() >= (clock?.now ?? new Date().getTime())
 
   // A single corner badge, highest priority first. Upcoming and Past are
   // mutually exclusive, so they never need to share the corner.
@@ -111,8 +117,8 @@ export function ProgramCard({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <span>
-            {formatDate(program.schedule.startDate)} -{" "}
-            {formatDate(program.schedule.endDate)}
+            {publicEventDateLabel(program.schedule.startDate, hydrated)} -{" "}
+            {publicEventDateLabel(program.schedule.endDate, hydrated)}
           </span>
         </div>
 
@@ -146,11 +152,15 @@ export function ProgramCard({
         </div>
 
         <div className="flex gap-2 pt-2">
-          {onView && (
+          {viewHref ? (
+            <Button variant="outline" className="flex-1" asChild>
+              <Link href={viewHref}>{lang === "ar" ? "عرض التفاصيل" : "View Details"}</Link>
+            </Button>
+          ) : onView ? (
             <Button variant="outline" className="flex-1" onClick={onView}>
               {lang === "ar" ? "عرض التفاصيل" : "View Details"}
             </Button>
-          )}
+          ) : null}
           {onRegister && !isPast && !isRegistered && (
             <Button
               className="flex-1"

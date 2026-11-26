@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { trainingProgramsCollection } from "@/lib/pb-training"
+import { getPublicProgram } from "@/lib/public-events"
 import { buildMetadata, metaDescription } from "@/lib/seo"
 
 interface TrainingDetailLayoutProps {
@@ -20,7 +20,8 @@ export async function generateMetadata({
   })
 
   try {
-    const program = await trainingProgramsCollection.getById(id)
+    const program = await getPublicProgram(id)
+    if (!program) return fallback
     return buildMetadata({
       title: `${program.title.en} | Training Programme | DSC`,
       description: metaDescription(

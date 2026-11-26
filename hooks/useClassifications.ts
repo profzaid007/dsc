@@ -6,9 +6,9 @@ import {
   type ClassificationDefinition,
 } from "@/lib/classifications-data"
 
-export function useClassifications() {
-  const [main, setMain] = useState<ClassificationDefinition[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+export function useClassifications(initialDefinitions?: ClassificationDefinition[]) {
+  const [main, setMain] = useState<ClassificationDefinition[]>(initialDefinitions || [])
+  const [isLoading, setIsLoading] = useState(!initialDefinitions)
   const [error, setError] = useState("")
   const [reloadKey, setReloadKey] = useState(0)
   const refresh = useCallback(() => setReloadKey(value => value + 1), [])
