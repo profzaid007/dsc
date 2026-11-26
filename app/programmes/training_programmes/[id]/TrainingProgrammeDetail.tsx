@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { usePublicEventTime } from "@/components/PublicEventTime"
-import { publicEventDate, publicEventDateLabel } from "@/lib/public-event-dates"
+import { publicEventDateLabel, publicEventInstant } from "@/lib/public-event-dates"
 import { formatDate } from "@/lib/format-date"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -230,7 +230,7 @@ export default function TrainingProgrammeDetail({ program }: { program: Training
     }
   }
 
-  const isPast = publicEventDate(program.schedule.endDate, hydrated).getTime() < clock.now
+  const isPast = publicEventInstant(program.schedule.endDate, hydrated).getTime() < clock.now
   const isFull = !!(
     program.maxParticipants &&
     program.currentRegistrations >= program.maxParticipants

@@ -1,7 +1,7 @@
 "use client"
 
 import { usePublicEventTime } from "@/components/PublicEventTime"
-import { publicEventDate, publicEventDateLabel } from "@/lib/public-event-dates"
+import { publicEventDate, publicEventDateLabel, publicEventInstant } from "@/lib/public-event-dates"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -37,7 +37,7 @@ export default function PublicLectureDetail({ lecture }: { lecture: Lecture }) {
     })
   }
 
-  const isPast = publicEventDate(lecture.schedule.dateTime, hydrated).getTime() < clock.now
+  const isPast = publicEventInstant(lecture.schedule.dateTime, hydrated).getTime() < clock.now
 
   return (
     <div className="container mx-auto space-y-6 px-4 py-8">

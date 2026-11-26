@@ -1,7 +1,7 @@
 "use client"
 
 import { usePublicEventTime } from "@/components/PublicEventTime"
-import { publicEventDate, publicEventDateLabel } from "@/lib/public-event-dates"
+import { publicEventDate, publicEventDateLabel, publicEventInstant } from "@/lib/public-event-dates"
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -57,7 +57,7 @@ export function LectureCard({
     })
   }
 
-  const isPast = publicEventDate(lecture.schedule.dateTime, hydrated).getTime() < (clock?.now ?? new Date().getTime())
+  const isPast = publicEventInstant(lecture.schedule.dateTime, hydrated).getTime() < (clock?.now ?? new Date().getTime())
   const isUpcoming = !isPast
 
   // A single corner badge, highest priority first. Upcoming and Past are

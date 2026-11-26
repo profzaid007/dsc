@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { publicEventDate, publicEventDateLabel, publicEventDay } from "../lib/public-event-dates"
+import { publicEventDate, publicEventDateLabel, publicEventDay, publicEventInstant } from "../lib/public-event-dates"
 import { dayKey } from "../lib/event-dates"
 
 test("SSR and first hydration interpret naive wall-clock dates consistently", () => {
@@ -16,4 +16,8 @@ test("SSR date labels and calendar keys are timezone independent near midnight",
   assert.equal(publicEventDay(date, true), dayKey(date))
   assert.equal(publicEventDateLabel("invalid", false), "")
   assert.equal(publicEventDay(new Date("invalid"), false), "")
+})
+
+test("enrolment and status checks retain the existing date-only deadline instant", () => {
+  for (const hydrated of [false, true]) assert.equal(publicEventInstant("2027-01-02", hydrated).toISOString(), "2027-01-02T00:00:00.000Z")
 })

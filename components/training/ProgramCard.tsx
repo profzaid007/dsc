@@ -1,7 +1,7 @@
 "use client"
 
 import { usePublicEventTime } from "@/components/PublicEventTime"
-import { publicEventDate, publicEventDateLabel } from "@/lib/public-event-dates"
+import { publicEventDateLabel, publicEventInstant } from "@/lib/public-event-dates"
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -58,10 +58,10 @@ export function ProgramCard({
   const clock = usePublicEventTime()
   const hydrated = clock?.hydrated ?? true
 
-  const isPast = publicEventDate(program.schedule.endDate, hydrated).getTime() < (clock?.now ?? new Date().getTime())
+  const isPast = publicEventInstant(program.schedule.endDate, hydrated).getTime() < (clock?.now ?? new Date().getTime())
   // "Upcoming" means not yet started. A programme that has started but not yet
   // finished is in progress: neither upcoming nor past, so it gets no tag.
-  const isUpcoming = !isPast && publicEventDate(program.schedule.startDate, hydrated).getTime() >= (clock?.now ?? new Date().getTime())
+  const isUpcoming = !isPast && publicEventInstant(program.schedule.startDate, hydrated).getTime() >= (clock?.now ?? new Date().getTime())
 
   // A single corner badge, highest priority first. Upcoming and Past are
   // mutually exclusive, so they never need to share the corner.

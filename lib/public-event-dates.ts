@@ -27,3 +27,8 @@ export function publicEventDateLabel(value: string, hydrated: boolean): string {
     ? formatDate(date)
     : date.toISOString().slice(0, 10).split("-").reverse().join("-")
 }
+
+/** Preserve Date's original date-only instant semantics for enrolment/status checks. */
+export function publicEventInstant(value: string, hydrated: boolean): Date {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(value) : publicEventDate(value, hydrated)
+}
