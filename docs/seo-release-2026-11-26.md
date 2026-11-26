@@ -28,3 +28,7 @@ Recovery snapshots (restricted to the server administrator):
 - Local HTML checks verified bilingual titles, hreflang/canonical tags, published content without JavaScript, ten education services and permanent legacy redirects.
 
 Netlify production and test projects both track `origin/dr-badr`; the release's Git commit is the deployment source. Final deployment receipts and HTTP verification are retained outside the repository in `work/seo-release-20261126`.
+
+## Netlify redirect ordering
+
+The first production HTML check confirmed content and bilingual metadata, but found that Netlify resolved the old portal redirect after the locale rewrite, discarding the URL language. The proxy now redirects the retired portal before rewriting. Regression coverage verifies permanent redirects, language and query preservation. The follow-up Git release includes this hosting-specific correction.

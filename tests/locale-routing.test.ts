@@ -36,3 +36,16 @@ test("articles stay independent and protected routes ignore spoofed metadata pat
   assert.equal(privateResponse.headers.get("location"), null)
   assert.equal(privateResponse.headers.get("x-middleware-request-x-public-path"), null)
 })
+
+
+test("retired portal redirects before rewrites and preserves language and query", () => {
+  for (const lang of ["ar", "en"]) {
+    const response = proxy(new NextRequest(`https://dsc.ac/${lang}/portal/3?from=programmes`))
+    assert.equal(response.status, 308)
+    assert.equal(response.headers.get("location"), `https://dsc.ac/${lang}/portal/4?from=programmes`)
+    assert.equal(response.headers.get("x-middleware-rewrite"), null)
+  }
+  const response = proxy(new NextRequest("https://dsc.ac/portal/3", { headers: { cookie: "lang=ar" } }))
+  assert.equal(response.status, 308)
+  assert.equal(response.headers.get("location"), "https://dsc.ac/ar/portal/4")
+})

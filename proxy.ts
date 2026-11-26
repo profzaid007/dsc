@@ -6,6 +6,16 @@ export function proxy(request: NextRequest) {
   const language = pathLanguage(pathname)
   const barePath = stripLocale(pathname)
   const publicPage = isPublicPath(barePath)
+  // Netlify applies some next.config redirects after rewrites. Redirect the
+  // retired portal before rewriting so the original URL language is retained.
+  if (barePath === "/portal/3" || barePath === "/portal/3/") {
+    const target = request.nextUrl.clone()
+    const lang = language || (request.cookies.get("lang")?.value === "ar" ? "ar" : "en")
+    target.pathname = localizedPath("/portal/4", lang)
+    const response = NextResponse.redirect(target, 308)
+    response.headers.set("Cache-Control", "private, no-store")
+    return response
+  }
   if (publicPage && !language && !isArticlePath(barePath)) {
     const target = request.nextUrl.clone()
     target.pathname = localizedPath(barePath, request.cookies.get("lang")?.value === "ar" ? "ar" : "en")
